@@ -1,0 +1,89 @@
+[project]
+name = "cycling-ai-analysis"
+version = "0.1.0"
+description = "Generic AI-powered cycling performance analysis with multi-provider LLM support"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    {name = "Eduardo", email = "eduardo@example.com"}
+]
+keywords = ["cycling", "performance", "analysis", "ai", "llm"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    # Data processing
+    "pandas>=2.1.0",
+    "numpy>=1.26.0",
+    "pyarrow>=14.0.0",
+
+    # FIT file parsing
+    "fitparse>=1.2.0",
+
+    # Utilities
+    "python-dateutil>=2.8.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    # Linting and formatting
+    "ruff>=0.1.0",
+
+    # Type checking
+    "mypy>=1.7.0",
+    "pandas-stubs>=2.1.0",
+
+    # Testing
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "pytest-asyncio>=0.21.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cycling_ai"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+select = ["E", "F", "I", "N", "UP", "B", "C4", "SIM"]
+ignore = []
+
+[tool.ruff.per-file-ignores]
+"__init__.py" = ["F401"]  # Allow unused imports in __init__.py
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_any_unimported = false
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+check_untyped_defs = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = "fitparse.*"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--cov=src/cycling_ai",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "-v"
+]
