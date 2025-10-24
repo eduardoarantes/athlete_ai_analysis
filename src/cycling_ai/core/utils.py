@@ -380,3 +380,34 @@ def format_stats_text(stats: dict[str, Any]) -> str:
     text += f"📦 Distribution: {stats['long_rides']} long (>80km) / {stats['medium_rides']} medium (40-80km) / {stats['short_rides']} short (<40km)\n"
 
     return text
+
+
+def load_and_categorize_activities(csv_file_path: str) -> pd.DataFrame:
+    """
+    Load activities and apply cross-training categorization.
+
+    This function loads the activities CSV and ensures the activity_category
+    column is populated for cross-training analysis. The categorization is
+    already done by load_csv_data() which sets activity_category based on
+    activity type.
+
+    Args:
+        csv_file_path: Path to Strava activities CSV file
+
+    Returns:
+        DataFrame with activity_category column for cross-training analysis
+    """
+    # Load activities using the standard loader which handles categorization
+    df = load_activities_data(csv_file_path)
+
+    # Verify activity_category exists (should be added by load_csv_data)
+    if 'activity_category' not in df.columns:
+        # Fallback: create category based on type
+        df['activity_category'] = df['type'].apply(
+            lambda x: 'Cycling' if 'Ride' in str(x) else
+                      'Strength' if str(x) in ['Weight Training', 'Workout'] else
+                      'Cardio' if str(x) in ['Run', 'Swim', 'Rowing'] else
+                      'Other'
+        )
+
+    return df

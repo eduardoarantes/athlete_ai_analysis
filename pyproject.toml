@@ -45,6 +45,9 @@ dependencies = [
     "python-dateutil>=2.8.0",
 ]
 
+[project.scripts]
+cycling-ai = "cycling_ai.cli.main:main"
+
 [project.optional-dependencies]
 dev = [
     # Linting and formatting
