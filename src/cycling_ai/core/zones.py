@@ -12,6 +12,7 @@ import gzip
 import json
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Any
 
 from fitparse import FitFile
 
@@ -97,7 +98,7 @@ def analyze_time_in_zones(
     period_months: int = 6,
     max_files: int | None = None,
     use_cache: bool = True,
-    athlete_profile: any | None = None
+    athlete_profile: Any | None = None
 ) -> str:
     """
     Analyze actual time spent in each power zone by reading .fit files.

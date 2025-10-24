@@ -9,6 +9,7 @@ Outputs structured JSON for integration with report generators.
 """
 
 import json
+from typing import Any
 
 from .utils import convert_to_json_serializable
 from .workout_builder import (
@@ -26,7 +27,7 @@ def generate_training_plan(
     target_ftp: float = None,
     total_weeks: int = 12,
     athlete_age: int = None,
-    athlete_profile: any = None
+    athlete_profile: Any = None
 ) -> str:
     """
     Generate a progressive training plan based on athlete's availability and goals.
