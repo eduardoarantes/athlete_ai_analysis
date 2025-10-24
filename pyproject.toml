@@ -24,6 +24,23 @@ dependencies = [
     # FIT file parsing
     "fitparse>=1.2.0",
 
+    # LLM Provider SDKs
+    "openai>=1.0.0",
+    "anthropic>=0.18.0",
+    "google-generativeai>=0.3.0",
+    "ollama>=0.1.0",
+
+    # HTTP client (used by providers)
+    "httpx>=0.25.0",
+
+    # Configuration
+    "pyyaml>=6.0.0",
+    "pydantic>=2.0.0",
+
+    # CLI
+    "click>=8.1.0",
+    "rich>=13.0.0",
+
     # Utilities
     "python-dateutil>=2.8.0",
 ]
@@ -36,11 +53,19 @@ dev = [
     # Type checking
     "mypy>=1.7.0",
     "pandas-stubs>=2.1.0",
+    "types-requests>=2.31.0",
+    "types-PyYAML>=6.0.0",
 
     # Testing
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
     "pytest-asyncio>=0.21.0",
+    "pytest-mock>=3.12.0",
+    "responses>=0.24.0",
+]
+
+integration = [
+    "python-dotenv>=1.0.0",
 ]
 
 [build-system]
@@ -76,14 +101,38 @@ strict_equality = true
 module = "fitparse.*"
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = "ollama.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "google.generativeai.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "google.ai.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "anthropic.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "openai.*"
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+markers = [
+    "integration: Integration tests requiring API keys (deselect with '-m \"not integration\"')",
+]
 addopts = [
     "--cov=src/cycling_ai",
     "--cov-report=term-missing",
     "--cov-report=html",
-    "-v"
+    "-v",
+    "-m", "not integration",
 ]

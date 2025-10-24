@@ -98,7 +98,7 @@ class BaseProvider(ABC):
         self.config = config
 
     @abstractmethod
-    def convert_tool_schema(self, tools: list[ToolDefinition]) -> dict[str, Any]:
+    def convert_tool_schema(self, tools: list[ToolDefinition]) -> Any:
         """
         Convert generic tool definitions to provider-specific schema format.
 
@@ -106,7 +106,8 @@ class BaseProvider(ABC):
             tools: List of generic tool definitions
 
         Returns:
-            Provider-specific tool schema (e.g., OpenAI functions, Anthropic tools)
+            Provider-specific tool schemas (e.g., list of dicts for OpenAI/Anthropic,
+            list of Tool objects for Gemini)
         """
         pass
 
