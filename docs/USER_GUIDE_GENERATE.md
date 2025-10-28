@@ -33,10 +33,12 @@ The `cycling-ai generate` command uses a multi-agent LLM system to analyze your 
 - Creates 3 HTML reports with visualizations and insights
 
 **What you need:**
-- Strava CSV export (activities data)
+- FIT files from your bike computer (automatic from device sync)
 - Athlete profile (JSON file with FTP, zones, goals)
 - LLM provider configured (Anthropic, OpenAI, Gemini, or Ollama)
 - 5 minutes (typical execution time)
+
+**Note:** CSV export is no longer required! The system works directly with FIT files.
 
 **Output:**
 - `index.html` - Main report with executive summary
@@ -49,11 +51,13 @@ The `cycling-ai generate` command uses a multi-agent LLM system to analyze your 
 
 ### 5-Minute Setup
 
-**Step 1: Export your Strava data**
+**Step 1: Locate your FIT files**
 
 ```bash
-# Go to Strava → Settings → My Account → Download or Export Your Account
-# Save activities.csv to your computer
+# FIT files are usually synced automatically to:
+# - Garmin: ~/Library/Application Support/Garmin/GarminExpress/*/GARMIN/Activity/
+# - Wahoo: Wahoo app exports to ~/Downloads/
+# - Other: Check your device manufacturer's app
 ```
 
 **Step 2: Create athlete profile**
@@ -80,8 +84,9 @@ export ANTHROPIC_API_KEY="sk-ant-your-key-here"
 
 ```bash
 cycling-ai generate \
-  --csv ~/Downloads/activities.csv \
   --profile athlete_profile.json \
+  --fit-dir ~/path/to/fit/files \
+  --output-dir ./reports \
   --provider anthropic \
   --period-months 6 \
   --training-plan-weeks 12
@@ -100,18 +105,6 @@ Done! 🎉
 ## Command Options
 
 ### Required Options
-
-#### `--csv PATH`
-Path to your Strava CSV export file.
-
-```bash
---csv ~/Downloads/activities.csv
-```
-
-**Format:** Standard Strava bulk export CSV
-**Contents:** Activity Date, Name, Type, Distance, Moving Time, Elapsed Time, Elevation Gain, Average Speed, Max Speed, Average Heart Rate, Max Heart Rate, Average Power, Max Power, Training Stress Score®
-
-**Where to get it:** Strava → Settings → My Account → Download or Export Your Account
 
 #### `--profile PATH`
 Path to your athlete profile JSON file.

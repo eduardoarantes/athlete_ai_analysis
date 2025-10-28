@@ -1,10 +1,10 @@
 """
 Cache preparation tool for Phase 1: Data Preparation.
 
-Creates optimized Parquet cache from CSV or FIT files for fast downstream analysis.
+Creates optimized Parquet cache from FIT files for fast downstream analysis.
 Supports two modes:
-- CSV mode: Reads Strava CSV export and optionally enriches with FIT zone data
-- FIT-only mode: Builds activities DataFrame directly from FIT files (no CSV needed)
+- FIT-only mode (RECOMMENDED): Builds activities DataFrame directly from FIT files
+- CSV mode (LEGACY): Reads activities CSV file and optionally enriches with FIT zone data
 """
 from __future__ import annotations
 
@@ -21,11 +21,11 @@ from cycling_ai.tools.registry import register_tool
 
 class CachePreparationTool(BaseTool):
     """
-    Tool for creating optimized Parquet cache from CSV or FIT files.
+    Tool for creating optimized Parquet cache from FIT files.
 
     Supports two modes:
-    - CSV mode: Converts CSV to Parquet with optional zone enrichment from FIT files
-    - FIT-only mode: Builds DataFrame from FIT files, then creates Parquet cache with zones
+    - FIT-only mode (RECOMMENDED): Builds DataFrame from FIT files with zones and cross-training data
+    - CSV mode (LEGACY): Converts CSV to Parquet with optional zone enrichment from FIT files
     """
 
     @property
@@ -34,9 +34,9 @@ class CachePreparationTool(BaseTool):
         return ToolDefinition(
             name="prepare_cache",
             description=(
-                "Create optimized Parquet cache from CSV or FIT files. Supports two modes: "
-                "1) CSV mode: Converts CSV to Parquet with optional zone enrichment from FIT files. "
-                "2) FIT-only mode: Builds activities DataFrame from FIT files directly (no CSV). "
+                "Create optimized Parquet cache from FIT files. Supports two modes: "
+                "1) FIT-only mode (RECOMMENDED): Builds activities DataFrame from FIT files with zones and cross-training data. "
+                "2) CSV mode (LEGACY): Converts CSV to Parquet with optional zone enrichment from FIT files. "
                 "Both modes create optimized Parquet with proper data types, compression, and indexing. "
                 "Cache location: 'cache/' subdirectory next to CSV (CSV mode) or in output directory (FIT-only)."
             ),
@@ -45,7 +45,7 @@ class CachePreparationTool(BaseTool):
                 ToolParameter(
                     name="csv_file_path",
                     type="string",
-                    description="Absolute path to Strava activities CSV export file (optional for FIT-only mode)",
+                    description="Absolute path to activities CSV file (LEGACY: optional for FIT-only mode)",
                     required=False,
                 ),
                 ToolParameter(

@@ -51,10 +51,11 @@ class PerformanceAnalysisTool(BaseTool):
                     name="csv_file_path",
                     type="string",
                     description=(
-                        "Path to Strava activities CSV file (used to locate Phase 1 cache). "
+                        "Path to activities CSV file or use for cache location. "
                         "The actual data is read from the enriched Parquet cache at "
-                        "<csv_dir>/cache/activities_processed.parquet created by Phase 1. "
-                        "This provides 10x faster reads and includes zone enrichment data."
+                        "<csv_dir>/cache/activities_processed.parquet created by prepare_cache tool. "
+                        "This provides 10x faster reads and includes zone enrichment data. "
+                        "LEGACY: CSV mode supported for backward compatibility."
                     ),
                     required=True,
                 ),

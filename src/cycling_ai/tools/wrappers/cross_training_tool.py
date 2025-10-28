@@ -44,22 +44,22 @@ class CrossTrainingTool(BaseTool):
             category="analysis",
             parameters=[
                 ToolParameter(
-                    name="csv_file_path",
+                    name="cache_file_path",
                     type="string",
                     description=(
-                        "Path to Strava activities CSV export containing ALL activity types "
-                        "(cycling, running, strength training, swimming, etc.). Optional if "
-                        "cache_file_path is provided."
+                        "Path to Parquet cache file with categorized activities (RECOMMENDED). "
+                        "Cache must include cross-training categorization (activity_category, "
+                        "muscle_focus, etc.). Generated automatically by prepare_cache tool."
                     ),
                     required=False,
                 ),
                 ToolParameter(
-                    name="cache_file_path",
+                    name="csv_file_path",
                     type="string",
                     description=(
-                        "Path to Parquet cache file with categorized activities. Use this for "
-                        "FIT-only mode analysis. Cache must include cross-training categorization "
-                        "(activity_category, muscle_focus, etc.)."
+                        "Path to activities CSV file containing ALL activity types (cycling, "
+                        "running, strength training, swimming, etc.). LEGACY: Use cache_file_path "
+                        "instead for better performance. Optional if cache_file_path is provided."
                     ),
                     required=False,
                 ),
@@ -94,8 +94,8 @@ class CrossTrainingTool(BaseTool):
         Execute cross-training analysis.
 
         Supports two modes:
-        1. CSV mode: Load from Strava CSV export
-        2. Cache mode: Load from Parquet cache (FIT-only workflow)
+        1. Cache mode (RECOMMENDED): Load from Parquet cache with FIT file data
+        2. CSV mode (LEGACY): Load from activities CSV file
 
         Args:
             **kwargs: Tool parameters (csv_file_path OR cache_file_path, analysis_period_weeks)

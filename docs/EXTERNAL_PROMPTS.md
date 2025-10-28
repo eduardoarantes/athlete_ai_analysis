@@ -163,14 +163,15 @@ versions = PromptLoader.list_available_versions("gemini")
 # Returns: ['1.0', '1.1', '2.0']
 ```
 
-## Fallback Behavior
+## Error Handling
 
-The system provides robust fallback behavior:
+The system requires external prompt files to be present:
 
-1. **First attempt**: Load from external files using PromptLoader
-2. **Fallback**: Use embedded prompts from `prompts.py`
+1. **Prompt files must exist**: The system will raise `FileNotFoundError` if prompts are not found
+2. **No fallback prompts**: There are no embedded/hardcoded prompts in `prompts.py`
+3. **Explicit failure**: This design ensures prompts are properly managed in external files
 
-This ensures the system always works even if external prompt files are missing.
+If prompts are missing, the system will fail with a clear error message indicating which model/version/directory was not found.
 
 ## Testing
 
@@ -183,7 +184,7 @@ Run the test suite to verify prompt loading:
 The test suite verifies:
 - PromptLoader can find and load external prompts
 - AgentPromptsManager correctly uses PromptLoader
-- Fallback to embedded prompts works
+- Proper error handling when prompts are missing
 - Model and version listing functions work
 
 ## Creating New Prompt Versions
@@ -299,11 +300,9 @@ cycling-ai generate \
 │  (High-level prompt management)     │
 └──────────────┬──────────────────────┘
                │
-               ├──> Try PromptLoader (external files)
-               │    └─> prompts/{model}/{version}/
-               │
-               └──> Fallback to embedded prompts
-                    └─> DATA_PREPARATION_PROMPT, etc.
+               └──> PromptLoader (external files only)
+                    └─> prompts/{model}/{version}/
+                        └─> FileNotFoundError if missing
 ```
 
 ## Related Files

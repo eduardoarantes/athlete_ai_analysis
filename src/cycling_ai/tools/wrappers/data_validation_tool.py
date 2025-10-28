@@ -39,7 +39,7 @@ class DataValidationTool(BaseTool):
                 ToolParameter(
                     name="csv_file_path",
                     type="string",
-                    description="Absolute path to Strava activities CSV export file (optional if using FIT-only mode)",
+                    description="Absolute path to activities CSV file (LEGACY: optional if using FIT-only mode)",
                     required=False,
                 ),
                 ToolParameter(
