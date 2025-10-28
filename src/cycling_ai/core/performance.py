@@ -9,7 +9,7 @@ Extracted from MCP implementation - all business logic preserved.
 from __future__ import annotations
 
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from .utils import analyze_period, convert_to_json_serializable, load_activities_data
@@ -56,7 +56,8 @@ def analyze_performance(
         # Recent period: last N months (default 6) - from N months ago to today
         # Previous period: N months prior to that - from 2N months ago to N months ago
         # Example with N=6: Recent = last 6 months, Previous = 6 months before that (months 7-12)
-        today = datetime.now()
+        # Use timezone-aware datetime to match Parquet cache (which stores dates in UTC)
+        today = datetime.now(timezone.utc)
         period_start = today - timedelta(days=30 * period_months)
         previous_period_start = today - timedelta(days=30 * period_months * 2)
 
