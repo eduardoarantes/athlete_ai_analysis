@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
-from fitparse import FitFile
+import fitdecode
 
 from .utils import convert_to_json_serializable
 
@@ -246,54 +246,82 @@ def analyze_time_in_zones(
     # Process each .fit file
     for fit_file_path in fit_files:
         try:
-            # Open file (handle both .fit and .fit.gz)
+            # Handle .fit.gz files by decompressing first
+            file_to_parse = str(fit_file_path)
+            temp_file = None
             if fit_file_path.suffix == '.gz':
-                with gzip.open(fit_file_path, 'rb') as f:
-                    fitfile = FitFile(f)
-                    fitfile.parse()
-            else:
-                fitfile = FitFile(str(fit_file_path))
-                fitfile.parse()
+                import tempfile
+                temp_file = tempfile.NamedTemporaryFile(suffix='.fit', delete=False)
+                with gzip.open(fit_file_path, 'rb') as f_in:
+                    temp_file.write(f_in.read())
+                temp_file.close()
+                file_to_parse = temp_file.name
+
+            # Parse FIT file with lenient settings for corrupted files
+            fitfile = fitdecode.FitReader(
+                file_to_parse,
+                check_crc=fitdecode.CrcCheck.DISABLED,
+                error_handling=fitdecode.ErrorHandling.IGNORE
+            )
 
             # Check file date if period filtering is enabled
             file_timestamp = None
-            for record in fitfile.get_messages('file_id'):
-                for record_data in record:
-                    if record_data.name == 'time_created':
-                        file_timestamp = record_data.value
+            for frame in fitfile:
+                if isinstance(frame, fitdecode.FitDataMessage) and frame.name == 'file_id':
+                    for field in frame.fields:
+                        if field.name == 'time_created':
+                            file_timestamp = field.value
+                            break
+                    if file_timestamp:
                         break
-                if file_timestamp:
-                    break
 
             # Skip if file is older than cutoff date
             if cutoff_date and file_timestamp:
                 if isinstance(file_timestamp, datetime):
                     if file_timestamp < cutoff_date:
+                        # Clean up temp file
+                        if temp_file and Path(temp_file.name).exists():
+                            Path(temp_file.name).unlink()
                         continue
+
+            # Re-parse file for power data (fitdecode doesn't support reset)
+            fitfile = fitdecode.FitReader(
+                file_to_parse,
+                check_crc=fitdecode.CrcCheck.DISABLED,
+                error_handling=fitdecode.ErrorHandling.IGNORE
+            )
 
             # Extract power data from record messages
             has_power_data = False
             file_zone_times = dict.fromkeys(zones_definitions.keys(), 0)
 
-            for record in fitfile.get_messages('record'):
-                power = None
-                timestamp = None
+            for frame in fitfile:
+                if not isinstance(frame, fitdecode.FitDataMessage):
+                    continue
 
-                for record_data in record:
-                    if record_data.name == 'power':
-                        power = record_data.value
-                    elif record_data.name == 'timestamp':
-                        timestamp = record_data.value
+                if frame.name == 'record':
+                    power = None
+                    timestamp = None
 
-                # If we have valid power data, categorize it into a zone
-                if power is not None and power > 0:
-                    has_power_data = True
+                    for field in frame.fields:
+                        if field.name == 'power':
+                            power = field.value
+                        elif field.name == 'timestamp':
+                            timestamp = field.value
 
-                    # Determine which zone this power reading belongs to
-                    for zone_name, (lower, upper) in zones_definitions.items():
-                        if lower <= power < upper:
-                            file_zone_times[zone_name] += 1  # Each record is ~1 second
-                            break
+                    # If we have valid power data, categorize it into a zone
+                    if power is not None and power > 0:
+                        has_power_data = True
+
+                        # Determine which zone this power reading belongs to
+                        for zone_name, (lower, upper) in zones_definitions.items():
+                            if lower <= power < upper:
+                                file_zone_times[zone_name] += 1  # Each record is ~1 second
+                                break
+
+            # Clean up temp file
+            if temp_file and Path(temp_file.name).exists():
+                Path(temp_file.name).unlink()
 
             # Add this file's data to totals and save activity data
             if has_power_data:
@@ -326,6 +354,12 @@ def analyze_time_in_zones(
             files_processed += 1
 
         except Exception:
+            # Clean up temp file on error
+            try:
+                if temp_file and Path(temp_file.name).exists():
+                    Path(temp_file.name).unlink()
+            except:
+                pass
             # Skip files that fail to parse
             files_failed += 1
             continue

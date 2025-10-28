@@ -12,7 +12,10 @@ import statistics
 from datetime import datetime
 from pathlib import Path
 
-import fitparse
+import gzip
+import tempfile
+
+import fitdecode
 
 
 def parse_fit_file_metrics(filepath: Path) -> dict | None:
@@ -26,54 +29,79 @@ def parse_fit_file_metrics(filepath: Path) -> dict | None:
         Dictionary containing extracted metrics, or None if parsing fails
     """
     try:
-        fitfile = fitparse.FitFile(str(filepath))
+        # Handle .fit.gz files by decompressing first
+        file_to_parse = str(filepath)
+        temp_file = None
+        if filepath.suffix == '.gz':
+            temp_file = tempfile.NamedTemporaryFile(suffix='.fit', delete=False)
+            with gzip.open(filepath, 'rb') as f_in:
+                temp_file.write(f_in.read())
+            temp_file.close()
+            file_to_parse = temp_file.name
 
-        metrics = {
-            'filename': filepath.name,
-            'filepath': str(filepath),
-            'timestamp': None,
-            'duration': 0,
-            'distance': 0,
-            'avg_power': None,
-            'max_power': None,
-            'avg_hr': None,
-            'max_hr': None,
-            'avg_cadence': None,
-            'total_ascent': None,
-            'calories': None,
-            'avg_speed': None,
-            'max_speed': None
-        }
+        try:
+            # Parse FIT file with lenient settings for corrupted files
+            fitfile = fitdecode.FitReader(
+                file_to_parse,
+                check_crc=fitdecode.CrcCheck.DISABLED,
+                error_handling=fitdecode.ErrorHandling.IGNORE
+            )
 
-        # Get session data (summary)
-        for record in fitfile.get_messages('session'):
-            for field in record:
-                if field.name == 'timestamp':
-                    metrics['timestamp'] = field.value.isoformat() if field.value else None
-                elif field.name == 'total_elapsed_time':
-                    metrics['duration'] = field.value
-                elif field.name == 'total_distance':
-                    metrics['distance'] = field.value
-                elif field.name == 'avg_power':
-                    metrics['avg_power'] = field.value
-                elif field.name == 'max_power':
-                    metrics['max_power'] = field.value
-                elif field.name == 'avg_heart_rate':
-                    metrics['avg_hr'] = field.value
-                elif field.name == 'max_heart_rate':
-                    metrics['max_hr'] = field.value
-                elif field.name == 'avg_cadence':
-                    metrics['avg_cadence'] = field.value
-                elif field.name == 'total_ascent':
-                    metrics['total_ascent'] = field.value
-                elif field.name == 'total_calories':
-                    metrics['calories'] = field.value
-                elif field.name == 'avg_speed':
-                    metrics['avg_speed'] = field.value
-                elif field.name == 'max_speed':
-                    metrics['max_speed'] = field.value
+            metrics = {
+                'filename': filepath.name,
+                'filepath': str(filepath),
+                'timestamp': None,
+                'duration': 0,
+                'distance': 0,
+                'avg_power': None,
+                'max_power': None,
+                'avg_hr': None,
+                'max_hr': None,
+                'avg_cadence': None,
+                'total_ascent': None,
+                'calories': None,
+                'avg_speed': None,
+                'max_speed': None
+            }
 
-        return metrics
+            # Get session data (summary)
+            for frame in fitfile:
+                if not isinstance(frame, fitdecode.FitDataMessage):
+                    continue
+
+                if frame.name == 'session':
+                    for field in frame.fields:
+                        if field.name == 'timestamp':
+                            metrics['timestamp'] = field.value.isoformat() if field.value else None
+                        elif field.name == 'total_elapsed_time':
+                            metrics['duration'] = field.value
+                        elif field.name == 'total_distance':
+                            metrics['distance'] = field.value
+                        elif field.name == 'avg_power':
+                            metrics['avg_power'] = field.value
+                        elif field.name == 'max_power':
+                            metrics['max_power'] = field.value
+                        elif field.name == 'avg_heart_rate':
+                            metrics['avg_hr'] = field.value
+                        elif field.name == 'max_heart_rate':
+                            metrics['max_hr'] = field.value
+                        elif field.name == 'avg_cadence':
+                            metrics['avg_cadence'] = field.value
+                        elif field.name == 'total_ascent':
+                            metrics['total_ascent'] = field.value
+                        elif field.name == 'total_calories':
+                            metrics['calories'] = field.value
+                        elif field.name == 'avg_speed':
+                            metrics['avg_speed'] = field.value
+                        elif field.name == 'max_speed':
+                            metrics['max_speed'] = field.value
+
+            return metrics
+        finally:
+            # Clean up temp file
+            if temp_file and Path(temp_file.name).exists():
+                Path(temp_file.name).unlink()
+
     except Exception:
         return None
 
