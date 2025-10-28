@@ -222,7 +222,9 @@ def load_activities_data(csv_file_path: str) -> pd.DataFrame:
     - Proper data types and compression
 
     Args:
-        csv_file_path: Path to the Strava activities CSV file (used to locate cache)
+        csv_file_path: Path to Parquet cache file OR CSV file (used to locate cache).
+            - If ends with .parquet: loads directly from that file (FIT-only mode)
+            - Otherwise: treats as CSV path and looks for cache in <csv_parent>/cache/
 
     Returns:
         DataFrame with cleaned activity data and standardized column names
@@ -230,8 +232,15 @@ def load_activities_data(csv_file_path: str) -> pd.DataFrame:
     Raises:
         FileNotFoundError: If Phase 1 cache doesn't exist. Run Phase 1 first to create cache.
     """
-    cache_dir = get_cache_dir(csv_file_path)
-    parquet_path = cache_dir / "activities_processed.parquet"
+    # Check if we're given a direct parquet path (FIT-only mode)
+    csv_path = Path(csv_file_path)
+    if csv_path.suffix == '.parquet':
+        # Direct parquet cache path provided
+        parquet_path = csv_path
+    else:
+        # CSV mode: locate cache from CSV parent directory
+        cache_dir = get_cache_dir(csv_file_path)
+        parquet_path = cache_dir / "activities_processed.parquet"
 
     # Check if Phase 1 cache exists
     if not parquet_path.exists():

@@ -302,7 +302,20 @@ class MultiAgentOrchestrator:
 
                         # Extract data based on tool type
                         try:
-                            if tool_name == "analyze_performance":
+                            if tool_name == "prepare_cache":
+                                # Extract cache path and metadata from Phase 1
+                                data = json.loads(message.content)
+                                if "cache_path" in data:
+                                    extracted["cache_file_path"] = data["cache_path"]
+                                if "metadata_path" in data:
+                                    extracted["cache_metadata_path"] = data["metadata_path"]
+                                extracted["cache_info"] = data
+                            elif tool_name == "validate_data_files":
+                                # Extract profile path from validation
+                                data = json.loads(message.content)
+                                if "profile_file" in data:
+                                    extracted["athlete_profile_path"] = data["profile_file"]
+                            elif tool_name == "analyze_performance":
                                 data = json.loads(message.content)
                                 extracted["performance_data"] = data
                             elif tool_name in ("analyze_zones", "analyze_time_in_zones"):
@@ -511,8 +524,14 @@ class MultiAgentOrchestrator:
         Returns:
             PhaseResult for performance analysis phase
         """
+        # Extract file paths from Phase 1
+        cache_file_path = phase1_result.extracted_data.get("cache_file_path", "Not available")
+        athlete_profile_path = phase1_result.extracted_data.get("athlete_profile_path", str(config.athlete_profile_path))
+
         user_message = self.prompts_manager.get_performance_analysis_user_prompt(
-            period_months=config.period_months
+            period_months=config.period_months,
+            cache_file_path=cache_file_path,
+            athlete_profile_path=athlete_profile_path,
         )
 
         return self._execute_phase(

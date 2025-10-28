@@ -51,11 +51,11 @@ class PerformanceAnalysisTool(BaseTool):
                     name="csv_file_path",
                     type="string",
                     description=(
-                        "Path to activities CSV file or use for cache location. "
-                        "The actual data is read from the enriched Parquet cache at "
-                        "<csv_dir>/cache/activities_processed.parquet created by prepare_cache tool. "
-                        "This provides 10x faster reads and includes zone enrichment data. "
-                        "LEGACY: CSV mode supported for backward compatibility."
+                        "Path to Parquet cache file (RECOMMENDED) or CSV file (LEGACY). "
+                        "RECOMMENDED: Pass the cache_file_path from Phase 1 (ends with .parquet). "
+                        "This directly loads the enriched cache with zone data and cross-training categorization. "
+                        "LEGACY: Pass CSV path, and cache will be located at <csv_dir>/cache/activities_processed.parquet. "
+                        "Use the cache path provided in Phase 1 output for FIT-only mode."
                     ),
                     required=True,
                 ),

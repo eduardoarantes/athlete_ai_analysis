@@ -17,8 +17,8 @@ Analyze cycling performance data to identify trends, patterns, and insights.
 4. Generate actionable insights
 
 **Available Tools:**
-- analyze_performance: Compare time periods
-- analyze_time_in_zones: Calculate power zone distribution
+- analyze_performance: Compare time periods (reads from Parquet cache)
+- analyze_time_in_zones: Calculate power zone distribution (requires FIT directory, NOT available in Phase 2)
 
 **Output Requirements:**
 - Clear comparison of periods
