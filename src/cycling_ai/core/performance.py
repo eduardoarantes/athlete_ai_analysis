@@ -48,9 +48,15 @@ def analyze_performance(
         Formatted performance analysis as JSON string
     """
     try:
+        import sys
+        print(f"[PERFORMANCE DEBUG] Starting analyze_performance", file=sys.stderr)
+        print(f"[PERFORMANCE DEBUG] csv_file_path: {csv_file_path}", file=sys.stderr)
+        print(f"[PERFORMANCE DEBUG] period_months: {period_months}", file=sys.stderr)
+
         # Load activities data - uses cache if available, otherwise loads from CSV
         # Cache significantly improves performance (~10x faster reads)
         df_clean = load_activities_data(csv_file_path)
+        print(f"[PERFORMANCE DEBUG] Loaded {len(df_clean)} activities", file=sys.stderr)
 
         # Define time periods for comparison analysis
         # Recent period: last N months (default 6) - from N months ago to today
@@ -58,8 +64,10 @@ def analyze_performance(
         # Example with N=6: Recent = last 6 months, Previous = 6 months before that (months 7-12)
         # Use timezone-aware datetime to match Parquet cache (which stores dates in UTC)
         today = datetime.now(timezone.utc)
+        print(f"[PERFORMANCE DEBUG] today: {today} (type: {type(today)})", file=sys.stderr)
         period_start = today - timedelta(days=30 * period_months)
         previous_period_start = today - timedelta(days=30 * period_months * 2)
+        print(f"[PERFORMANCE DEBUG] Periods defined successfully", file=sys.stderr)
 
         # Filter to only cycling activities (any activity with category 'Cycling')
         rides = df_clean[df_clean["activity_category"] == "Cycling"].copy()
@@ -232,6 +240,9 @@ def analyze_performance(
 
     except Exception as e:
         # Handle any errors gracefully and provide helpful error messages
+        import traceback
+        print(f"[PERFORMANCE DEBUG] EXCEPTION: {type(e).__name__}: {e}", file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
         error_text = f"❌ Error analyzing performance: {str(e)}\n\n"
         error_text += "Make sure the CSV file path is correct and the file is a valid Strava activities export."
         return error_text
