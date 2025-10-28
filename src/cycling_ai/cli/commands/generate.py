@@ -56,6 +56,7 @@ class PhaseProgressTracker:
                 "status": PhaseStatus.PENDING,
             },
         }
+        self._live: Live | None = None
 
     def update_phase(self, phase_name: str, status: PhaseStatus) -> None:
         """
@@ -69,6 +70,9 @@ class PhaseProgressTracker:
         """
         if phase_name in self.phases:
             self.phases[phase_name]["status"] = status
+            # Refresh live display if it exists
+            if self._live:
+                self._live.update(self.get_table())
 
     def get_table(self) -> Table:
         """
@@ -309,7 +313,9 @@ def generate(
         console.print()
 
         try:
-            with Live(phase_tracker.get_table(), refresh_per_second=4, console=console):
+            with Live(phase_tracker.get_table(), refresh_per_second=4, console=console) as live:
+                # Update live display reference in phase tracker
+                phase_tracker._live = live
                 result = orchestrator.execute_workflow(workflow_config)
         except KeyboardInterrupt:
             console.print()

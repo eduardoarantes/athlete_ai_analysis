@@ -49,3 +49,4 @@ htmlcov/
 *.fit.gz
 cache/
 reports/
+logs
