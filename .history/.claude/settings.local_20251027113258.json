@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/eduardo/Documents/projects/athlete_performance_analysis/data/Athlete_Name/**)",
+      "Read(//Users/eduardo/Documents/projects/athlete_performance_analysis/.claude/agents/**)",
+      "Bash(mkdir:*)",
+      "Bash(python -m pytest:*)",
+      "Bash(python3 -m pytest:*)",
+      "Bash(source:*)",
+      "Bash(python -m mypy:*)",
+      "Bash(python -m ruff check:*)",
+      "Bash(pytest:*)",
+      "Bash(mypy:*)",
+      "Bash(ruff check:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

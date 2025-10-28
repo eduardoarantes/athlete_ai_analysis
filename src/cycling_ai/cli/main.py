@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import click
 
-from .commands import analyze, config as config_cmd, plan, providers, report
+from .commands import analyze, chat, config as config_cmd, generate, plan, providers, report
 from .formatting import console
 
 
@@ -43,6 +43,8 @@ def cli(ctx: click.Context, config: str | None) -> None:
 
 # Register command groups
 cli.add_command(analyze.analyze)
+cli.add_command(chat.chat)
+cli.add_command(generate.generate)
 cli.add_command(plan.plan)
 cli.add_command(report.report)
 cli.add_command(config_cmd.config)

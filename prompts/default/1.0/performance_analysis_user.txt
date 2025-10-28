@@ -1,0 +1,8 @@
+Analyze cycling performance for the last {period_months} months:
+
+1. Compare recent period vs previous equivalent period
+2. Calculate time-in-zones distribution
+3. Identify trends and patterns
+4. Generate insights and observations
+
+Use the data prepared in phase 1.

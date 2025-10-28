@@ -1,0 +1,348 @@
+"""
+LLM agent orchestration.
+
+Coordinates LLM-powered tool execution with multi-turn conversation support.
+"""
+from __future__ import annotations
+
+import json
+from typing import Any
+
+from cycling_ai.orchestration.executor import ToolExecutor
+from cycling_ai.orchestration.session import (
+    ConversationMessage,
+    ConversationSession,
+)
+from cycling_ai.providers.base import BaseProvider, ProviderMessage
+from cycling_ai.tools.base import ToolExecutionResult
+
+
+class LLMAgent:
+    """
+    Orchestrates LLM-powered tool execution.
+
+    Manages the loop:
+    1. Send user message + available tools to LLM
+    2. LLM decides which tool(s) to call
+    3. Execute requested tools
+    4. Send results back to LLM
+    5. LLM interprets and provides final response
+    """
+
+    def __init__(
+        self,
+        provider: BaseProvider,
+        executor: ToolExecutor,
+        session: ConversationSession,
+        max_iterations: int = 10,
+        allowed_tools: list[str] | None = None,
+    ):
+        """
+        Initialize LLM agent.
+
+        Args:
+            provider: LLM provider adapter
+            executor: Tool executor
+            session: Conversation session
+            max_iterations: Maximum tool execution iterations (safety limit)
+            allowed_tools: Optional list of tool names to make available to the LLM.
+                If None, all tools from executor are available.
+        """
+        self.provider = provider
+        self.executor = executor
+        self.session = session
+        self.max_iterations = max_iterations
+        self.allowed_tools = allowed_tools
+
+    def process_message(self, user_message: str) -> str:
+        """
+        Process user message through LLM agent loop.
+
+        Args:
+            user_message: User's natural language input
+
+        Returns:
+            LLM's final response after tool execution
+
+        Raises:
+            RuntimeError: If max iterations exceeded
+        """
+        # Add user message to session
+        self.session.add_message(
+            ConversationMessage(role="user", content=user_message)
+        )
+
+        # Get available tools (filtered if allowed_tools is set)
+        all_tools = self.executor.registry.list_tools()
+
+        # Filter tools if allowed_tools is specified
+        if self.allowed_tools is not None:
+            all_tool_names = [tool.name for tool in all_tools]
+            tools = [
+                tool for tool in all_tools
+                if tool.name in self.allowed_tools and tool.name in all_tool_names
+            ]
+        else:
+            tools = all_tools
+
+        iteration = 0
+        while iteration < self.max_iterations:
+            iteration += 1
+
+            # Get messages formatted for LLM and convert to ProviderMessage
+            messages_data = self.session.get_messages_for_llm()
+            messages = [
+                self._convert_to_provider_message(msg) for msg in messages_data
+            ]
+
+            # Send to LLM with tools
+            response = self.provider.create_completion(
+                messages=messages,
+                tools=tools if tools else None,
+            )
+
+            # Check if LLM wants to call tools
+            if response.tool_calls:
+                # Execute tools and add results to session
+                tool_results = self._execute_tool_calls(response.tool_calls)
+
+                # Add assistant message with tool calls
+                self.session.add_message(
+                    ConversationMessage(
+                        role="assistant",
+                        content=response.content or "",
+                        tool_calls=response.tool_calls,
+                    )
+                )
+
+                # Add tool results as separate messages
+                for tool_call, result in zip(response.tool_calls, tool_results):
+                    tool_result_msg = self._format_tool_result_message(
+                        tool_call, result
+                    )
+                    self.session.add_message(tool_result_msg)
+
+                # Continue loop to let LLM process results
+                continue
+
+            # No tool calls - this is the final response
+            self.session.add_message(
+                ConversationMessage(role="assistant", content=response.content)
+            )
+
+            return response.content
+
+        raise RuntimeError(
+            f"Maximum iterations ({self.max_iterations}) exceeded. "
+            "Agent may be stuck in a loop."
+        )
+
+    def _execute_tool_calls(
+        self, tool_calls: list[dict[str, Any]]
+    ) -> list[ToolExecutionResult]:
+        """
+        Execute tools requested by LLM.
+
+        Args:
+            tool_calls: List of tool call specifications from LLM
+
+        Returns:
+            List of tool execution results
+        """
+        results = []
+
+        for tool_call in tool_calls:
+            tool_name = tool_call.get("name")
+            # Support both "parameters" and "arguments" keys for compatibility
+            parameters = tool_call.get("parameters") or tool_call.get("arguments", {})
+
+            # Execute tool
+            result = self.executor.execute_tool(tool_name, parameters)
+            results.append(result)
+
+        return results
+
+    def _convert_to_provider_message(self, msg_data: dict[str, Any]) -> ProviderMessage:
+        """
+        Convert session message data to ProviderMessage.
+
+        Args:
+            msg_data: Message data dictionary from session
+
+        Returns:
+            ProviderMessage instance
+        """
+        # Extract basic fields
+        role = msg_data.get("role", "user")
+        content = msg_data.get("content", "")
+        tool_calls = msg_data.get("tool_calls")
+
+        # Handle tool role messages differently
+        if role == "tool":
+            # Tool messages should use assistant role with tool results
+            return ProviderMessage(
+                role="assistant",
+                content=content,
+                tool_calls=None,
+            )
+
+        return ProviderMessage(
+            role=role,
+            content=content,
+            tool_calls=tool_calls,
+        )
+
+    def _format_tool_result_message(
+        self, tool_call: dict[str, Any], result: ToolExecutionResult
+    ) -> ConversationMessage:
+        """
+        Format tool execution result as conversation message.
+
+        Args:
+            tool_call: Original tool call specification
+            result: Tool execution result
+
+        Returns:
+            Conversation message with tool result
+        """
+        # Format result content based on success
+        if result.success:
+            if result.format == "json":
+                # If data is JSON, stringify it
+                if isinstance(result.data, (dict, list)):
+                    content = json.dumps(result.data, indent=2)
+                else:
+                    content = str(result.data)
+            else:
+                # For markdown, text, html - use as is
+                content = str(result.data)
+        else:
+            # Format error message
+            errors_str = "\n".join(result.errors)
+            content = f"Error executing tool: {errors_str}"
+
+        # Create tool result message
+        return ConversationMessage(
+            role="tool",
+            content=content,
+            tool_results=[
+                {
+                    "tool_call_id": tool_call.get("id"),
+                    "tool_name": tool_call.get("name"),
+                    "success": result.success,
+                    "format": result.format,
+                }
+            ],
+        )
+
+    def get_conversation_history(self) -> list[ConversationMessage]:
+        """
+        Get full conversation history.
+
+        Returns:
+            List of all messages in the session
+        """
+        return self.session.messages
+
+    def clear_history(self, keep_system: bool = True) -> None:
+        """
+        Clear conversation history.
+
+        Args:
+            keep_system: Whether to keep system message (if present)
+        """
+        if keep_system and self.session.messages:
+            # Keep only system message if it exists
+            system_messages = [
+                msg for msg in self.session.messages if msg.role == "system"
+            ]
+            self.session.messages = system_messages
+        else:
+            self.session.messages = []
+
+
+class AgentFactory:
+    """
+    Factory for creating LLM agents with proper configuration.
+    """
+
+    @staticmethod
+    def create_agent(
+        provider: BaseProvider,
+        session: ConversationSession,
+        system_prompt: str | None = None,
+        max_iterations: int = 10,
+        allowed_tools: list[str] | None = None,
+    ) -> LLMAgent:
+        """
+        Create configured LLM agent.
+
+        Args:
+            provider: LLM provider adapter
+            session: Conversation session
+            system_prompt: Optional system prompt to set context
+            max_iterations: Maximum tool execution iterations
+            allowed_tools: Optional list of tool names to restrict agent access to
+
+        Returns:
+            Configured LLM agent
+        """
+        # Add system prompt if provided and no system message exists
+        if system_prompt:
+            has_system = any(msg.role == "system" for msg in session.messages)
+            if not has_system:
+                session.add_message(
+                    ConversationMessage(role="system", content=system_prompt)
+                )
+
+        # Create executor with tool filtering
+        executor = ToolExecutor(allowed_tools=allowed_tools)
+
+        # Create agent
+        return LLMAgent(
+            provider=provider,
+            executor=executor,
+            session=session,
+            max_iterations=max_iterations,
+            allowed_tools=allowed_tools,
+        )
+
+    @staticmethod
+    def get_default_system_prompt() -> str:
+        """
+        Get default system prompt for cycling performance analyst.
+
+        Returns:
+            System prompt text
+        """
+        return """You are an expert cycling performance analyst with deep knowledge of:
+- Training load and periodization
+- Power-based training zones (based on FTP)
+- FTP testing and improvement strategies
+- Polarized training methodology (80/20 principle)
+- Cross-training impact on cycling performance
+- Training plan design for amateur and competitive cyclists
+
+You have access to tools to analyze athlete data. When a user asks about their
+performance, use the appropriate tools to gather data, then provide insightful
+analysis and actionable recommendations.
+
+**Guidelines:**
+- Always explain your reasoning and cite specific data points
+- When recommending training changes, explain the physiological basis
+- Consider the athlete's goals, current fitness, and time availability
+- Be encouraging but honest about areas needing improvement
+- Use percentages and concrete numbers when discussing improvements
+
+**Available Analysis Tools:**
+- analyze_performance: Compare recent performance vs previous period
+- analyze_zones: Calculate time spent in each power zone
+- generate_training_plan: Create periodized training plan
+- analyze_cross_training: Understand impact of non-cycling activities
+- generate_report: Create comprehensive analysis report
+
+**Tool Usage Strategy:**
+1. Start with broad analysis (performance, zones)
+2. Based on findings, dive deeper if needed
+3. Provide actionable recommendations
+4. Offer to generate training plan if improvements are needed"""

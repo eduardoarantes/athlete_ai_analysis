@@ -1,0 +1,8 @@
+Create a {training_plan_weeks}-week training plan:
+
+1. Review performance analysis findings
+2. Consider current fitness level and trends
+3. Design periodized plan with progressive overload
+4. Include recovery weeks and taper
+
+Base the plan on insights from the performance analysis phase.

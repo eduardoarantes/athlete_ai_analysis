@@ -298,11 +298,20 @@ def analyze_cross_training_impact(
         JSON string with structured analysis data
     """
     import json
+    from datetime import timezone
 
     from .utils import convert_to_json_serializable
 
     # Filter to analysis period
+    # Make cutoff_date timezone-aware if df['date'] is timezone-aware
     cutoff_date = datetime.now() - timedelta(weeks=analysis_period_weeks)
+    df = df.copy()
+    df['date'] = pd.to_datetime(df['date'])
+
+    # If dates are timezone-aware, make cutoff timezone-aware too
+    if hasattr(df['date'].dtype, 'tz') and df['date'].dtype.tz is not None:
+        cutoff_date = cutoff_date.replace(tzinfo=timezone.utc)
+
     df_period = df[df['date'] >= cutoff_date].copy()
 
     if len(df_period) == 0:

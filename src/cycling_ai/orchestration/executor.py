@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from typing import Any
 
+import cycling_ai.tools  # Trigger tool registration via load_all_tools()
 from cycling_ai.tools.base import ToolExecutionResult
 from cycling_ai.tools.registry import get_global_registry
 
@@ -16,11 +17,21 @@ class ToolExecutor:
     Executes tools and manages results.
 
     Provides a simple interface for executing tools by name with parameters.
+    Optionally supports filtering to only specific allowed tools.
     """
 
-    def __init__(self) -> None:
-        """Initialize executor with global registry."""
+    def __init__(self, allowed_tools: list[str] | None = None) -> None:
+        """
+        Initialize executor with global registry.
+
+        Args:
+            allowed_tools: Optional list of tool names to restrict access to.
+                If None, all registered tools are available.
+        """
+        # Ensure all tools are loaded before accessing registry
+        cycling_ai.tools.load_all_tools()  # noqa: F405
         self.registry = get_global_registry()
+        self.allowed_tools = allowed_tools
 
     def execute_tool(
         self, tool_name: str, parameters: dict[str, Any]
@@ -38,6 +49,15 @@ class ToolExecutor:
         Raises:
             KeyError: If tool not found in registry
         """
+        # Check if tool is allowed
+        if self.allowed_tools is not None and tool_name not in self.allowed_tools:
+            return ToolExecutionResult(
+                success=False,
+                data=None,
+                format="json",
+                errors=[f"Tool '{tool_name}' is not available in this context"],
+            )
+
         try:
             tool = self.registry.get_tool(tool_name)
             return tool.execute(**parameters)
@@ -56,11 +76,23 @@ class ToolExecutor:
                 errors=[f"Execution error: {str(e)}"],
             )
 
-    def list_available_tools(self) -> list[str]:
+    def list_available_tools(self) -> list:
         """
-        List all registered tool names.
+        List available tool definitions.
+
+        Returns filtered list if allowed_tools is set, otherwise all tools.
 
         Returns:
-            List of tool names available in registry
+            List of ToolDefinition objects available in this executor's context
         """
-        return self.registry.list_tools()
+        all_tools = self.registry.list_tools()
+
+        # If no filter is set, return all tools
+        if self.allowed_tools is None:
+            return all_tools
+
+        # Filter to only allowed tools that exist in registry
+        return [
+            tool for tool in all_tools
+            if tool.name in self.allowed_tools
+        ]

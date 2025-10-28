@@ -171,3 +171,16 @@ class BaseTool(ABC):
                 # Type validation could be expanded here
                 if param.enum and value not in param.enum:
                     raise ValueError(f"Parameter '{param.name}' must be one of {param.enum}")
+
+                # Validate min/max values for numeric parameters
+                if param.min_value is not None and isinstance(value, (int, float)):
+                    if value < param.min_value:
+                        raise ValueError(
+                            f"Parameter '{param.name}' must be >= {param.min_value}, got {value}"
+                        )
+
+                if param.max_value is not None and isinstance(value, (int, float)):
+                    if value > param.max_value:
+                        raise ValueError(
+                            f"Parameter '{param.name}' must be <= {param.max_value}, got {value}"
+                        )

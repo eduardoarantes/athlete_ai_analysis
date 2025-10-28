@@ -6,6 +6,7 @@ Supports function calling via function declarations.
 """
 from __future__ import annotations
 
+import time
 from typing import Any
 
 import google.generativeai as genai
@@ -17,6 +18,7 @@ from cycling_ai.providers.base import (
     ProviderConfig,
     ProviderMessage,
 )
+from cycling_ai.providers.interaction_logger import get_interaction_logger
 from cycling_ai.providers.provider_utils import retry_with_exponential_backoff
 from cycling_ai.tools.base import ToolDefinition, ToolExecutionResult
 
@@ -32,7 +34,7 @@ class GeminiProvider(BaseProvider):
         >>> config = ProviderConfig(
         ...     provider_name="gemini",
         ...     api_key="...",
-        ...     model="gemini-1.5-pro"
+        ...     model="gemini-2.5-flash"
         ... )
         >>> provider = GeminiProvider(config)
         >>> response = provider.create_completion(messages)
@@ -154,7 +156,13 @@ class GeminiProvider(BaseProvider):
             >>> messages = [ProviderMessage(role="user", content="Hello")]
             >>> response = provider.create_completion(messages)
         """
+        # Start timing
+        start_time = time.time()
+
         try:
+            if not messages:
+                raise ValueError("messages list cannot be empty")
+
             # Create model with tools if provided
             model_kwargs: dict[str, Any] = {"model_name": self.config.model}
             if tools:
@@ -165,8 +173,11 @@ class GeminiProvider(BaseProvider):
             # Build chat history
             chat = model.start_chat(history=[])
             for msg in messages[:-1]:  # All but last message
+                if not msg or not hasattr(msg, 'role') or not hasattr(msg, 'content'):
+                    continue
                 role = "user" if msg.role in ("user", "system") else "model"
-                chat.history.append({"role": role, "parts": [msg.content]})  # type: ignore[arg-type]
+                content = msg.content if msg.content is not None else ""
+                chat.history.append({"role": role, "parts": [content]})  # type: ignore[arg-type]
 
             # Send last message
             generation_config: dict[str, Any] = {
@@ -174,24 +185,38 @@ class GeminiProvider(BaseProvider):
                 "temperature": self.config.temperature,
             }
 
-            response = chat.send_message(messages[-1].content, generation_config=generation_config)  # type: ignore[arg-type]
+            last_content = messages[-1].content if messages[-1].content is not None else ""
+            response = chat.send_message(last_content, generation_config=generation_config)  # type: ignore[arg-type]
 
             # Extract response
-            content = response.text if response.text else ""
+            content = ""
+            try:
+                if hasattr(response, "text") and response.text:
+                    content = response.text
+            except (ValueError, AttributeError):
+                # response.text can raise ValueError if there's no text content
+                pass
+
             tool_calls = None
 
             # Extract function calls
             if hasattr(response, "candidates") and response.candidates:
                 candidate = response.candidates[0]
-                if hasattr(candidate, "content") and hasattr(candidate.content, "parts"):
+                if hasattr(candidate, "content") and hasattr(candidate.content, "parts") and candidate.content.parts:
                     for i, part in enumerate(candidate.content.parts):
                         if hasattr(part, "function_call"):
+                            # Skip if function_call.name is empty or missing
+                            if not hasattr(part.function_call, "name") or not part.function_call.name:
+                                continue
+
                             if tool_calls is None:
                                 tool_calls = []
+                            # Convert args to dict, handling None case
+                            args = part.function_call.args if part.function_call.args is not None else {}
                             tool_calls.append(
                                 {
                                     "name": part.function_call.name,
-                                    "arguments": dict(part.function_call.args),
+                                    "arguments": dict(args),
                                     "id": f"call_{i}",  # Gemini doesn't provide IDs
                                 }
                             )
@@ -205,10 +230,35 @@ class GeminiProvider(BaseProvider):
             if hasattr(response, "candidates") and response.candidates:
                 metadata["finish_reason"] = str(response.candidates[0].finish_reason)
 
-            return CompletionResponse(content=content, tool_calls=tool_calls, metadata=metadata)
+            # Calculate duration
+            duration_ms = (time.time() - start_time) * 1000
+
+            # Create response object
+            completion_response = CompletionResponse(content=content, tool_calls=tool_calls, metadata=metadata)
+
+            # Log the interaction
+            try:
+                logger = get_interaction_logger()
+                logger.log_interaction(
+                    provider_name="gemini",
+                    model=self.config.model,
+                    messages=messages,
+                    tools=tools,
+                    response=completion_response,
+                    duration_ms=duration_ms,
+                )
+            except Exception as e:
+                # Don't fail the request if logging fails
+                import logging as log
+                log.warning(f"Failed to log LLM interaction: {e}")
+
+            return completion_response
 
         except Exception as e:
             # Gemini exceptions are not well-typed, check by name
             if "unauthenticated" in str(e).lower():
                 raise ValueError(f"Invalid Gemini API key: {e}") from e
-            raise RuntimeError(f"Gemini API error: {e}") from e
+            # Add better context for debugging
+            import traceback
+            tb_str = ''.join(traceback.format_tb(e.__traceback__))
+            raise RuntimeError(f"Gemini API error: {e}\nTraceback:\n{tb_str}") from e

@@ -48,10 +48,20 @@ class CrossTrainingTool(BaseTool):
                     type="string",
                     description=(
                         "Path to Strava activities CSV export containing ALL activity types "
-                        "(cycling, running, strength training, swimming, etc.). Must include "
-                        "complete activity history for meaningful cross-training analysis."
+                        "(cycling, running, strength training, swimming, etc.). Optional if "
+                        "cache_file_path is provided."
                     ),
-                    required=True,
+                    required=False,
+                ),
+                ToolParameter(
+                    name="cache_file_path",
+                    type="string",
+                    description=(
+                        "Path to Parquet cache file with categorized activities. Use this for "
+                        "FIT-only mode analysis. Cache must include cross-training categorization "
+                        "(activity_category, muscle_focus, etc.)."
+                    ),
+                    required=False,
                 ),
                 ToolParameter(
                     name="analysis_period_weeks",
@@ -83,40 +93,101 @@ class CrossTrainingTool(BaseTool):
         """
         Execute cross-training analysis.
 
+        Supports two modes:
+        1. CSV mode: Load from Strava CSV export
+        2. Cache mode: Load from Parquet cache (FIT-only workflow)
+
         Args:
-            **kwargs: Tool parameters (csv_file_path, analysis_period_weeks)
+            **kwargs: Tool parameters (csv_file_path OR cache_file_path, analysis_period_weeks)
 
         Returns:
             ToolExecutionResult with cross-training analysis or errors
         """
         try:
-            # Validate parameters against tool definition
-            self.validate_parameters(**kwargs)
-
             # Extract parameters
-            csv_file_path = kwargs["csv_file_path"]
+            csv_file_path = kwargs.get("csv_file_path")
+            cache_file_path = kwargs.get("cache_file_path")
             analysis_period_weeks = kwargs.get("analysis_period_weeks", 12)
 
-            # Validate CSV path
-            csv_path = Path(csv_file_path)
-            if not csv_path.exists():
+            # Must provide either CSV or cache path
+            if not csv_file_path and not cache_file_path:
                 return ToolExecutionResult(
                     success=False,
                     data=None,
                     format="json",
-                    errors=[f"CSV file not found at path: {csv_file_path}"],
+                    errors=["Must provide either csv_file_path or cache_file_path"],
                 )
 
-            # Load and categorize activities
-            try:
-                df = load_and_categorize_activities(str(csv_path))
-            except Exception as e:
-                return ToolExecutionResult(
-                    success=False,
-                    data=None,
-                    format="json",
-                    errors=[f"Error loading/categorizing activities: {str(e)}"],
-                )
+            # Load activities from appropriate source
+            if cache_file_path:
+                # Cache mode: load from Parquet
+                cache_path = Path(cache_file_path)
+                if not cache_path.exists():
+                    return ToolExecutionResult(
+                        success=False,
+                        data=None,
+                        format="json",
+                        errors=[f"Cache file not found at path: {cache_file_path}"],
+                    )
+
+                try:
+                    import pandas as pd
+                    df = pd.read_parquet(cache_path)
+
+                    # Verify cache has cross-training categorization
+                    required_columns = ["activity_category", "muscle_focus", "fatigue_impact", "recovery_hours"]
+                    missing_columns = [col for col in required_columns if col not in df.columns]
+
+                    if missing_columns:
+                        return ToolExecutionResult(
+                            success=False,
+                            data=None,
+                            format="json",
+                            errors=[
+                                f"Cache file missing cross-training columns: {', '.join(missing_columns)}. "
+                                "Please regenerate cache with cross-training categorization."
+                            ],
+                        )
+
+                    # Rename columns to match cross_training.py expectations
+                    column_mapping = {
+                        "Activity Date": "date",
+                        "Activity Type": "type",
+                        "Activity Name": "name",
+                        "Elapsed Time": "elapsed_time",
+                        "Average Heart Rate": "avg_hr",
+                        "Average Watts": "avg_watts",
+                        "Weighted Average Power": "weighted_power",
+                    }
+                    df = df.rename(columns=column_mapping)
+
+                except Exception as e:
+                    return ToolExecutionResult(
+                        success=False,
+                        data=None,
+                        format="json",
+                        errors=[f"Error loading cache file: {str(e)}"],
+                    )
+            else:
+                # CSV mode: load and categorize from CSV
+                csv_path = Path(csv_file_path)
+                if not csv_path.exists():
+                    return ToolExecutionResult(
+                        success=False,
+                        data=None,
+                        format="json",
+                        errors=[f"CSV file not found at path: {csv_file_path}"],
+                    )
+
+                try:
+                    df = load_and_categorize_activities(str(csv_path))
+                except Exception as e:
+                    return ToolExecutionResult(
+                        success=False,
+                        data=None,
+                        format="json",
+                        errors=[f"Error loading/categorizing activities: {str(e)}"],
+                    )
 
             # Execute cross-training analysis
             result_json = analyze_cross_training_impact(

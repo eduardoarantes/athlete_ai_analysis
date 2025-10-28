@@ -1,0 +1,28 @@
+{
+  "model": "default",
+  "version": "1.0",
+  "description": "Default multi-agent workflow prompts",
+  "created": "2025-10-28",
+  "agents": {
+    "data_preparation": {
+      "file": "data_preparation.txt",
+      "user_file": "data_preparation_user.txt",
+      "description": "Data validation and preparation specialist"
+    },
+    "performance_analysis": {
+      "file": "performance_analysis.txt",
+      "user_file": "performance_analysis_user.txt",
+      "description": "Cycling performance analysis expert"
+    },
+    "training_planning": {
+      "file": "training_planning.txt",
+      "user_file": "training_planning_user.txt",
+      "description": "Training plan design specialist"
+    },
+    "report_generation": {
+      "file": "report_generation.txt",
+      "user_file": "report_generation_user.txt",
+      "description": "Report generation specialist"
+    }
+  }
+}

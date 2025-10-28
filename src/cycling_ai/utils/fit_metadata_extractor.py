@@ -94,12 +94,35 @@ def extract_fit_metadata(fit_file_path: str | Path) -> dict[str, Any] | None:
         if not activity_date:
             activity_date = datetime.now()
 
-        # Determine activity type/sport
-        sport = get_value("sport", "cycling")
-        if isinstance(sport, (int, float)):
-            sport = "Ride"  # Default if numeric
+        # Determine activity type/sport with proper handling
+        sport_raw = get_value("sport", "cycling")
+        sub_sport_raw = get_value("sub_sport", None)
+
+        # Convert sport enum to string if needed
+        if isinstance(sport_raw, (int, float)):
+            sport = "cycling"  # Default if numeric
         else:
-            sport = str(sport).title()
+            sport = str(sport_raw).lower() if sport_raw else "cycling"
+
+        # Convert sub_sport enum to string if needed
+        if sub_sport_raw and not isinstance(sub_sport_raw, str):
+            sub_sport = str(sub_sport_raw).lower()
+        else:
+            sub_sport = sub_sport_raw if sub_sport_raw else None
+
+        # Determine Activity Type for display (like Strava CSV format)
+        # Map sport to Strava-style activity type names
+        sport_display_map = {
+            "cycling": "Ride",
+            "running": "Run",
+            "swimming": "Swim",
+            "walking": "Walk",
+            "hiking": "Hike",
+            "strength_training": "Weight Training",
+            "training": "Workout",
+            "generic": "Workout",
+        }
+        activity_type_display = sport_display_map.get(sport, sport.title())
 
         # Helper to safely convert to int/float
         def safe_int(value: Any, default: int = 0) -> int:
@@ -122,8 +145,10 @@ def extract_fit_metadata(fit_file_path: str | Path) -> dict[str, Any] | None:
         return {
             "Activity ID": int(activity_id) if activity_id.isdigit() else activity_id,
             "Activity Date": activity_date,
-            "Activity Name": f"{sport} - {activity_date.strftime('%B %d, %Y')}" if isinstance(activity_date, datetime) else f"{sport}",
-            "Activity Type": sport,
+            "Activity Name": f"{activity_type_display} - {activity_date.strftime('%B %d, %Y')}" if isinstance(activity_date, datetime) else activity_type_display,
+            "Activity Type": activity_type_display,  # Strava-style display name
+            "sport": sport,  # Raw sport type (lowercase, normalized)
+            "sub_sport": sub_sport,  # Sub-sport detail (e.g., road, mountain, indoor)
             "Elapsed Time": safe_int(get_value("total_elapsed_time")),
             "Moving Time": safe_int(get_value("total_timer_time")),
             "Distance": safe_float(get_value("total_distance")),

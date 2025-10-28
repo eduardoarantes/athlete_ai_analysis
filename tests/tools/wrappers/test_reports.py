@@ -20,22 +20,25 @@ class TestReportGenerationTool:
         assert definition.name == "generate_report"
         assert definition.category == "reporting"
         assert definition.version == "1.0.0"
-        assert len(definition.parameters) == 4
+        assert len(definition.parameters) == 6  # Updated: added output_dir and output_format
 
         # Verify required parameters
         required_params = definition.get_required_parameters()
-        assert len(required_params) == 3
+        assert len(required_params) == 2  # Only performance_json and zones_json are required now
         required_names = {p.name for p in required_params}
         assert required_names == {
             "performance_analysis_json",
             "zones_analysis_json",
-            "output_path",
         }
 
-        # Verify optional parameters
+        # Verify optional parameters (training_plan_json, output_dir, output_format, output_path)
         optional_params = definition.get_optional_parameters()
-        assert len(optional_params) == 1
-        assert optional_params[0].name == "training_plan_json"
+        assert len(optional_params) == 4
+        optional_names = {p.name for p in optional_params}
+        assert "training_plan_json" in optional_names
+        assert "output_dir" in optional_names
+        assert "output_format" in optional_names
+        assert "output_path" in optional_names
 
     def test_execute_success(self, tmp_path: Path) -> None:
         """Test successful execution with valid inputs."""
@@ -89,7 +92,12 @@ class TestReportGenerationTool:
         assert result.success is True
         assert result.format == "json"
         assert isinstance(result.data, dict)
-        assert "report_path" in result.data
+        # Updated: check for new return format
+        assert "output_files" in result.data
+        assert "output_format" in result.data
+        assert "files_created" in result.data
+        assert result.data["output_format"] == "markdown"
+        assert result.data["files_created"] == 1
         assert output_file.exists()
         assert "generated_at" in result.metadata
 

@@ -57,6 +57,12 @@ class TestGetConfigPath:
         # Clear environment variable
         monkeypatch.delenv("CYCLING_AI_CONFIG", raising=False)
 
+        # Mock home directory to non-existent path
+        # This prevents finding ~/.cycling-ai/config.yaml
+        home_dir = tmp_path / "mock_home"
+        home_dir.mkdir()
+        monkeypatch.setattr(Path, "home", lambda: home_dir)
+
         # Change to temp directory
         monkeypatch.chdir(tmp_path)
 

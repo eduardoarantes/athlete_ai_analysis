@@ -22,10 +22,13 @@ from cycling_ai.tools.registry import register_tool
 
 class PerformanceAnalysisTool(BaseTool):
     """
-    Tool for analyzing cycling performance from Strava CSV data.
+    Tool for analyzing cycling performance from Phase 1 enriched cache.
 
     Compares recent period with equivalent prior period to identify trends,
     provides monthly breakdown, and highlights best performances.
+
+    Data is loaded from the Phase 1 Parquet cache (created by prepare_cache tool)
+    which includes zone enrichment and 10x faster read performance than CSV.
     """
 
     @property
@@ -34,12 +37,13 @@ class PerformanceAnalysisTool(BaseTool):
         return ToolDefinition(
             name="analyze_performance",
             description=(
-                "Analyze cycling performance from Strava CSV export comparing time periods. "
+                "Analyze cycling performance comparing time periods using Phase 1 enriched cache. "
                 "Compares recent period (e.g., last 6 months) with equivalent prior period "
                 "(e.g., 6 months before that) to identify trends. Provides comprehensive "
                 "statistics including weekly averages, monthly breakdown, power/HR trends, "
                 "and highlights of best performances. Uses athlete profile for personalized "
-                "analysis context (age, FTP, goals, training status)."
+                "analysis context (age, FTP, goals, training status). "
+                "Requires Phase 1 (Data Preparation) to have been run first to create the cache."
             ),
             category="analysis",
             parameters=[
@@ -47,9 +51,10 @@ class PerformanceAnalysisTool(BaseTool):
                     name="csv_file_path",
                     type="string",
                     description=(
-                        "Absolute path to Strava activities CSV export file. "
-                        "Must be a valid Strava export containing Activity Date, "
-                        "Distance, Moving Time, Average Power, etc."
+                        "Path to Strava activities CSV file (used to locate Phase 1 cache). "
+                        "The actual data is read from the enriched Parquet cache at "
+                        "<csv_dir>/cache/activities_processed.parquet created by Phase 1. "
+                        "This provides 10x faster reads and includes zone enrichment data."
                     ),
                     required=True,
                 ),

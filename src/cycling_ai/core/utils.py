@@ -211,31 +211,82 @@ def create_cache(csv_file_path: str) -> tuple[Path, dict[str, Any]]:
 
 def load_activities_data(csv_file_path: str) -> pd.DataFrame:
     """
-    Load activities data, using cache if available and valid.
+    Load activities data from Phase 1 Parquet cache with proper column mapping.
 
-    This function checks if a valid cache exists and uses it for fast loading.
-    If cache doesn't exist or is invalid, it loads from CSV and creates cache.
+    This function loads from the Phase 1 enriched Parquet cache (created by
+    CachePreparationTool) and maps columns to the expected format for analysis tools.
+
+    The Phase 1 cache includes:
+    - All original CSV columns
+    - Zone enrichment data (z1-z6, total_power_sec, normalized_power)
+    - Proper data types and compression
 
     Args:
-        csv_file_path: Path to the Strava activities CSV file
+        csv_file_path: Path to the Strava activities CSV file (used to locate cache)
 
     Returns:
-        DataFrame with cleaned activity data
+        DataFrame with cleaned activity data and standardized column names
+
+    Raises:
+        FileNotFoundError: If Phase 1 cache doesn't exist. Run Phase 1 first to create cache.
     """
     cache_dir = get_cache_dir(csv_file_path)
     parquet_path = cache_dir / "activities_processed.parquet"
 
-    # Check if cache exists and is valid
-    if not needs_cache_refresh(csv_file_path, cache_dir):
-        try:
-            # Load from cache
-            return pd.read_parquet(parquet_path, engine='pyarrow')
-        except Exception:
-            # Cache corrupted, will recreate below
-            pass
+    # Check if Phase 1 cache exists
+    if not parquet_path.exists():
+        raise FileNotFoundError(
+            f"Phase 1 Parquet cache not found at {parquet_path}. "
+            "Please run Phase 1 (Data Preparation) first to create the enriched cache."
+        )
 
-    # Cache doesn't exist, is invalid, or corrupted - load from CSV
-    return load_csv_data(csv_file_path)
+    try:
+        # Load from Phase 1 enriched Parquet cache
+        df_parquet = pd.read_parquet(parquet_path, engine='pyarrow')
+
+        # Map Phase 1 Parquet columns to expected column names for analysis tools
+        # This ensures compatibility with existing analysis code
+        df_clean = pd.DataFrame()
+        df_clean['date'] = pd.to_datetime(df_parquet['Activity Date'])
+        df_clean['name'] = df_parquet['Activity Name']
+        df_clean['type'] = df_parquet['Activity Type'].astype('category')
+        df_clean['elapsed_time'] = pd.to_numeric(df_parquet['Elapsed Time'], errors='coerce').fillna(0)
+        df_clean['moving_time'] = pd.to_numeric(df_parquet['Moving Time'], errors='coerce').fillna(0)
+        df_clean['distance'] = pd.to_numeric(df_parquet['Distance'], errors='coerce').fillna(0)
+        df_clean['elevation'] = pd.to_numeric(df_parquet['Elevation Gain'], errors='coerce').fillna(0)
+        df_clean['avg_hr'] = pd.to_numeric(df_parquet['Average Heart Rate'], errors='coerce').fillna(0)
+        df_clean['max_hr'] = pd.to_numeric(df_parquet['Max Heart Rate'], errors='coerce').fillna(0)
+        df_clean['avg_watts'] = pd.to_numeric(df_parquet['Average Watts'], errors='coerce').fillna(0)
+        df_clean['max_watts'] = pd.to_numeric(df_parquet['Max Watts'], errors='coerce').fillna(0)
+        df_clean['avg_cadence'] = pd.to_numeric(df_parquet['Average Cadence'], errors='coerce').fillna(0)
+        df_clean['avg_speed'] = pd.to_numeric(df_parquet['Average Speed'], errors='coerce').fillna(0)
+        df_clean['weighted_power'] = pd.to_numeric(df_parquet['Weighted Average Power'], errors='coerce').fillna(0)
+
+        # Derive activity_category from Activity Type
+        df_clean['activity_category'] = df_clean['type'].apply(
+            lambda x: 'Cycling' if 'Ride' in str(x) else 'Other'
+        )
+
+        # Include zone enrichment columns if available (from Phase 1 zone enrichment)
+        zone_columns = [
+            'z1_active_recovery_sec', 'z2_endurance_sec', 'z3_tempo_sec',
+            'z4_threshold_sec', 'z5_vo2max_sec', 'z6_anaerobic_sec',
+            'total_power_sec', 'normalized_power'
+        ]
+        for col in zone_columns:
+            if col in df_parquet.columns:
+                df_clean[col] = df_parquet[col]
+
+        # Clean up - remove invalid dates and sort
+        df_clean = df_clean.dropna(subset=['date'])
+        df_clean = df_clean.sort_values('date', ascending=False)
+
+        return df_clean
+
+    except Exception as e:
+        raise RuntimeError(
+            f"Failed to load Phase 1 Parquet cache from {parquet_path}: {str(e)}"
+        ) from e
 
 
 def analyze_period(data: pd.DataFrame, period_name: str) -> dict[str, Any]:
