@@ -164,6 +164,11 @@ class PhaseProgressTracker:
     help="Skip training plan generation phase",
 )
 @click.option(
+    "--skip-data-prep",
+    is_flag=True,
+    help="Skip data preparation phase and use existing cache (cache must exist)",
+)
+@click.option(
     "--provider",
     type=click.Choice(["openai", "anthropic", "gemini", "ollama"]),
     default="anthropic",
@@ -186,6 +191,7 @@ def generate(
     period_months: int,
     training_plan_weeks: int,
     skip_training_plan: bool,
+    skip_data_prep: bool,
     provider: str,
     model: str | None,
     prompts_dir: Path | None,
@@ -285,6 +291,7 @@ def generate(
             generate_training_plan=not skip_training_plan,
             training_plan_weeks=training_plan_weeks,
             fit_only_mode=fit_only_mode,
+            skip_data_prep=skip_data_prep,
         )
 
         # Validate configuration

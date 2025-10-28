@@ -121,6 +121,7 @@ class WorkflowConfig:
     generate_training_plan: bool = True
     training_plan_weeks: int = 12
     fit_only_mode: bool = False
+    skip_data_prep: bool = False
 
     # Provider configuration
     provider: Any = None  # BaseProvider, but avoid circular import
@@ -168,6 +169,17 @@ class WorkflowConfig:
 
         if self.max_iterations_per_phase < 1:
             raise ValueError("max_iterations_per_phase must be positive")
+
+        # Validate skip_data_prep requirements
+        if self.skip_data_prep:
+            # Cache must exist when skipping data prep
+            cache_path = self.output_dir / "cache" / "activities_processed.parquet"
+            if not cache_path.exists():
+                raise ValueError(
+                    f"Cache file not found: {cache_path}\n"
+                    f"The --skip-data-prep flag requires an existing cache file.\n"
+                    f"Run without this flag first to create the cache, or check the output directory path."
+                )
 
 
 @dataclass
@@ -498,11 +510,17 @@ class MultiAgentOrchestrator:
             mode_specific_instructions=mode_instructions,
         )
 
+        # Include analyze_time_in_zones tool if FIT files are provided
+        # This tool enriches the cache with zone data during Phase 1
+        tools = ["validate_data_files", "prepare_cache"]
+        if config.fit_dir_path:
+            tools.append("analyze_time_in_zones")
+
         return self._execute_phase(
             phase_name="data_preparation",
             config=config,
             prompt_getter=self.prompts_manager.get_data_preparation_prompt,
-            tools=["validate_data_files", "prepare_cache"],
+            tools=tools,
             phase_context={
                 "csv_file_path": str(config.csv_file_path),
                 "athlete_profile_path": str(config.athlete_profile_path),
@@ -534,11 +552,12 @@ class MultiAgentOrchestrator:
             athlete_profile_path=athlete_profile_path,
         )
 
+        # Phase 2 only does performance analysis - zone calculation moved to Phase 1
         return self._execute_phase(
             phase_name="performance_analysis",
             config=config,
             prompt_getter=self.prompts_manager.get_performance_analysis_prompt,
-            tools=["analyze_performance", "analyze_time_in_zones"],
+            tools=["analyze_performance"],
             phase_context=phase1_result.extracted_data,
             user_message=user_message,
         )
@@ -628,15 +647,34 @@ class MultiAgentOrchestrator:
         workflow_start = datetime.now()
         total_tokens = 0
 
-        # Phase 1: Data Preparation
-        phase1_result = self._execute_phase_1(config)
-        phase_results.append(phase1_result)
-        total_tokens += phase1_result.tokens_used
-
-        if not phase1_result.success:
-            return self._create_failed_workflow_result(
-                phase_results, workflow_start, total_tokens
+        # Phase 1: Data Preparation (skip if requested and cache exists)
+        if config.skip_data_prep:
+            # Skip Phase 1 - cache already validated in config.validate()
+            # Populate extracted_data with cache file paths for Phase 2
+            cache_file_path = str(config.output_dir / "cache" / "activities_processed.parquet")
+            phase1_result = PhaseResult(
+                phase_name="data_preparation",
+                status=PhaseStatus.SKIPPED,
+                agent_response="Data preparation skipped - using existing cache",
+                extracted_data={
+                    "cache_file_path": cache_file_path,
+                    "athlete_profile_path": str(config.athlete_profile_path),
+                    "zones_already_calculated": True,  # Cache includes zone data
+                },
             )
+            if self.progress_callback:
+                self.progress_callback("data_preparation", PhaseStatus.SKIPPED)
+        else:
+            # Execute Phase 1 normally
+            phase1_result = self._execute_phase_1(config)
+            total_tokens += phase1_result.tokens_used
+
+            if not phase1_result.success:
+                return self._create_failed_workflow_result(
+                    phase_results, workflow_start, total_tokens
+                )
+
+        phase_results.append(phase1_result)
 
         # Phase 2: Performance Analysis
         phase2_result = self._execute_phase_2(config, phase1_result)
