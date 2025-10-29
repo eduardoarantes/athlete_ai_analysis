@@ -139,6 +139,20 @@ class LLMAgent:
                     )
                     self.session.add_message(tool_result_msg)
 
+                # Check if finalize_training_plan was called - if so, force completion
+                has_finalized = any(
+                    tc.get("name") == "finalize_training_plan"
+                    for tc in response.tool_calls
+                )
+
+                if has_finalized:
+                    logger.info("[AGENT LOOP] finalize_training_plan called. Forcing completion.")
+                    final_msg = "Training plan has been successfully created and saved."
+                    self.session.add_message(
+                        ConversationMessage(role="assistant", content=final_msg)
+                    )
+                    return final_msg
+
                 logger.info(f"[AGENT LOOP] Session now has {len(self.session.messages)} messages. Continuing to next iteration...")
 
                 # Continue loop to let LLM process results

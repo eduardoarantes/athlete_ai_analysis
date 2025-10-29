@@ -6,9 +6,17 @@ Runs each workflow phase individually and captures all LLM interactions
 for inspection. Useful for debugging provider-specific issues.
 """
 import json
+import logging
 import os
 import sys
 from pathlib import Path
+
+# Configure logging BEFORE any other imports
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(levelname)s:%(name)s:%(message)s',
+    stream=sys.stderr  # Send to stderr so it appears with tee
+)
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -156,7 +164,7 @@ def main():
         fit_only_mode=True,
         skip_data_prep=True,  # Skip Phase 1 - use existing cache
         generate_training_plan=True,
-        max_iterations_per_phase=15,  # Increase for debugging
+        max_iterations_per_phase=5,  # Enough for finalize to be called
     )
 
     try:
