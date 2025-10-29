@@ -117,7 +117,7 @@ class InteractionLogger:
         return {
             "role": msg.role,
             "content": msg.content,
-            "tool_calls": msg.tool_calls,
+            "tool_calls": self._serialize_tool_calls(msg.tool_calls),
             "content_length": len(msg.content) if msg.content else 0,
         }
 
@@ -146,11 +146,20 @@ class InteractionLogger:
         if tool_calls is None:
             return None
 
+        # Convert to list if it's an iterable (handles RepeatedComposite)
+        try:
+            if not isinstance(tool_calls, (list, str)):
+                tool_calls = list(tool_calls)
+        except (TypeError, AttributeError):
+            # Not iterable, convert to string
+            return str(tool_calls)
+
         if isinstance(tool_calls, list):
             result = []
             for call in tool_calls:
                 if isinstance(call, dict):
-                    result.append(call)
+                    # Recursively serialize dict values
+                    result.append(self._deep_serialize(call))
                 else:
                     # Handle protobuf or other objects by converting to dict
                     try:
@@ -160,7 +169,7 @@ class InteractionLogger:
                             "id": getattr(call, "id", None),
                             "arguments": getattr(call, "arguments", None),
                         }
-                        result.append(call_dict)
+                        result.append(self._deep_serialize(call_dict))
                     except Exception:
                         # Fallback: convert to string
                         result.append(str(call))
@@ -168,6 +177,43 @@ class InteractionLogger:
 
         # If not a list, try to convert to string
         return str(tool_calls)
+
+    def _deep_serialize(self, obj: Any) -> Any:
+        """
+        Recursively serialize an object to JSON-compatible format.
+
+        Handles nested dicts, lists, and protobuf objects.
+        """
+        if obj is None:
+            return None
+
+        # Try direct JSON serialization first
+        try:
+            json.dumps(obj)
+            return obj
+        except (TypeError, ValueError):
+            pass
+
+        # Handle dict
+        if isinstance(obj, dict):
+            result = {}
+            for key, value in obj.items():
+                result[key] = self._deep_serialize(value)
+            return result
+
+        # Handle list or iterable (including RepeatedComposite)
+        if isinstance(obj, (list, tuple)):
+            return [self._deep_serialize(item) for item in obj]
+
+        # Try to convert iterables like RepeatedComposite
+        try:
+            if hasattr(obj, '__iter__') and not isinstance(obj, str):
+                return [self._deep_serialize(item) for item in obj]
+        except (TypeError, AttributeError):
+            pass
+
+        # Fallback: convert to string
+        return str(obj)
 
     def _serialize_metadata(self, metadata: Any) -> Any:
         """
@@ -178,24 +224,8 @@ class InteractionLogger:
         if metadata is None:
             return None
 
-        if isinstance(metadata, dict):
-            result = {}
-            for key, value in metadata.items():
-                try:
-                    # Test if value is JSON serializable
-                    json.dumps(value)
-                    result[key] = value
-                except (TypeError, ValueError):
-                    # Convert non-serializable values to string
-                    result[key] = str(value)
-            return result
-
-        # If not a dict, try to return as-is or convert to string
-        try:
-            json.dumps(metadata)
-            return metadata
-        except (TypeError, ValueError):
-            return str(metadata)
+        # Use deep serialization for all metadata
+        return self._deep_serialize(metadata)
 
     def _log_summary(self, interaction: dict[str, Any]) -> None:
         """Log a summary to console."""
