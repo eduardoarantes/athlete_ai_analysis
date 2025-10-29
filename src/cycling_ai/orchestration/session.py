@@ -14,6 +14,43 @@ from pathlib import Path
 from typing import Any
 
 
+def _deep_serialize(obj: Any) -> Any:
+    """
+    Recursively serialize an object to JSON-compatible format.
+    Handles nested dicts, lists, and protobuf objects.
+    """
+    if obj is None:
+        return None
+
+    # Try direct JSON serialization first
+    try:
+        json.dumps(obj)
+        return obj
+    except (TypeError, ValueError):
+        pass
+
+    # Handle dict
+    if isinstance(obj, dict):
+        result = {}
+        for key, value in obj.items():
+            result[key] = _deep_serialize(value)
+        return result
+
+    # Handle list or tuple
+    if isinstance(obj, (list, tuple)):
+        return [_deep_serialize(item) for item in obj]
+
+    # Try to convert iterables like RepeatedComposite
+    try:
+        if hasattr(obj, '__iter__') and not isinstance(obj, str):
+            return [_deep_serialize(item) for item in obj]
+    except (TypeError, AttributeError):
+        pass
+
+    # Fallback: convert to string
+    return str(obj)
+
+
 @dataclass
 class ConversationMessage:
     """
@@ -33,8 +70,8 @@ class ConversationMessage:
         return {
             "role": self.role,
             "content": self.content,
-            "tool_calls": self.tool_calls,
-            "tool_results": self.tool_results,
+            "tool_calls": _deep_serialize(self.tool_calls),
+            "tool_results": _deep_serialize(self.tool_results),
             "timestamp": self.timestamp.isoformat(),
         }
 
