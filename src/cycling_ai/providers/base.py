@@ -48,13 +48,14 @@ class ProviderMessage:
     Provides a common structure that can be converted to provider-specific formats.
     """
 
-    role: str  # "user", "assistant", "system"
+    role: str  # "user", "assistant", "system", "tool"
     content: str
     tool_calls: list[dict[str, Any]] | None = None
+    tool_results: list[dict[str, Any]] | None = None
 
     def __post_init__(self) -> None:
         """Validate message."""
-        valid_roles = {"user", "assistant", "system"}
+        valid_roles = {"user", "assistant", "system", "tool"}
         if self.role not in valid_roles:
             raise ValueError(f"Invalid role '{self.role}'. Must be one of {valid_roles}")
 

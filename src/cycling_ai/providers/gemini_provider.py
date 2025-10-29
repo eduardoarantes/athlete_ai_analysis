@@ -178,9 +178,64 @@ class GeminiProvider(BaseProvider):
             for msg in messages[:-1]:  # All but last message
                 if not msg or not hasattr(msg, 'role') or not hasattr(msg, 'content'):
                     continue
-                role = "user" if msg.role in ("user", "system") else "model"
-                content = msg.content if msg.content is not None else ""
-                chat.history.append({"role": role, "parts": [content]})  # type: ignore[arg-type]
+
+                # Handle tool/function results specially
+                if msg.role == "tool":
+                    # Tool results need to be formatted as function responses
+                    # Parse the JSON content and format as Gemini expects
+                    import json
+                    try:
+                        tool_data = json.loads(msg.content) if msg.content else {}
+                    except json.JSONDecodeError:
+                        tool_data = {"response": msg.content}
+
+                    # Extract tool name from tool_results metadata
+                    tool_name = "unknown"
+                    if hasattr(msg, 'tool_results') and msg.tool_results:
+                        tool_name = msg.tool_results[0].get("tool_name", "unknown")
+
+                    # DEBUG: Print what we're sending to Gemini
+                    import logging
+                    logging.info(f"[GEMINI DEBUG] Adding function response: name={tool_name}, data_keys={list(tool_data.keys())}")
+
+                    chat.history.append({
+                        "role": "function",
+                        "parts": [{
+                            "function_response": {
+                                "name": tool_name,
+                                "response": tool_data
+                            }
+                        }]
+                    })  # type: ignore[arg-type]
+                else:
+                    # Regular messages
+                    role = "user" if msg.role in ("user", "system") else "model"
+                    content = msg.content if msg.content is not None else ""
+
+                    # Handle assistant messages with tool calls
+                    if msg.role == "assistant" and hasattr(msg, 'tool_calls') and msg.tool_calls:
+                        # Assistant is making function calls
+                        parts = []
+
+                        # Add text content if present
+                        if content:
+                            parts.append(content)
+
+                        # Add function calls
+                        for tool_call in msg.tool_calls:
+                            import google.ai.generativelanguage as glm
+                            # Convert tool call to Gemini FunctionCall format
+                            parts.append(glm.Part(
+                                function_call=glm.FunctionCall(
+                                    name=tool_call.get("name", ""),
+                                    args=tool_call.get("arguments", {})
+                                )
+                            ))
+
+                        chat.history.append({"role": role, "parts": parts})  # type: ignore[arg-type]
+                    else:
+                        # Regular text message
+                        chat.history.append({"role": role, "parts": [content]})  # type: ignore[arg-type]
 
             # Send last message
             generation_config: dict[str, Any] = {

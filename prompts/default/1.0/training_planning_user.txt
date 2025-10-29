@@ -54,13 +54,15 @@ Design a personalized {training_plan_weeks}-week training plan for this athlete.
      * Specific considerations for this athlete's situation
 
 6. **Finalize the Plan**
-   - Use finalize_training_plan tool with:
+   - YOU MUST use the finalize_training_plan tool to save your plan
+   - Call finalize_training_plan with:
      * athlete_profile_json: {athlete_profile_path}
      * total_weeks: {training_plan_weeks}
      * target_ftp: your determined target (be realistic!)
      * weekly_plan: array of all {training_plan_weeks} weeks with workouts
      * coaching_notes: your coaching analysis and rationale
      * monitoring_guidance: what athlete should monitor
+   - This tool call is REQUIRED - do not skip it!
 
 **Example Workout Creation:**
 
@@ -81,7 +83,7 @@ create_workout(
 
 **Critical Reminders:**
 - This is a PERSONALIZED coaching program - analyze the performance data and adapt to THIS athlete
+- YOU MUST call finalize_training_plan tool - do NOT return JSON directly
 - Explain your reasoning throughout - you're coaching, not just outputting a template
 - DO NOT include SVG visualizations in your response text
-- Present clear workout details with power targets and durations
 - Base your decisions on the actual performance data available to you

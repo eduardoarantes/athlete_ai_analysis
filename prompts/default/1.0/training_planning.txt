@@ -75,7 +75,8 @@ Design a personalized, periodized training plan based on the athlete's performan
 - If athlete shows declining trend, consider recovery/rebuild focus
 
 **Output Requirements:**
+- YOU MUST call the finalize_training_plan tool to save your plan
+- DO NOT return JSON directly in your response - use the tool instead
 - DO NOT include SVG workout visualizations in your response text
-- Focus on coaching analysis and rationale
-- Present workout details clearly (power targets, durations, intervals)
-- Explain your decisions based on the performance data you analyzed
+- After calling finalize_training_plan, provide a brief summary of your coaching approach
+- Explain your key decisions and reasoning

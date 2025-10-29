@@ -170,6 +170,22 @@ class AnthropicProvider(BaseProvider):
             for msg in messages:
                 if msg.role == "system":
                     system_msg = msg.content
+                elif msg.role == "tool":
+                    # Tool results must be sent as user messages with tool_result content
+                    import json
+                    try:
+                        tool_data = json.loads(msg.content) if msg.content else {}
+                    except json.JSONDecodeError:
+                        tool_data = {"response": msg.content}
+
+                    user_messages.append({
+                        "role": "user",
+                        "content": [{
+                            "type": "tool_result",
+                            "tool_use_id": "unknown",  # TODO: Track tool call IDs
+                            "content": json.dumps(tool_data),
+                        }]
+                    })
                 else:
                     user_messages.append({"role": msg.role, "content": msg.content})
 

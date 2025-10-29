@@ -176,20 +176,18 @@ class LLMAgent:
         role = msg_data.get("role", "user")
         content = msg_data.get("content", "")
         tool_calls = msg_data.get("tool_calls")
+        tool_results = msg_data.get("tool_results")
 
-        # Handle tool role messages differently
-        if role == "tool":
-            # Tool messages should use assistant role with tool results
-            return ProviderMessage(
-                role="assistant",
-                content=content,
-                tool_calls=None,
-            )
-
+        # Pass role unchanged - let each provider handle role conversion
+        # Providers will convert as needed:
+        # - OpenAI: role="tool" → role="tool"
+        # - Anthropic: role="tool" → role="user" with type="tool_result"
+        # - Gemini: role="tool" → role="function" with function_response
         return ProviderMessage(
             role=role,
             content=content,
             tool_calls=tool_calls,
+            tool_results=tool_results,
         )
 
     def _format_tool_result_message(
