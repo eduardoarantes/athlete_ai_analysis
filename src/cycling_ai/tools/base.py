@@ -29,6 +29,7 @@ class ToolParameter:
     min_value: float | None = None
     max_value: float | None = None
     pattern: str | None = None  # Regex pattern for string validation
+    items: dict[str, Any] | None = None  # Schema for array items (required for type="array")
 
     def __post_init__(self) -> None:
         """Validate parameter definition."""

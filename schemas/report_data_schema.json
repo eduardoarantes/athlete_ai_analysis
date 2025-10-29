@@ -1,0 +1,474 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Cycling Training Plan Report Data",
+  "description": "Schema for consolidated training plan report data",
+  "type": "object",
+  "required": ["version", "generated_timestamp", "generator", "athletes"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Data format version",
+      "pattern": "^\\d+\\.\\d+(\\.\\d+)?$"
+    },
+    "generated_timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when this file was generated"
+    },
+    "generator": {
+      "type": "object",
+      "required": ["tool", "version"],
+      "properties": {
+        "tool": {
+          "type": "string",
+          "description": "Name of the tool that generated this file"
+        },
+        "version": {
+          "type": "string",
+          "description": "Version of the tool"
+        },
+        "command": {
+          "type": "string",
+          "description": "Command used to generate the file"
+        }
+      }
+    },
+    "athletes": {
+      "type": "array",
+      "description": "Array of athlete objects",
+      "items": {
+        "$ref": "#/definitions/athlete"
+      }
+    }
+  },
+  "definitions": {
+    "athlete": {
+      "type": "object",
+      "required": ["id", "name", "profile", "training_plan", "metadata"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the athlete",
+          "pattern": "^[a-z0-9_]+$"
+        },
+        "name": {
+          "type": "string",
+          "description": "Display name for the athlete"
+        },
+        "profile": {
+          "$ref": "#/definitions/profile"
+        },
+        "training_plan": {
+          "$ref": "#/definitions/training_plan"
+        },
+        "performance_analysis": {
+          "$ref": "#/definitions/performance_analysis"
+        },
+        "metadata": {
+          "$ref": "#/definitions/metadata"
+        }
+      }
+    },
+    "profile": {
+      "type": "object",
+      "required": ["age", "ftp", "weight_kg", "power_to_weight", "training_availability", "goals"],
+      "properties": {
+        "age": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 120
+        },
+        "gender": {
+          "type": "string",
+          "enum": ["male", "female", "other"]
+        },
+        "ftp": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Functional Threshold Power in watts"
+        },
+        "weight_kg": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Body weight in kilograms"
+        },
+        "power_to_weight": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Power to weight ratio (W/kg)"
+        },
+        "max_hr": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 300,
+          "description": "Maximum heart rate in bpm"
+        },
+        "resting_hr": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 200,
+          "description": "Resting heart rate in bpm"
+        },
+        "training_availability": {
+          "type": "object",
+          "required": ["hours_per_week", "available_training_days", "weekly_training_hours"],
+          "properties": {
+            "hours_per_week": {
+              "type": "number",
+              "minimum": 0
+            },
+            "week_days": {
+              "type": "string"
+            },
+            "available_training_days": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+              }
+            },
+            "weekly_training_hours": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "goals": {
+          "type": "string",
+          "description": "Athlete's training goals"
+        },
+        "current_training_status": {
+          "type": "string",
+          "description": "Current training status description"
+        }
+      }
+    },
+    "training_plan": {
+      "type": "object",
+      "required": ["current_ftp", "target_ftp", "ftp_gain", "ftp_gain_percent", "total_weeks", "available_days_per_week", "power_zones", "weekly_workouts"],
+      "properties": {
+        "current_ftp": {
+          "type": "number",
+          "minimum": 0
+        },
+        "target_ftp": {
+          "type": "number",
+          "minimum": 0
+        },
+        "ftp_gain": {
+          "type": "number"
+        },
+        "ftp_gain_percent": {
+          "type": "number"
+        },
+        "total_weeks": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "available_days_per_week": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 7
+        },
+        "plan_structure": {
+          "type": "object",
+          "properties": {
+            "foundation_weeks": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "build_weeks": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "peak_weeks": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "recovery_weeks": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        },
+        "power_zones": {
+          "$ref": "#/definitions/power_zones"
+        },
+        "plan_text": {
+          "type": "string",
+          "description": "Markdown-formatted plan summary"
+        },
+        "weekly_workouts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/week"
+          }
+        }
+      }
+    },
+    "power_zones": {
+      "type": "object",
+      "required": ["z1", "z2", "z3", "z4", "z5"],
+      "properties": {
+        "z1": {
+          "$ref": "#/definitions/zone"
+        },
+        "z2": {
+          "$ref": "#/definitions/zone"
+        },
+        "z3": {
+          "$ref": "#/definitions/zone"
+        },
+        "z4": {
+          "$ref": "#/definitions/zone"
+        },
+        "z5": {
+          "$ref": "#/definitions/zone"
+        },
+        "sweet_spot": {
+          "$ref": "#/definitions/zone"
+        }
+      }
+    },
+    "zone": {
+      "type": "object",
+      "required": ["name", "min", "max"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "min": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        }
+      }
+    },
+    "week": {
+      "type": "object",
+      "required": ["week", "phase", "workouts"],
+      "properties": {
+        "week": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "phase": {
+          "type": "string",
+          "enum": ["Foundation", "Build", "Peak", "Recovery"]
+        },
+        "workouts": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/workout"
+          }
+        }
+      }
+    },
+    "workout": {
+      "type": "object",
+      "required": ["name", "description", "total_duration_min", "segments"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "total_duration_min": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "work_time_min": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "intensity_zone": {
+          "type": "string"
+        },
+        "segments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/segment"
+          }
+        }
+      }
+    },
+    "segment": {
+      "type": "object",
+      "required": ["duration_min", "power_low", "power_high", "description", "type"],
+      "properties": {
+        "duration_min": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "power_low": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "power_high": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "description": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["warmup", "interval", "work", "recovery", "cooldown", "steady", "tempo"]
+        }
+      }
+    },
+    "performance_analysis": {
+      "type": "object",
+      "properties": {
+        "analysis_period": {
+          "type": "object",
+          "properties": {
+            "start_date": {
+              "type": "string",
+              "format": "date"
+            },
+            "end_date": {
+              "type": "string",
+              "format": "date"
+            },
+            "period_months": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "summary": {
+          "type": "object",
+          "properties": {
+            "total_rides": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "total_distance_km": {
+              "type": "number",
+              "minimum": 0
+            },
+            "total_time_hours": {
+              "type": "number",
+              "minimum": 0
+            },
+            "rides_per_week": {
+              "type": "number",
+              "minimum": 0
+            },
+            "outdoor_rides": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "indoor_rides": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "consistency": {
+          "type": "object",
+          "properties": {
+            "score": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "description": {
+              "type": "string"
+            }
+          }
+        },
+        "power_metrics": {
+          "type": "object",
+          "properties": {
+            "average_power": {
+              "type": "number",
+              "minimum": 0
+            },
+            "normalized_power": {
+              "type": "number",
+              "minimum": 0
+            },
+            "power_trend_percent": {
+              "type": "number"
+            }
+          }
+        },
+        "time_in_zones": {
+          "type": "object",
+          "properties": {
+            "z1_percent": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "z2_percent": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "z3_percent": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "z4_percent": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "z5_percent": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["sources", "generated_at"],
+      "properties": {
+        "sources": {
+          "type": "object",
+          "required": ["interaction_log"],
+          "properties": {
+            "interaction_log": {
+              "type": "string"
+            },
+            "interaction_id": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "athlete_profile": {
+              "type": "string"
+            }
+          }
+        },
+        "generated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "llm_provider": {
+          "type": "string"
+        },
+        "llm_model": {
+          "type": "string"
+        },
+        "generation_duration_ms": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

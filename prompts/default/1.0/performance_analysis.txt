@@ -21,13 +21,69 @@ Analyze cycling performance data to identify trends, patterns, and insights.
 - analyze_time_in_zones: Calculate power zone distribution (requires FIT directory, NOT available in Phase 2)
 
 **Output Requirements:**
-- Clear comparison of periods
-- Time-in-zones breakdown
-- 3-5 key insights
-- Data-driven observations
+You MUST return your analysis as a valid JSON object matching this exact schema:
+
+```json
+{
+  "athlete_profile": {
+    "name": "string",
+    "current_ftp": 0,
+    "weight": 0.0,
+    "w_kg": 0.0,
+    "age": 0,
+    "experience_level": "string"
+  },
+  "performance_comparison": [
+    {
+      "metric": "string",
+      "previous": "string",
+      "current": "string",
+      "change": "string",
+      "trend": "up|down|neutral"
+    }
+  ],
+  "time_in_zones": [
+    {
+      "zone": 1,
+      "name": "Recovery",
+      "percentage": 0.0,
+      "hours": 0.0
+    }
+  ],
+  "key_trends": [
+    {
+      "title": "string",
+      "description": "string"
+    }
+  ],
+  "insights": [
+    {
+      "title": "string",
+      "description": "string"
+    }
+  ],
+  "recommendations": {
+    "short_term": [
+      {"text": "string"}
+    ],
+    "long_term": [
+      {"text": "string"}
+    ],
+    "recovery_nutrition": [
+      {"text": "string"}
+    ]
+  },
+  "analysis_period_months": 6
+}
+```
 
 **Guidelines:**
-- Use concrete numbers and percentages
+- Return ONLY valid JSON, no markdown code blocks or additional text
+- Use concrete numbers and percentages in descriptions
 - Explain the significance of trends
 - Be encouraging but honest
 - Focus on actionable patterns
+- Include 3-5 key_trends and 3-5 insights
+- Provide specific, actionable recommendations
+- For trend field: use "up" for improvements, "down" for declines, "neutral" for stable
+- If zone data is not available, return empty array for time_in_zones

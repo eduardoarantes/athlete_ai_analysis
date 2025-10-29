@@ -16,6 +16,7 @@ from typing import Any
 
 import fitdecode
 
+from .power_zones import get_zone_bounds_for_analysis
 from .utils import convert_to_json_serializable
 
 
@@ -153,13 +154,7 @@ def analyze_time_in_zones(
             total_time = sum(zone_times.values())
 
             # Build JSON response from cached data
-            zones_definitions = {
-                'Z1 (Active Recovery)': (0, athlete_ftp * 0.6),
-                'Z2 (Endurance)': (athlete_ftp * 0.6, athlete_ftp * 0.8),
-                'Z3 (Tempo)': (athlete_ftp * 0.8, athlete_ftp * 0.9),
-                'Z4 (Threshold)': (athlete_ftp * 0.9, athlete_ftp * 1.1),
-                'Z5 (VO2 Max)': (athlete_ftp * 1.1, float('inf'))
-            }
+            zones_definitions = get_zone_bounds_for_analysis(athlete_ftp)
 
             zone_data = {}
             for zone_name, (lower, upper) in zones_definitions.items():
@@ -209,14 +204,8 @@ def analyze_time_in_zones(
     if not activities_path.exists():
         return f"❌ Error: Activities directory not found at {activities_directory}"
 
-    # Define power zones based on FTP
-    zones_definitions = {
-        'Z1 (Active Recovery)': (0, athlete_ftp * 0.6),
-        'Z2 (Endurance)': (athlete_ftp * 0.6, athlete_ftp * 0.8),
-        'Z3 (Tempo)': (athlete_ftp * 0.8, athlete_ftp * 0.9),
-        'Z4 (Threshold)': (athlete_ftp * 0.9, athlete_ftp * 1.1),
-        'Z5 (VO2 Max)': (athlete_ftp * 1.1, float('inf'))
-    }
+    # Define power zones based on FTP using centralized helper
+    zones_definitions = get_zone_bounds_for_analysis(athlete_ftp)
 
     # Initialize zone counters (in seconds)
     zone_times = dict.fromkeys(zones_definitions.keys(), 0)

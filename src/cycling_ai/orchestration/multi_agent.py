@@ -333,7 +333,7 @@ class MultiAgentOrchestrator:
                             elif tool_name in ("analyze_zones", "analyze_time_in_zones"):
                                 data = json.loads(message.content)
                                 extracted["zones_data"] = data
-                            elif tool_name == "generate_training_plan":
+                            elif tool_name in ("generate_training_plan", "finalize_training_plan"):
                                 data = json.loads(message.content)
                                 extracted["training_plan"] = data
                             elif tool_name == "analyze_cross_training_impact":
@@ -439,6 +439,13 @@ class MultiAgentOrchestrator:
 
             # Extract structured data from tool results
             extracted_data = self._extract_phase_data(phase_name, response, session)
+
+            # Store session ID for downstream phases that need access to session data
+            extracted_data["session_id"] = session.session_id
+
+            # For performance analysis phase, also store the markdown response
+            if phase_name == "performance_analysis":
+                extracted_data["performance_analysis_markdown"] = response
 
             # Calculate metrics
             execution_time = (datetime.now() - phase_start).total_seconds()
@@ -575,15 +582,21 @@ class MultiAgentOrchestrator:
         Returns:
             PhaseResult for training planning phase
         """
+        # Extract athlete profile path from Phase 2 context (originally from Phase 1)
+        athlete_profile_path = phase2_result.extracted_data.get(
+            "athlete_profile_path", str(config.athlete_profile_path)
+        )
+
         user_message = self.prompts_manager.get_training_planning_user_prompt(
-            training_plan_weeks=config.training_plan_weeks
+            training_plan_weeks=config.training_plan_weeks,
+            athlete_profile_path=athlete_profile_path,
         )
 
         return self._execute_phase(
             phase_name="training_planning",
             config=config,
             prompt_getter=self.prompts_manager.get_training_planning_prompt,
-            tools=["generate_training_plan"],
+            tools=["calculate_power_zones", "create_workout", "finalize_training_plan"],
             phase_context=phase2_result.extracted_data,
             user_message=user_message,
         )
@@ -592,7 +605,127 @@ class MultiAgentOrchestrator:
         self, config: WorkflowConfig, all_results: list[PhaseResult]
     ) -> PhaseResult:
         """
-        Execute Phase 4: Report Generation.
+        Execute Phase 4: Report Data Preparation.
+
+        Consolidates training plan data into report_data.json format
+        for use with the HTML viewer and subsequent report generation.
+
+        Args:
+            config: Workflow configuration
+            all_results: Results from all previous phases
+
+        Returns:
+            PhaseResult for report data preparation phase
+        """
+        from cycling_ai.tools.report_data_extractor import create_report_data
+
+        phase_start = datetime.now()
+
+        try:
+            # Get the training planning phase result (Phase 3)
+            training_phase_result = next(
+                (r for r in all_results if r.phase_name == "training_planning"),
+                None
+            )
+
+            if not training_phase_result or not training_phase_result.success:
+                return PhaseResult(
+                    phase_name="report_data_preparation",
+                    status=PhaseStatus.FAILED,
+                    agent_response="Training planning phase did not complete successfully",
+                    errors=["Cannot prepare report data without training plan"],
+                )
+
+            # Get the training plan from Phase 3's extracted data
+            training_plan = training_phase_result.extracted_data.get("training_plan")
+            if not training_plan:
+                return PhaseResult(
+                    phase_name="report_data_preparation",
+                    status=PhaseStatus.FAILED,
+                    agent_response="Training plan not found in Phase 3 results",
+                    errors=["Training plan was not extracted from Phase 3"],
+                )
+
+            # Load athlete profile
+            import json
+            with open(config.athlete_profile_path) as f:
+                athlete_profile = json.load(f)
+
+            # Create athlete data structure for report
+            athlete_data = {
+                "athlete_name": athlete_profile.get("name", "Unknown"),
+                "training_plan": training_plan,
+            }
+
+            # Create report data structure
+            generator_info = {
+                "tool": "cycling-ai",
+                "version": "0.1.0",
+                "command": "generate (integrated workflow)",
+            }
+
+            report_data = create_report_data([athlete_data], generator_info)
+
+            # Save report data to output directory
+            output_path = config.output_dir / "report_data.json"
+            with open(output_path, "w") as f:
+                json.dump(report_data, f, indent=2)
+
+            # Copy HTML viewer template to output directory
+            import shutil
+            from pathlib import Path
+
+            # Get template path (relative to project root)
+            project_root = Path(__file__).parent.parent.parent.parent
+            template_path = project_root / "templates" / "training_plan_viewer.html"
+            viewer_output_path = config.output_dir / "training_plan_viewer.html"
+
+            if template_path.exists():
+                shutil.copy2(template_path, viewer_output_path)
+                viewer_copied = True
+            else:
+                viewer_copied = False
+
+            phase_end = datetime.now()
+            execution_time = (phase_end - phase_start).total_seconds()
+
+            response_msg = f"Report data prepared successfully and saved to {output_path}"
+            if viewer_copied:
+                response_msg += f"\nHTML viewer copied to {viewer_output_path}"
+
+            return PhaseResult(
+                phase_name="report_data_preparation",
+                status=PhaseStatus.COMPLETED,
+                agent_response=response_msg,
+                extracted_data={
+                    "report_data_path": str(output_path),
+                    "viewer_path": str(viewer_output_path) if viewer_copied else None,
+                    "athlete_id": athlete_data["id"],
+                    "athlete_name": athlete_data["name"],
+                    "report_data": report_data,  # Make available for Phase 5
+                },
+                execution_time_seconds=execution_time,
+            )
+
+        except Exception as e:
+            phase_end = datetime.now()
+            execution_time = (phase_end - phase_start).total_seconds()
+
+            return PhaseResult(
+                phase_name="report_data_preparation",
+                status=PhaseStatus.FAILED,
+                agent_response=f"Report data preparation failed: {str(e)}",
+                errors=[str(e)],
+                execution_time_seconds=execution_time,
+            )
+
+    def _execute_phase_5(
+        self, config: WorkflowConfig, all_results: list[PhaseResult]
+    ) -> PhaseResult:
+        """
+        Execute Phase 5: Report Generation.
+
+        Generates HTML reports using structured data from Phase 4.
 
         Args:
             config: Workflow configuration
@@ -601,9 +734,31 @@ class MultiAgentOrchestrator:
         Returns:
             PhaseResult for report generation phase
         """
-        # Combine data from all previous phases
-        combined_data = {}
-        for result in all_results:
+        # Get structured report data from Phase 4
+        phase4_result = all_results[-1]  # Phase 4 is the last result
+        report_data = phase4_result.extracted_data.get("report_data")
+
+        if not report_data:
+            # Fallback: try loading from file
+            report_data_path = config.output_dir / "report_data.json"
+            if report_data_path.exists():
+                with open(report_data_path) as f:
+                    report_data = json.load(f)
+            else:
+                return PhaseResult(
+                    phase_name="report_generation",
+                    status=PhaseStatus.FAILED,
+                    agent_response="No structured data available from Phase 4",
+                    errors=["report_data not found in Phase 4 results or file system"],
+                )
+
+        # Combine with any additional context from previous phases
+        combined_data = {
+            "report_data": report_data,
+        }
+
+        # Add performance/zones data if needed
+        for result in all_results[:-1]:  # Exclude Phase 4
             combined_data.update(result.extracted_data)
 
         user_message = self.prompts_manager.get_report_generation_user_prompt(
@@ -625,11 +780,12 @@ class MultiAgentOrchestrator:
 
         Flow:
         1. Validate configuration
-        2. Execute Phase 1: Data Preparation
+        2. Execute Phase 1: Data Preparation (or skip if cache exists)
         3. Execute Phase 2: Performance Analysis (uses Phase 1 data)
         4. Execute Phase 3: Training Planning (optional, uses Phase 2 data)
-        5. Execute Phase 4: Report Generation (uses all previous data)
-        6. Return aggregated WorkflowResult
+        5. Execute Phase 4: Report Data Preparation (consolidates into report_data.json)
+        6. Execute Phase 5: Report Generation (LLM generates HTML using Phase 4 data)
+        7. Return aggregated WorkflowResult
 
         Args:
             config: Workflow configuration
@@ -705,12 +861,32 @@ class MultiAgentOrchestrator:
                 )
             )
 
-        # Phase 4: Report Generation
-        phase4_result = self._execute_phase_4(config, phase_results)
-        phase_results.append(phase4_result)
-        total_tokens += phase4_result.tokens_used
+        # Phase 4: Prepare Report Data (consolidate into report_data.json)
+        if config.generate_training_plan:
+            phase4_result = self._execute_phase_4(config, phase_results)
+            phase_results.append(phase4_result)
+            # This is a post-processing step, not an LLM call, so no tokens used
 
-        if not phase4_result.success:
+            if not phase4_result.success:
+                return self._create_failed_workflow_result(
+                    phase_results, workflow_start, total_tokens
+                )
+        else:
+            # Skip if no training plan was generated
+            phase_results.append(
+                PhaseResult(
+                    phase_name="report_data_preparation",
+                    status=PhaseStatus.SKIPPED,
+                    agent_response="Report data preparation skipped - no training plan generated",
+                )
+            )
+
+        # Phase 5: Report Generation (LLM generates HTML reports)
+        phase5_result = self._execute_phase_5(config, phase_results)
+        phase_results.append(phase5_result)
+        total_tokens += phase5_result.tokens_used
+
+        if not phase5_result.success:
             return self._create_failed_workflow_result(
                 phase_results, workflow_start, total_tokens
             )
@@ -719,8 +895,8 @@ class MultiAgentOrchestrator:
         workflow_end = datetime.now()
         total_time = (workflow_end - workflow_start).total_seconds()
 
-        # Validate output files exist
-        output_files = phase4_result.extracted_data.get("output_files", [])
+        # Validate output files exist (from Phase 5 now)
+        output_files = phase5_result.extracted_data.get("output_files", [])
         validated_files: list[Path] = []
 
         if output_files:

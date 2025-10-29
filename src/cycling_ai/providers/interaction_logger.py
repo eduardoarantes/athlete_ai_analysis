@@ -97,8 +97,8 @@ class InteractionLogger:
             },
             "output": {
                 "content": response.content,
-                "tool_calls": response.tool_calls,
-                "metadata": response.metadata,
+                "tool_calls": self._serialize_tool_calls(response.tool_calls),
+                "metadata": self._serialize_metadata(response.metadata),
             },
         }
 
@@ -136,6 +136,66 @@ class InteractionLogger:
                 for param in tool.parameters
             ],
         }
+
+    def _serialize_tool_calls(self, tool_calls: Any) -> Any:
+        """
+        Serialize tool calls to JSON-compatible format.
+
+        Handles both list of dicts and protobuf RepeatedComposite objects.
+        """
+        if tool_calls is None:
+            return None
+
+        if isinstance(tool_calls, list):
+            result = []
+            for call in tool_calls:
+                if isinstance(call, dict):
+                    result.append(call)
+                else:
+                    # Handle protobuf or other objects by converting to dict
+                    try:
+                        # Try to access common attributes
+                        call_dict = {
+                            "name": getattr(call, "name", None),
+                            "id": getattr(call, "id", None),
+                            "arguments": getattr(call, "arguments", None),
+                        }
+                        result.append(call_dict)
+                    except Exception:
+                        # Fallback: convert to string
+                        result.append(str(call))
+            return result
+
+        # If not a list, try to convert to string
+        return str(tool_calls)
+
+    def _serialize_metadata(self, metadata: Any) -> Any:
+        """
+        Serialize metadata to JSON-compatible format.
+
+        Handles nested dicts and converts non-serializable objects to strings.
+        """
+        if metadata is None:
+            return None
+
+        if isinstance(metadata, dict):
+            result = {}
+            for key, value in metadata.items():
+                try:
+                    # Test if value is JSON serializable
+                    json.dumps(value)
+                    result[key] = value
+                except (TypeError, ValueError):
+                    # Convert non-serializable values to string
+                    result[key] = str(value)
+            return result
+
+        # If not a dict, try to return as-is or convert to string
+        try:
+            json.dumps(metadata)
+            return metadata
+        except (TypeError, ValueError):
+            return str(metadata)
 
     def _log_summary(self, interaction: dict[str, Any]) -> None:
         """Log a summary to console."""

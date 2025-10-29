@@ -5,6 +5,8 @@ Generates detailed workout structures with warm-up, main sets, and cool-down.
 Creates visual SVG representations of workouts similar to Zwift/TrainingPeaks.
 """
 
+from .power_zones import get_workout_power_targets
+
 
 
 class WorkoutSegment:
@@ -219,15 +221,16 @@ def build_threshold_workout(ftp: int, intervals: str = "2x20", week: int = 1) ->
     sets = int(sets)
     duration = int(duration)
 
+    # Get power targets using centralized helper
+    targets = get_workout_power_targets(ftp)
+
     # Warm-up (15 min progressive)
-    z1_max = int(ftp * 0.6)
-    z2_max = int(ftp * 0.75)
-    workout.add_warmup(15, z1_max, z2_max)
+    workout.add_warmup(15, targets['z1_max'], targets['z2_max'])
 
     # Main set
-    threshold_low = int(ftp * 0.90)
-    threshold_high = int(ftp * 0.95)
-    recovery_power = int(ftp * 0.55)
+    threshold_low = targets['threshold_low']
+    threshold_high = targets['threshold_high']
+    recovery_power = targets['recovery']
 
     for i in range(sets):
         workout.add_interval(duration, threshold_low, threshold_high, f"Threshold {duration}min @ 90-95% FTP")
@@ -235,7 +238,7 @@ def build_threshold_workout(ftp: int, intervals: str = "2x20", week: int = 1) ->
             workout.add_recovery(5, recovery_power)
 
     # Cool-down (10 min)
-    workout.add_cooldown(10, z1_max, int(ftp * 0.5))
+    workout.add_cooldown(10, targets['z1_max'], int(ftp * 0.5))
 
     return workout
 
@@ -248,21 +251,22 @@ def build_vo2max_workout(ftp: int, intervals: str = "5x5", week: int = 1) -> Wor
     sets = int(sets)
     duration = int(duration)
 
+    # Get power targets using centralized helper
+    targets = get_workout_power_targets(ftp)
+
     # Warm-up (15 min progressive with primers)
-    z1_max = int(ftp * 0.6)
-    z2_max = int(ftp * 0.75)
-    workout.add_warmup(10, z1_max, z2_max)
+    workout.add_warmup(10, targets['z1_max'], targets['z2_max'])
 
     # Add 2 short primers
     workout.add_interval(1, int(ftp * 1.0), int(ftp * 1.05), "Primer")
-    workout.add_recovery(2, z1_max)
+    workout.add_recovery(2, targets['z1_max'])
     workout.add_interval(1, int(ftp * 1.0), int(ftp * 1.05), "Primer")
-    workout.add_recovery(2, z1_max)
+    workout.add_recovery(2, targets['z1_max'])
 
     # Main set
-    vo2_low = int(ftp * 1.06)
-    vo2_high = int(ftp * 1.15)
-    recovery_power = int(ftp * 0.55)
+    vo2_low = targets['vo2_low']
+    vo2_high = targets['vo2_high']
+    recovery_power = targets['recovery']
 
     for i in range(sets):
         workout.add_interval(duration, vo2_low, vo2_high, f"VO2 Max {duration}min @ 106-115% FTP")
@@ -270,7 +274,7 @@ def build_vo2max_workout(ftp: int, intervals: str = "5x5", week: int = 1) -> Wor
             workout.add_recovery(5, recovery_power)
 
     # Cool-down
-    workout.add_cooldown(10, z1_max, int(ftp * 0.5))
+    workout.add_cooldown(10, targets['z1_max'], int(ftp * 0.5))
 
     return workout
 
@@ -283,15 +287,16 @@ def build_sweetspot_workout(ftp: int, intervals: str = "3x15") -> Workout:
     sets = int(sets)
     duration = int(duration)
 
+    # Get power targets using centralized helper
+    targets = get_workout_power_targets(ftp)
+
     # Warm-up
-    z1_max = int(ftp * 0.6)
-    z2_max = int(ftp * 0.75)
-    workout.add_warmup(15, z1_max, z2_max)
+    workout.add_warmup(15, targets['z1_max'], targets['z2_max'])
 
     # Main set
-    ss_low = int(ftp * 0.88)
-    ss_high = int(ftp * 0.93)
-    recovery_power = int(ftp * 0.60)
+    ss_low = targets['sweet_spot_low']
+    ss_high = targets['sweet_spot_high']
+    recovery_power = targets['endurance_low']
 
     for i in range(sets):
         workout.add_interval(duration, ss_low, ss_high, f"Sweet Spot {duration}min @ 88-93% FTP")
@@ -299,7 +304,7 @@ def build_sweetspot_workout(ftp: int, intervals: str = "3x15") -> Workout:
             workout.add_recovery(5, recovery_power)
 
     # Cool-down
-    workout.add_cooldown(10, z1_max, int(ftp * 0.5))
+    workout.add_cooldown(10, targets['z1_max'], int(ftp * 0.5))
 
     return workout
 
@@ -312,15 +317,16 @@ def build_tempo_workout(ftp: int, intervals: str = "3x15") -> Workout:
     sets = int(sets)
     duration = int(duration)
 
+    # Get power targets using centralized helper
+    targets = get_workout_power_targets(ftp)
+
     # Warm-up
-    z1_max = int(ftp * 0.6)
-    z2_max = int(ftp * 0.75)
-    workout.add_warmup(10, z1_max, z2_max)
+    workout.add_warmup(10, targets['z1_max'], targets['z2_max'])
 
     # Main set
-    tempo_low = int(ftp * 0.80)
-    tempo_high = int(ftp * 0.85)
-    recovery_power = int(ftp * 0.60)
+    tempo_low = targets['tempo_low']
+    tempo_high = targets['tempo_high']
+    recovery_power = targets['endurance_low']
 
     for i in range(sets):
         workout.add_interval(duration, tempo_low, tempo_high, f"Tempo {duration}min @ 80-85% FTP")
@@ -328,7 +334,7 @@ def build_tempo_workout(ftp: int, intervals: str = "3x15") -> Workout:
             workout.add_recovery(5, recovery_power)
 
     # Cool-down
-    workout.add_cooldown(10, z1_max, int(ftp * 0.5))
+    workout.add_cooldown(10, targets['z1_max'], int(ftp * 0.5))
 
     return workout
 
@@ -337,8 +343,11 @@ def build_endurance_workout(ftp: int, duration_min: int = 60) -> Workout:
     """Build an endurance workout"""
     workout = Workout("Endurance", "Aerobic base building")
 
-    z2_low = int(ftp * 0.60)
-    z2_high = int(ftp * 0.75)
+    # Get power targets using centralized helper
+    targets = get_workout_power_targets(ftp)
+
+    z2_low = targets['endurance_low']
+    z2_high = targets['endurance_high']
 
     workout.add_steady(duration_min, z2_low, z2_high, f"Endurance {duration_min}min @ Z2")
 

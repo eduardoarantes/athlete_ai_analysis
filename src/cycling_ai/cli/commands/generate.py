@@ -51,6 +51,10 @@ class PhaseProgressTracker:
                 "name": "Training Planning",
                 "status": PhaseStatus.PENDING,
             },
+            "report_data_preparation": {
+                "name": "Report Data Preparation",
+                "status": PhaseStatus.PENDING,
+            },
             "report_generation": {
                 "name": "Report Generation",
                 "status": PhaseStatus.PENDING,

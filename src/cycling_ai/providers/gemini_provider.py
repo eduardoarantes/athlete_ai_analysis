@@ -77,6 +77,9 @@ class GeminiProvider(BaseProvider):
                 }
                 if param.enum:
                     param_schema["enum"] = param.enum
+                # Add items schema for array types (required by Gemini)
+                if param.type == "array" and param.items:
+                    param_schema["items"] = param.items
                 properties[param.name] = param_schema
 
                 if param.required:

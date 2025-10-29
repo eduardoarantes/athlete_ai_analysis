@@ -1,0 +1,35 @@
+{
+  "mcpServers": {
+    "cycling-data-prep": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "scripts/data-prep-mcp",
+        "cycling-data-prep"
+      ]
+    },
+    "cycling-analysis": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "scripts/analysis-mcp",
+        "cycling-analysis"
+      ]
+    },
+    "cycling-reports": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "scripts/report-gen-mcp",
+        "cycling-reports"
+      ]
+    },
+    "playwright": {
+      "command": "mcp-server-playwright",
+      "args": []
+    }
+  }
+}

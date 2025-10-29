@@ -261,6 +261,22 @@ class SessionManager:
 
         return sessions
 
+    def get_session_file_path(self, session_id: str) -> Path | None:
+        """
+        Get file path for a session.
+
+        Args:
+            session_id: Session identifier
+
+        Returns:
+            Path to session file if storage is configured and file exists, None otherwise
+        """
+        if not self._storage_dir:
+            return None
+
+        session_file = self._storage_dir / f"{session_id}.json"
+        return session_file if session_file.exists() else None
+
     def delete_session(self, session_id: str) -> None:
         """
         Delete session.

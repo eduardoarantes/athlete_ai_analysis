@@ -8,6 +8,7 @@ from __future__ import annotations
 import click
 
 from .commands import analyze, chat, config as config_cmd, generate, plan, providers, report
+from .commands.prepare_report_cmd import prepare_report_cmd
 from .formatting import console
 
 
@@ -47,6 +48,7 @@ cli.add_command(chat.chat)
 cli.add_command(generate.generate)
 cli.add_command(plan.plan)
 cli.add_command(report.report)
+cli.add_command(prepare_report_cmd)
 cli.add_command(config_cmd.config)
 cli.add_command(providers.providers)
 

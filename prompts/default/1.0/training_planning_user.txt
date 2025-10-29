@@ -1,8 +1,87 @@
-Create a {training_plan_weeks}-week training plan:
+Design a personalized {training_plan_weeks}-week training plan for this athlete.
 
-1. Review performance analysis findings
-2. Consider current fitness level and trends
-3. Design periodized plan with progressive overload
-4. Include recovery weeks and taper
+**Athlete Profile:** {athlete_profile_path}
 
-Base the plan on insights from the performance analysis phase.
+**Context Available to You:**
+- Performance analysis data showing recent trends, fitness trajectory, and time-in-zones
+- Athlete profile with FTP, goals, available training days, and constraints
+- Current training status and age considerations
+
+**Your Responsibilities:**
+
+1. **Analyze the Athlete's Situation**
+   - What does the performance data tell you about their current state?
+   - Are they improving, stable, or declining?
+   - What are their strengths and limiters based on time-in-zones?
+   - What do their goals require?
+
+2. **Design Appropriate Periodization**
+   - Don't use a generic template - design for THIS athlete
+   - Consider their recent trends when planning phases
+   - Balance their goals with their available time and recovery capacity
+   - Set a realistic target FTP based on current trajectory and plan duration
+
+3. **Create Each Workout**
+   - Use calculate_power_zones to get training zones for this athlete's current FTP
+   - Use create_workout to build each workout with specific structure:
+     * Workout name and description
+     * Segments array with warm-up, main intervals, recovery, cool-down
+     * Specific power targets (in watts) for each segment
+     * Duration for each segment
+   - Remember: High-intensity workouts need warm-up and cool-down
+
+4. **Organize Into Weekly Structure**
+   - Respect the athlete's available training days (don't schedule more than they have)
+   - For each week, specify:
+     * Week number (1 to {training_plan_weeks})
+     * Phase (Foundation, Build, Recovery, Peak, or whatever is appropriate)
+     * Phase rationale (why this phase for this athlete at this point?)
+     * Workouts (mapping day names to workout objects from create_workout)
+     * Weekly focus (what's the key training stimulus this week?)
+     * Monitoring notes (what should the athlete watch for this week?)
+
+5. **Provide Coaching Guidance**
+   - Write comprehensive coaching_notes explaining:
+     * Why you chose this specific structure
+     * How this addresses the athlete's performance trends
+     * Your rationale for the target FTP
+     * How the plan aligns with their goals
+     * Key success factors
+   - Write monitoring_guidance explaining:
+     * What metrics the athlete should track
+     * Warning signs that might require adjustment
+     * When to prioritize recovery
+     * Specific considerations for this athlete's situation
+
+6. **Finalize the Plan**
+   - Use finalize_training_plan tool with:
+     * athlete_profile_json: {athlete_profile_path}
+     * total_weeks: {training_plan_weeks}
+     * target_ftp: your determined target (be realistic!)
+     * weekly_plan: array of all {training_plan_weeks} weeks with workouts
+     * coaching_notes: your coaching analysis and rationale
+     * monitoring_guidance: what athlete should monitor
+
+**Example Workout Creation:**
+
+```
+create_workout(
+  workout_name="Week 1 Threshold Development",
+  description="Build FTP with sustained sub-threshold efforts",
+  ftp=260,
+  segments=[
+    {{"type": "warmup", "duration_min": 15, "power_low": 150, "power_high": 195, "description": "Progressive warm-up Z1-Z2"}},
+    {{"type": "interval", "duration_min": 15, "power_low": 234, "power_high": 247, "description": "Threshold effort 90-95% FTP"}},
+    {{"type": "recovery", "duration_min": 5, "power_low": 143, "power_high": 143, "description": "Easy spinning recovery"}},
+    {{"type": "interval", "duration_min": 15, "power_low": 234, "power_high": 247, "description": "Threshold effort 90-95% FTP"}},
+    {{"type": "cooldown", "duration_min": 10, "power_low": 150, "power_high": 120, "description": "Easy recovery spin"}}
+  ]
+)
+```
+
+**Critical Reminders:**
+- This is a PERSONALIZED coaching program - analyze the performance data and adapt to THIS athlete
+- Explain your reasoning throughout - you're coaching, not just outputting a template
+- DO NOT include SVG visualizations in your response text
+- Present clear workout details with power targets and durations
+- Base your decisions on the actual performance data available to you

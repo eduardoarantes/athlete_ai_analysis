@@ -1,7 +1,9 @@
 """
-Training plan generation tool wrapper.
+Training plan finalization tool wrapper.
 
-Wraps core.training.generate_training_plan() as a BaseTool for LLM provider integration.
+Wraps core.training.finalize_training_plan() as a BaseTool for LLM provider integration.
+The LLM designs the plan using create_workout and calculate_power_zones tools,
+then uses this tool to save the complete plan.
 """
 from __future__ import annotations
 
@@ -10,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from cycling_ai.core.athlete import load_athlete_profile
-from cycling_ai.core.training import generate_training_plan
+from cycling_ai.core.training import finalize_training_plan
 from cycling_ai.tools.base import (
     BaseTool,
     ToolDefinition,
@@ -22,24 +24,25 @@ from cycling_ai.tools.registry import register_tool
 
 class TrainingPlanTool(BaseTool):
     """
-    Tool for generating progressive training plans.
+    Tool for finalizing LLM-designed training plans.
 
-    Creates periodized week-by-week plans with Foundation, Build, Recovery,
-    and Peak phases tailored to athlete's availability and goals.
+    Validates and saves a complete training plan designed by the LLM agent.
+    The LLM is responsible for creating individual workouts (using create_workout)
+    and organizing them into a weekly structure.
     """
 
     @property
     def definition(self) -> ToolDefinition:
         """Return tool definition."""
         return ToolDefinition(
-            name="generate_training_plan",
+            name="finalize_training_plan",
             description=(
-                "Generate a progressive, periodized training plan based on athlete's "
-                "current fitness, goals, and availability. Creates structured week-by-week "
-                "plan with Foundation (base building), Build (intensity), Recovery (adaptation), "
-                "and Peak (performance) phases. Includes specific workouts with power targets, "
-                "SVG visualizations, and personalized recommendations based on age, training status, "
-                "and available training days."
+                "Finalize and save your complete training plan design. Use this tool AFTER you have: "
+                "1) Analyzed the athlete's performance data and profile, "
+                "2) Calculated power zones using calculate_power_zones, "
+                "3) Designed individual workouts using create_workout for each training day, "
+                "4) Organized workouts into a weekly structure with phases and coaching notes. "
+                "This tool validates your plan and saves it for report generation."
             ),
             category="analysis",
             parameters=[
@@ -47,8 +50,7 @@ class TrainingPlanTool(BaseTool):
                     name="athlete_profile_json",
                     type="string",
                     description=(
-                        "Path to athlete_profile.json. Required for FTP, age, "
-                        "training availability (days/week), and goals."
+                        "Path to athlete_profile.json. Required for athlete metadata and validation."
                     ),
                     required=True,
                 ),
@@ -56,11 +58,10 @@ class TrainingPlanTool(BaseTool):
                     name="total_weeks",
                     type="integer",
                     description=(
-                        "Duration of training plan in weeks. Minimum 4, maximum 24. "
-                        "Longer plans allow for more gradual progression."
+                        "Total duration of your plan in weeks (4-24). Must match the number of weeks "
+                        "in your weekly_plan array."
                     ),
-                    required=False,
-                    default=12,
+                    required=True,
                     min_value=4,
                     max_value=24,
                 ),
@@ -68,33 +69,101 @@ class TrainingPlanTool(BaseTool):
                     name="target_ftp",
                     type="number",
                     description=(
-                        "Target FTP in watts. If not provided, defaults to +6% of current FTP. "
-                        "Should be realistic based on plan duration and current fitness."
+                        "Target FTP goal in watts. Should be realistic based on plan duration, "
+                        "athlete's current fitness, and performance trends. Explain your rationale "
+                        "for this target in coaching_notes."
                     ),
-                    required=False,
+                    required=True,
+                ),
+                ToolParameter(
+                    name="weekly_plan",
+                    type="array",
+                    description=(
+                        "Array of week objects (one per week). Each week must include: "
+                        "week_number (1 to total_weeks), phase (e.g., 'Foundation', 'Build', 'Recovery', 'Peak'), "
+                        "phase_rationale (why this phase for this week), "
+                        "workouts (object mapping day names to workout objects from create_workout), "
+                        "weekly_focus (key training focus for the week), "
+                        "monitoring_notes (what athlete should watch this week)."
+                    ),
+                    required=True,
+                    items={
+                        "type": "OBJECT",
+                        "properties": {
+                            "week_number": {
+                                "type": "INTEGER",
+                                "description": "Week number (1 to total_weeks)"
+                            },
+                            "phase": {
+                                "type": "STRING",
+                                "description": "Training phase (e.g., Foundation, Build, Recovery, Peak)"
+                            },
+                            "phase_rationale": {
+                                "type": "STRING",
+                                "description": "Explanation of why this phase for this week"
+                            },
+                            "workouts": {
+                                "type": "OBJECT",
+                                "description": "Object mapping day names to workout objects"
+                            },
+                            "weekly_focus": {
+                                "type": "STRING",
+                                "description": "Key training focus for the week"
+                            },
+                            "monitoring_notes": {
+                                "type": "STRING",
+                                "description": "What athlete should monitor this week"
+                            }
+                        },
+                        "required": ["week_number", "phase", "workouts", "weekly_focus"]
+                    },
+                ),
+                ToolParameter(
+                    name="coaching_notes",
+                    type="string",
+                    description=(
+                        "Your overall coaching guidance for this plan. Explain: "
+                        "- Why you chose this structure and periodization "
+                        "- How this plan addresses the athlete's specific needs and performance trends "
+                        "- Key success factors and considerations "
+                        "- How the plan aligns with the athlete's goals "
+                        "Be specific and reference the actual performance data you analyzed."
+                    ),
+                    required=True,
+                ),
+                ToolParameter(
+                    name="monitoring_guidance",
+                    type="string",
+                    description=(
+                        "What the athlete should monitor throughout the plan: "
+                        "- Key performance indicators to track "
+                        "- Warning signs that might require plan adjustment "
+                        "- When to consider rest or recovery "
+                        "- Specific metrics relevant to this athlete's situation"
+                    ),
+                    required=True,
                 ),
             ],
             returns={
                 "type": "object",
                 "format": "json",
                 "description": (
-                    "JSON object containing: athlete_profile, ftp_progression, power_zones, "
-                    "weekly_workouts (with SVG visualizations), plan_text (formatted markdown), "
-                    "llm_context for personalized coaching recommendations."
+                    "Complete validated training plan with athlete profile, plan metadata, "
+                    "coaching notes, monitoring guidance, and weekly structure."
                 ),
             },
-            version="1.0.0",
+            version="2.0.0",
         )
 
     def execute(self, **kwargs: Any) -> ToolExecutionResult:
         """
-        Execute training plan generation.
+        Execute training plan finalization.
 
         Args:
-            **kwargs: Tool parameters (athlete_profile_json, total_weeks, target_ftp)
+            **kwargs: Tool parameters
 
         Returns:
-            ToolExecutionResult with training plan data or errors
+            ToolExecutionResult with finalized plan or errors
         """
         try:
             # Validate parameters against tool definition
@@ -102,8 +171,11 @@ class TrainingPlanTool(BaseTool):
 
             # Extract parameters
             athlete_profile_json = kwargs["athlete_profile_json"]
-            total_weeks = kwargs.get("total_weeks", 12)
-            target_ftp = kwargs.get("target_ftp")
+            total_weeks = int(kwargs["total_weeks"])
+            target_ftp = float(kwargs["target_ftp"])
+            weekly_plan = kwargs["weekly_plan"]
+            coaching_notes = kwargs["coaching_notes"]
+            monitoring_guidance = kwargs["monitoring_guidance"]
 
             # Validate profile path
             profile_path = Path(athlete_profile_json)
@@ -128,20 +200,34 @@ class TrainingPlanTool(BaseTool):
                     errors=[f"Error loading athlete profile: {str(e)}"],
                 )
 
-            # Get available training days from profile
-            available_days = athlete_profile.get_training_days_count()
+            # Validate weekly_plan is a list
+            if not isinstance(weekly_plan, list):
+                return ToolExecutionResult(
+                    success=False,
+                    data=None,
+                    format="json",
+                    errors=["weekly_plan must be an array of week objects"],
+                )
 
-            # Generate training plan
-            result_json = generate_training_plan(
-                current_ftp=athlete_profile.ftp,
-                available_days_per_week=available_days,
-                target_ftp=target_ftp,
-                total_weeks=total_weeks,
-                athlete_age=athlete_profile.age,
-                athlete_profile=athlete_profile,
-            )
+            # Finalize the plan
+            try:
+                result_json = finalize_training_plan(
+                    athlete_profile=athlete_profile,
+                    total_weeks=total_weeks,
+                    target_ftp=target_ftp,
+                    weekly_plan=weekly_plan,
+                    coaching_notes=coaching_notes,
+                    monitoring_guidance=monitoring_guidance,
+                )
+            except ValueError as e:
+                return ToolExecutionResult(
+                    success=False,
+                    data=None,
+                    format="json",
+                    errors=[f"Plan validation error: {str(e)}"],
+                )
 
-            # Parse and validate result JSON
+            # Parse result JSON
             try:
                 result_data = json.loads(result_json)
             except json.JSONDecodeError as e:
@@ -149,7 +235,7 @@ class TrainingPlanTool(BaseTool):
                     success=False,
                     data=None,
                     format="json",
-                    errors=[f"Invalid JSON returned from training plan: {str(e)}"],
+                    errors=[f"Invalid JSON from finalize_training_plan: {str(e)}"],
                 )
 
             # Return successful result
@@ -160,9 +246,9 @@ class TrainingPlanTool(BaseTool):
                 metadata={
                     "athlete": athlete_profile.name,
                     "current_ftp": athlete_profile.ftp,
-                    "target_ftp": result_data.get("target_ftp"),
+                    "target_ftp": target_ftp,
                     "total_weeks": total_weeks,
-                    "available_days": available_days,
+                    "weeks_in_plan": len(weekly_plan),
                 },
             )
 
