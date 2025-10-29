@@ -214,32 +214,6 @@ def find_athlete_id_from_path(profile_path: Path) -> str:
     athlete_id = athlete_dir.lower().replace(' ', '_').replace('-', '_')
     return athlete_id
 
-
-def _strip_svg_from_workouts(weekly_workouts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """
-    Remove SVG fields from workouts (SVG should be generated client-side).
-
-    Args:
-        weekly_workouts: List of weekly workout structures
-
-    Returns:
-        Cleaned weekly workouts without SVG fields
-    """
-    cleaned = []
-    for week in weekly_workouts:
-        week_copy = week.copy()
-        if 'workouts' in week_copy:
-            workouts_copy = {}
-            for day, workout in week_copy['workouts'].items():
-                workout_copy = workout.copy()
-                # Remove svg field if present
-                workout_copy.pop('svg', None)
-                workouts_copy[day] = workout_copy
-            week_copy['workouts'] = workouts_copy
-        cleaned.append(week_copy)
-    return cleaned
-
-
 def consolidate_athlete_data(
     training_plan_data: Dict[str, Any],
     profile: Dict[str, Any],
@@ -262,7 +236,6 @@ def consolidate_athlete_data(
     """
     # Strip SVG from workouts (will be generated client-side in HTML viewer)
     weekly_workouts = training_plan_data.get('weekly_workouts', [])
-    cleaned_workouts = _strip_svg_from_workouts(weekly_workouts)
 
     athlete_obj = {
         'id': athlete_id,
@@ -276,7 +249,7 @@ def consolidate_athlete_data(
             'total_weeks': training_plan_data.get('total_weeks', 12),
             'available_days_per_week': training_plan_data.get('available_days_per_week'),
             'power_zones': training_plan_data.get('power_zones', {}),
-            'weekly_workouts': cleaned_workouts
+            'weekly_workouts': weekly_workouts
         },
         'metadata': training_plan_data.get('metadata', {})
     }

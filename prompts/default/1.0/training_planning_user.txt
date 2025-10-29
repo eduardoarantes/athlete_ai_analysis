@@ -90,5 +90,4 @@ create_workout(
 - This is a PERSONALIZED coaching program - analyze the performance data and adapt to THIS athlete
 - YOU MUST call finalize_training_plan tool - do NOT return JSON directly
 - Explain your reasoning throughout - you're coaching, not just outputting a template
-- DO NOT include SVG visualizations in your response text
 - Base your decisions on the actual performance data available to you
