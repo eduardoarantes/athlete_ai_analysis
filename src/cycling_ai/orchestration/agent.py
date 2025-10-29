@@ -89,11 +89,19 @@ class LLMAgent:
         while iteration < self.max_iterations:
             iteration += 1
 
+            # DEBUG: Log iteration start
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.info(f"[AGENT LOOP] Iteration {iteration}/{self.max_iterations}")
+            logger.info(f"[AGENT LOOP] Current session messages: {len(self.session.messages)}")
+
             # Get messages formatted for LLM and convert to ProviderMessage
             messages_data = self.session.get_messages_for_llm()
             messages = [
                 self._convert_to_provider_message(msg) for msg in messages_data
             ]
+
+            logger.info(f"[AGENT LOOP] Sending {len(messages)} messages to LLM")
 
             # Send to LLM with tools
             response = self.provider.create_completion(
@@ -101,10 +109,19 @@ class LLMAgent:
                 tools=tools if tools else None,
             )
 
+            logger.info(f"[AGENT LOOP] Response received. Content length: {len(response.content) if response.content else 0}")
+            logger.info(f"[AGENT LOOP] Tool calls: {len(response.tool_calls) if response.tool_calls else 0}")
+
             # Check if LLM wants to call tools
             if response.tool_calls:
+                logger.info(f"[AGENT LOOP] Executing {len(response.tool_calls)} tool calls:")
+                for tc in response.tool_calls:
+                    logger.info(f"[AGENT LOOP]   - {tc.get('name', 'unknown')}")
+
                 # Execute tools and add results to session
                 tool_results = self._execute_tool_calls(response.tool_calls)
+
+                logger.info(f"[AGENT LOOP] Tool execution completed. Adding messages to session.")
 
                 # Add assistant message with tool calls
                 self.session.add_message(
@@ -122,10 +139,13 @@ class LLMAgent:
                     )
                     self.session.add_message(tool_result_msg)
 
+                logger.info(f"[AGENT LOOP] Session now has {len(self.session.messages)} messages. Continuing to next iteration...")
+
                 # Continue loop to let LLM process results
                 continue
 
             # No tool calls - this is the final response
+            logger.info(f"[AGENT LOOP] No tool calls. Final response received. Exiting loop.")
             self.session.add_message(
                 ConversationMessage(role="assistant", content=response.content)
             )

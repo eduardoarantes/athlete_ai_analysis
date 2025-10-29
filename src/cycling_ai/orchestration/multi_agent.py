@@ -437,6 +437,9 @@ class MultiAgentOrchestrator:
             # Execute phase
             response = agent.process_message(user_message)
 
+            # Persist session to disk (agent adds messages but doesn't save)
+            self.session_manager.update_session(session)
+
             # Extract structured data from tool results
             extracted_data = self._extract_phase_data(phase_name, response, session)
 
@@ -469,6 +472,12 @@ class MultiAgentOrchestrator:
         except Exception as e:
             # Handle failure gracefully
             execution_time = (datetime.now() - phase_start).total_seconds()
+
+            # Persist session even on failure (agent may have added messages before failing)
+            try:
+                self.session_manager.update_session(session)
+            except Exception:
+                pass  # Don't fail the phase result if session persistence fails
 
             result = PhaseResult(
                 phase_name=phase_name,
