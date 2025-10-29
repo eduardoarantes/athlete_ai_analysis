@@ -2,6 +2,8 @@ Design a personalized {training_plan_weeks}-week training plan for this athlete.
 
 **Athlete Profile:** {athlete_profile_path}
 
+
+**Power Zones:**
 {power_zones}
 
 **Context Available to You:**
