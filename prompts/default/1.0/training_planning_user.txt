@@ -2,10 +2,13 @@ Design a personalized {training_plan_weeks}-week training plan for this athlete.
 
 **Athlete Profile:** {athlete_profile_path}
 
+{power_zones}
+
 **Context Available to You:**
 - Performance analysis data showing recent trends, fitness trajectory, and time-in-zones
 - Athlete profile with FTP, goals, available training days, and constraints
 - Current training status and age considerations
+- Power zones calculated above for workout design
 
 **Your Responsibilities:**
 
@@ -22,7 +25,7 @@ Design a personalized {training_plan_weeks}-week training plan for this athlete.
    - Set a realistic target FTP based on current trajectory and plan duration
 
 3. **Create Each Workout**
-   - Use calculate_power_zones to get training zones for this athlete's current FTP
+   - Use the power zones provided above to design appropriate power targets
    - Use create_workout to build each workout with specific structure:
      * Workout name and description
      * Segments array with warm-up, main intervals, recovery, cool-down

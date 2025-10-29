@@ -591,21 +591,41 @@ class MultiAgentOrchestrator:
         Returns:
             PhaseResult for training planning phase
         """
+        from cycling_ai.core.power_zones import calculate_power_zones
+        from cycling_ai.core.athlete import load_athlete_profile
+
         # Extract athlete profile path from Phase 2 context (originally from Phase 1)
         athlete_profile_path = phase2_result.extracted_data.get(
             "athlete_profile_path", str(config.athlete_profile_path)
         )
 
+        # Load athlete profile to get FTP
+        try:
+            athlete_profile = load_athlete_profile(athlete_profile_path)
+            ftp = athlete_profile.ftp
+        except Exception:
+            # Fallback to default FTP if profile can't be loaded
+            ftp = 260  # Default FTP
+
+        # Pre-calculate power zones
+        power_zones = calculate_power_zones(ftp)
+
+        # Format zones for prompt
+        zones_text = f"**Power Zones (based on FTP {ftp}W):**\n"
+        for zone_id, zone_data in power_zones.items():
+            zones_text += f"- **{zone_id.upper()} ({zone_data['name']})**: {zone_data['min']}-{zone_data['max']}W ({int(zone_data['ftp_pct_min']*100)}-{int(zone_data['ftp_pct_max']*100)}% FTP) - {zone_data['description']}\n"
+
         user_message = self.prompts_manager.get_training_planning_user_prompt(
-            training_plan_weeks=config.training_plan_weeks,
+            training_plan_weeks=str(config.training_plan_weeks),
             athlete_profile_path=athlete_profile_path,
+            power_zones=zones_text,
         )
 
         return self._execute_phase(
             phase_name="training_planning",
             config=config,
             prompt_getter=self.prompts_manager.get_training_planning_prompt,
-            tools=["calculate_power_zones", "create_workout", "finalize_training_plan"],
+            tools=["create_workout", "finalize_training_plan"],  # Removed calculate_power_zones
             phase_context=phase2_result.extracted_data,
             user_message=user_message,
         )
