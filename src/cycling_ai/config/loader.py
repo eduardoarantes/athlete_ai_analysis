@@ -16,9 +16,9 @@ def get_config_path() -> Path:
 
     Searches in this order:
     1. CYCLING_AI_CONFIG environment variable
-    2. ~/.cycling-ai/config.yaml
-    3. ./.cycling-ai.yaml (current directory)
-    4. Default: ~/.cycling-ai/config.yaml (created if missing)
+    2. ./.cycling-ai.yaml (current directory) - PRIORITIZED
+    3. ~/.cycling-ai/config.yaml (home directory)
+    4. Default: ./.cycling-ai.yaml (created in current directory if missing)
 
     Returns:
         Path to configuration file
@@ -27,18 +27,18 @@ def get_config_path() -> Path:
     if config_env := os.getenv("CYCLING_AI_CONFIG"):
         return Path(config_env)
 
+    # Check current directory FIRST (project-local config)
+    local_config = Path.cwd() / ".cycling-ai.yaml"
+    if local_config.exists():
+        return local_config
+
     # Check home directory
     home_config = Path.home() / ".cycling-ai" / "config.yaml"
     if home_config.exists():
         return home_config
 
-    # Check current directory
-    local_config = Path.cwd() / ".cycling-ai.yaml"
-    if local_config.exists():
-        return local_config
-
-    # Return default path (will be created if needed)
-    return home_config
+    # Return default path - prefer local config (will be created if needed)
+    return local_config
 
 
 def load_config() -> CyclingAIConfig:
