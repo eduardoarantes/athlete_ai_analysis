@@ -6,6 +6,11 @@ Design a personalized {training_plan_weeks}-week training plan for this athlete.
 **Power Zones:**
 {power_zones}
 
+**Athlete's Available Training Days:**
+{available_days}
+
+**Weekly Time Budget:** {weekly_time_budget_hours} hours
+
 **Context Available to You:**
 - Performance analysis data showing recent trends, fitness trajectory, and time-in-zones
 - Athlete profile with FTP, goals, available training days, and constraints
@@ -34,9 +39,9 @@ Design a complete {training_plan_weeks}-week training plan and submit it in ONE 
    - Each workout must include:
      * name: Descriptive workout name
      * description: Purpose and coaching notes
-     * segments: Array of segments (warmup, interval, recovery, cooldown, steady)
+     * segments: Array of segments (warmup, interval, work, recovery, cooldown, steady, tempo)
    - Each segment must have:
-     * type: warmup/interval/recovery/cooldown/steady
+     * type: warmup/interval/work/recovery/cooldown/steady/tempo
      * duration_min: Duration in minutes
      * power_low: Lower power target in watts
      * power_high: Upper power target in watts (optional, defaults to power_low)
@@ -47,9 +52,11 @@ Design a complete {training_plan_weeks}-week training plan and submit it in ONE 
      * week_number: Week number
      * phase: Training phase name
      * phase_rationale: Why this phase for this week?
-     * workouts: Object mapping day names (e.g., "Monday", "Wednesday") to workout objects
+     * workouts: Object mapping day names to workout objects
+       **CRITICAL: You MUST ONLY use these days: {available_days}**
+       **DO NOT schedule workouts on any other days of the week**
      * weekly_focus: Key training stimulus for the week
-     * monitoring_notes: What athlete should watch for this week
+     * weekly_watch_points: What athlete should watch for this week
 
 5. **Write Coaching Guidance**
    - coaching_notes: Comprehensive explanation of:
@@ -89,6 +96,7 @@ Design a complete {training_plan_weeks}-week training plan and submit it in ONE 
 
 **Critical Instructions:**
 - This is a PERSONALIZED coaching program - adapt to THIS athlete
+- **ONLY schedule workouts on these days: {available_days} - NO OTHER DAYS**
 - You have ONLY ONE tool: finalize_training_plan
 - Design ALL {training_plan_weeks} weeks with ALL workouts, THEN submit everything in ONE CALL
 - Do NOT make multiple tool calls - submit the complete plan in a single finalize_training_plan call

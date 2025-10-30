@@ -11,6 +11,183 @@ from typing import Any
 from .utils import convert_to_json_serializable
 
 
+def validate_training_plan(
+    plan_data: dict[str, Any],
+    available_days: list[str],
+    weekly_hours: float,
+    daily_caps: dict[str, int] | None = None,
+) -> tuple[bool, list[str]]:
+    """
+    Validate training plan structure and constraints.
+
+    Args:
+        plan_data: Dictionary containing weekly_plan and total_weeks
+        available_days: List of available training days (e.g., ["Monday", "Wednesday", "Saturday"])
+        weekly_hours: Maximum weekly training hours
+        daily_caps: Optional dict mapping day names to max minutes per day
+
+    Returns:
+        Tuple of (is_valid, error_messages)
+    """
+    errors = []
+
+    try:
+        # Check top-level structure
+        if "total_weeks" not in plan_data:
+            errors.append("Missing 'total_weeks' field in plan")
+            return False, errors
+
+        if "weekly_plan" not in plan_data:
+            errors.append("Missing 'weekly_plan' field in plan")
+            return False, errors
+
+        total_weeks = plan_data["total_weeks"]
+        weekly_plan = plan_data["weekly_plan"]
+
+        # Validate total_weeks matches weekly_plan length
+        if total_weeks != len(weekly_plan):
+            errors.append(
+                f"total_weeks ({total_weeks}) does not match weekly_plan length ({len(weekly_plan)})"
+            )
+
+        # Validate each week
+        for i, week in enumerate(weekly_plan, 1):
+            week_num = week.get("week_number", i)
+
+            # Check week_number is in valid range
+            if not (1 <= week_num <= total_weeks):
+                errors.append(f"Week {week_num} number out of range (1-{total_weeks})")
+
+            # Check workouts field exists
+            if "workouts" not in week:
+                errors.append(f"Week {week_num} missing 'workouts' field")
+                continue  # Skip further validation for this week
+
+            workouts = week["workouts"]
+
+            # Check workouts is a list
+            if not isinstance(workouts, list):
+                errors.append(f"Week {week_num} 'workouts' must be a list, got {type(workouts).__name__}")
+                continue
+
+            # Check at least one workout
+            if len(workouts) < 1:
+                errors.append(f"Week {week_num} must have at least one workout")
+                continue
+
+            # Validate each workout
+            week_minutes = 0
+            for workout_idx, workout in enumerate(workouts, 1):
+                # Validate weekday field exists
+                if "weekday" not in workout:
+                    errors.append(f"Week {week_num}, workout {workout_idx}: Missing 'weekday' field")
+                    continue
+
+                day = workout["weekday"]
+
+                # Validate day name
+                valid_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+                if day not in valid_days:
+                    errors.append(f"Week {week_num}, workout {workout_idx}: Invalid weekday '{day}' (must be one of {valid_days})")
+                    continue
+
+                # Check day is in available days
+                if day not in available_days:
+                    errors.append(
+                        f"Week {week_num}, workout {workout_idx}: Workout scheduled on '{day}' but athlete only available on {available_days}"
+                    )
+
+                # Validate workout has segments
+                if "segments" not in workout:
+                    errors.append(f"Week {week_num}, {day}: Workout missing 'segments' field")
+                    continue
+
+                segments = workout["segments"]
+                if not isinstance(segments, list):
+                    errors.append(
+                        f"Week {week_num}, {day}: 'segments' must be a list, got {type(segments).__name__}"
+                    )
+                    continue
+
+                if len(segments) < 1:
+                    errors.append(f"Week {week_num}, {day}: Workout must have at least one segment")
+                    continue
+
+                # Validate each segment
+                day_minutes = 0
+                for seg_idx, segment in enumerate(segments, 1):
+                    # Check segment type
+                    valid_types = {"warmup", "interval", "work", "recovery", "cooldown", "steady", "tempo"}
+                    seg_type = segment.get("type")
+                    if seg_type not in valid_types:
+                        errors.append(
+                            f"Week {week_num}, {day}, segment {seg_idx}: Invalid type '{seg_type}' (must be one of {valid_types})"
+                        )
+
+                    # Check duration
+                    if "duration_min" not in segment:
+                        errors.append(f"Week {week_num}, {day}, segment {seg_idx}: Missing 'duration_min' field")
+                    elif not isinstance(segment["duration_min"], (int, float)):
+                        errors.append(
+                            f"Week {week_num}, {day}, segment {seg_idx}: 'duration_min' must be a number"
+                        )
+                    else:
+                        day_minutes += segment["duration_min"]
+
+                    # Auto-default power_high_pct to power_low_pct if not provided
+                    if "power_low_pct" in segment and "power_high_pct" not in segment:
+                        segment["power_high_pct"] = segment["power_low_pct"]
+
+                    # Check power percentage fields
+                    if "power_low_pct" not in segment:
+                        errors.append(f"Week {week_num}, {day}, segment {seg_idx}: Missing 'power_low_pct' field")
+                    elif not isinstance(segment["power_low_pct"], (int, float)):
+                        errors.append(
+                            f"Week {week_num}, {day}, segment {seg_idx}: 'power_low_pct' must be a number"
+                        )
+                    elif not (0 <= segment["power_low_pct"] <= 200):
+                        errors.append(
+                            f"Week {week_num}, {day}, segment {seg_idx}: 'power_low_pct' must be between 0 and 200 (got {segment['power_low_pct']})"
+                        )
+
+                    # Validate power_high_pct >= power_low_pct if present
+                    if "power_high_pct" in segment:
+                        if not isinstance(segment["power_high_pct"], (int, float)):
+                            errors.append(
+                                f"Week {week_num}, {day}, segment {seg_idx}: 'power_high_pct' must be a number"
+                            )
+                        elif not (0 <= segment["power_high_pct"] <= 200):
+                            errors.append(
+                                f"Week {week_num}, {day}, segment {seg_idx}: 'power_high_pct' must be between 0 and 200 (got {segment['power_high_pct']})"
+                            )
+                        elif segment["power_high_pct"] < segment.get("power_low_pct", 0):
+                            errors.append(
+                                f"Week {week_num}, {day}, segment {seg_idx}: power_high_pct ({segment['power_high_pct']}) must be >= power_low_pct ({segment['power_low_pct']})"
+                            )
+
+                # Check daily cap if specified
+                if daily_caps and day in daily_caps:
+                    if day_minutes > daily_caps[day]:
+                        errors.append(
+                            f"Week {week_num}, {day}: Total duration {day_minutes} min exceeds daily cap of {daily_caps[day]} min"
+                        )
+
+                week_minutes += day_minutes
+
+            # Check weekly hours constraint
+            max_weekly_minutes = weekly_hours * 60
+            if week_minutes > max_weekly_minutes:
+                errors.append(
+                    f"Week {week_num}: Total duration {week_minutes} min exceeds weekly limit of {max_weekly_minutes} min ({weekly_hours} hours)"
+                )
+
+    except Exception as e:
+        errors.append(f"Unexpected validation error: {str(e)}")
+        return False, errors
+
+    return len(errors) == 0, errors
+
+
 def finalize_training_plan(
     athlete_profile: Any,
     total_weeks: int,
@@ -42,13 +219,13 @@ def finalize_training_plan(
                 "week_number": 1,
                 "phase": "Foundation",
                 "phase_rationale": "Building aerobic base...",
-                "workouts": {
-                    "Tuesday": {workout object from create_workout},
-                    "Thursday": {workout object},
+                "workouts": [
+                    {workout object from create_workout with weekday field},
+                    {workout object with weekday field},
                     ...
-                },
+                ],
                 "weekly_focus": "Focus on consistency...",
-                "monitoring_notes": "Watch for fatigue..."
+                "weekly_watch_points": "Watch for fatigue..."
             },
             ...
         ]
@@ -75,9 +252,9 @@ def finalize_training_plan(
         if "workouts" not in week_data:
             raise ValueError(f"Week {week_data.get('week_number')} missing 'workouts' field")
 
-        if not isinstance(week_data["workouts"], dict):
+        if not isinstance(week_data["workouts"], list):
             raise ValueError(
-                f"Week {week_data.get('week_number')} 'workouts' must be a dictionary"
+                f"Week {week_data.get('week_number')} 'workouts' must be a list"
             )
 
     # Build athlete profile data for metadata

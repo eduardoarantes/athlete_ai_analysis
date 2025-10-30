@@ -26,7 +26,7 @@ Both the current viewer and original MCP template share:
 4. **SVG Power Profile**
    - Grid lines for reference
    - FTP reference line (purple dashed)
-   - Color-coded segments (warmup, interval, recovery, cooldown)
+   - Color-coded segments (warmup, interval, work, recovery, cooldown, steady, tempo)
    - Proportional bar widths and heights
 
 5. **Workout Structure**

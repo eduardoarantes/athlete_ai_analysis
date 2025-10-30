@@ -29,7 +29,7 @@ The training planning agent becomes a **coaching expert** that:
 - `workout_name`: string (e.g., "Threshold", "VO2 Max", "Endurance")
 - `description`: string (coaching notes)
 - `segments`: array of segment objects
-  - `type`: warmup | interval | recovery | cooldown | steady
+  - `type`: warmup | interval | work | recovery | cooldown | steady | tempo
   - `duration_min`: integer
   - `power_low`: integer (watts)
   - `power_high`: integer (watts, optional)
@@ -73,7 +73,7 @@ The training planning agent becomes a **coaching expert** that:
   - `phase_rationale`: string (why this phase now)
   - `workouts`: object mapping day names to workout objects
   - `weekly_focus`: string (coaching guidance for the week)
-  - `monitoring_notes`: string (what athlete should watch for)
+  - `weekly_watch_points`: string (what athlete should watch for)
 
 **Returns**: Complete training plan with metadata
 

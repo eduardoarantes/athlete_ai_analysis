@@ -19,7 +19,7 @@ class WorkoutSegment:
             power_low: Lower power bound in watts
             power_high: Upper power bound in watts (same as low for steady state)
             description: Text description of the segment
-            segment_type: Type of segment (warmup, interval, recovery, cooldown, steady)
+            segment_type: Type of segment (warmup, interval, work, recovery, cooldown, steady, tempo)
         """
         self.duration_min = duration_min
         self.power_low = power_low
@@ -40,8 +40,8 @@ class WorkoutSegment:
 class Workout:
     """Represents a complete structured workout"""
 
-    def __init__(self, name: str, description: str = ""):
-        self.name = name
+    def __init__(self, weekday: str, description: str = ""):
+        self.weekday = weekday
         self.description = description
         self.segments: list[WorkoutSegment] = []
 
@@ -96,7 +96,7 @@ class Workout:
     def to_dict(self) -> dict:
         """Convert workout to dictionary"""
         return {
-            'name': self.name,
+            'weekday': self.weekday,
             'description': self.description,
             'total_duration_min': self.total_duration(),
             'work_time_min': self.work_time(),
@@ -104,19 +104,20 @@ class Workout:
         }
 
 
-def build_threshold_workout(ftp: int, intervals: str = "2x20", week: int = 1) -> Workout:
+def build_threshold_workout(ftp: int, weekday: str, intervals: str = "2x20", week: int = 1) -> Workout:
     """
     Build a threshold workout with warm-up and cool-down.
 
     Args:
         ftp: Athlete's FTP
+        weekday: Day of the week (Monday-Sunday)
         intervals: Interval structure (e.g., "2x20", "2x15")
         week: Week number for progression
 
     Returns:
         Structured Workout object
     """
-    workout = Workout("Threshold", "Build sustainable power at FTP")
+    workout = Workout(weekday, "Build sustainable power at FTP")
 
     # Parse intervals
     sets, duration = intervals.split('x')
@@ -145,9 +146,9 @@ def build_threshold_workout(ftp: int, intervals: str = "2x20", week: int = 1) ->
     return workout
 
 
-def build_vo2max_workout(ftp: int, intervals: str = "5x5", week: int = 1) -> Workout:
+def build_vo2max_workout(ftp: int, weekday: str, intervals: str = "5x5", week: int = 1) -> Workout:
     """Build a VO2 max workout"""
-    workout = Workout("VO2 Max", "High intensity intervals to boost aerobic capacity")
+    workout = Workout(weekday, "High intensity intervals to boost aerobic capacity")
 
     sets, duration = intervals.split('x')
     sets = int(sets)
@@ -181,9 +182,9 @@ def build_vo2max_workout(ftp: int, intervals: str = "5x5", week: int = 1) -> Wor
     return workout
 
 
-def build_sweetspot_workout(ftp: int, intervals: str = "3x15") -> Workout:
+def build_sweetspot_workout(ftp: int, weekday: str, intervals: str = "3x15") -> Workout:
     """Build a sweet spot workout"""
-    workout = Workout("Sweet Spot", "Sub-threshold intervals for FTP development")
+    workout = Workout(weekday, "Sub-threshold intervals for FTP development")
 
     sets, duration = intervals.split('x')
     sets = int(sets)
@@ -211,9 +212,9 @@ def build_sweetspot_workout(ftp: int, intervals: str = "3x15") -> Workout:
     return workout
 
 
-def build_tempo_workout(ftp: int, intervals: str = "3x15") -> Workout:
+def build_tempo_workout(ftp: int, weekday: str, intervals: str = "3x15") -> Workout:
     """Build a tempo workout"""
-    workout = Workout("Tempo", "Aerobic endurance at moderate intensity")
+    workout = Workout(weekday, "Aerobic endurance at moderate intensity")
 
     sets, duration = intervals.split('x')
     sets = int(sets)
@@ -241,9 +242,9 @@ def build_tempo_workout(ftp: int, intervals: str = "3x15") -> Workout:
     return workout
 
 
-def build_endurance_workout(ftp: int, duration_min: int = 60) -> Workout:
+def build_endurance_workout(ftp: int, weekday: str, duration_min: int = 60) -> Workout:
     """Build an endurance workout"""
-    workout = Workout("Endurance", "Aerobic base building")
+    workout = Workout(weekday, "Aerobic base building")
 
     # Get power targets using centralized helper
     targets = get_workout_power_targets(ftp)

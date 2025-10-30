@@ -39,11 +39,11 @@ class WorkoutBuilderTool(BaseTool):
             category="analysis",
             parameters=[
                 ToolParameter(
-                    name="workout_name",
+                    name="weekday",
                     type="string",
                     description=(
-                        "Name of the workout (e.g., 'Threshold Development', 'VO2 Max Intervals', "
-                        "'Long Endurance Ride'). Should be descriptive and specific."
+                        "Day of the week for this workout. Must be one of: Monday, Tuesday, "
+                        "Wednesday, Thursday, Friday, Saturday, Sunday."
                     ),
                     required=True,
                 ),
@@ -62,7 +62,7 @@ class WorkoutBuilderTool(BaseTool):
                     type="array",
                     description=(
                         "Array of workout segments in sequential order. Each segment must include: "
-                        "type (warmup/interval/recovery/cooldown/steady), duration_min (integer), "
+                        "type (warmup/interval/work/recovery/cooldown/steady/tempo), duration_min (integer), "
                         "power_low (watts), power_high (watts, optional - defaults to power_low), "
                         "description (segment purpose). Workouts typically include: warm-up (10-15min), "
                         "main intervals, recovery between intervals (3-5min), and cool-down (10min)."
@@ -73,7 +73,7 @@ class WorkoutBuilderTool(BaseTool):
                         "properties": {
                             "type": {
                                 "type": "STRING",
-                                "description": "Segment type: warmup, interval, recovery, cooldown, or steady"
+                                "description": "Segment type: warmup, interval, work, recovery, cooldown, steady, or tempo"
                             },
                             "duration_min": {
                                 "type": "INTEGER",
@@ -108,7 +108,7 @@ class WorkoutBuilderTool(BaseTool):
                 "type": "object",
                 "format": "json",
                 "description": (
-                    "Structured workout object containing: name, description, total_duration_min, "
+                    "Structured workout object containing: weekday, description, total_duration_min, "
                     "work_time_min (interval segments only), and segments (array of segment details)."
                 ),
             },
@@ -120,7 +120,7 @@ class WorkoutBuilderTool(BaseTool):
         Execute workout creation.
 
         Args:
-            **kwargs: Tool parameters (workout_name, description, segments, ftp)
+            **kwargs: Tool parameters (weekday, description, segments, ftp)
 
         Returns:
             ToolExecutionResult with structured workout data
@@ -130,10 +130,20 @@ class WorkoutBuilderTool(BaseTool):
             self.validate_parameters(**kwargs)
 
             # Extract parameters
-            workout_name = kwargs["workout_name"]
+            weekday = kwargs["weekday"]
             description = kwargs["description"]
             segments_data = kwargs["segments"]
             ftp = float(kwargs["ftp"])
+
+            # Validate weekday
+            valid_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+            if weekday not in valid_days:
+                return ToolExecutionResult(
+                    success=False,
+                    data=None,
+                    format="json",
+                    errors=[f"Invalid weekday '{weekday}'. Must be one of: {', '.join(valid_days)}"],
+                )
 
             # Validate segments is a list
             if not isinstance(segments_data, list):
@@ -153,7 +163,7 @@ class WorkoutBuilderTool(BaseTool):
                 )
 
             # Create workout
-            workout = Workout(name=workout_name, description=description)
+            workout = Workout(weekday=weekday, description=description)
 
             # Add segments
             for idx, seg_data in enumerate(segments_data):
@@ -200,7 +210,7 @@ class WorkoutBuilderTool(BaseTool):
                         )
 
                     # Validate segment type
-                    valid_types = ["warmup", "interval", "recovery", "cooldown", "steady"]
+                    valid_types = ["warmup", "interval", "work", "recovery", "cooldown", "steady", "tempo"]
                     if seg_type not in valid_types:
                         return ToolExecutionResult(
                             success=False,
@@ -272,7 +282,7 @@ class WorkoutBuilderTool(BaseTool):
                 data=workout_dict,
                 format="json",
                 metadata={
-                    "workout_name": workout_name,
+                    "weekday": weekday,
                     "total_duration_min": workout.total_duration(),
                     "work_time_min": workout.work_time(),
                     "num_segments": len(workout.segments),
