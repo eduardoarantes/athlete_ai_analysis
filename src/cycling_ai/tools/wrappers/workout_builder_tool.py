@@ -23,7 +23,7 @@ class WorkoutBuilderTool(BaseTool):
     Tool for creating structured workouts.
 
     Enables LLM to design workouts with specific segments, power targets,
-    and durations. Generates SVG visualizations automatically.
+    and durations.
     """
 
     @property
@@ -34,8 +34,7 @@ class WorkoutBuilderTool(BaseTool):
             description=(
                 "Create a structured workout with warm-up, work intervals, recovery periods, "
                 "and cool-down. Each workout consists of segments with specific durations and "
-                "power targets. Use this tool to design each individual workout in your training plan. "
-                "Automatically generates visual SVG representation."
+                "power targets. Use this tool to design each individual workout in your training plan."
             ),
             category="analysis",
             parameters=[
@@ -100,8 +99,7 @@ class WorkoutBuilderTool(BaseTool):
                     name="ftp",
                     type="number",
                     description=(
-                        "Athlete's current FTP in watts. Used for SVG visualization scaling. "
-                        "Required for generating the workout visualization."
+                        "Athlete's current FTP in watts. Used for workout metadata."
                     ),
                     required=True,
                 ),
@@ -111,8 +109,7 @@ class WorkoutBuilderTool(BaseTool):
                 "format": "json",
                 "description": (
                     "Structured workout object containing: name, description, total_duration_min, "
-                    "work_time_min (interval segments only), segments (array of segment details), "
-                    "and svg (visual representation as SVG markup)."
+                    "work_time_min (interval segments only), and segments (array of segment details)."
                 ),
             },
             version="1.0.0",
@@ -268,10 +265,6 @@ class WorkoutBuilderTool(BaseTool):
 
             # Generate workout data
             workout_dict = workout.to_dict()
-
-            # Generate SVG visualization
-            svg_markup = workout.generate_svg(width=600, height=200, ftp=int(ftp))
-            workout_dict['svg'] = svg_markup
 
             # Return successful result
             return ToolExecutionResult(

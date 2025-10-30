@@ -26,7 +26,8 @@ Design a personalized {training_plan_weeks}-week training plan for this athlete.
    - Balance their goals with their available time and recovery capacity
    - Set a realistic target FTP based on current trajectory and plan duration
 
-3. **Create Each Workout**
+3. **Create Each Workout (Do This First)**
+   - Design ONE workout for EACH training day across ALL {training_plan_weeks} weeks
    - Use the power zones provided above to design appropriate power targets
    - Use create_workout to build each workout with specific structure:
      * Workout name and description
@@ -34,6 +35,8 @@ Design a personalized {training_plan_weeks}-week training plan for this athlete.
      * Specific power targets (in watts) for each segment
      * Duration for each segment
    - Remember: High-intensity workouts need warm-up and cool-down
+   - Total workouts to create: Approximately {training_plan_weeks} weeks × athlete's available training days
+   - Create ALL workouts BEFORE proceeding to step 6
 
 4. **Organize Into Weekly Structure**
    - Respect the athlete's available training days (don't schedule more than they have)
@@ -58,9 +61,11 @@ Design a personalized {training_plan_weeks}-week training plan for this athlete.
      * When to prioritize recovery
      * Specific considerations for this athlete's situation
 
-6. **Finalize the Plan**
+6. **Finalize the Plan - FINAL REQUIRED STEP**
+   - AFTER creating all workouts for all {training_plan_weeks} weeks, YOU MUST call finalize_training_plan
+   - Do NOT create more workouts after you have covered all {training_plan_weeks} weeks
    - YOU MUST use the finalize_training_plan tool to save your plan
-   - Call finalize_training_plan with:
+   - Call finalize_training_plan ONCE with the complete plan:
      * athlete_profile_json: {athlete_profile_path}
      * total_weeks: {training_plan_weeks}
      * target_ftp: your determined target (be realistic!)
@@ -68,6 +73,13 @@ Design a personalized {training_plan_weeks}-week training plan for this athlete.
      * coaching_notes: your coaching analysis and rationale
      * monitoring_guidance: what athlete should monitor
    - This tool call is REQUIRED - do not skip it!
+
+**Completion Checklist (verify before calling finalize_training_plan):**
+- ✓ Created workouts for all {training_plan_weeks} weeks
+- ✓ Organized workouts into weekly structure with phases and rationale
+- ✓ Written coaching_notes explaining your plan design
+- ✓ Written monitoring_guidance for the athlete
+- ✓ Ready to call finalize_training_plan tool NOW
 
 **Example Workout Creation:**
 
@@ -88,6 +100,14 @@ create_workout(
 
 **Critical Reminders:**
 - This is a PERSONALIZED coaching program - analyze the performance data and adapt to THIS athlete
-- YOU MUST call finalize_training_plan tool - do NOT return JSON directly
+- YOU MUST call finalize_training_plan tool AFTER creating all workouts - do NOT return JSON directly
+- Do NOT create endless workouts - create exactly {training_plan_weeks} weeks of training, then STOP and call finalize_training_plan
 - Explain your reasoning throughout - you're coaching, not just outputting a template
 - Base your decisions on the actual performance data available to you
+
+**Workflow Summary:**
+1. Analyze athlete's data and determine periodization
+2. Create workouts using create_workout for all {training_plan_weeks} weeks
+3. Organize workouts into weekly structure
+4. Write coaching notes and monitoring guidance
+5. Call finalize_training_plan tool (REQUIRED FINAL STEP)

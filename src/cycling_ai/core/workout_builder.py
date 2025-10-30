@@ -2,7 +2,6 @@
 Workout Builder Module
 
 Generates detailed workout structures with warm-up, main sets, and cool-down.
-Creates visual SVG representations of workouts similar to Zwift/TrainingPeaks.
 """
 
 from .power_zones import get_workout_power_targets
@@ -103,103 +102,6 @@ class Workout:
             'work_time_min': self.work_time(),
             'segments': [s.to_dict() for s in self.segments]
         }
-
-    def generate_svg(self, width: int = 600, height: int = 200, ftp: int = 250) -> str:
-        """
-        Generate an SVG visualization of the workout.
-
-        Args:
-            width: SVG width in pixels
-            height: SVG height in pixels
-            ftp: Athlete's FTP for scaling
-
-        Returns:
-            SVG markup as string
-        """
-        if not self.segments:
-            return ""
-
-        # Calculate total duration
-        total_duration = self.total_duration()
-        if total_duration == 0:
-            return ""
-
-        # SVG setup - use total duration * 10 for viewBox width for smooth scaling
-        viewbox_width = total_duration * 10
-        viewbox_height = 120
-
-        # No padding in viewBox coordinates - we'll work in the full viewBox space
-        chart_width = viewbox_width
-        chart_height = viewbox_height
-
-        # Find max power for scaling (use 200% FTP as max for better visualization)
-        max_power = ftp * 2.0
-
-        # Color mapping for different segment types and zones
-        def get_color(segment: WorkoutSegment) -> str:
-            avg_power = (segment.power_low + segment.power_high) / 2
-            intensity = avg_power / ftp if ftp > 0 else 0
-
-            if segment.segment_type in ['warmup', 'cooldown']:
-                return '#94A3B8'  # Gray
-            elif intensity < 0.6:
-                return '#3B82F6'  # Blue - Z1 Recovery
-            elif intensity < 0.8:
-                return '#10B981'  # Green - Z2 Endurance
-            elif intensity < 0.9:
-                return '#F59E0B'  # Orange - Z3 Tempo
-            elif intensity < 1.05:
-                return '#EF4444'  # Red - Z4 Threshold
-            else:
-                return '#DC2626'  # Dark Red - Z5 VO2 Max
-
-        # Start building SVG with viewBox and preserveAspectRatio
-        svg_parts = [
-            f'<svg viewBox="0 0 {viewbox_width} {viewbox_height}" preserveAspectRatio="none" style="width: 100%; height: 120px;" xmlns="http://www.w3.org/2000/svg">',
-
-            # Background grid lines
-            f'<line x1="0" y1="30" x2="{viewbox_width}" y2="30" stroke="#e4e6e8" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/>',
-            f'<line x1="0" y1="60" x2="{viewbox_width}" y2="60" stroke="#e4e6e8" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/>',
-            f'<line x1="0" y1="90" x2="{viewbox_width}" y2="90" stroke="#e4e6e8" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/>',
-        ]
-
-        # Add FTP reference line at 50% of viewbox height (middle)
-        ftp_y = viewbox_height / 2
-        svg_parts.append(
-            f'<line x1="0" y1="{ftp_y}" x2="{viewbox_width}" y2="{ftp_y}" stroke="#696cff" stroke-width="2" stroke-dasharray="6 4" vector-effect="non-scaling-stroke"/>'
-        )
-
-        # Draw workout segments
-        x_position = 0
-        for segment in self.segments:
-            # Calculate segment width based on duration (multiply by 10 to match viewBox width)
-            segment_width = segment.duration_min * 10
-
-            # Calculate bar height based on power as percentage of max
-            # Map power to a position in the viewBox (0-120)
-            # We want FTP (100%) to be at y=60 (middle)
-            # So higher power = lower y value
-            avg_power = (segment.power_low + segment.power_high) / 2
-            power_ratio = avg_power / ftp if ftp > 0 else 0.5
-
-            # Map power ratio to height
-            # 0% = y=120 (bottom), 50% = y=90, 100% (FTP) = y=60, 200% = y=0
-            bar_height = viewbox_height - (power_ratio * viewbox_height / 2)
-            y_top = viewbox_height - bar_height
-
-            color = get_color(segment)
-
-            # Draw segment as a rectangle
-            svg_parts.append(
-                f'<rect x="{x_position}" y="{y_top}" width="{segment_width}" height="{bar_height}" fill="{color}"/>'
-            )
-
-            x_position += segment_width
-
-        # Close SVG
-        svg_parts.append('</svg>')
-
-        return '\n'.join(svg_parts)
 
 
 def build_threshold_workout(ftp: int, intervals: str = "2x20", week: int = 1) -> Workout:
