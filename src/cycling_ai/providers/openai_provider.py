@@ -7,6 +7,7 @@ Supports native function calling and tool use.
 from __future__ import annotations
 
 import json
+import time
 from typing import Any
 
 import openai
@@ -17,6 +18,7 @@ from cycling_ai.providers.base import (
     ProviderConfig,
     ProviderMessage,
 )
+from cycling_ai.providers.interaction_logger import get_interaction_logger
 from cycling_ai.providers.provider_utils import retry_with_exponential_backoff
 from cycling_ai.tools.base import ToolDefinition, ToolExecutionResult
 
@@ -279,8 +281,14 @@ class OpenAIProvider(BaseProvider):
             if tools:
                 request_params["tools"] = self.convert_tool_schema(tools)
 
+            # Track timing
+            start_time = time.time()
+
             # Call OpenAI API
             response = self.client.chat.completions.create(**request_params)
+
+            # Calculate duration
+            duration_ms = (time.time() - start_time) * 1000
 
             # Extract response content
             content = response.choices[0].message.content or ""
@@ -297,7 +305,7 @@ class OpenAIProvider(BaseProvider):
                     for tc in response.choices[0].message.tool_calls
                 ]
 
-            return CompletionResponse(
+            completion_response = CompletionResponse(
                 content=content,
                 tool_calls=tool_calls,
                 metadata={
@@ -306,6 +314,24 @@ class OpenAIProvider(BaseProvider):
                     "finish_reason": response.choices[0].finish_reason,
                 },
             )
+
+            # Log the interaction
+            try:
+                logger = get_interaction_logger()
+                logger.log_interaction(
+                    provider_name="openai",
+                    model=self.config.model,
+                    messages=messages,
+                    tools=tools,
+                    response=completion_response,
+                    duration_ms=duration_ms,
+                )
+            except Exception as e:
+                # Don't fail the request if logging fails
+                import logging as log
+                log.warning(f"Failed to log LLM interaction: {e}")
+
+            return completion_response
 
         except openai.AuthenticationError as e:
             raise ValueError(f"Invalid OpenAI API key: {e}") from e
