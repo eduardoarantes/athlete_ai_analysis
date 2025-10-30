@@ -238,6 +238,53 @@
             border-radius: 6px;
         }
 
+        /* Coaching Sections */
+        .coaching-section {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-md);
+            border-left: 4px solid var(--accent-teal);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-icon {
+            font-size: 2rem;
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent-teal) 0%, var(--accent-orange) 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .section-header h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .section-content {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 1.5rem;
+            border-radius: 12px;
+            line-height: 1.8;
+        }
+
+        .section-content p {
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
         /* Calendar Section Header */
         .calendar-header {
             display: flex;
@@ -850,6 +897,28 @@
             </div>
         </div>
 
+        <!-- Coaching Notes Section -->
+        <div id="coaching-notes-section" class="coaching-section" style="display: none;">
+            <div class="section-header">
+                <div class="section-icon">📋</div>
+                <h3>Coaching Notes</h3>
+            </div>
+            <div class="section-content">
+                <p id="coaching-notes-text">Loading coaching notes...</p>
+            </div>
+        </div>
+
+        <!-- Monitoring Guidance Section -->
+        <div id="monitoring-guidance-section" class="coaching-section" style="display: none;">
+            <div class="section-header">
+                <div class="section-icon">📊</div>
+                <h3>Monitoring Guidance</h3>
+            </div>
+            <div class="section-content">
+                <p id="monitoring-guidance-text">Loading monitoring guidance...</p>
+            </div>
+        </div>
+
         <!-- Calendar Section -->
         <div id="calendar-section" style="display: none;">
             <div class="calendar-header">
@@ -1028,6 +1097,19 @@
 
             // Update weeks badge
             document.getElementById('weeks-badge').textContent = `${athlete.training_plan.total_weeks} weeks`;
+
+            // Update coaching notes and monitoring guidance
+            const trainingPlanData = athlete.training_plan.training_plan || athlete.training_plan;
+
+            if (trainingPlanData.coaching_notes) {
+                document.getElementById('coaching-notes-text').textContent = trainingPlanData.coaching_notes;
+                document.getElementById('coaching-notes-section').style.display = 'block';
+            }
+
+            if (trainingPlanData.monitoring_guidance) {
+                document.getElementById('monitoring-guidance-text').textContent = trainingPlanData.monitoring_guidance;
+                document.getElementById('monitoring-guidance-section').style.display = 'block';
+            }
 
             // Show cards
             document.getElementById('athlete-card').style.display = 'grid';
