@@ -111,7 +111,7 @@ def main():
     interactive = sys.stdin.isatty()
 
     print("\n" + "="*60)
-    print("Manual Phase Runner - Gemini 2.0 Flash Debug")
+    print("Manual Phase Runner - OpenAI GPT-4o Test")
     if not interactive:
         print("(Running in non-interactive mode)")
     print("="*60 + "\n")
@@ -127,18 +127,18 @@ def main():
     print(f"FIT directory: {fit_dir}")
 
     # Initialize provider
-    print("\nInitializing Gemini provider...")
+    print("\nInitializing OpenAI provider...")
 
     # Get API key from environment
-    api_key = os.getenv("GOOGLE_API_KEY")
+    api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
-        print("✗ Error: GOOGLE_API_KEY environment variable not set")
+        print("✗ Error: OPENAI_API_KEY environment variable not set")
         return 1
 
     provider_config = ProviderConfig(
-        provider_name="gemini",
+        provider_name="openai",
         api_key=api_key,
-        model="gemini-2.5-flash",
+        model="gpt-4o",
         max_tokens=8192,
         temperature=0.7,
     )

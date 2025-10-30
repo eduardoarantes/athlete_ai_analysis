@@ -109,13 +109,16 @@ def convert_to_openai_format(tools: list[ToolDefinition]) -> list[dict[str, Any]
     """
     Convert generic tool definitions to OpenAI function schema format.
 
+    DEPRECATED: This function is kept for backwards compatibility with Ollama provider.
+    OpenAI provider now implements schema conversion directly.
+
     This format is also compatible with Ollama and other OpenAI-compatible APIs.
 
     Args:
         tools: List of generic tool definitions
 
     Returns:
-        List of OpenAI-format function schemas
+        List of OpenAI-format function schemas (basic conversion only)
 
     Example:
         >>> tool = ToolDefinition(
@@ -144,6 +147,7 @@ def convert_to_openai_format(tools: list[ToolDefinition]) -> list[dict[str, Any]
             }
             if param.enum:
                 properties[param.name]["enum"] = param.enum
+            # Note: items are NOT processed here - use provider-specific implementation
             if param.required:
                 required.append(param.name)
 

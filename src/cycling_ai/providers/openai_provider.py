@@ -21,6 +21,81 @@ from cycling_ai.providers.provider_utils import retry_with_exponential_backoff
 from cycling_ai.tools.base import ToolDefinition, ToolExecutionResult
 
 
+def _normalize_type(type_str: str) -> str:
+    """
+    Normalize type string to lowercase for OpenAI compatibility.
+
+    Args:
+        type_str: Type string (may be uppercase or lowercase)
+
+    Returns:
+        Lowercase type string
+    """
+    return type_str.lower()
+
+
+def _convert_items_schema(items: dict[str, Any]) -> dict[str, Any]:
+    """
+    Recursively convert items schema to OpenAI format.
+
+    Handles nested objects, arrays, and type normalization.
+
+    Args:
+        items: Items schema dictionary
+
+    Returns:
+        OpenAI-format items schema
+    """
+    result: dict[str, Any] = {}
+
+    # Normalize type to lowercase
+    if "type" in items:
+        result["type"] = _normalize_type(items["type"])
+
+    # Copy description
+    if "description" in items:
+        result["description"] = items["description"]
+
+    # Process properties for object types
+    if "properties" in items:
+        properties = {}
+        for key, value in items["properties"].items():
+            prop: dict[str, Any] = {}
+
+            # Normalize type
+            if "type" in value:
+                prop["type"] = _normalize_type(value["type"])
+
+            # Copy description
+            if "description" in value:
+                prop["description"] = value["description"]
+
+            # Recursively process nested items
+            if "items" in value:
+                prop["items"] = _convert_items_schema(value["items"])
+
+            # Recursively process nested properties (for nested objects)
+            if "properties" in value:
+                nested_result = _convert_items_schema(value)
+                prop["properties"] = nested_result["properties"]
+                if "required" in nested_result:
+                    prop["required"] = nested_result["required"]
+
+            properties[key] = prop
+
+        result["properties"] = properties
+
+        # Copy required fields
+        if "required" in items:
+            result["required"] = items["required"]
+
+    # Recursively process nested items (for arrays)
+    if "items" in items:
+        result["items"] = _convert_items_schema(items["items"])
+
+    return result
+
+
 class OpenAIProvider(BaseProvider):
     """
     OpenAI provider adapter for GPT models.
@@ -62,9 +137,41 @@ class OpenAIProvider(BaseProvider):
             >>> schema[0]["type"]
             'function'
         """
-        from cycling_ai.providers.provider_utils import convert_to_openai_format
+        openai_tools = []
 
-        return convert_to_openai_format(tools)
+        for tool in tools:
+            properties: dict[str, Any] = {}
+            required: list[str] = []
+
+            for param in tool.parameters:
+                properties[param.name] = {
+                    "type": param.type,
+                    "description": param.description,
+                }
+                if param.enum:
+                    properties[param.name]["enum"] = param.enum
+                if param.items:
+                    # Convert items schema for array types
+                    properties[param.name]["items"] = _convert_items_schema(param.items)
+                if param.required:
+                    required.append(param.name)
+
+            openai_tools.append(
+                {
+                    "type": "function",
+                    "function": {
+                        "name": tool.name,
+                        "description": tool.description,
+                        "parameters": {
+                            "type": "object",
+                            "properties": properties,
+                            "required": required,
+                        },
+                    },
+                }
+            )
+
+        return openai_tools
 
     def invoke_tool(self, tool_name: str, parameters: dict[str, Any]) -> ToolExecutionResult:
         """
@@ -132,7 +239,33 @@ class OpenAIProvider(BaseProvider):
         """
         try:
             # Convert messages to OpenAI format
-            openai_messages = [{"role": m.role, "content": m.content} for m in messages]
+            openai_messages = []
+            for m in messages:
+                msg = {"role": m.role, "content": m.content}
+
+                # If assistant message has tool_calls, include them
+                if m.role == "assistant" and m.tool_calls:
+                    # Convert to OpenAI format with proper structure
+                    msg["tool_calls"] = [
+                        {
+                            "id": tc.get("id"),
+                            "type": "function",
+                            "function": {
+                                "name": tc.get("name"),
+                                "arguments": json.dumps(tc.get("arguments", {})),
+                            },
+                        }
+                        for tc in m.tool_calls
+                    ]
+
+                # If tool message, include tool_call_id
+                elif m.role == "tool" and m.tool_results:
+                    # Extract tool_call_id from tool_results
+                    tool_call_id = m.tool_results[0].get("tool_call_id")
+                    if tool_call_id:
+                        msg["tool_call_id"] = tool_call_id
+
+                openai_messages.append(msg)
 
             # Build request parameters
             request_params: dict[str, Any] = {
