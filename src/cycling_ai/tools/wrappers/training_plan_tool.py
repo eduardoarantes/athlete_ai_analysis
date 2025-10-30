@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from cycling_ai.core.athlete import load_athlete_profile
-from cycling_ai.core.training import finalize_training_plan
+from cycling_ai.core.training import finalize_training_plan, validate_training_plan
 from cycling_ai.tools.base import (
     BaseTool,
     ToolDefinition,
@@ -83,12 +83,12 @@ class TrainingPlanTool(BaseTool):
                         "Array of week objects (one per week). Each week must include: "
                         "week_number (1 to total_weeks), phase (e.g., 'Foundation', 'Build', 'Recovery', 'Peak'), "
                         "phase_rationale (why this phase for this week), "
-                        "workouts (object mapping day names like 'Monday', 'Wednesday' to workout objects), "
+                        "workouts (array of workout objects, each with weekday, description, and segments), "
                         "weekly_focus (key training focus for the week), "
-                        "monitoring_notes (what athlete should watch this week). "
-                        "Each workout object must contain: name, description, segments (array of segment objects). "
+                        "weekly_watch_points (what athlete should watch this week). "
+                        "Each workout object must contain: weekday (Monday-Sunday), description, segments (array of segment objects). "
                         "Each segment must have: type (warmup/interval/recovery/cooldown/steady), duration_min, "
-                        "power_low (watts), power_high (watts, optional), description."
+                        "power_low_pct (percentage of FTP, e.g., 85.0), power_high_pct (percentage of FTP, optional), description."
                     ),
                     required=True,
                     items={
@@ -107,16 +107,60 @@ class TrainingPlanTool(BaseTool):
                                 "description": "Explanation of why this phase for this week"
                             },
                             "workouts": {
-                                "type": "OBJECT",
-                                "description": "Object mapping day names to workout objects with name, description, and segments"
+                                "type": "ARRAY",
+                                "description": "Array of workout objects, each with weekday, description, and segments",
+                                "items": {
+                                    "type": "OBJECT",
+                                    "properties": {
+                                        "weekday": {
+                                            "type": "STRING",
+                                            "description": "Day of the week (Monday-Sunday)"
+                                        },
+                                        "description": {
+                                            "type": "STRING",
+                                            "description": "Workout purpose and coaching notes"
+                                        },
+                                        "segments": {
+                                            "type": "ARRAY",
+                                            "description": "Array of workout segments",
+                                            "items": {
+                                                "type": "OBJECT",
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "STRING",
+                                                        "description": "Segment type (warmup/interval/recovery/cooldown/steady/work/tempo)"
+                                                    },
+                                                    "duration_min": {
+                                                        "type": "INTEGER",
+                                                        "description": "Duration in minutes"
+                                                    },
+                                                    "power_low_pct": {
+                                                        "type": "NUMBER",
+                                                        "description": "Lower power bound as percentage of FTP"
+                                                    },
+                                                    "power_high_pct": {
+                                                        "type": "NUMBER",
+                                                        "description": "Upper power bound as percentage of FTP (optional)"
+                                                    },
+                                                    "description": {
+                                                        "type": "STRING",
+                                                        "description": "Purpose and guidance for this segment"
+                                                    }
+                                                },
+                                                "required": ["type", "duration_min", "power_low_pct", "description"]
+                                            }
+                                        }
+                                    },
+                                    "required": ["weekday", "description", "segments"]
+                                }
                             },
                             "weekly_focus": {
                                 "type": "STRING",
                                 "description": "Key training focus for the week"
                             },
-                            "monitoring_notes": {
+                            "weekly_watch_points": {
                                 "type": "STRING",
-                                "description": "What athlete should monitor this week"
+                                "description": "What athlete should watch for this week"
                             }
                         },
                         "required": ["week_number", "phase", "workouts", "weekly_focus"]
@@ -213,6 +257,31 @@ class TrainingPlanTool(BaseTool):
                     errors=["weekly_plan must be an array of week objects"],
                 )
 
+            # Perform comprehensive validation before finalizing
+            available_days = athlete_profile.get_training_days()
+            weekly_hours = athlete_profile.get_weekly_training_hours()
+
+            plan_data = {
+                "total_weeks": total_weeks,
+                "weekly_plan": weekly_plan,
+            }
+
+            is_valid, validation_errors = validate_training_plan(
+                plan_data=plan_data,
+                available_days=available_days,
+                weekly_hours=weekly_hours,
+                daily_caps=None,  # Could be added to athlete profile if needed
+            )
+
+            if not is_valid:
+                # Return validation errors to allow LLM to retry
+                return ToolExecutionResult(
+                    success=False,
+                    data=None,
+                    format="json",
+                    errors=validation_errors,
+                )
+
             # Finalize the plan
             try:
                 result_json = finalize_training_plan(
@@ -242,10 +311,10 @@ class TrainingPlanTool(BaseTool):
                     errors=[f"Invalid JSON from finalize_training_plan: {str(e)}"],
                 )
 
-            # Return successful result
+            # Return successful result wrapped in 'training_plan' key for Phase 4
             return ToolExecutionResult(
                 success=True,
-                data=result_data,
+                data={"training_plan": result_data},
                 format="json",
                 metadata={
                     "athlete": athlete_profile.name,
