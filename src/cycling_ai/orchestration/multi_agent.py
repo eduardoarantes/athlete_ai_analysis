@@ -625,7 +625,7 @@ class MultiAgentOrchestrator:
             phase_name="training_planning",
             config=config,
             prompt_getter=self.prompts_manager.get_training_planning_prompt,
-            tools=["create_workout", "finalize_training_plan"],  # Removed calculate_power_zones
+            tools=["finalize_training_plan"],  # Single-call pattern: workouts submitted inline
             phase_context=phase2_result.extracted_data,
             user_message=user_message,
         )

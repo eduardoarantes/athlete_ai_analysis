@@ -37,11 +37,12 @@ class TrainingPlanTool(BaseTool):
         return ToolDefinition(
             name="finalize_training_plan",
             description=(
-                "Finalize and save your complete training plan design. Use this tool AFTER you have: "
-                "1) Analyzed the athlete's performance data and profile, "
-                "2) Calculated power zones using calculate_power_zones, "
-                "3) Designed individual workouts using create_workout for each training day, "
-                "4) Organized workouts into a weekly structure with phases and coaching notes. "
+                "Finalize and save your complete training plan design. Use this tool to submit "
+                "your entire training plan in one call. Include: "
+                "1) All weeks with their phases and rationale, "
+                "2) All workouts with segments (warm-up, intervals, recovery, cool-down), "
+                "3) Coaching notes explaining your design decisions, "
+                "4) Monitoring guidance for the athlete. "
                 "This tool validates your plan and saves it for report generation."
             ),
             category="analysis",
@@ -82,9 +83,12 @@ class TrainingPlanTool(BaseTool):
                         "Array of week objects (one per week). Each week must include: "
                         "week_number (1 to total_weeks), phase (e.g., 'Foundation', 'Build', 'Recovery', 'Peak'), "
                         "phase_rationale (why this phase for this week), "
-                        "workouts (object mapping day names to workout objects from create_workout), "
+                        "workouts (object mapping day names like 'Monday', 'Wednesday' to workout objects), "
                         "weekly_focus (key training focus for the week), "
-                        "monitoring_notes (what athlete should watch this week)."
+                        "monitoring_notes (what athlete should watch this week). "
+                        "Each workout object must contain: name, description, segments (array of segment objects). "
+                        "Each segment must have: type (warmup/interval/recovery/cooldown/steady), duration_min, "
+                        "power_low (watts), power_high (watts, optional), description."
                     ),
                     required=True,
                     items={
@@ -104,7 +108,7 @@ class TrainingPlanTool(BaseTool):
                             },
                             "workouts": {
                                 "type": "OBJECT",
-                                "description": "Object mapping day names to workout objects"
+                                "description": "Object mapping day names to workout objects with name, description, and segments"
                             },
                             "weekly_focus": {
                                 "type": "STRING",
