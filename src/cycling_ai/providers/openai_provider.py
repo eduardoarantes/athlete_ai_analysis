@@ -7,6 +7,7 @@ Supports native function calling and tool use.
 from __future__ import annotations
 
 import json
+import logging
 import time
 from typing import Any
 
@@ -21,6 +22,8 @@ from cycling_ai.providers.base import (
 from cycling_ai.providers.interaction_logger import get_interaction_logger
 from cycling_ai.providers.provider_utils import retry_with_exponential_backoff
 from cycling_ai.tools.base import ToolDefinition, ToolExecutionResult
+
+logger = logging.getLogger(__name__)
 
 
 def _normalize_type(type_str: str) -> str:

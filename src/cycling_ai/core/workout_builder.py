@@ -5,6 +5,7 @@ Generates detailed workout structures with warm-up, main sets, and cool-down.
 """
 
 from .power_zones import get_workout_power_targets
+from .tss import calculate_workout_tss
 
 
 
@@ -93,15 +94,45 @@ class Workout:
         """Calculate work time (interval segments only) in minutes"""
         return sum(s.duration_min for s in self.segments if s.segment_type == 'interval')
 
-    def to_dict(self) -> dict:
-        """Convert workout to dictionary"""
-        return {
+    def calculate_tss(self, ftp: float) -> float:
+        """
+        Calculate TSS for the workout based on FTP.
+
+        Args:
+            ftp: Athlete's FTP in watts
+
+        Returns:
+            Total TSS for the workout
+        """
+        segments_data = [s.to_dict() for s in self.segments]
+        # Convert power watts to power_pct for TSS calculation
+        for seg in segments_data:
+            seg['power_low_pct'] = (seg['power_low'] / ftp) * 100
+            seg['power_high_pct'] = (seg['power_high'] / ftp) * 100
+        return calculate_workout_tss(segments_data, ftp)
+
+    def to_dict(self, ftp: float | None = None) -> dict:
+        """
+        Convert workout to dictionary.
+
+        Args:
+            ftp: Optional FTP to include TSS calculation
+
+        Returns:
+            Dictionary representation of workout
+        """
+        result = {
             'weekday': self.weekday,
             'description': self.description,
             'total_duration_min': self.total_duration(),
             'work_time_min': self.work_time(),
             'segments': [s.to_dict() for s in self.segments]
         }
+
+        if ftp is not None:
+            result['tss'] = self.calculate_tss(ftp)
+
+        return result
 
 
 def build_threshold_workout(ftp: int, weekday: str, intervals: str = "2x20", week: int = 1) -> Workout:

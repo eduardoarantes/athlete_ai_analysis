@@ -28,12 +28,6 @@ def plan() -> None:
     help="Path to athlete_profile.json",
 )
 @click.option(
-    "--weeks",
-    type=int,
-    default=12,
-    help="Plan duration in weeks (4-24, default: 12)",
-)
-@click.option(
     "--target-ftp",
     type=float,
     help="Target FTP in watts (optional, defaults to +6% of current)",
@@ -54,7 +48,6 @@ def plan() -> None:
 def generate(
     ctx: click.Context,
     profile: str,
-    weeks: int,
     target_ftp: float | None,
     output: str | None,
     output_format: str,
@@ -69,9 +62,28 @@ def generate(
     Example:
         cycling-ai plan generate \\
             --profile ~/data/athlete_profile.json \\
-            --weeks 12 \\
             --target-ftp 270
     """
+    # Load athlete profile to get training_plan_weeks
+    try:
+        with open(profile, 'r') as f:
+            athlete_profile = json.load(f)
+    except Exception as e:
+        console.print(f"[red]Error loading athlete profile: {e}[/red]")
+        raise click.Abort()
+
+    weeks = athlete_profile.get('training_plan_weeks')
+    if weeks is None:
+        console.print("[red]Error: 'training_plan_weeks' not found in athlete profile.[/red]")
+        console.print("[yellow]Please add 'training_plan_weeks' field to your athlete_profile.json[/yellow]")
+        raise click.Abort()
+
+    if not isinstance(weeks, int) or weeks < 1 or weeks > 52:
+        console.print(
+            f"[red]Error: 'training_plan_weeks' must be an integer between 1 and 52, got: {weeks}[/red]"
+        )
+        raise click.Abort()
+
     with console.status("[bold green]Generating training plan..."):
         tool = TrainingPlanTool()
         kwargs = {

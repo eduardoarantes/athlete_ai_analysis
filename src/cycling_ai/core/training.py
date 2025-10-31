@@ -8,6 +8,7 @@ The actual plan design is done by the LLM agent using workout building tools.
 import json
 from typing import Any
 
+from .tss import calculate_weekly_tss, calculate_workout_tss
 from .utils import convert_to_json_serializable
 
 
@@ -240,6 +241,20 @@ def finalize_training_plan(
         )
 
     current_ftp = athlete_profile.ftp
+
+    # Calculate TSS for each workout and week
+    for week_data in weekly_plan:
+        workouts = week_data.get("workouts", [])
+
+        # Calculate TSS for each workout
+        for workout in workouts:
+            segments = workout.get("segments", [])
+            workout_tss = calculate_workout_tss(segments, current_ftp)
+            workout["tss"] = workout_tss  # Add TSS to workout data
+
+        # Calculate weekly TSS total
+        week_tss = calculate_weekly_tss(workouts, current_ftp)
+        week_data["week_tss"] = week_tss  # Add weekly TSS
 
     # Validate each week
     for week_data in weekly_plan:

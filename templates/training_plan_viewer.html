@@ -443,6 +443,15 @@
         .phase-badge.peak { background: #004e89; }
         .phase-badge.recovery { background: #ffc857; }
 
+        .week-tss-badge {
+            font-size: 0.7rem;
+            color: var(--accent-orange);
+            font-weight: 600;
+            background: rgba(255, 107, 53, 0.1);
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+        }
+
         /* Day Cell - Modern Design */
         .day-cell {
             padding: 1rem;
@@ -492,6 +501,13 @@
             font-size: 0.75rem;
             color: var(--text-secondary);
             font-weight: 500;
+        }
+
+        .workout-tss {
+            font-size: 0.7rem;
+            color: var(--accent-orange);
+            font-weight: 600;
+            margin-top: 0.25rem;
         }
 
         .workout-intensity {
@@ -1018,6 +1034,10 @@
                         <div class="metric-value" id="modal-work-time">30 min</div>
                     </div>
                     <div class="metric-card">
+                        <div class="metric-label">TSS</div>
+                        <div class="metric-value" id="modal-tss">--</div>
+                    </div>
+                    <div class="metric-card">
                         <div class="metric-label">Intensity</div>
                         <div class="metric-value" id="modal-intensity">Z4</div>
                     </div>
@@ -1358,9 +1378,11 @@
                 // Week label
                 const weekLabel = document.createElement('div');
                 weekLabel.className = 'week-label';
+                const weekTssBadge = week.week_tss ? `<div class="week-tss-badge">${Math.round(week.week_tss)} TSS</div>` : '';
                 weekLabel.innerHTML = `
                     <div class="week-number">W${week.week_number}</div>
                     <div class="phase-badge ${week.phase.toLowerCase()}">${week.phase}</div>
+                    ${weekTssBadge}
                 `;
                 weekRow.appendChild(weekLabel);
 
@@ -1377,10 +1399,12 @@
 
                         // Add intensity indicator from description or segment types
                         const intensity = getIntensityFromWorkout(workout);
+                        const tssDisplay = workout.tss ? `<div class="workout-tss">${Math.round(workout.tss)} TSS</div>` : '';
                         dayCell.innerHTML = `
                             <div class="workout-intensity ${intensity}"></div>
                             <div class="workout-name">${day}</div>
                             <div class="workout-duration">${totalDuration}min</div>
+                            ${tssDisplay}
                         `;
 
                         dayCell.onclick = () => openWorkoutModal(week.week_number, day, workout);
@@ -1437,6 +1461,7 @@
             // Update metrics
             document.getElementById('modal-duration').textContent = `${totalDuration} min`;
             document.getElementById('modal-work-time').textContent = workTime ? `${workTime} min` : 'N/A';
+            document.getElementById('modal-tss').textContent = workout.tss ? Math.round(workout.tss) : 'N/A';
             document.getElementById('modal-intensity').textContent = workout.intensity_zone || 'Mixed';
 
             // Update description

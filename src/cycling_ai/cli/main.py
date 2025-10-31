@@ -47,7 +47,7 @@ def cli(ctx: click.Context, config: str | None, debug: bool, log_file: str | Non
     Examples:
         cycling-ai analyze performance --csv activities.csv --profile profile.json
         cycling-ai analyze zones --fit-dir ./fit_files --profile profile.json
-        cycling-ai plan generate --profile profile.json --weeks 12
+        cycling-ai plan generate --profile profile.json
 
     \b
     Debugging:

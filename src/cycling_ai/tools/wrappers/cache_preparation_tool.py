@@ -257,6 +257,51 @@ class CachePreparationTool(BaseTool):
                     # Zone enrichment is optional, continue without it
                     enrichment_summary = f"Zone enrichment failed: {str(e)}"
 
+            # Add intensity categorization for interference detection
+            # Uses TSS, normalized power, and duration to classify activities as Easy/Moderate/Hard
+            try:
+                intensity_categories = []
+                for _, row in df.iterrows():
+                    category = row.get("activity_category", "Other")
+
+                    if category == "Cycling":
+                        # For cycling: use normalized power / FTP if available
+                        np_val = row.get("normalized_power", 0)
+                        if np_val and not pd.isna(np_val) and np_val > 0 and ftp > 0:
+                            intensity_factor = np_val / ftp
+                            if intensity_factor >= 0.95:
+                                intensity_categories.append("Hard")
+                            elif intensity_factor >= 0.75:
+                                intensity_categories.append("Moderate")
+                            else:
+                                intensity_categories.append("Easy")
+                        else:
+                            # Fallback: use duration (long rides are typically easier)
+                            duration_hours = row.get("Elapsed Time", 0) / 3600
+                            if duration_hours >= 2.5:
+                                intensity_categories.append("Easy")  # Long endurance rides
+                            else:
+                                intensity_categories.append("Moderate")  # Unknown intensity
+                    else:
+                        # For non-cycling: use TSS/hour ratio
+                        tss = row.get("estimated_tss", 0)
+                        duration_hours = row.get("Elapsed Time", 0) / 3600
+                        if duration_hours > 0 and tss > 0:
+                            tss_per_hour = tss / duration_hours
+                            if tss_per_hour >= 60:
+                                intensity_categories.append("Hard")
+                            elif tss_per_hour >= 40:
+                                intensity_categories.append("Moderate")
+                            else:
+                                intensity_categories.append("Easy")
+                        else:
+                            intensity_categories.append("Moderate")  # Default
+
+                df["intensity_category"] = intensity_categories
+            except Exception as e:
+                # Intensity categorization is optional
+                df["intensity_category"] = "Moderate"  # Default fallback
+
             # Write to Parquet with compression
             df.to_parquet(
                 parquet_path,
