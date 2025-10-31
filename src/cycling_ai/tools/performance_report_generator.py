@@ -148,6 +148,10 @@ def _build_body(analysis: PerformanceAnalysis) -> str:
     # Recommendations
     sections.append(_build_recommendations(analysis.recommendations))
 
+    # Cross-Training Analysis (optional - only if analyzed)
+    if analysis.cross_training and analysis.cross_training.analyzed:
+        sections.append(_build_cross_training(analysis.cross_training))
+
     return "\n".join(sections)
 
 
@@ -297,6 +301,112 @@ def _build_recommendations(recs) -> str:
         for rec in recs.recovery_nutrition:
             html += f'  <li>{rec.text}</li>\n'
         html += '</ul>\n'
+
+    html += '</div>\n'
+    return html
+
+
+def _build_cross_training(ct) -> str:
+    """Build cross-training analysis section."""
+    html = '<div class="section-cross_training" id="cross_training">\n'
+    html += '<h2>Cross-Training Analysis</h2>\n'
+
+    # Activity Distribution
+    if ct.activity_distribution:
+        html += '<div class="cross-training-subsection">\n'
+        html += '<h3>Activity Distribution</h3>\n'
+        html += '<div class="activity-distribution-grid">\n'
+
+        for activity in ct.activity_distribution:
+            html += f'  <div class="activity-card">\n'
+            html += f'    <div class="activity-category">{activity.category}</div>\n'
+            html += f'    <div class="activity-count">{activity.count} activities</div>\n'
+            html += f'    <div class="activity-percentage">{activity.percentage:.1f}%</div>\n'
+            html += f'  </div>\n'
+
+        html += '</div>\n'
+        html += '</div>\n'
+
+    # Load Balance
+    if ct.load_balance:
+        html += '<div class="cross-training-subsection">\n'
+        html += '<h3>Training Load Balance</h3>\n'
+        html += '<div class="load-balance-grid">\n'
+
+        html += f'  <div class="load-item">\n'
+        html += f'    <div class="load-label">Cycling</div>\n'
+        html += f'    <div class="load-bar">\n'
+        html += f'      <div class="load-fill load-cycling" style="width: {ct.load_balance.cycling_percent}%"></div>\n'
+        html += f'    </div>\n'
+        html += f'    <div class="load-value">{ct.load_balance.cycling_percent:.1f}%</div>\n'
+        html += f'  </div>\n'
+
+        html += f'  <div class="load-item">\n'
+        html += f'    <div class="load-label">Strength</div>\n'
+        html += f'    <div class="load-bar">\n'
+        html += f'      <div class="load-fill load-strength" style="width: {ct.load_balance.strength_percent}%"></div>\n'
+        html += f'    </div>\n'
+        html += f'    <div class="load-value">{ct.load_balance.strength_percent:.1f}%</div>\n'
+        html += f'  </div>\n'
+
+        html += f'  <div class="load-item">\n'
+        html += f'    <div class="load-label">Cardio</div>\n'
+        html += f'    <div class="load-bar">\n'
+        html += f'      <div class="load-fill load-cardio" style="width: {ct.load_balance.cardio_percent}%"></div>\n'
+        html += f'    </div>\n'
+        html += f'    <div class="load-value">{ct.load_balance.cardio_percent:.1f}%</div>\n'
+        html += f'  </div>\n'
+
+        html += '</div>\n'
+        html += f'<p class="load-assessment">{ct.load_balance.assessment}</p>\n'
+        html += '</div>\n'
+
+    # Interference Events
+    if ct.interference_events:
+        html += '<div class="cross-training-subsection">\n'
+        html += '<h3>Scheduling Conflicts Detected</h3>\n'
+        html += '<p class="interference-warning">⚠️ The following activity pairs may have interfered with performance:</p>\n'
+        html += '<table class="interference-table">\n'
+        html += '  <thead>\n'
+        html += '    <tr>\n'
+        html += '      <th>Date</th>\n'
+        html += '      <th>Activity 1</th>\n'
+        html += '      <th>Activity 2</th>\n'
+        html += '      <th>Hours Between</th>\n'
+        html += '      <th>Risk</th>\n'
+        html += '      <th>Explanation</th>\n'
+        html += '    </tr>\n'
+        html += '  </thead>\n'
+        html += '  <tbody>\n'
+
+        for event in ct.interference_events:
+            risk_class = (
+                "risk-high" if event.score >= 7
+                else "risk-medium" if event.score >= 4
+                else "risk-low"
+            )
+            html += f'    <tr class="{risk_class}">\n'
+            html += f'      <td>{event.date}</td>\n'
+            html += f'      <td>{event.activity1}</td>\n'
+            html += f'      <td>{event.activity2}</td>\n'
+            html += f'      <td>{event.hours_between:.1f}h</td>\n'
+            html += f'      <td><span class="risk-score">{event.score}/10</span></td>\n'
+            html += f'      <td>{event.explanation}</td>\n'
+            html += f'    </tr>\n'
+
+        html += '  </tbody>\n'
+        html += '</table>\n'
+        html += '</div>\n'
+
+    # Cross-Training Recommendations
+    if ct.recommendations:
+        html += '<div class="cross-training-subsection">\n'
+        html += '<h3>Scheduling Recommendations</h3>\n'
+        html += '<ul class="recommendations-list">\n'
+        for rec in ct.recommendations:
+            html += f'  <li>{rec.text}</li>\n'
+        html += '</ul>\n'
+        html += '</div>\n'
 
     html += '</div>\n'
     return html
@@ -690,6 +800,190 @@ def _get_css() -> str:
             .comparison-table td {
                 padding: 0.75rem 0.5rem;
             }
+        }
+
+        /* Cross-Training Styles */
+        .cross-training-subsection {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--bg-light);
+            border-radius: 8px;
+        }
+
+        .cross-training-subsection h3 {
+            color: var(--accent-teal);
+            font-size: 1.3em;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--accent-teal);
+        }
+
+        .activity-distribution-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .activity-card {
+            background: var(--bg-card);
+            padding: 1.25rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-orange);
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .activity-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .activity-category {
+            font-weight: 600;
+            color: var(--primary-dark);
+            font-size: 1.1em;
+            margin-bottom: 0.5rem;
+        }
+
+        .activity-count {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-percentage {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: var(--accent-orange);
+        }
+
+        .load-balance-grid {
+            display: grid;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .load-item {
+            display: grid;
+            grid-template-columns: 120px 1fr 80px;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .load-label {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .load-bar {
+            background: var(--border-light);
+            height: 24px;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .load-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+            border-radius: 12px;
+        }
+
+        .load-cycling {
+            background: linear-gradient(90deg, var(--accent-teal), #0066a8);
+        }
+
+        .load-strength {
+            background: linear-gradient(90deg, var(--accent-orange), #ff8c5e);
+        }
+
+        .load-cardio {
+            background: linear-gradient(90deg, var(--accent-yellow), #ffd27f);
+        }
+
+        .load-value {
+            font-weight: 600;
+            color: var(--primary-dark);
+            text-align: right;
+        }
+
+        .load-assessment {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: var(--bg-card);
+            border-left: 4px solid var(--success-green);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-style: italic;
+        }
+
+        .interference-warning {
+            color: var(--accent-orange);
+            font-weight: 500;
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background: #fff3e0;
+            border-radius: 4px;
+            border-left: 4px solid var(--accent-orange);
+        }
+
+        .interference-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            background: var(--bg-card);
+            box-shadow: var(--shadow-sm);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .interference-table thead {
+            background: var(--primary-dark);
+            color: white;
+        }
+
+        .interference-table th {
+            padding: 0.75rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .interference-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .interference-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .interference-table .risk-high {
+            background-color: #fee;
+            border-left: 4px solid #d32f2f;
+        }
+
+        .interference-table .risk-medium {
+            background-color: #fff9e6;
+            border-left: 4px solid var(--accent-yellow);
+        }
+
+        .interference-table .risk-low {
+            background-color: #e3f2fd;
+            border-left: 4px solid var(--accent-teal);
+        }
+
+        .risk-score {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            background: var(--accent-orange);
+            color: white;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.9em;
         }
 
         /* Print Styles */

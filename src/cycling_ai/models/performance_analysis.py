@@ -70,6 +70,52 @@ class RecommendationCategories(BaseModel):
     )
 
 
+class ActivityDistribution(BaseModel):
+    """Distribution of activities by category."""
+
+    category: str = Field(..., description="Activity category (e.g., Cycling, Strength, Cardio)")
+    count: int = Field(..., ge=0, description="Number of activities in this category")
+    percentage: float = Field(..., ge=0, le=100, description="Percentage of total activities")
+
+
+class LoadBalance(BaseModel):
+    """Training load balance across activity categories."""
+
+    cycling_percent: float = Field(..., ge=0, le=100, description="Percentage of load from cycling")
+    strength_percent: float = Field(..., ge=0, le=100, description="Percentage of load from strength training")
+    cardio_percent: float = Field(..., ge=0, le=100, description="Percentage of load from cardio activities")
+    assessment: str = Field(..., description="Assessment of load balance appropriateness")
+
+
+class InterferenceEvent(BaseModel):
+    """A detected interference event between activities."""
+
+    date: str = Field(..., description="Date of interference event (YYYY-MM-DD)")
+    activity1: str = Field(..., description="First activity name")
+    activity2: str = Field(..., description="Second activity name")
+    hours_between: float = Field(..., ge=0, description="Hours between activities")
+    score: int = Field(..., ge=0, le=10, description="Interference severity score (0-10)")
+    explanation: str = Field(..., description="Explanation of why this is an interference")
+
+
+class CrossTrainingAnalysis(BaseModel):
+    """Cross-training impact analysis data."""
+
+    analyzed: bool = Field(..., description="Whether cross-training analysis was performed")
+    activity_distribution: list[ActivityDistribution] = Field(
+        default_factory=list, description="Distribution of activities by category"
+    )
+    load_balance: LoadBalance | None = Field(
+        None, description="Training load balance across categories"
+    )
+    interference_events: list[InterferenceEvent] = Field(
+        default_factory=list, description="Detected activity interference events"
+    )
+    recommendations: list[Recommendation] = Field(
+        default_factory=list, description="Cross-training specific recommendations"
+    )
+
+
 class PerformanceAnalysis(BaseModel):
     """Complete performance analysis report structure."""
 
@@ -83,6 +129,9 @@ class PerformanceAnalysis(BaseModel):
     key_trends: list[KeyTrend] = Field(..., description="Key performance trends")
     insights: list[Insight] = Field(..., description="Training insights")
     recommendations: RecommendationCategories = Field(..., description="Training recommendations")
+    cross_training: CrossTrainingAnalysis | None = Field(
+        None, description="Cross-training impact analysis (optional, only if athlete does multiple sports)"
+    )
     analysis_period_months: int = Field(
         default=6, description="Number of months analyzed"
     )
