@@ -453,6 +453,16 @@ class MultiAgentOrchestrator:
                                     plan_metadata = plan_data.get('plan_metadata', {})
                                     target_ftp_value = plan_metadata.get('target_ftp', 'N/A')
                                     logger.info(f"[PHASE {phase_name.upper()}] Training plan target_ftp: {target_ftp_value}")
+
+                                    # Validate weekly hours (10% tolerance)
+                                    hours_violations = self._validate_weekly_hours(plan_data, plan_metadata)
+                                    if hours_violations:
+                                        logger.warning(
+                                            f"[PHASE {phase_name.upper()}] Training plan has {len(hours_violations)} "
+                                            f"weeks exceeding hours_per_week guideline (+10% tolerance)"
+                                        )
+                                        for violation in hours_violations:
+                                            logger.warning(f"  Week {violation['week']}: {violation['actual_hours']:.1f}h > {violation['max_allowed']:.1f}h")
                                 else:
                                     logger.error(f"[PHASE {phase_name.upper()}] Training plan is not a dict: {type(plan_data)}")
                             elif tool_name == "analyze_cross_training_impact":
@@ -565,6 +575,76 @@ class MultiAgentOrchestrator:
 
         logger.debug("[PHASE 2 VALIDATION] Schema validation passed")
         return True
+
+    def _validate_weekly_hours(
+        self,
+        training_plan: dict[str, Any],
+        plan_metadata: dict[str, Any],
+        tolerance_pct: float = 0.10
+    ) -> list[dict[str, Any]]:
+        """
+        Validate that weekly training hours don't exceed guideline (with tolerance).
+
+        Args:
+            training_plan: Training plan data with weekly_plan array
+            plan_metadata: Plan metadata containing weekly_training_hours guideline
+            tolerance_pct: Tolerance percentage (default 10%)
+
+        Returns:
+            List of violation dictionaries, empty if all weeks are within limits
+            Each violation: {"week": int, "actual_hours": float, "max_allowed": float}
+        """
+        violations = []
+
+        # Get the weekly hours guideline
+        weekly_hours_guideline = plan_metadata.get("weekly_training_hours")
+        if weekly_hours_guideline is None:
+            logger.debug("[HOURS VALIDATION] No weekly_training_hours guideline found, skipping validation")
+            return violations
+
+        # Convert to float
+        try:
+            weekly_hours_guideline = float(weekly_hours_guideline)
+        except (ValueError, TypeError):
+            logger.warning(f"[HOURS VALIDATION] Invalid weekly_training_hours: {weekly_hours_guideline}")
+            return violations
+
+        # Calculate max allowed with tolerance
+        max_allowed = weekly_hours_guideline * (1 + tolerance_pct)
+
+        # Check each week
+        weekly_plan = training_plan.get("weekly_plan", [])
+        for week_idx, week in enumerate(weekly_plan, start=1):
+            if not isinstance(week, dict):
+                continue
+
+            # Sum up hours from all workouts in the week
+            total_hours = 0.0
+            workouts = week.get("workouts", [])
+
+            for workout in workouts:
+                if not isinstance(workout, dict):
+                    continue
+
+                # Get duration in minutes, convert to hours
+                duration_minutes = workout.get("duration_minutes", 0)
+                try:
+                    total_hours += float(duration_minutes) / 60.0
+                except (ValueError, TypeError):
+                    logger.warning(f"[HOURS VALIDATION] Invalid duration for workout in week {week_idx}: {duration_minutes}")
+                    continue
+
+            # Check if exceeds max allowed
+            if total_hours > max_allowed:
+                violations.append({
+                    "week": week_idx,
+                    "actual_hours": total_hours,
+                    "max_allowed": max_allowed,
+                    "guideline": weekly_hours_guideline,
+                    "exceeds_by": total_hours - max_allowed
+                })
+
+        return violations
 
     def _estimate_tokens(self, session: ConversationSession) -> int:
         """
