@@ -1230,5 +1230,19 @@
     "cwd": "/Users/eduardo/Documents/projects/cycling-ai-analysis",
     "hook_event_name": "Notification",
     "message": "Claude needs your permission to use playwright - Take a screenshot (MCP)"
+  },
+  {
+    "session_id": "3427e8fe-c107-4e02-8ae4-49e711104c3d",
+    "transcript_path": "/Users/eduardo/.claude/projects/-Users-eduardo-Documents-projects-cycling-ai-analysis/3427e8fe-c107-4e02-8ae4-49e711104c3d.jsonl",
+    "cwd": "/Users/eduardo/Documents/projects/cycling-ai-analysis",
+    "hook_event_name": "Notification",
+    "message": "Claude is waiting for your input"
+  },
+  {
+    "session_id": "7a897efb-2445-45a9-bca9-0e196a2c5774",
+    "transcript_path": "/Users/eduardo/.claude/projects/-Users-eduardo-Documents-projects-cycling-ai-analysis/7a897efb-2445-45a9-bca9-0e196a2c5774.jsonl",
+    "cwd": "/Users/eduardo/Documents/projects/cycling-ai-analysis",
+    "hook_event_name": "Notification",
+    "message": "Claude needs your permission to use Bash"
   }
 ]

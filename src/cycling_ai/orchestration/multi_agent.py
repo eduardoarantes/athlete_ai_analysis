@@ -31,7 +31,6 @@ PHASE_DATA_PREPARATION = "data_preparation"
 PHASE_PERFORMANCE_ANALYSIS = "performance_analysis"
 PHASE_TRAINING_PLANNING = "training_planning"
 PHASE_REPORT_DATA_PREPARATION = "report_data_preparation"
-PHASE_REPORT_GENERATION = "report_generation"
 
 
 class PhaseStatus(Enum):
@@ -1064,7 +1063,7 @@ class MultiAgentOrchestrator:
                 extracted_data={
                     "report_data_path": str(output_path),
                     "athlete_name": athlete_name,
-                    "report_data": report_data,  # Make available for Phase 5
+                    "report_data": report_data,  # Make available for HTML generation
                     "has_performance_analysis": performance_analysis is not None,
                 },
                 execution_time_seconds=execution_time,
@@ -1089,110 +1088,6 @@ class MultiAgentOrchestrator:
                 execution_time_seconds=execution_time,
             )
 
-    def _execute_phase_5(
-        self, config: WorkflowConfig, all_results: list[PhaseResult]
-    ) -> PhaseResult:
-        """
-        Execute Phase 5: HTML Report Generation.
-
-        Generates HTML reports using template-based rendering (NO LLM).
-        Reads complete data from Phase 4's report_data.json.
-
-        Args:
-            config: Workflow configuration
-            all_results: Results from all previous phases
-
-        Returns:
-            PhaseResult for report generation phase
-        """
-        from cycling_ai.tools.performance_report_generator import generate_performance_html_from_json
-
-        phase_start = datetime.now()
-
-        try:
-            # Get report data from Phase 4
-            phase4_result = all_results[-1]  # Phase 4 is the last result
-            report_data = phase4_result.extracted_data.get("report_data")
-            report_data_path = phase4_result.extracted_data.get("report_data_path")
-
-            if not report_data:
-                # Fallback: try loading from file
-                report_data_path = config.output_dir / "report_data.json"
-                if report_data_path.exists():
-                    import json
-                    with open(report_data_path) as f:
-                        report_data = json.load(f)
-                else:
-                    return PhaseResult(
-                        phase_name=PHASE_REPORT_GENERATION,
-                        status=PhaseStatus.FAILED,
-                        agent_response="No structured data available from Phase 4",
-                        errors=["report_data not found in Phase 4 results or file system"],
-                    )
-
-            # Check if we have performance analysis
-            has_performance = phase4_result.extracted_data.get("has_performance_analysis", False)
-
-            # Generate HTML report using template-based rendering
-            # This is a deterministic process - no LLM involved
-            output_html_path = config.output_dir / "performance_report.html"
-
-            logger.info(f"[PHASE 5] Generating HTML report from report_data.json")
-            logger.info(f"[PHASE 5] Performance analysis included: {has_performance}")
-
-            # Call template-based HTML generator
-            generate_performance_html_from_json(
-                report_data=report_data,
-                output_path=output_html_path
-            )
-
-            logger.info("[PHASE 5] HTML generation function returned successfully")
-
-            phase_end = datetime.now()
-            execution_time = (phase_end - phase_start).total_seconds()
-
-            logger.info(f"[PHASE 5] Building response message, execution time={execution_time:.2f}s")
-
-            response_msg = f"HTML report generated successfully:\n"
-            response_msg += f"  - Report: {output_html_path}\n"
-            response_msg += f"  - Data source: {report_data_path}\n"
-            if has_performance:
-                response_msg += f"  - Includes performance analysis"
-            response_msg += f"\n  - Generation time: {execution_time:.2f}s (template-based, no LLM)"
-
-            logger.info("[PHASE 5] Creating PhaseResult for return")
-
-            result = PhaseResult(
-                phase_name=PHASE_REPORT_GENERATION,
-                status=PhaseStatus.COMPLETED,
-                agent_response=response_msg,
-                extracted_data={
-                    "report_html_path": str(output_html_path),
-                    "report_data_path": str(report_data_path),
-                },
-                execution_time_seconds=execution_time,
-                tokens_used=0,  # No LLM, so 0 tokens
-            )
-
-            logger.info(f"[PHASE 5] Returning PhaseResult with status={result.status}")
-            return result
-
-        except Exception as e:
-            phase_end = datetime.now()
-            execution_time = (phase_end - phase_start).total_seconds()
-
-            import traceback
-            error_details = traceback.format_exc()
-            logger.error(f"[PHASE 5] Error: {error_details}")
-
-            return PhaseResult(
-                phase_name=PHASE_REPORT_GENERATION,
-                status=PhaseStatus.FAILED,
-                agent_response=f"HTML report generation failed: {str(e)}",
-                errors=[str(e), error_details],
-                execution_time_seconds=execution_time,
-                tokens_used=0,
-            )
 
     def execute_workflow(self, config: WorkflowConfig) -> WorkflowResult:
         """
@@ -1205,11 +1100,10 @@ class MultiAgentOrchestrator:
         4. Execute Phase 3: Training Planning (LLM - uses Phase 2 data)
         5. Execute Phase 4: Report Data Consolidation (consolidates Phase 2 + 3 into report_data.json)
            ↑ FINAL DATA GENERATION - ALL LLM OUTPUT COMPLETE
-        6. Execute Phase 5: HTML Report Generation (Template-based, NO LLM - uses report_data.json)
-        7. Return aggregated WorkflowResult
+        6. Return aggregated WorkflowResult
 
-        NOTE: Phase 4 is the last step that involves LLM output. Phase 5 is purely
-        template-based HTML generation using the complete report_data.json.
+        NOTE: Phase 4 is the final step. HTML report generation can be done
+        separately using the report_data.json output from Phase 4.
 
         Args:
             config: Workflow configuration
@@ -1305,32 +1199,18 @@ class MultiAgentOrchestrator:
                 )
             )
 
-        # Phase 5: Report Generation (LLM generates HTML reports)
-        phase5_result = self._execute_phase_5(config, phase_results)
-        phase_results.append(phase5_result)
-        total_tokens += phase5_result.tokens_used
-
-        if not phase5_result.success:
-            return self._create_failed_workflow_result(
-                phase_results, workflow_start, total_tokens
-            )
-
-        # Success! But validate output files were actually created
+        # Workflow complete
         workflow_end = datetime.now()
         total_time = (workflow_end - workflow_start).total_seconds()
 
-        # Validate output files exist (from Phase 5 now)
-        output_files = phase5_result.extracted_data.get("output_files", [])
+        # Collect output files from Phase 4 (report_data.json)
         validated_files: list[Path] = []
-
-        if output_files:
-            for file_path in output_files:
-                file_obj = Path(file_path)
+        if config.generate_training_plan:
+            report_data_path = phase4_result.extracted_data.get("report_data_path")
+            if report_data_path:
+                file_obj = Path(report_data_path)
                 if file_obj.exists():
                     validated_files.append(file_obj.absolute())
-                else:
-                    # File was reported but doesn't exist - log warning
-                    pass
 
         return WorkflowResult(
             phase_results=phase_results,

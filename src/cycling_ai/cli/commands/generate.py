@@ -56,10 +56,6 @@ class PhaseProgressTracker:
                 "name": "Report Data Preparation",
                 "status": PhaseStatus.PENDING,
             },
-            "report_generation": {
-                "name": "Report Generation",
-                "status": PhaseStatus.PENDING,
-            },
         }
         self._live: Live | None = None
 
@@ -407,6 +403,20 @@ def generate(
 
         console.print()
 
+        # Generate HTML report from report_data.json if workflow succeeded
+        if result.success and workflow_config.generate_training_plan:
+            console.print("[cyan]Generating HTML report...[/cyan]")
+            try:
+                html_path = _generate_html_report(workflow_config.output_dir, result)
+                if html_path:
+                    console.print(f"[green]✓ HTML report generated: {html_path}[/green]")
+                    # Add HTML path to result output files
+                    result.output_files.append(html_path)
+            except Exception as e:
+                console.print(f"[yellow]⚠ HTML report generation failed: {str(e)}[/yellow]")
+                console.print("[dim]Report data is still available in report_data.json[/dim]")
+            console.print()
+
         # Display results
         if result.success:
             _display_success_results(result)
@@ -424,6 +434,55 @@ def generate(
         console.print(f"\n[red]Unexpected error: {str(e)}[/red]")
         console.print("\n[dim]If this error persists, please report it as an issue.[/dim]")
         raise
+
+
+def _generate_html_report(output_dir: Path, result: WorkflowResult) -> Path | None:
+    """
+    Generate HTML report from report_data.json.
+
+    Args:
+        output_dir: Output directory containing report_data.json
+        result: Workflow result
+
+    Returns:
+        Path to generated HTML file, or None if generation failed
+
+    Raises:
+        Exception: If HTML generation fails
+    """
+    from cycling_ai.tools.performance_report_generator import generate_performance_html_from_json
+    import json
+
+    # Find report_data.json path from Phase 4 result
+    phase4_result = next(
+        (r for r in result.phase_results if r.phase_name == "report_data_preparation"),
+        None
+    )
+
+    if not phase4_result or not phase4_result.success:
+        return None
+
+    report_data_path = phase4_result.extracted_data.get("report_data_path")
+    if not report_data_path:
+        # Fallback to default location
+        report_data_path = output_dir / "report_data.json"
+
+    report_data_file = Path(report_data_path)
+    if not report_data_file.exists():
+        raise FileNotFoundError(f"report_data.json not found at {report_data_path}")
+
+    # Load report data
+    with open(report_data_file) as f:
+        report_data = json.load(f)
+
+    # Generate HTML
+    output_html_path = output_dir / "performance_report.html"
+    generate_performance_html_from_json(
+        report_data=report_data,
+        output_path=output_html_path
+    )
+
+    return output_html_path
 
 
 def _initialize_provider(

@@ -86,21 +86,20 @@ cycling-ai generate \
 
 ### Workflow Execution (method: `execute_workflow`)
 
-The orchestrator executes **5 sequential phases**:
+The orchestrator executes **4 sequential phases**:
 
 ```python
 Phase 1: Data Preparation        → Prepare Parquet cache
 Phase 2: Performance Analysis    → Analyze trends, FTP, fitness
 Phase 3: Training Planning       → Design personalized plan (LLM-driven)
 Phase 4: Report Data Preparation → Extract & format into report_data.json (deterministic)
-Phase 5: Report Generation       → LLM generates HTML reports using structured data
 ```
 
-**Note**: Phase 4 prepares structured data that Phase 5 consumes:
-- **Phase 4**: Deterministic extraction from session log → `report_data.json` + static HTML viewer
-- **Phase 5**: LLM uses structured `report_data.json` to generate comprehensive HTML reports
+**Note**: After Phase 4 completes, the CLI generates an HTML report using the template engine:
+- **Phase 4**: Deterministic extraction from session log → `report_data.json`
+- **CLI Post-Processing**: Template-based HTML generation from `report_data.json` → `performance_report.html`
 
-This order ensures data is prepared **before** reports are generated.
+This separation ensures all LLM work is complete before the deterministic template rendering.
 
 ### Phase 1: Data Preparation
 
