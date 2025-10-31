@@ -210,6 +210,37 @@ class PromptLoader:
         """Get report generation user prompt with formatting."""
         return self.load_user_prompt("report_generation", **kwargs)
 
+    def get_cross_training_instructions(self, **kwargs: Any) -> str:
+        """
+        Get cross-training addon instructions for performance analysis.
+
+        Returns instructions for analyzing cross-training impact, or empty string
+        if cross-training analysis is not needed.
+
+        Args:
+            **kwargs: Template variables (period_months)
+
+        Returns:
+            Formatted cross-training instructions or empty string
+        """
+        addon_file = self.prompts_dir / "performance_analysis_cross_training_addon.txt"
+
+        if not addon_file.exists():
+            # Graceful degradation - return empty string if addon doesn't exist
+            import logging
+            logging.warning(
+                f"Cross-training addon file not found: {addon_file}. "
+                "Cross-training analysis will not be available."
+            )
+            return ""
+
+        # Load addon template
+        with open(addon_file, "r", encoding="utf-8") as f:
+            template = f.read().strip()
+
+        # Format with provided variables
+        return template.format(**kwargs)
+
     @staticmethod
     def list_available_models(prompts_base_dir: Path | str | None = None) -> list[str]:
         """

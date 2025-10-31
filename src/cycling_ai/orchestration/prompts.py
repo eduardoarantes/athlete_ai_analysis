@@ -131,3 +131,18 @@ class AgentPromptsManager:
             FileNotFoundError: If prompt file doesn't exist
         """
         return self._prompt_loader.get_report_generation_user_prompt(**kwargs)
+
+    def get_cross_training_instructions(self, **kwargs: str) -> str:
+        """
+        Get cross-training addon instructions for performance analysis.
+
+        Returns formatted cross-training instructions if needed, or empty string
+        if cross-training analysis should not be performed.
+
+        Args:
+            **kwargs: Template variables (period_months)
+
+        Returns:
+            Formatted cross-training instructions or empty string
+        """
+        return self._prompt_loader.get_cross_training_instructions(**kwargs)

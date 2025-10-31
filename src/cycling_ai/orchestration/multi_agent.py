@@ -879,18 +879,44 @@ class MultiAgentOrchestrator:
         cache_file_path = phase1_result.extracted_data.get("cache_file_path", "Not available")
         athlete_profile_path = phase1_result.extracted_data.get("athlete_profile_path", str(config.athlete_profile_path))
 
+        # Determine if cross-training analysis should be performed
+        should_analyze_ct = False
+        if config.analyze_cross_training is None:
+            # Auto-detect
+            should_analyze_ct = self._should_analyze_cross_training(cache_file_path)
+        else:
+            # Explicit override
+            should_analyze_ct = config.analyze_cross_training
+
+        # Build cross-training instructions (empty if not needed)
+        if should_analyze_ct:
+            cross_training_instructions = self.prompts_manager.get_cross_training_instructions(
+                period_months=str(config.period_months)
+            )
+            logger.info("[PHASE 2] Cross-training analysis ENABLED")
+        else:
+            cross_training_instructions = ""
+            logger.info("[PHASE 2] Cross-training analysis DISABLED")
+
+        # Build user message with conditional cross-training section
         user_message = self.prompts_manager.get_performance_analysis_user_prompt(
-            period_months=config.period_months,
+            period_months=str(config.period_months),
             cache_file_path=cache_file_path,
             athlete_profile_path=athlete_profile_path,
+            cross_training_instructions=cross_training_instructions,
         )
+
+        # Build tools list (conditionally include cross-training tool)
+        tools = ["analyze_performance"]
+        if should_analyze_ct:
+            tools.append("analyze_cross_training_impact")
 
         # Phase 2 only does performance analysis - zone calculation moved to Phase 1
         return self._execute_phase(
             phase_name=PHASE_PERFORMANCE_ANALYSIS,
             config=config,
             prompt_getter=self.prompts_manager.get_performance_analysis_prompt,
-            tools=["analyze_performance"],
+            tools=tools,
             phase_context=phase1_result.extracted_data,
             user_message=user_message,
         )

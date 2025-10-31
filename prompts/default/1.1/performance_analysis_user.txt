@@ -15,3 +15,5 @@ Analyze cycling performance for the last {period_months} months:
 - Tool reads from Parquet cache (NO access to FIT files needed)
 - Cache includes zone enrichment and cross-training categorization
 - NOTE: analyze_time_in_zones() requires FIT directory which is not available in Phase 2
+
+{cross_training_instructions}
