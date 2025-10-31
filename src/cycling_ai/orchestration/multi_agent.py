@@ -113,14 +113,18 @@ class WorkflowConfig:
         generate_training_plan: Whether to generate training plan (Phase 3)
         training_plan_weeks: Number of weeks for training plan
         fit_only_mode: If True, build activities DataFrame from FIT files instead of CSV
+        analyze_cross_training: Whether to analyze cross-training impact (None=auto-detect, True=force, False=skip)
         provider: LLM provider instance (optional, set by orchestrator)
         max_iterations_per_phase: Maximum tool execution loops per phase
         prompts_dir: Optional directory with custom prompt files
     """
 
-    # Input paths
+    # Input paths (required fields first)
     csv_file_path: Path | None
     athlete_profile_path: Path
+    training_plan_weeks: int  # Required, no default - must come from athlete profile
+
+    # Input paths (with defaults)
     fit_dir_path: Path | None = None
 
     # Output paths
@@ -129,9 +133,11 @@ class WorkflowConfig:
     # Execution parameters
     period_months: int = 6
     generate_training_plan: bool = True
-    training_plan_weeks: int = 12
     fit_only_mode: bool = False
     skip_data_prep: bool = False
+
+    # Cross-training analysis (uses same period_months as cycling analysis)
+    analyze_cross_training: bool | None = None  # None = auto-detect, True = force, False = skip
 
     # Provider configuration
     provider: Any = None  # BaseProvider, but avoid circular import
@@ -292,6 +298,84 @@ class MultiAgentOrchestrator:
         """
         storage_dir = Path.home() / ".cycling-ai" / "workflow_sessions"
         return SessionManager(storage_dir=storage_dir)
+
+    def _should_analyze_cross_training(
+        self,
+        cache_file_path: str,
+        threshold_pct: float = 0.10,
+        min_activities: int = 20
+    ) -> bool:
+        """
+        Auto-detect if cross-training analysis is warranted.
+
+        Analyzes activity distribution in cache to determine if athlete
+        participates in multiple sports at a meaningful level.
+
+        Args:
+            cache_file_path: Path to Parquet cache file
+            threshold_pct: Minimum percentage of non-cycling activities (default: 10%)
+            min_activities: Minimum total activities required for analysis (default: 20)
+
+        Returns:
+            True if cross-training analysis should be performed, False otherwise
+
+        Criteria for cross-training analysis:
+        - At least min_activities total activities in cache
+        - At least 2 different activity categories
+        - At least threshold_pct of activities are non-cycling
+        """
+        try:
+            import pandas as pd
+
+            # Load cache
+            cache_path = Path(cache_file_path)
+            if not cache_path.exists():
+                logger.warning(f"Cache file not found for cross-training detection: {cache_file_path}")
+                return False
+
+            df = pd.read_parquet(cache_path)
+
+            # Check minimum activity count
+            if len(df) < min_activities:
+                logger.info(
+                    f"Cross-training analysis skipped: only {len(df)} activities "
+                    f"(minimum {min_activities} required)"
+                )
+                return False
+
+            # Check for activity_category column (added by cache preparation)
+            if 'activity_category' not in df.columns:
+                logger.warning("Cache missing 'activity_category' column - cross-training analysis not available")
+                return False
+
+            # Count activities by category
+            category_counts = df['activity_category'].value_counts()
+
+            # Need at least 2 categories
+            if len(category_counts) < 2:
+                logger.info("Cross-training analysis skipped: only 1 activity category detected")
+                return False
+
+            # Calculate non-cycling percentage
+            non_cycling_count = (df['activity_category'] != 'Cycling').sum()
+            non_cycling_pct = non_cycling_count / len(df)
+
+            if non_cycling_pct >= threshold_pct:
+                logger.info(
+                    f"Cross-training analysis enabled: {non_cycling_pct:.1%} non-cycling activities "
+                    f"({non_cycling_count}/{len(df)} activities)"
+                )
+                return True
+            else:
+                logger.info(
+                    f"Cross-training analysis skipped: only {non_cycling_pct:.1%} non-cycling activities "
+                    f"(threshold: {threshold_pct:.1%})"
+                )
+                return False
+
+        except Exception as e:
+            logger.error(f"Error during cross-training auto-detection: {str(e)}")
+            return False
 
     def _extract_phase_data(
         self,

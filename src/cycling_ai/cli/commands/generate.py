@@ -154,12 +154,6 @@ class PhaseProgressTracker:
     help="Number of months for performance comparison",
 )
 @click.option(
-    "--training-plan-weeks",
-    type=int,
-    default=4,
-    help="Number of weeks for training plan",
-)
-@click.option(
     "--skip-training-plan",
     is_flag=True,
     help="Skip training plan generation phase",
@@ -168,6 +162,11 @@ class PhaseProgressTracker:
     "--skip-data-prep",
     is_flag=True,
     help="Skip data preparation phase and use existing cache (cache must exist)",
+)
+@click.option(
+    "--cross-training/--no-cross-training",
+    default=None,
+    help="Analyze cross-training impact (auto-detect if not specified)",
 )
 @click.option(
     "--provider",
@@ -200,9 +199,9 @@ def generate(
     fit_dir: Path | None,
     output_dir: Path,
     period_months: int,
-    training_plan_weeks: int,
     skip_training_plan: bool,
     skip_data_prep: bool,
+    cross_training: bool | None,
     provider: str,
     model: str | None,
     prompts_dir: Path | None,
@@ -242,6 +241,19 @@ def generate(
                 athlete_profile = json.load(f)
         except Exception as e:
             console.print(f"[red]Error loading athlete profile: {str(e)}[/red]")
+            raise click.Abort()
+
+        # Read training_plan_weeks from profile (required field)
+        training_plan_weeks = athlete_profile.get('training_plan_weeks')
+        if training_plan_weeks is None:
+            console.print("[red]Error: 'training_plan_weeks' not found in athlete profile.[/red]")
+            console.print("[yellow]Please add 'training_plan_weeks' field to your athlete_profile.json[/yellow]")
+            raise click.Abort()
+
+        if not isinstance(training_plan_weeks, int) or training_plan_weeks < 1 or training_plan_weeks > 52:
+            console.print(
+                f"[red]Error: 'training_plan_weeks' must be an integer between 1 and 52, got: {training_plan_weeks}[/red]"
+            )
             raise click.Abort()
 
         # Determine data sources (CLI args override profile)
@@ -345,6 +357,7 @@ def generate(
             training_plan_weeks=training_plan_weeks,
             fit_only_mode=fit_only_mode,
             skip_data_prep=skip_data_prep,
+            analyze_cross_training=cross_training,
         )
 
         # Validate configuration
