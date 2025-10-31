@@ -263,8 +263,8 @@
           "enum": ["Foundation", "Build", "Peak", "Recovery"]
         },
         "workouts": {
-          "type": "object",
-          "additionalProperties": {
+          "type": "array",
+          "items": {
             "$ref": "#/definitions/workout"
           }
         }
@@ -272,10 +272,12 @@
     },
     "workout": {
       "type": "object",
-      "required": ["name", "description", "total_duration_min", "segments"],
+      "required": ["weekday", "description", "total_duration_min", "segments"],
       "properties": {
-        "name": {
-          "type": "string"
+        "weekday": {
+          "type": "string",
+          "enum": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+          "description": "Day of the week for this workout"
         },
         "description": {
           "type": "string"
@@ -301,19 +303,23 @@
     },
     "segment": {
       "type": "object",
-      "required": ["duration_min", "power_low", "power_high", "description", "type"],
+      "required": ["duration_min", "power_low_pct", "power_high_pct", "description", "type"],
       "properties": {
         "duration_min": {
           "type": "integer",
           "minimum": 0
         },
-        "power_low": {
-          "type": "integer",
-          "minimum": 0
+        "power_low_pct": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 200,
+          "description": "Lower power bound as percentage of FTP (e.g., 85.0 for 85% FTP)"
         },
-        "power_high": {
-          "type": "integer",
-          "minimum": 0
+        "power_high_pct": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 200,
+          "description": "Upper power bound as percentage of FTP (e.g., 95.0 for 95% FTP)"
         },
         "description": {
           "type": "string"
@@ -326,111 +332,194 @@
     },
     "performance_analysis": {
       "type": "object",
+      "required": ["athlete_profile", "performance_comparison", "time_in_zones", "key_trends", "insights", "recommendations", "analysis_period_months"],
       "properties": {
-        "analysis_period": {
+        "athlete_profile": {
           "type": "object",
+          "required": ["name", "current_ftp", "weight", "w_kg", "age", "experience_level"],
           "properties": {
-            "start_date": {
+            "name": {
               "type": "string",
-              "format": "date"
+              "description": "Athlete name"
             },
-            "end_date": {
-              "type": "string",
-              "format": "date"
-            },
-            "period_months": {
-              "type": "number",
-              "minimum": 0
-            }
-          }
-        },
-        "summary": {
-          "type": "object",
-          "properties": {
-            "total_rides": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "total_distance_km": {
-              "type": "number",
-              "minimum": 0
-            },
-            "total_time_hours": {
-              "type": "number",
-              "minimum": 0
-            },
-            "rides_per_week": {
-              "type": "number",
-              "minimum": 0
-            },
-            "outdoor_rides": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "indoor_rides": {
-              "type": "integer",
-              "minimum": 0
-            }
-          }
-        },
-        "consistency": {
-          "type": "object",
-          "properties": {
-            "score": {
+            "current_ftp": {
               "type": "number",
               "minimum": 0,
-              "maximum": 100
+              "description": "Current Functional Threshold Power in watts"
             },
-            "description": {
-              "type": "string"
+            "weight": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Body weight in kilograms"
+            },
+            "w_kg": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Power to weight ratio (watts per kilogram)"
+            },
+            "age": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 120,
+              "description": "Athlete age in years"
+            },
+            "experience_level": {
+              "type": "string",
+              "description": "Athlete experience level"
             }
           }
         },
-        "power_metrics": {
-          "type": "object",
-          "properties": {
-            "average_power": {
-              "type": "number",
-              "minimum": 0
-            },
-            "normalized_power": {
-              "type": "number",
-              "minimum": 0
-            },
-            "power_trend_percent": {
-              "type": "number"
+        "performance_comparison": {
+          "type": "array",
+          "description": "Array of performance metric comparisons between periods",
+          "items": {
+            "type": "object",
+            "required": ["metric", "previous", "current", "change", "trend"],
+            "properties": {
+              "metric": {
+                "type": "string",
+                "description": "Name of the performance metric"
+              },
+              "previous": {
+                "type": "string",
+                "description": "Value in previous period"
+              },
+              "current": {
+                "type": "string",
+                "description": "Value in current period"
+              },
+              "change": {
+                "type": "string",
+                "description": "Change between periods"
+              },
+              "trend": {
+                "type": "string",
+                "enum": ["up", "down", "neutral"],
+                "description": "Direction of trend"
+              }
             }
           }
         },
         "time_in_zones": {
-          "type": "object",
-          "properties": {
-            "z1_percent": {
-              "type": "number",
-              "minimum": 0,
-              "maximum": 100
-            },
-            "z2_percent": {
-              "type": "number",
-              "minimum": 0,
-              "maximum": 100
-            },
-            "z3_percent": {
-              "type": "number",
-              "minimum": 0,
-              "maximum": 100
-            },
-            "z4_percent": {
-              "type": "number",
-              "minimum": 0,
-              "maximum": 100
-            },
-            "z5_percent": {
-              "type": "number",
-              "minimum": 0,
-              "maximum": 100
+          "type": "array",
+          "description": "Time spent in each power zone",
+          "items": {
+            "type": "object",
+            "required": ["zone", "name", "percentage", "hours"],
+            "properties": {
+              "zone": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 5,
+                "description": "Zone number (1-5)"
+              },
+              "name": {
+                "type": "string",
+                "description": "Zone name"
+              },
+              "percentage": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Percentage of total time in this zone"
+              },
+              "hours": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Total hours in this zone"
+              }
             }
           }
+        },
+        "key_trends": {
+          "type": "array",
+          "description": "Key trends identified in the analysis",
+          "minItems": 3,
+          "maxItems": 5,
+          "items": {
+            "type": "object",
+            "required": ["title", "description"],
+            "properties": {
+              "title": {
+                "type": "string",
+                "description": "Short trend title"
+              },
+              "description": {
+                "type": "string",
+                "description": "Detailed description"
+              }
+            }
+          }
+        },
+        "insights": {
+          "type": "array",
+          "description": "Actionable insights from analysis",
+          "minItems": 3,
+          "maxItems": 5,
+          "items": {
+            "type": "object",
+            "required": ["title", "description"],
+            "properties": {
+              "title": {
+                "type": "string",
+                "description": "Short insight title"
+              },
+              "description": {
+                "type": "string",
+                "description": "Detailed explanation"
+              }
+            }
+          }
+        },
+        "recommendations": {
+          "type": "object",
+          "required": ["short_term", "long_term", "recovery_nutrition"],
+          "properties": {
+            "short_term": {
+              "type": "array",
+              "description": "Short-term recommendations",
+              "items": {
+                "type": "object",
+                "required": ["text"],
+                "properties": {
+                  "text": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "long_term": {
+              "type": "array",
+              "description": "Long-term recommendations",
+              "items": {
+                "type": "object",
+                "required": ["text"],
+                "properties": {
+                  "text": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "recovery_nutrition": {
+              "type": "array",
+              "description": "Recovery and nutrition recommendations",
+              "items": {
+                "type": "object",
+                "required": ["text"],
+                "properties": {
+                  "text": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "analysis_period_months": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Number of months analyzed"
         }
       }
     },

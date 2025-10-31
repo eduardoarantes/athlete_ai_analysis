@@ -1,0 +1,190 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Training Plan Output Schema",
+  "description": "Schema for Phase 3 Training Planning tool output (finalize_training_plan)",
+  "type": "object",
+  "required": [
+    "athlete_profile",
+    "plan_metadata",
+    "coaching_notes",
+    "monitoring_guidance",
+    "weekly_plan"
+  ],
+  "properties": {
+    "athlete_profile": {
+      "type": "object",
+      "required": ["name", "age", "ftp", "weight_kg", "power_to_weight", "goals", "training_availability"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "age": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 120
+        },
+        "gender": {
+          "type": "string",
+          "enum": ["male", "female", "other"]
+        },
+        "ftp": {
+          "type": "number",
+          "minimum": 0
+        },
+        "weight_kg": {
+          "type": "number",
+          "minimum": 0
+        },
+        "power_to_weight": {
+          "type": ["number", "null"],
+          "minimum": 0
+        },
+        "max_hr": {
+          "type": ["integer", "null"],
+          "minimum": 0,
+          "maximum": 300
+        },
+        "goals": {
+          "type": "string"
+        },
+        "current_training_status": {
+          "type": "string"
+        },
+        "training_availability": {
+          "type": "object"
+        },
+        "available_training_days": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+          }
+        },
+        "weekly_training_hours": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "plan_metadata": {
+      "type": "object",
+      "required": ["total_weeks", "current_ftp", "target_ftp", "ftp_gain_watts", "ftp_gain_percent", "plan_type"],
+      "properties": {
+        "total_weeks": {
+          "type": "integer",
+          "minimum": 4,
+          "maximum": 24
+        },
+        "current_ftp": {
+          "type": "number",
+          "minimum": 0
+        },
+        "target_ftp": {
+          "type": "number",
+          "minimum": 0
+        },
+        "ftp_gain_watts": {
+          "type": "number"
+        },
+        "ftp_gain_percent": {
+          "type": "number"
+        },
+        "plan_type": {
+          "type": "string"
+        }
+      }
+    },
+    "coaching_notes": {
+      "type": "string",
+      "description": "Overall coaching guidance explaining the plan structure, rationale, and key considerations"
+    },
+    "monitoring_guidance": {
+      "type": "string",
+      "description": "Guidance on what the athlete should monitor during plan execution"
+    },
+    "weekly_plan": {
+      "type": "array",
+      "description": "Array of week objects, one for each week of the plan",
+      "items": {
+        "type": "object",
+        "required": ["week_number", "phase", "phase_rationale", "workouts", "weekly_focus", "weekly_watch_points"],
+        "properties": {
+          "week_number": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "phase": {
+            "type": "string",
+            "description": "Training phase name (e.g., Foundation, Build, Recovery, Peak, Taper)"
+          },
+          "phase_rationale": {
+            "type": "string",
+            "description": "Short explanation of why this phase for this week"
+          },
+          "weekly_focus": {
+            "type": "string",
+            "description": "Key training focus for the week"
+          },
+          "weekly_watch_points": {
+            "type": "string",
+            "description": "What athlete should monitor this week"
+          },
+          "workouts": {
+            "type": "array",
+            "description": "Array of workout objects for the week",
+            "items": {
+              "type": "object",
+              "required": ["weekday", "description", "segments"],
+              "properties": {
+                "weekday": {
+                  "type": "string",
+                  "enum": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+                  "description": "Day of the week for this workout"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Workout purpose and coaching notes"
+                },
+                "segments": {
+                  "type": "array",
+                  "description": "Array of workout segments",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "required": ["type", "duration_min", "power_low_pct", "description"],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": ["warmup", "interval", "recovery", "cooldown", "steady", "work", "tempo"]
+                      },
+                      "duration_min": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "power_low_pct": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 200,
+                        "description": "Lower power bound as percentage of FTP (e.g., 85.0 for 85% FTP)"
+                      },
+                      "power_high_pct": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 200,
+                        "description": "Upper power bound as percentage of FTP (defaults to power_low_pct if not provided)"
+                      },
+                      "description": {
+                        "type": "string",
+                        "description": "Purpose and guidance for this segment"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

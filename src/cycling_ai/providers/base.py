@@ -141,7 +141,10 @@ class BaseProvider(ABC):
 
     @abstractmethod
     def create_completion(
-        self, messages: list[ProviderMessage], tools: list[ToolDefinition] | None = None
+        self,
+        messages: list[ProviderMessage],
+        tools: list[ToolDefinition] | None = None,
+        force_tool_call: bool = False,
     ) -> CompletionResponse:
         """
         Create a completion using the provider's API.
@@ -149,6 +152,7 @@ class BaseProvider(ABC):
         Args:
             messages: Conversation messages
             tools: Available tools (optional)
+            force_tool_call: If True, force LLM to call tool instead of responding with text
 
         Returns:
             Standardized completion response

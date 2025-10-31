@@ -6,6 +6,7 @@ Coordinates LLM-powered tool execution with multi-turn conversation support.
 from __future__ import annotations
 
 import json
+import logging
 from typing import Any
 
 from cycling_ai.orchestration.executor import ToolExecutor
@@ -15,6 +16,8 @@ from cycling_ai.orchestration.session import (
 )
 from cycling_ai.providers.base import BaseProvider, ProviderMessage
 from cycling_ai.tools.base import ToolExecutionResult
+
+logger = logging.getLogger(__name__)
 
 
 class LLMAgent:
@@ -36,6 +39,7 @@ class LLMAgent:
         session: ConversationSession,
         max_iterations: int = 10,
         allowed_tools: list[str] | None = None,
+        force_tool_call: bool = False,
     ):
         """
         Initialize LLM agent.
@@ -47,12 +51,14 @@ class LLMAgent:
             max_iterations: Maximum tool execution iterations (safety limit)
             allowed_tools: Optional list of tool names to make available to the LLM.
                 If None, all tools from executor are available.
+            force_tool_call: If True, force LLM to call tool instead of responding with text
         """
         self.provider = provider
         self.executor = executor
         self.session = session
         self.max_iterations = max_iterations
         self.allowed_tools = allowed_tools
+        self.force_tool_call = force_tool_call
 
     def process_message(self, user_message: str) -> str:
         """
@@ -107,21 +113,44 @@ class LLMAgent:
             response = self.provider.create_completion(
                 messages=messages,
                 tools=tools if tools else None,
+                force_tool_call=self.force_tool_call,
             )
 
-            logger.info(f"[AGENT LOOP] Response received. Content length: {len(response.content) if response.content else 0}")
-            logger.info(f"[AGENT LOOP] Tool calls: {len(response.tool_calls) if response.tool_calls else 0}")
+            # Comprehensive response logging for observability
+            logger.info(f"[AGENT LOOP] Response received from LLM")
+            logger.debug(f"[AGENT LOOP] Response type: {type(response)}")
+            logger.debug(f"[AGENT LOOP] Response content type: {type(response.content)}")
+            logger.info(f"[AGENT LOOP] Content length: {len(response.content) if response.content else 0}")
+
+            # Tool calls debugging
+            logger.debug(f"[AGENT LOOP] response.tool_calls type: {type(response.tool_calls)}")
+            logger.debug(f"[AGENT LOOP] response.tool_calls value: {response.tool_calls}")
+            logger.debug(f"[AGENT LOOP] response.tool_calls bool evaluation: {bool(response.tool_calls)}")
+            logger.info(f"[AGENT LOOP] Tool calls count: {len(response.tool_calls) if response.tool_calls else 0}")
 
             # Check if LLM wants to call tools
             if response.tool_calls:
-                logger.info(f"[AGENT LOOP] Executing {len(response.tool_calls)} tool calls:")
+                logger.info(f"[AGENT LOOP] Tool calls detected: {len(response.tool_calls)}")
                 for tc in response.tool_calls:
-                    logger.info(f"[AGENT LOOP]   - {tc.get('name', 'unknown')}")
+                    tool_name = tc.get('name', 'unknown')
+                    tool_args = tc.get('arguments', {})
+                    logger.info(f"[AGENT LOOP]   - Tool: {tool_name}")
+                    logger.debug(f"[AGENT LOOP]     Arguments: {tool_args}")
 
                 # Execute tools and add results to session
-                tool_results = self._execute_tool_calls(response.tool_calls)
+                logger.debug(f"[AGENT LOOP] Calling _execute_tool_calls()...")
+                try:
+                    tool_results = self._execute_tool_calls(response.tool_calls)
+                    logger.info(f"[AGENT LOOP] Tool execution completed successfully. {len(tool_results)} results.")
+                    for i, result in enumerate(tool_results):
+                        logger.debug(f"[AGENT LOOP]   Result {i+1}: success={result.success}, format={result.format}")
+                        if not result.success:
+                            logger.warning(f"[AGENT LOOP]   Result {i+1} errors: {result.errors}")
+                except Exception as e:
+                    logger.error(f"[AGENT LOOP] Tool execution failed with exception: {e}", exc_info=True)
+                    raise
 
-                logger.info(f"[AGENT LOOP] Tool execution completed. Adding messages to session.")
+                logger.debug(f"[AGENT LOOP] Adding tool call and result messages to session...")
 
                 # Add assistant message with tool calls
                 self.session.add_message(
@@ -139,19 +168,28 @@ class LLMAgent:
                     )
                     self.session.add_message(tool_result_msg)
 
-                # Check if finalize_training_plan was called - if so, force completion
-                has_finalized = any(
-                    tc.get("name") == "finalize_training_plan"
-                    for tc in response.tool_calls
-                )
+                # Check if finalize_training_plan was called AND succeeded - if so, force completion
+                finalize_idx = None
+                for idx, tc in enumerate(response.tool_calls):
+                    if tc.get("name") == "finalize_training_plan":
+                        finalize_idx = idx
+                        break
 
-                if has_finalized:
-                    logger.info("[AGENT LOOP] finalize_training_plan called. Forcing completion.")
-                    final_msg = "Training plan has been successfully created and saved."
-                    self.session.add_message(
-                        ConversationMessage(role="assistant", content=final_msg)
-                    )
-                    return final_msg
+                if finalize_idx is not None:
+                    # Check if the tool execution was successful
+                    finalize_result = tool_results[finalize_idx]
+                    if finalize_result.success:
+                        logger.info("[AGENT LOOP] finalize_training_plan succeeded. Forcing completion.")
+                        final_msg = "Training plan has been successfully created and saved."
+                        self.session.add_message(
+                            ConversationMessage(role="assistant", content=final_msg)
+                        )
+                        return final_msg
+                    else:
+                        logger.warning(
+                            f"[AGENT LOOP] finalize_training_plan failed with errors: {finalize_result.errors}. "
+                            "Continuing to give LLM a chance to retry."
+                        )
 
                 logger.info(f"[AGENT LOOP] Session now has {len(self.session.messages)} messages. Continuing to next iteration...")
 
@@ -305,6 +343,7 @@ class AgentFactory:
         system_prompt: str | None = None,
         max_iterations: int = 10,
         allowed_tools: list[str] | None = None,
+        force_tool_call: bool = False,
     ) -> LLMAgent:
         """
         Create configured LLM agent.
@@ -315,6 +354,7 @@ class AgentFactory:
             system_prompt: Optional system prompt to set context
             max_iterations: Maximum tool execution iterations
             allowed_tools: Optional list of tool names to restrict agent access to
+            force_tool_call: If True, force LLM to call tool instead of responding with text
 
         Returns:
             Configured LLM agent
@@ -337,6 +377,7 @@ class AgentFactory:
             session=session,
             max_iterations=max_iterations,
             allowed_tools=allowed_tools,
+            force_tool_call=force_tool_call,
         )
 
     @staticmethod

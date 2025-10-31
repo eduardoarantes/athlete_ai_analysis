@@ -131,6 +131,33 @@
             outline-offset: 2px;
         }
 
+        /* File Selector Button */
+        .file-selector-btn {
+            background: var(--accent-orange);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .file-selector-btn:hover {
+            background: #ff5520;
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        #fileInput {
+            display: none;
+        }
+
         /* Stats Badge */
         .stats-badge {
             background: rgba(255, 255, 255, 0.1);
@@ -851,8 +878,14 @@
                     <option value="">Loading athletes...</option>
                 </select>
             </div>
-            <div class="stats-badge" id="stats-badge">
-                Loading...
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <input type="file" id="fileInput" accept=".json">
+                <label for="fileInput" class="file-selector-btn">
+                    📁 Load File
+                </label>
+                <div class="stats-badge" id="stats-badge">
+                    Loading...
+                </div>
             </div>
         </div>
     </header>
@@ -1018,14 +1051,21 @@
         // Day name mapping
         const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-        // Load report data
-        async function loadReportData() {
+        // Load report data from file input or default
+        async function loadReportData(file = null) {
             try {
-                const response = await fetch('report_data.json');
-                if (!response.ok) {
-                    throw new Error('Failed to load report data');
+                if (file) {
+                    // Load from user-selected file using FileReader
+                    const text = await readFileAsText(file);
+                    reportData = JSON.parse(text);
+                } else {
+                    // Load from default report_data.json
+                    const response = await fetch('report_data.json');
+                    if (!response.ok) {
+                        throw new Error('Failed to load report data');
+                    }
+                    reportData = await response.json();
                 }
-                reportData = await response.json();
 
                 document.getElementById('loading').style.display = 'none';
 
@@ -1038,6 +1078,45 @@
                 showError('Error loading report data: ' + error.message);
             }
         }
+
+        // Read file as text using FileReader
+        function readFileAsText(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = (e) => reject(new Error('Failed to read file'));
+                reader.readAsText(file);
+            });
+        }
+
+        // Handle file input change
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Reset state
+                reportData = null;
+                currentAthleteId = null;
+
+                // Show loading
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('loading').innerHTML = `
+                    <div class="loading-spinner"></div>
+                    <div style="color: var(--text-secondary); margin-top: 1rem;">Loading ${file.name}...</div>
+                `;
+
+                // Hide cards while loading
+                const athleteCard = document.getElementById('athlete-card');
+                const coachingSection = document.getElementById('coaching-notes-section');
+                const monitoringSection = document.getElementById('monitoring-guidance-section');
+
+                if (athleteCard) athleteCard.style.display = 'none';
+                if (coachingSection) coachingSection.style.display = 'none';
+                if (monitoringSection) monitoringSection.style.display = 'none';
+
+                // Load the selected file
+                loadReportData(file);
+            }
+        });
 
         // Show error message
         function showError(message) {
@@ -1052,55 +1131,60 @@
             const selector = document.getElementById('athlete-selector');
             selector.innerHTML = '';
 
-            reportData.athletes.forEach(athlete => {
+            reportData.athletes.forEach((athlete, index) => {
                 const option = document.createElement('option');
-                option.value = athlete.id;
-                option.textContent = athlete.name;
+                option.value = index;
+                option.textContent = athlete.athlete_name || athlete.training_plan?.athlete_profile?.name || 'Unknown';
                 selector.appendChild(option);
             });
 
             selector.addEventListener('change', (e) => {
-                loadAthlete(e.target.value);
+                loadAthlete(parseInt(e.target.value));
             });
 
             // Load first athlete
             if (reportData.athletes.length > 0) {
-                selector.value = reportData.athletes[0].id;
-                loadAthlete(reportData.athletes[0].id);
+                selector.value = 0;
+                loadAthlete(0);
             }
         }
 
         // Load athlete data
         function loadAthlete(athleteId) {
             currentAthleteId = athleteId;
-            const athlete = reportData.athletes.find(a => a.id === athleteId);
+            const athlete = reportData.athletes[athleteId];
 
             if (!athlete) return;
 
+            // Extract data from nested structure
+            const trainingPlanData = athlete.training_plan || {};
+            const profile = trainingPlanData.athlete_profile || {};
+            const metadata = trainingPlanData.plan_metadata || {};
+
+            const athleteName = profile.name || athlete.athlete_name || 'Unknown';
+
             // Update athlete card
-            document.getElementById('athlete-avatar').textContent = athlete.name.charAt(0).toUpperCase();
-            document.getElementById('athlete-name').textContent = athlete.name;
-            document.getElementById('athlete-age').textContent = `${athlete.profile.age} years old`;
-            document.getElementById('athlete-ftp').textContent = `${athlete.profile.ftp}W FTP`;
-            document.getElementById('athlete-weight').textContent = `${athlete.profile.weight_kg}kg`;
-            document.getElementById('athlete-wtkg').textContent = `${athlete.profile.power_to_weight.toFixed(2)} W/kg`;
+            document.getElementById('athlete-avatar').textContent = athleteName.charAt(0).toUpperCase();
+            document.getElementById('athlete-name').textContent = athleteName;
+            document.getElementById('athlete-age').textContent = `${profile.age || 0} years old`;
+            document.getElementById('athlete-ftp').textContent = `${profile.ftp || 0}W FTP`;
+            document.getElementById('athlete-weight').textContent = `${profile.weight_kg || 0}kg`;
+            document.getElementById('athlete-wtkg').textContent = `${(profile.power_to_weight || 0).toFixed(2)} W/kg`;
 
             // Update FTP progression
-            document.getElementById('ftp-current').textContent = `${athlete.training_plan.current_ftp}W`;
-            document.getElementById('ftp-target').textContent = `${athlete.training_plan.target_ftp}W`;
-            const gain = athlete.training_plan.ftp_gain;
-            const gainPercent = athlete.training_plan.ftp_gain_percent;
+            document.getElementById('ftp-current').textContent = `${metadata.current_ftp || 0}W`;
+            document.getElementById('ftp-target').textContent = `${metadata.target_ftp || 0}W`;
+            const gain = metadata.ftp_gain_watts || 0;
+            const gainPercent = metadata.ftp_gain_percent || 0;
             document.getElementById('ftp-gain').textContent = `+${gain}W (+${gainPercent.toFixed(1)}%)`;
 
             // Update stats badge
-            document.getElementById('stats-badge').textContent = `${athlete.training_plan.total_weeks} weeks plan`;
+            document.getElementById('stats-badge').textContent = `${metadata.total_weeks || 0} weeks plan`;
 
             // Update weeks badge
-            document.getElementById('weeks-badge').textContent = `${athlete.training_plan.total_weeks} weeks`;
+            document.getElementById('weeks-badge').textContent = `${metadata.total_weeks || 0} weeks`;
 
             // Update coaching notes and monitoring guidance
-            const trainingPlanData = athlete.training_plan.training_plan || athlete.training_plan;
-
             if (trainingPlanData.coaching_notes) {
                 document.getElementById('coaching-notes-text').textContent = trainingPlanData.coaching_notes;
                 document.getElementById('coaching-notes-section').style.display = 'block';
@@ -1116,7 +1200,7 @@
             document.getElementById('calendar-section').style.display = 'block';
 
             // Render calendar
-            renderCalendar(athlete.training_plan);
+            renderCalendar(trainingPlanData);
         }
 
         // Generate SVG visualization from workout segments
@@ -1143,12 +1227,11 @@
                 return colors[type] || '#3B82F6'; // Blue default
             };
 
-            // Calculate bar heights based on power (normalized to FTP)
-            const getBarHeight = (powerLow, powerHigh, ftp) => {
-                const avgPower = (powerLow + powerHigh) / 2;
-                const percent = (avgPower / ftp) * 100;
+            // Calculate bar heights based on FTP percentage
+            const getBarHeight = (powerLowPct, powerHighPct) => {
+                const avgPercent = (powerLowPct + powerHighPct) / 2;
                 // Scale: 50% FTP = 50% height, 100% FTP = 100% height
-                const heightPercent = Math.min(100, Math.max(20, percent));
+                const heightPercent = Math.min(100, Math.max(20, avgPercent));
                 return (heightPercent / 100) * (height * 0.7); // Use 70% of height for bars
             };
 
@@ -1168,7 +1251,7 @@
             let xOffset = 0;
             segments.forEach(segment => {
                 const segmentWidth = (segment.duration_min / totalDuration) * width;
-                const barHeight = getBarHeight(segment.power_low, segment.power_high, ftp);
+                const barHeight = getBarHeight(segment.power_low_pct, segment.power_high_pct);
                 const y = height - barHeight;
                 const color = getSegmentColor(segment.type);
 
@@ -1266,7 +1349,9 @@
             const container = document.getElementById('calendar-weeks');
             container.innerHTML = '';
 
-            trainingPlan.weekly_workouts.forEach(week => {
+            const weeklyPlan = trainingPlan.weekly_plan || [];
+
+            weeklyPlan.forEach(week => {
                 const weekRow = document.createElement('div');
                 weekRow.className = 'week-row';
 
@@ -1274,28 +1359,31 @@
                 const weekLabel = document.createElement('div');
                 weekLabel.className = 'week-label';
                 weekLabel.innerHTML = `
-                    <div class="week-number">W${week.week}</div>
+                    <div class="week-number">W${week.week_number}</div>
                     <div class="phase-badge ${week.phase.toLowerCase()}">${week.phase}</div>
                 `;
                 weekRow.appendChild(weekLabel);
 
                 // Day cells
                 dayNames.forEach(day => {
-                    const workout = week.workouts[day];
+                    const workout = week.workouts?.find(w => w.weekday === day);
                     const dayCell = document.createElement('div');
 
                     if (workout) {
+                        // Calculate total duration from segments
+                        const totalDuration = workout.segments?.reduce((sum, seg) => sum + seg.duration_min, 0) || 0;
+
                         dayCell.className = 'day-cell';
 
-                        // Add intensity indicator
-                        const intensity = getIntensityClass(workout.name);
+                        // Add intensity indicator from description or segment types
+                        const intensity = getIntensityFromWorkout(workout);
                         dayCell.innerHTML = `
                             <div class="workout-intensity ${intensity}"></div>
-                            <div class="workout-name">${workout.name}</div>
-                            <div class="workout-duration">${workout.total_duration_min}min</div>
+                            <div class="workout-name">${day}</div>
+                            <div class="workout-duration">${totalDuration}min</div>
                         `;
 
-                        dayCell.onclick = () => openWorkoutModal(week.week, day, workout);
+                        dayCell.onclick = () => openWorkoutModal(week.week_number, day, workout);
                     } else {
                         dayCell.className = 'day-cell rest';
                         dayCell.innerHTML = `
@@ -1310,26 +1398,45 @@
             });
         }
 
-        // Get intensity class
-        function getIntensityClass(workoutName) {
-            const name = workoutName.toLowerCase();
-            if (name.includes('vo2') || name.includes('vo2max')) return 'intensity-vo2max';
-            if (name.includes('threshold')) return 'intensity-threshold';
-            if (name.includes('tempo')) return 'intensity-tempo';
-            return 'intensity-endurance';
+        // Get intensity class from workout structure
+        function getIntensityFromWorkout(workout) {
+            // Analyze description for intensity keywords
+            const description = workout.description?.toLowerCase() || '';
+            if (description.includes('vo2') || description.includes('vo2max')) return 'intensity-vo2max';
+            if (description.includes('threshold')) return 'intensity-threshold';
+            if (description.includes('tempo')) return 'intensity-tempo';
+            if (description.includes('sweet spot')) return 'intensity-threshold';
+
+            // Analyze segments to determine intensity
+            const segments = workout.segments || [];
+            const maxPower = Math.max(...segments.map(s => s.power_high_pct || s.power_low_pct || 0));
+
+            if (maxPower >= 106) return 'intensity-vo2max';  // VO2 Max zone
+            if (maxPower >= 90) return 'intensity-threshold';  // Threshold zone
+            if (maxPower >= 76) return 'intensity-tempo';  // Tempo zone
+            return 'intensity-endurance';  // Endurance zone
         }
 
         // Open workout modal
         function openWorkoutModal(weekNum, day, workout) {
             const modal = document.getElementById('workout-modal');
 
+            // Calculate metrics from segments
+            const totalDuration = workout.segments?.reduce((sum, seg) => sum + seg.duration_min, 0) || 0;
+            const workTime = workout.segments?.reduce((sum, seg) => {
+                if (seg.type !== 'warmup' && seg.type !== 'cooldown' && seg.type !== 'recovery') {
+                    return sum + seg.duration_min;
+                }
+                return sum;
+            }, 0) || 0;
+
             // Update header
-            document.getElementById('modal-title').textContent = `${workout.name}`;
-            document.getElementById('modal-meta').innerHTML = `<span>Week ${weekNum} • ${day}</span>`;
+            document.getElementById('modal-title').textContent = `${day} Workout`;
+            document.getElementById('modal-meta').innerHTML = `<span>Week ${weekNum}</span>`;
 
             // Update metrics
-            document.getElementById('modal-duration').textContent = `${workout.total_duration_min} min`;
-            document.getElementById('modal-work-time').textContent = workout.work_time_min ? `${workout.work_time_min} min` : 'N/A';
+            document.getElementById('modal-duration').textContent = `${totalDuration} min`;
+            document.getElementById('modal-work-time').textContent = workTime ? `${workTime} min` : 'N/A';
             document.getElementById('modal-intensity').textContent = workout.intensity_zone || 'Mixed';
 
             // Update description
@@ -1337,8 +1444,8 @@
 
             // Generate and display SVG visualization
             if (workout.segments && workout.segments.length > 0) {
-                const athlete = reportData.athletes.find(a => a.id === currentAthleteId);
-                const ftp = athlete ? athlete.training_plan.current_ftp : 260;
+                const athlete = reportData.athletes[currentAthleteId];
+                const ftp = athlete?.training_plan?.plan_metadata?.current_ftp || 260;
                 const svg = generateWorkoutSVG(workout.segments, ftp);
                 document.getElementById('modal-visualization').style.display = 'block';
                 document.getElementById('modal-svg').innerHTML = svg;
@@ -1377,9 +1484,17 @@
                             const segmentDiv = document.createElement('div');
                             segmentDiv.className = `segment ${segment.type}`;
 
-                            const powerRange = segment.power_low === segment.power_high
-                                ? `${segment.power_low}W`
-                                : `${segment.power_low}-${segment.power_high}W`;
+                            // Get current FTP for conversion
+                            const athlete = reportData.athletes[currentAthleteId];
+                            const ftp = athlete?.training_plan?.plan_metadata?.current_ftp || 260;
+
+                            // Convert FTP percentages to watts
+                            const powerLowWatts = Math.round((segment.power_low_pct / 100) * ftp);
+                            const powerHighWatts = Math.round((segment.power_high_pct / 100) * ftp);
+
+                            const powerRange = segment.power_low_pct === segment.power_high_pct
+                                ? `${powerLowWatts}W (${segment.power_low_pct}%)`
+                                : `${powerLowWatts}-${powerHighWatts}W (${segment.power_low_pct}-${segment.power_high_pct}%)`;
 
                             segmentDiv.innerHTML = `
                                 <div class="segment-duration">${segment.duration_min} min</div>
@@ -1397,9 +1512,17 @@
                         const segmentDiv = document.createElement('div');
                         segmentDiv.className = `segment ${item.type}`;
 
-                        const powerRange = item.power_low === item.power_high
-                            ? `${item.power_low}W`
-                            : `${item.power_low}-${item.power_high}W`;
+                        // Get current FTP for conversion
+                        const athlete = reportData.athletes[currentAthleteId];
+                        const ftp = athlete?.training_plan?.plan_metadata?.current_ftp || 260;
+
+                        // Convert FTP percentages to watts
+                        const powerLowWatts = Math.round((item.power_low_pct / 100) * ftp);
+                        const powerHighWatts = Math.round((item.power_high_pct / 100) * ftp);
+
+                        const powerRange = item.power_low_pct === item.power_high_pct
+                            ? `${powerLowWatts}W (${item.power_low_pct}%)`
+                            : `${powerLowWatts}-${powerHighWatts}W (${item.power_low_pct}-${item.power_high_pct}%)`;
 
                         segmentDiv.innerHTML = `
                             <div class="segment-duration">${item.duration_min} min</div>

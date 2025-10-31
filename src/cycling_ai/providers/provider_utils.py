@@ -101,6 +101,7 @@ def is_permanent_error(error: Exception) -> bool:
         "InvalidRequestError",
         "NotFoundError",
         "ValueError",
+        "JSONDecodeError",
     ]
     return error_type in permanent_errors
 

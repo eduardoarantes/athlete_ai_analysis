@@ -43,7 +43,8 @@ def test_prompt_loader_direct():
     print("Testing individual prompt loading:")
     print("-" * 80)
 
-    agents = ["data_preparation", "performance_analysis", "training_planning", "report_generation"]
+    # Note: Phase 1 (data_preparation) no longer uses LLM prompts
+    agents = ["performance_analysis", "training_planning", "report_generation"]
 
     for agent in agents:
         try:
@@ -73,8 +74,8 @@ def test_agent_prompts_manager():
     print("\nTesting system prompt retrieval methods:")
     print("-" * 80)
 
+    # Note: Phase 1 (data_preparation) no longer uses LLM prompts
     methods = [
-        ("data_preparation", manager.get_data_preparation_prompt),
         ("performance_analysis", manager.get_performance_analysis_prompt),
         ("training_planning", manager.get_training_planning_prompt),
         ("report_generation", manager.get_report_generation_prompt),
@@ -97,17 +98,23 @@ def test_agent_prompts_manager():
     print("Testing user prompt retrieval methods:")
     print("-" * 80)
 
+    # Note: Phase 1 (data_preparation) no longer uses LLM prompts
     user_methods = [
-        ("data_preparation_user",
-         lambda: manager.get_data_preparation_user_prompt(
-             csv_file_path="/path/to/file.csv",
-             athlete_profile_path="/path/to/profile.json",
-             fit_dir_path="/path/to/fit"
-         )),
         ("performance_analysis_user",
-         lambda: manager.get_performance_analysis_user_prompt(period_months=6)),
+         lambda: manager.get_performance_analysis_user_prompt(
+             period_months=6,
+             cache_file_path="/path/to/cache.parquet",
+             athlete_profile_path="/path/to/profile.json"
+         )),
         ("training_planning_user",
-         lambda: manager.get_training_planning_user_prompt(training_plan_weeks=12)),
+         lambda: manager.get_training_planning_user_prompt(
+             training_plan_weeks=12,
+             athlete_profile_path="/path/to/profile.json",
+             power_zones="Z1-Z6 zones",
+             available_days="Mon, Wed, Sat",
+             weekly_time_budget_hours="8",
+             daily_time_caps_json="{}"
+         )),
         ("report_generation_user",
          lambda: manager.get_report_generation_user_prompt(output_dir="/tmp/reports")),
     ]
@@ -129,24 +136,23 @@ def test_agent_prompts_manager():
 
 
 def test_fallback_behavior():
-    """Test fallback to embedded prompts."""
+    """Test error handling for non-existent model."""
     print("\n" + "=" * 80)
-    print("Testing fallback behavior (non-existent model)")
+    print("Testing error handling (non-existent model)")
     print("=" * 80)
 
-    # Try to load from non-existent model/version
-    manager = AgentPromptsManager(model="nonexistent", version="99.0")
-
-    print("\nThis should fall back to embedded prompts:")
+    print("\nThis should raise an appropriate error:")
 
     try:
-        prompt = manager.get_data_preparation_prompt()
-        print(f"\n✅ Successfully retrieved prompt (fallback working)")
-        print(f"   Prompt length: {len(prompt)} chars")
-        print(f"   First 50 chars: {prompt[:50]}...")
+        # This should fail during initialization since prompts don't exist
+        manager = AgentPromptsManager(model="nonexistent", version="99.0")
+        print(f"\n❌ Should have raised FileNotFoundError during initialization")
+        return False
+    except FileNotFoundError as e:
+        print(f"\n✅ Correctly raised FileNotFoundError: {e}")
         return True
     except Exception as e:
-        print(f"\n❌ Failed to get prompt even with fallback: {e}")
+        print(f"\n❌ Unexpected error: {e}")
         return False
 
 
@@ -177,7 +183,7 @@ def main():
     tests = [
         ("PromptLoader Direct", test_prompt_loader_direct),
         ("AgentPromptsManager", test_agent_prompts_manager),
-        ("Fallback Behavior", test_fallback_behavior),
+        ("Error Handling", test_fallback_behavior),
         ("Model/Version Listing", test_model_version_listing),
     ]
 

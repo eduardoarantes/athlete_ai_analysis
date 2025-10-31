@@ -21,9 +21,10 @@ Analyze cycling performance data to identify trends, patterns, and insights.
 - analyze_time_in_zones: Calculate power zone distribution (requires FIT directory, NOT available in Phase 2)
 
 **Output Requirements:**
-You MUST return your analysis as a valid JSON object matching this exact schema:
+You MUST return your analysis as valid JSON matching this exact schema.
+Return ONLY the JSON object - no markdown code blocks, no additional text, no explanations.
 
-```json
+Schema structure:
 {
   "athlete_profile": {
     "name": "string",
@@ -75,10 +76,8 @@ You MUST return your analysis as a valid JSON object matching this exact schema:
   },
   "analysis_period_months": 6
 }
-```
 
 **Guidelines:**
-- Return ONLY valid JSON, no markdown code blocks or additional text
 - Use concrete numbers and percentages in descriptions
 - Explain the significance of trends
 - Be encouraging but honest

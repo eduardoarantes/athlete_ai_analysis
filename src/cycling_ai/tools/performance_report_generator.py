@@ -4,8 +4,63 @@ from __future__ import annotations
 import json
 from datetime import datetime
 from pathlib import Path
+from typing import Dict, Any
 
 from cycling_ai.models.performance_analysis import PerformanceAnalysis
+
+
+def generate_performance_html_from_json(
+    report_data: Dict[str, Any],
+    output_path: Path | str
+) -> None:
+    """
+    Generate HTML performance analysis report from report_data.json structure.
+
+    This is the new template-based approach that reads complete report_data.json
+    and generates HTML without LLM involvement.
+
+    Args:
+        report_data: Complete report data dictionary (from report_data.json)
+        output_path: Path where HTML file should be written
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+
+    logger.debug(f"[PERF HTML] Starting generation, output_path={output_path}")
+
+    # Extract first athlete from report data
+    athletes = report_data.get("athletes", [])
+    logger.debug(f"[PERF HTML] Found {len(athletes)} athletes")
+    if not athletes:
+        raise ValueError("No athletes found in report_data")
+
+    athlete = athletes[0]  # For now, support single athlete
+    performance_analysis = athlete.get("performance_analysis")
+    logger.debug(f"[PERF HTML] Performance analysis type: {type(performance_analysis)}")
+
+    if not performance_analysis:
+        raise ValueError("No performance analysis data found in report_data")
+
+    # If performance_analysis is a JSON string, parse it first
+    if isinstance(performance_analysis, str):
+        logger.debug("[PERF HTML] Parsing performance_analysis from JSON string")
+        import json
+        performance_analysis = json.loads(performance_analysis)
+
+    # Now validate it's a dict
+    if not isinstance(performance_analysis, dict):
+        raise ValueError(
+            f"performance_analysis must be a dict after parsing, got {type(performance_analysis).__name__}"
+        )
+
+    logger.debug("[PERF HTML] Validating with Pydantic model")
+    # Convert to PerformanceAnalysis model using Pydantic v2
+    analysis = PerformanceAnalysis.model_validate(performance_analysis)
+
+    logger.debug("[PERF HTML] Calling generate_performance_html")
+    # Use existing HTML generation
+    generate_performance_html(analysis, output_path)
+    logger.debug("[PERF HTML] HTML generation completed")
 
 
 def generate_performance_html(analysis: PerformanceAnalysis, output_path: Path | str) -> None:
@@ -16,13 +71,21 @@ def generate_performance_html(analysis: PerformanceAnalysis, output_path: Path |
         analysis: Validated performance analysis data
         output_path: Path where HTML file should be written
     """
+    import logging
+    logger = logging.getLogger(__name__)
+
+    logger.debug("[PERF HTML] Building HTML content")
     html_content = _build_html(analysis)
+    logger.debug(f"[PERF HTML] HTML content built, length={len(html_content)} chars")
 
     output_file = Path(output_path)
+    logger.debug(f"[PERF HTML] Creating parent directory for {output_file}")
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
+    logger.debug(f"[PERF HTML] Writing HTML to {output_file}")
     with open(output_file, "w", encoding="utf-8") as f:
         f.write(html_content)
+    logger.debug("[PERF HTML] HTML file written successfully")
 
 
 def _build_html(analysis: PerformanceAnalysis) -> str:

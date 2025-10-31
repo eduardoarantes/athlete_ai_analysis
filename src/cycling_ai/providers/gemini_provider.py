@@ -112,11 +112,26 @@ class GeminiProvider(BaseProvider):
         Example:
             >>> result = provider.invoke_tool("analyze_performance", {"period_months": 6})
         """
+        import logging
         from cycling_ai.tools.registry import get_global_registry
 
-        registry = get_global_registry()
-        tool = registry.get_tool(tool_name)
-        return tool.execute(**parameters)
+        logger = logging.getLogger(__name__)
+        logger.debug(f"[GEMINI PROVIDER] invoke_tool called: {tool_name}")
+        logger.debug(f"[GEMINI PROVIDER] Parameters: {parameters}")
+
+        try:
+            registry = get_global_registry()
+            tool = registry.get_tool(tool_name)
+            logger.debug(f"[GEMINI PROVIDER] Tool retrieved from registry: {tool.definition.name}")
+
+            result = tool.execute(**parameters)
+            logger.info(f"[GEMINI PROVIDER] Tool {tool_name} executed: success={result.success}")
+            if not result.success:
+                logger.warning(f"[GEMINI PROVIDER] Tool {tool_name} errors: {result.errors}")
+            return result
+        except Exception as e:
+            logger.error(f"[GEMINI PROVIDER] Tool {tool_name} execution failed: {e}", exc_info=True)
+            raise
 
     def format_response(self, result: ToolExecutionResult) -> dict[str, Any]:
         """
@@ -140,6 +155,7 @@ class GeminiProvider(BaseProvider):
         self,
         messages: list[ProviderMessage],
         tools: list[ToolDefinition] | None = None,
+        force_tool_call: bool = False,
     ) -> CompletionResponse:
         """
         Create completion using Gemini API.
@@ -147,6 +163,7 @@ class GeminiProvider(BaseProvider):
         Args:
             messages: Conversation messages
             tools: Available tools (optional)
+            force_tool_call: If True, force LLM to call tool instead of responding with text
 
         Returns:
             Standardized completion response
@@ -243,8 +260,25 @@ class GeminiProvider(BaseProvider):
                 "temperature": self.config.temperature,
             }
 
+            # Configure tool calling behavior
+            tool_config: dict[str, Any] | None = None
+            if tools and force_tool_call:
+                # Force tool calling if requested by phase configuration
+                # This is crucial for phases like training_planning where the LLM
+                # must call the tool rather than just explaining what it plans to do
+                import google.ai.generativelanguage as glm
+                tool_config = {
+                    "function_calling_config": {
+                        "mode": glm.FunctionCallingConfig.Mode.ANY
+                    }
+                }
+
             last_content = messages[-1].content if messages[-1].content is not None else ""
-            response = chat.send_message(last_content, generation_config=generation_config)  # type: ignore[arg-type]
+            response = chat.send_message(
+                last_content,
+                generation_config=generation_config,
+                tool_config=tool_config  # type: ignore[arg-type]
+            )
 
             # Extract response
             content = ""

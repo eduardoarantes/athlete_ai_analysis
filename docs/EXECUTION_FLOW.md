@@ -265,7 +265,7 @@ This order ensures data is prepared **before** reports are generated.
                "Saturday": {workout from create_workout}
            },
            "weekly_focus": "Consistency and proper recovery",
-           "monitoring_notes": "Watch RPE on threshold intervals..."
+           "weekly_watch_points": "Watch RPE on threshold intervals..."
        },
        # ... weeks 2-12
    ]

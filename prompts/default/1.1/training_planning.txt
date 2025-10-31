@@ -18,11 +18,12 @@ You **must** call:
    - `phase_rationale` (≤30 words)
    - `weekly_focus` (≤20 words)
    - `weekly_watch_points` (≤30 words)
-   - `workouts` (array of workout objects; include only workouts on athlete-available days)
+   - `workouts` (array of workout objects; include ONLY training days, NOT rest days)
+     - **IMPORTANT**: Do NOT include rest days in the workouts array. If a day is a rest day, simply omit it from the array.
      - Each workout has:
        - `weekday` ∈ {`Monday`,`Tuesday`,`Wednesday`,`Thursday`,`Friday`,`Saturday`,`Sunday`} (REQUIRED)
        - `description` (≤25 words)
-       - `segments` (array of ≥1 segment objects)
+       - `segments` (array of ≥1 segment objects, REQUIRED - must have at least one segment)
          - Each segment MUST have these fields:
            `type` ∈ {`warmup`,`interval`,`work`,`recovery`,`cooldown`,`steady`,`tempo`} (REQUIRED, must not be empty)
            `duration_min` (integer, REQUIRED)
@@ -53,6 +54,21 @@ If required inputs (e.g., athlete profile path, FTP zones, available days, weekl
 - `coaching_notes` (≤350 words): rationale for periodization, mapping to athlete trends/goals, target FTP logic, success factors.
 - `monitoring_guidance` (≤250 words): KPIs (e.g., HR drift, RPE, compliance %), red flags (plateau, poor sleep/mood), when to down-regulate.
 
+## Overall json structure
+  athlete_profile_json
+  total_weeks
+  target_ftp
+  coaching_notes
+  monitoring_guidance
+  weekly_plan (top level array of weeks)
+    └─ 
+        ├─ week_number
+        ├─ phase
+        ├─ workouts (array of workout objects)  ← THIS is correct
+        │   └─ workout
+        
+
+
 ## Schema Guidance (shape, not a template to paraphrase)
 ```json
 {
@@ -69,8 +85,11 @@ If required inputs (e.g., athlete profile path, FTP zones, available days, weekl
       "weekly_focus": "string <=20 words",
       "weekly_watch_points": "string <=30 words",
       "workouts": [
+        // ONLY include training days, NOT rest days
+        // If Tuesday/Thursday/Saturday are training days and other days are rest,
+        // the array should only contain 3 workout objects
         {
-          "weekday": "Monday",
+          "weekday": "Tuesday",
           "description": "string <=25 words",
           "segments": [
             {
@@ -82,6 +101,8 @@ If required inputs (e.g., athlete profile path, FTP zones, available days, weekl
             }
           ]
         }
+        // Thursday and Saturday workouts would follow...
+        // Monday, Wednesday, Friday, Sunday are rest (not included)
       ]
     }
   ]
@@ -93,11 +114,13 @@ If required inputs (e.g., athlete profile path, FTP zones, available days, weekl
 - Every week has ≥1 workout and **workouts only scheduled on `{available_days}`**
 - **Weekly total minutes ≤ `{weekly_time_budget_hours}` × 60**
 - If `{daily_time_caps_json}` provided: each workout day minutes ≤ that cap
-- Every workout has ≥1 segment; intensity sessions include warmup & cooldown
+- **Every workout has ≥1 segment** (if a day is rest, omit it from workouts array entirely)
+- Intensity sessions include warmup & cooldown
 - **Every segment has required fields**: `type` (non-empty string), `duration_min`, `power_low_pct` (0-200), `description`
 - Intensities obey provided zone wattages (0-200% FTP)
 - Progression ≤10% and recovery weeks included
 - Every workout has valid `weekday` field ("Monday"… "Sunday")
+- **No rest days in workouts array** - rest days are days not included in the array
 
 ## Example Segments (Common Patterns)
 
@@ -133,6 +156,8 @@ If required inputs (e.g., athlete profile path, FTP zones, available days, weekl
 - ❌ Scheduling on unavailable days
 - ❌ Missing `workouts` array entirely
 - ❌ Missing `weekday` field in workout
+- ❌ Including rest days in workouts array with empty segments
+- ❌ Workouts with 0 segments (if day is rest, don't include it at all)
 
 ## Output Protocol
 1) Produce **one** `finalize_training_plan` tool call with the complete JSON.

@@ -7,6 +7,7 @@ with data handoffs between phases and comprehensive error handling.
 from __future__ import annotations
 
 import json
+import logging
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -21,6 +22,16 @@ from cycling_ai.orchestration.session import (
     SessionManager,
 )
 from cycling_ai.providers.base import BaseProvider
+
+logger = logging.getLogger(__name__)
+
+
+# Phase name constants
+PHASE_DATA_PREPARATION = "data_preparation"
+PHASE_PERFORMANCE_ANALYSIS = "performance_analysis"
+PHASE_TRAINING_PLANNING = "training_planning"
+PHASE_REPORT_DATA_PREPARATION = "report_data_preparation"
+PHASE_REPORT_GENERATION = "report_generation"
 
 
 class PhaseStatus(Enum):
@@ -293,7 +304,8 @@ class MultiAgentOrchestrator:
         Extract structured data from phase execution.
 
         Examines tool results in session messages to extract data
-        that can be passed to subsequent phases.
+        that can be passed to subsequent phases. For Phase 2 and Phase 3,
+        also extracts and validates the LLM's JSON response content.
 
         Args:
             phase_name: Name of the phase
@@ -335,7 +347,31 @@ class MultiAgentOrchestrator:
                                 extracted["zones_data"] = data
                             elif tool_name in ("generate_training_plan", "finalize_training_plan"):
                                 data = json.loads(message.content)
-                                extracted["training_plan"] = data
+                                logger.info(f"[PHASE {phase_name.upper()}] Extracting training plan from tool result")
+                                logger.debug(f"[PHASE {phase_name.upper()}] Tool result data keys: {list(data.keys())}")
+                                logger.debug(f"[PHASE {phase_name.upper()}] Tool result data type: {type(data)}")
+
+                                # The tool wrapper returns {"training_plan": {...}}
+                                if "training_plan" in data:
+                                    extracted["training_plan"] = data["training_plan"]
+                                    logger.info(f"[PHASE {phase_name.upper()}] Extracted nested training_plan")
+                                    logger.debug(f"[PHASE {phase_name.upper()}] Nested training_plan keys: {list(data['training_plan'].keys())}")
+                                else:
+                                    # Fallback if structure is different
+                                    extracted["training_plan"] = data
+                                    logger.warning(f"[PHASE {phase_name.upper()}] No 'training_plan' wrapper found, using data directly")
+
+                                # Validate we have the expected structure
+                                plan_data = extracted.get("training_plan", {})
+                                if isinstance(plan_data, dict):
+                                    weekly_plan_count = len(plan_data.get("weekly_plan", []))
+                                    logger.info(f"[PHASE {phase_name.upper()}] Training plan has {weekly_plan_count} weeks")
+                                    # target_ftp is nested in plan_metadata (not at top level)
+                                    plan_metadata = plan_data.get('plan_metadata', {})
+                                    target_ftp_value = plan_metadata.get('target_ftp', 'N/A')
+                                    logger.info(f"[PHASE {phase_name.upper()}] Training plan target_ftp: {target_ftp_value}")
+                                else:
+                                    logger.error(f"[PHASE {phase_name.upper()}] Training plan is not a dict: {type(plan_data)}")
                             elif tool_name == "analyze_cross_training_impact":
                                 data = json.loads(message.content)
                                 extracted["cross_training_data"] = data
@@ -346,7 +382,106 @@ class MultiAgentOrchestrator:
                             # Skip malformed JSON
                             pass
 
+        # For Phase 2 (Performance Analysis), extract the LLM's formatted JSON response
+        if phase_name == PHASE_PERFORMANCE_ANALYSIS and response:
+            extracted["performance_analysis_json"] = self._extract_and_validate_phase2_response(response)
+
+        # For Phase 3 (Training Planning), extract the training plan from tool result
+        # (Already handled above via finalize_training_plan tool result)
+
         return extracted
+
+    def _extract_and_validate_phase2_response(self, response: str) -> dict[str, Any] | None:
+        """
+        Extract and validate Phase 2 Performance Analysis JSON response.
+
+        Args:
+            response: LLM's response text (may be wrapped in markdown code fence)
+
+        Returns:
+            Validated performance analysis dict or None if invalid
+        """
+        try:
+            # Strip markdown code fence if present
+            cleaned = response.strip()
+            if cleaned.startswith("```json"):
+                cleaned = cleaned[7:]  # Remove ```json
+            elif cleaned.startswith("```"):
+                cleaned = cleaned[3:]  # Remove ```
+
+            if cleaned.endswith("```"):
+                cleaned = cleaned[:-3]  # Remove trailing ```
+
+            cleaned = cleaned.strip()
+
+            # Try to parse response as JSON
+            data = json.loads(cleaned)
+
+            # Validate against schema
+            if self._validate_performance_analysis_schema(data):
+                logger.info("[PHASE 2] Successfully extracted and validated performance analysis JSON")
+                return data
+            else:
+                logger.warning("[PHASE 2] Performance analysis JSON does not match expected schema")
+                return None
+
+        except json.JSONDecodeError as e:
+            logger.warning(f"[PHASE 2] Could not parse response as JSON: {e}")
+            return None
+
+    def _validate_performance_analysis_schema(self, data: dict[str, Any]) -> bool:
+        """
+        Validate performance analysis data against expected schema.
+
+        Args:
+            data: Performance analysis dictionary
+
+        Returns:
+            True if valid, False otherwise
+        """
+        required_fields = [
+            "athlete_profile",
+            "performance_comparison",
+            "time_in_zones",
+            "key_trends",
+            "insights",
+            "recommendations",
+            "analysis_period_months"
+        ]
+
+        # Check all required top-level fields exist
+        for field in required_fields:
+            if field not in data:
+                logger.warning(f"[PHASE 2 VALIDATION] Missing required field: {field}")
+                return False
+
+        # Basic structure validation
+        if not isinstance(data["athlete_profile"], dict):
+            logger.warning("[PHASE 2 VALIDATION] athlete_profile must be an object")
+            return False
+
+        if not isinstance(data["performance_comparison"], list):
+            logger.warning("[PHASE 2 VALIDATION] performance_comparison must be an array")
+            return False
+
+        if not isinstance(data["time_in_zones"], list):
+            logger.warning("[PHASE 2 VALIDATION] time_in_zones must be an array")
+            return False
+
+        if not isinstance(data["key_trends"], list):
+            logger.warning("[PHASE 2 VALIDATION] key_trends must be an array")
+            return False
+
+        if not isinstance(data["insights"], list):
+            logger.warning("[PHASE 2 VALIDATION] insights must be an array")
+            return False
+
+        if not isinstance(data["recommendations"], dict):
+            logger.warning("[PHASE 2 VALIDATION] recommendations must be an object")
+            return False
+
+        logger.debug("[PHASE 2 VALIDATION] Schema validation passed")
+        return True
 
     def _estimate_tokens(self, session: ConversationSession) -> int:
         """
@@ -396,6 +531,7 @@ class MultiAgentOrchestrator:
         tools: list[str],
         phase_context: dict[str, Any],
         user_message: str,
+        force_tool_call: bool = False,
     ) -> PhaseResult:
         """
         Execute a single workflow phase with session isolation.
@@ -407,11 +543,18 @@ class MultiAgentOrchestrator:
             tools: List of available tool names
             phase_context: Context data for this phase
             user_message: User message to send to agent
+            force_tool_call: If True, force LLM to call tool instead of responding with text
 
         Returns:
             PhaseResult with execution details
         """
         phase_start = datetime.now()
+
+        # Phase execution logging
+        logger.info(f"[PHASE {phase_name.upper()}] Starting execution")
+        logger.debug(f"[PHASE {phase_name.upper()}] Available tools: {tools}")
+        logger.debug(f"[PHASE {phase_name.upper()}] Context keys: {list(phase_context.keys())}")
+        logger.debug(f"[PHASE {phase_name.upper()}] Max iterations: {config.max_iterations_per_phase}")
 
         # Notify progress callback
         if self.progress_callback:
@@ -419,40 +562,56 @@ class MultiAgentOrchestrator:
 
         try:
             # Create isolated session for this phase
+            logger.debug(f"[PHASE {phase_name.upper()}] Creating session...")
             session = self.session_manager.create_session(
                 provider_name=self.provider.config.provider_name,
                 context=phase_context,
                 model=self.provider.config.model,
                 system_prompt=prompt_getter(),
             )
+            logger.info(f"[PHASE {phase_name.upper()}] Session created: {session.session_id}")
 
             # Create agent with filtered tools
+            logger.debug(f"[PHASE {phase_name.upper()}] Creating agent with {len(tools)} tools...")
+            if force_tool_call:
+                logger.debug(f"[PHASE {phase_name.upper()}] Force tool call enabled")
             agent = AgentFactory.create_agent(
                 provider=self.provider,
                 session=session,
                 max_iterations=config.max_iterations_per_phase,
                 allowed_tools=tools,
+                force_tool_call=force_tool_call,  # Pass flag to agent
             )
 
             # Execute phase
+            logger.info(f"[PHASE {phase_name.upper()}] Starting agent execution...")
+            logger.debug(f"[PHASE {phase_name.upper()}] User message: {user_message[:100]}...")
             response = agent.process_message(user_message)
+            logger.info(f"[PHASE {phase_name.upper()}] Agent completed successfully")
+            logger.debug(f"[PHASE {phase_name.upper()}] Response length: {len(response)} characters")
 
             # Persist session to disk (agent adds messages but doesn't save)
+            logger.debug(f"[PHASE {phase_name.upper()}] Persisting session to disk...")
             self.session_manager.update_session(session)
 
             # Extract structured data from tool results
+            logger.debug(f"[PHASE {phase_name.upper()}] Extracting structured data...")
             extracted_data = self._extract_phase_data(phase_name, response, session)
+            logger.info(f"[PHASE {phase_name.upper()}] Extracted data keys: {list(extracted_data.keys())}")
 
             # Store session ID for downstream phases that need access to session data
             extracted_data["session_id"] = session.session_id
 
-            # For performance analysis phase, also store the markdown response
-            if phase_name == "performance_analysis":
-                extracted_data["performance_analysis_markdown"] = response
+            # For performance analysis phase, the JSON is already extracted and validated
+            # by _extract_phase_data() - don't overwrite it with the raw response
+            if phase_name == PHASE_PERFORMANCE_ANALYSIS and "performance_analysis_json" in extracted_data:
+                logger.debug(f"[PHASE {phase_name.upper()}] Performance analysis JSON already extracted and validated")
 
             # Calculate metrics
             execution_time = (datetime.now() - phase_start).total_seconds()
             tokens_used = self._estimate_tokens(session)
+            logger.info(f"[PHASE {phase_name.upper()}] Execution time: {execution_time:.2f}s")
+            logger.info(f"[PHASE {phase_name.upper()}] Estimated tokens used: {tokens_used}")
 
             # Create successful result
             result = PhaseResult(
@@ -464,6 +623,8 @@ class MultiAgentOrchestrator:
                 tokens_used=tokens_used,
             )
 
+            logger.info(f"[PHASE {phase_name.upper()}] Status: COMPLETED")
+
             if self.progress_callback:
                 self.progress_callback(phase_name, PhaseStatus.COMPLETED)
 
@@ -472,11 +633,15 @@ class MultiAgentOrchestrator:
         except Exception as e:
             # Handle failure gracefully
             execution_time = (datetime.now() - phase_start).total_seconds()
+            logger.error(f"[PHASE {phase_name.upper()}] Failed with exception: {e}", exc_info=True)
+            logger.info(f"[PHASE {phase_name.upper()}] Execution time before failure: {execution_time:.2f}s")
 
             # Persist session even on failure (agent may have added messages before failing)
             try:
+                logger.debug(f"[PHASE {phase_name.upper()}] Attempting to persist session despite failure...")
                 self.session_manager.update_session(session)
-            except Exception:
+            except Exception as persist_error:
+                logger.warning(f"[PHASE {phase_name.upper()}] Failed to persist session: {persist_error}")
                 pass  # Don't fail the phase result if session persistence fails
 
             result = PhaseResult(
@@ -487,6 +652,9 @@ class MultiAgentOrchestrator:
                 execution_time_seconds=execution_time,
             )
 
+            logger.info(f"[PHASE {phase_name.upper()}] Status: FAILED")
+            logger.warning(f"[PHASE {phase_name.upper()}] Errors: {result.errors}")
+
             if self.progress_callback:
                 self.progress_callback(phase_name, PhaseStatus.FAILED)
 
@@ -494,7 +662,9 @@ class MultiAgentOrchestrator:
 
     def _execute_phase_1(self, config: WorkflowConfig) -> PhaseResult:
         """
-        Execute Phase 1: Data Preparation.
+        Execute Phase 1: Data Preparation (Direct execution, no LLM).
+
+        Validates data files and creates optimized cache without LLM orchestration.
 
         Args:
             config: Workflow configuration
@@ -502,48 +672,112 @@ class MultiAgentOrchestrator:
         Returns:
             PhaseResult for data preparation phase
         """
-        # Prepare mode-specific instructions
-        if config.fit_only_mode:
-            mode_instructions = (
-                "MODE: FIT-Only (no CSV file)\n"
-                "- Build activities DataFrame from FIT files\n"
-                "- Include output_dir_path parameter in prepare_cache() call\n"
-                "- Zone enrichment will be automatic"
-            )
-        else:
-            mode_instructions = (
-                "MODE: CSV (with optional FIT enrichment)\n"
-                "- Convert CSV to Parquet cache\n"
-                "- Zone enrichment optional if FIT directory provided\n"
-                "- Cache will be in CSV parent directory"
-            )
+        from cycling_ai.tools.wrappers.data_validation_tool import DataValidationTool
+        from cycling_ai.tools.wrappers.cache_preparation_tool import CachePreparationTool
 
-        user_message = self.prompts_manager.get_data_preparation_user_prompt(
-            csv_file_path=str(config.csv_file_path) if config.csv_file_path else "Not provided (FIT-only mode)",
-            athlete_profile_path=str(config.athlete_profile_path),
-            fit_dir_path=str(config.fit_dir_path) if config.fit_dir_path else "Not provided",
-            output_dir_path=str(config.output_dir),
-            mode_specific_instructions=mode_instructions,
-        )
+        phase_start = datetime.now()
 
-        # Include analyze_time_in_zones tool if FIT files are provided
-        # This tool enriches the cache with zone data during Phase 1
-        tools = ["validate_data_files", "prepare_cache"]
-        if config.fit_dir_path:
-            tools.append("analyze_time_in_zones")
+        logger.info("[PHASE DATA_PREPARATION] Starting direct execution (no LLM)")
 
-        return self._execute_phase(
-            phase_name="data_preparation",
-            config=config,
-            prompt_getter=self.prompts_manager.get_data_preparation_prompt,
-            tools=tools,
-            phase_context={
-                "csv_file_path": str(config.csv_file_path),
+        try:
+            # Step 1: Validate data files
+            logger.info("[PHASE DATA_PREPARATION] Validating data files...")
+            validation_tool = DataValidationTool()
+            validation_params = {
                 "athlete_profile_path": str(config.athlete_profile_path),
-                "fit_dir_path": str(config.fit_dir_path) if config.fit_dir_path else None,
-            },
-            user_message=user_message,
-        )
+            }
+            if config.csv_file_path:
+                validation_params["csv_file_path"] = str(config.csv_file_path)
+            if config.fit_dir_path:
+                validation_params["fit_dir_path"] = str(config.fit_dir_path)
+
+            validation_result = validation_tool.execute(**validation_params)
+
+            if not validation_result.success:
+                errors = validation_result.data.get("issues", ["Validation failed"])
+                logger.error(f"[PHASE DATA_PREPARATION] Validation failed: {errors}")
+                return PhaseResult(
+                    phase_name=PHASE_DATA_PREPARATION,
+                    status=PhaseStatus.FAILED,
+                    agent_response="Data validation failed",
+                    errors=errors,
+                    execution_time_seconds=(datetime.now() - phase_start).total_seconds(),
+                )
+
+            logger.info("[PHASE DATA_PREPARATION] Validation passed")
+
+            # Step 2: Create cache
+            logger.info("[PHASE DATA_PREPARATION] Creating optimized cache...")
+            cache_tool = CachePreparationTool()
+            cache_params = {
+                "athlete_profile_path": str(config.athlete_profile_path),
+            }
+            if config.csv_file_path:
+                cache_params["csv_file_path"] = str(config.csv_file_path)
+            if config.fit_dir_path:
+                cache_params["fit_dir_path"] = str(config.fit_dir_path)
+            if config.fit_only_mode or not config.csv_file_path:
+                cache_params["output_dir_path"] = str(config.output_dir)
+
+            cache_result = cache_tool.execute(**cache_params)
+
+            if not cache_result.success:
+                errors = cache_result.errors or ["Cache creation failed"]
+                logger.error(f"[PHASE DATA_PREPARATION] Cache creation failed: {errors}")
+                return PhaseResult(
+                    phase_name=PHASE_DATA_PREPARATION,
+                    status=PhaseStatus.FAILED,
+                    agent_response="Cache creation failed",
+                    errors=errors,
+                    execution_time_seconds=(datetime.now() - phase_start).total_seconds(),
+                )
+
+            logger.info("[PHASE DATA_PREPARATION] Cache created successfully")
+
+            # Build response message
+            validation_msg = validation_result.data.get("message", "Validation passed")
+            cache_msg = cache_result.data.get("message", "Cache created")
+            response = f"{validation_msg}\n\n{cache_msg}\n\nData preparation complete. Ready for analysis."
+
+            # Extract data for Phase 2
+            extracted_data = {
+                "cache_file_path": cache_result.data.get("cache_path"),
+                "cache_metadata_path": cache_result.data.get("metadata_path"),
+                "athlete_profile_path": str(config.athlete_profile_path),
+                "zone_enriched": cache_result.data.get("zone_enriched", False),
+                "cache_info": cache_result.data,
+            }
+
+            execution_time = (datetime.now() - phase_start).total_seconds()
+            logger.info(f"[PHASE DATA_PREPARATION] Completed in {execution_time:.2f}s (no tokens used)")
+
+            if self.progress_callback:
+                self.progress_callback(PHASE_DATA_PREPARATION, PhaseStatus.COMPLETED)
+
+            return PhaseResult(
+                phase_name=PHASE_DATA_PREPARATION,
+                status=PhaseStatus.COMPLETED,
+                agent_response=response,
+                extracted_data=extracted_data,
+                execution_time_seconds=execution_time,
+                tokens_used=0,  # No LLM calls
+            )
+
+        except Exception as e:
+            execution_time = (datetime.now() - phase_start).total_seconds()
+            logger.error(f"[PHASE DATA_PREPARATION] Failed with exception: {e}", exc_info=True)
+
+            if self.progress_callback:
+                self.progress_callback(PHASE_DATA_PREPARATION, PhaseStatus.FAILED)
+
+            return PhaseResult(
+                phase_name=PHASE_DATA_PREPARATION,
+                status=PhaseStatus.FAILED,
+                agent_response=f"Data preparation failed: {str(e)}",
+                errors=[str(e)],
+                execution_time_seconds=execution_time,
+                tokens_used=0,
+            )
 
     def _execute_phase_2(
         self, config: WorkflowConfig, phase1_result: PhaseResult
@@ -570,7 +804,7 @@ class MultiAgentOrchestrator:
 
         # Phase 2 only does performance analysis - zone calculation moved to Phase 1
         return self._execute_phase(
-            phase_name="performance_analysis",
+            phase_name=PHASE_PERFORMANCE_ANALYSIS,
             config=config,
             prompt_getter=self.prompts_manager.get_performance_analysis_prompt,
             tools=["analyze_performance"],
@@ -599,13 +833,48 @@ class MultiAgentOrchestrator:
             "athlete_profile_path", str(config.athlete_profile_path)
         )
 
-        # Load athlete profile to get FTP
+        # Load athlete profile to get FTP and training availability
         try:
             athlete_profile = load_athlete_profile(athlete_profile_path)
-            ftp = athlete_profile.ftp
-        except Exception:
-            # Fallback to default FTP if profile can't be loaded
-            ftp = 260  # Default FTP
+        except FileNotFoundError as e:
+            raise ValueError(
+                f"[PHASE 3] Cannot proceed: Athlete profile not found at '{athlete_profile_path}'. "
+                f"Phase 3 requires a valid athlete profile with FTP, available training days, "
+                f"and weekly time budget. Error: {e}"
+            ) from e
+        except Exception as e:
+            raise ValueError(
+                f"[PHASE 3] Cannot proceed: Failed to load athlete profile from '{athlete_profile_path}'. "
+                f"Phase 3 requires a valid athlete profile. Error: {e}"
+            ) from e
+
+        # Validate required fields
+        if not hasattr(athlete_profile, 'ftp') or athlete_profile.ftp is None:
+            raise ValueError(
+                f"[PHASE 3] Cannot proceed: Athlete profile at '{athlete_profile_path}' "
+                f"does not have a valid FTP value. FTP is required for training plan generation."
+            )
+
+        ftp = athlete_profile.ftp
+        available_days = athlete_profile.get_training_days()
+        weekly_time_budget_hours = athlete_profile.get_weekly_training_hours()
+
+        # Validate available days
+        if not available_days or len(available_days) == 0:
+            raise ValueError(
+                f"[PHASE 3] Cannot proceed: Athlete profile at '{athlete_profile_path}' "
+                f"does not specify available training days. At least one training day is required."
+            )
+
+        # Validate weekly time budget
+        if weekly_time_budget_hours is None or weekly_time_budget_hours <= 0:
+            raise ValueError(
+                f"[PHASE 3] Cannot proceed: Athlete profile at '{athlete_profile_path}' "
+                f"does not have a valid weekly time budget. Weekly time budget must be greater than 0."
+            )
+
+        # Get daily time caps if available (for prompt version 1.1+)
+        daily_time_caps = getattr(athlete_profile, 'daily_time_caps', None)
 
         # Pre-calculate power zones
         power_zones = calculate_power_zones(ftp)
@@ -615,19 +884,28 @@ class MultiAgentOrchestrator:
         for zone_id, zone_data in power_zones.items():
             zones_text += f"- **{zone_id.upper()} ({zone_data['name']})**: {zone_data['min']}-{zone_data['max']}W ({int(zone_data['ftp_pct_min']*100)}-{int(zone_data['ftp_pct_max']*100)}% FTP) - {zone_data['description']}\n"
 
+        # Format available days and daily time caps for prompt
+        import json
+        available_days_str = ", ".join(available_days)
+        daily_time_caps_json = json.dumps(daily_time_caps) if daily_time_caps else "None"
+
         user_message = self.prompts_manager.get_training_planning_user_prompt(
             training_plan_weeks=str(config.training_plan_weeks),
             athlete_profile_path=athlete_profile_path,
             power_zones=zones_text,
+            available_days=available_days_str,
+            weekly_time_budget_hours=str(weekly_time_budget_hours),
+            daily_time_caps_json=daily_time_caps_json,
         )
 
         return self._execute_phase(
-            phase_name="training_planning",
+            phase_name=PHASE_TRAINING_PLANNING,
             config=config,
             prompt_getter=self.prompts_manager.get_training_planning_prompt,
             tools=["finalize_training_plan"],  # Single-call pattern: workouts submitted inline
             phase_context=phase2_result.extracted_data,
             user_message=user_message,
+            force_tool_call=True,  # Force LLM to call tool instead of just explaining
         )
 
     def _execute_phase_4(
@@ -636,8 +914,10 @@ class MultiAgentOrchestrator:
         """
         Execute Phase 4: Report Data Preparation.
 
-        Consolidates training plan data into report_data.json format
-        for use with the HTML viewer and subsequent report generation.
+        Consolidates ALL data (performance analysis + training plan) into
+        report_data.json format for use with the HTML viewer and report generation.
+
+        This is the FINAL data generation step - no more LLM calls after this.
 
         Args:
             config: Workflow configuration
@@ -646,45 +926,104 @@ class MultiAgentOrchestrator:
         Returns:
             PhaseResult for report data preparation phase
         """
-        from cycling_ai.tools.report_data_extractor import create_report_data
+        from cycling_ai.tools.report_data_extractor import (
+            create_report_data,
+            consolidate_athlete_data,
+            load_athlete_profile,
+            find_athlete_id_from_path
+        )
 
         phase_start = datetime.now()
 
         try:
-            # Get the training planning phase result (Phase 3)
+            # Get Phase 2: Performance Analysis result
+            performance_phase_result = next(
+                (r for r in all_results if r.phase_name == PHASE_PERFORMANCE_ANALYSIS),
+                None
+            )
+
+            # Get Phase 3: Training Planning result
             training_phase_result = next(
-                (r for r in all_results if r.phase_name == "training_planning"),
+                (r for r in all_results if r.phase_name == PHASE_TRAINING_PLANNING),
                 None
             )
 
             if not training_phase_result or not training_phase_result.success:
                 return PhaseResult(
-                    phase_name="report_data_preparation",
+                    phase_name=PHASE_REPORT_DATA_PREPARATION,
                     status=PhaseStatus.FAILED,
                     agent_response="Training planning phase did not complete successfully",
                     errors=["Cannot prepare report data without training plan"],
                 )
 
             # Get the training plan from Phase 3's extracted data
+            logger.info("[PHASE 4] Retrieving training plan from Phase 3 extracted data")
+            logger.debug(f"[PHASE 4] Phase 3 extracted_data keys: {list(training_phase_result.extracted_data.keys())}")
+
             training_plan = training_phase_result.extracted_data.get("training_plan")
             if not training_plan:
+                logger.error("[PHASE 4] Training plan not found in Phase 3 extracted_data")
+                logger.debug(f"[PHASE 4] Full extracted_data: {training_phase_result.extracted_data}")
                 return PhaseResult(
-                    phase_name="report_data_preparation",
+                    phase_name=PHASE_REPORT_DATA_PREPARATION,
                     status=PhaseStatus.FAILED,
                     agent_response="Training plan not found in Phase 3 results",
                     errors=["Training plan was not extracted from Phase 3"],
                 )
 
-            # Load athlete profile
-            import json
-            with open(config.athlete_profile_path) as f:
-                athlete_profile = json.load(f)
+            logger.info(f"[PHASE 4] Retrieved training plan, type: {type(training_plan)}")
+            if isinstance(training_plan, dict):
+                logger.info(f"[PHASE 4] Training plan keys: {list(training_plan.keys())}")
+                weekly_plan_len = len(training_plan.get("weekly_plan", []))
+                logger.info(f"[PHASE 4] Training plan weekly_plan length: {weekly_plan_len}")
+                logger.info(f"[PHASE 4] Training plan target_ftp: {training_plan.get('target_ftp', 'N/A')}")
+            else:
+                logger.error(f"[PHASE 4] Training plan is not a dict: {type(training_plan)}")
 
-            # Create athlete data structure for report
-            athlete_data = {
-                "athlete_name": athlete_profile.get("name", "Unknown"),
-                "training_plan": training_plan,
-            }
+            # Get performance analysis from Phase 2 (optional)
+            performance_analysis = None
+            if performance_phase_result and performance_phase_result.success:
+                performance_analysis = performance_phase_result.extracted_data.get("performance_analysis_json")
+                if performance_analysis:
+                    logger.info("[PHASE 4] Including performance analysis in report data")
+                else:
+                    logger.warning("[PHASE 4] Performance analysis phase succeeded but no data found")
+            else:
+                logger.warning("[PHASE 4] No performance analysis available")
+
+
+            # Normalize profile using extractor utility
+            profile = load_athlete_profile(config.athlete_profile_path)
+            athlete_id = find_athlete_id_from_path(config.athlete_profile_path)
+            athlete_name = config.athlete_profile_path.parent.name
+
+            # Consolidate all data using the extractor utility
+            logger.info("[PHASE 4] Calling consolidate_athlete_data()")
+            logger.debug(f"[PHASE 4] Input: training_plan type={type(training_plan)}, keys={list(training_plan.keys()) if isinstance(training_plan, dict) else 'N/A'}")
+            logger.debug(f"[PHASE 4] Input: athlete_id={athlete_id}, athlete_name={athlete_name}")
+            logger.debug(f"[PHASE 4] Input: performance_analysis available={performance_analysis is not None}")
+
+            athlete_data = consolidate_athlete_data(
+                training_plan_data=training_plan,
+                profile=profile,
+                athlete_id=athlete_id,
+                athlete_name=athlete_name,
+                performance_analysis=performance_analysis
+            )
+
+            logger.info("[PHASE 4] consolidate_athlete_data() completed")
+            logger.debug(f"[PHASE 4] athlete_data keys: {list(athlete_data.keys())}")
+            if "training_plan" in athlete_data:
+                tp = athlete_data["training_plan"]
+                logger.info(f"[PHASE 4] athlete_data['training_plan'] keys: {list(tp.keys())}")
+                # Extract data from training_plan (single level structure)
+                weekly_plan_len = len(tp.get('weekly_plan', []))
+                plan_metadata = tp.get('plan_metadata', {})
+                target_ftp = plan_metadata.get('target_ftp', 'N/A')
+                logger.info(f"[PHASE 4] athlete_data['training_plan']['weekly_plan'] length: {weekly_plan_len}")
+                logger.info(f"[PHASE 4] athlete_data['training_plan']['plan_metadata']['target_ftp']: {target_ftp}")
+            else:
+                logger.error("[PHASE 4] No 'training_plan' key in athlete_data!")
 
             # Create report data structure
             generator_info = {
@@ -693,58 +1032,60 @@ class MultiAgentOrchestrator:
                 "command": "generate (integrated workflow)",
             }
 
+            logger.info("[PHASE 4] Creating report_data structure")
             report_data = create_report_data([athlete_data], generator_info)
+            logger.info(f"[PHASE 4] report_data created with keys: {list(report_data.keys())}")
+            logger.debug(f"[PHASE 4] report_data['athletes'] count: {len(report_data.get('athletes', []))}")
 
             # Save report data to output directory
             output_path = config.output_dir / "report_data.json"
+            logger.info(f"[PHASE 4] Saving report_data to: {output_path}")
             with open(output_path, "w") as f:
                 json.dump(report_data, f, indent=2)
+            logger.info(f"[PHASE 4] report_data.json saved successfully, size: {output_path.stat().st_size} bytes")
 
-            # Copy HTML viewer template to output directory
-            import shutil
-            from pathlib import Path
-
-            # Get template path (relative to project root)
-            project_root = Path(__file__).parent.parent.parent.parent
-            template_path = project_root / "templates" / "training_plan_viewer.html"
-            viewer_output_path = config.output_dir / "training_plan_viewer.html"
-
-            if template_path.exists():
-                shutil.copy2(template_path, viewer_output_path)
-                viewer_copied = True
-            else:
-                viewer_copied = False
-
+           
             phase_end = datetime.now()
             execution_time = (phase_end - phase_start).total_seconds()
 
-            response_msg = f"Report data prepared successfully and saved to {output_path}"
-            if viewer_copied:
-                response_msg += f"\nHTML viewer copied to {viewer_output_path}"
+            response_msg = f"Complete report data prepared successfully:\n"
+            response_msg += f"  - Training plan: {len(training_plan.get('weekly_plan', []))} weeks\n"
+            if performance_analysis:
+                response_msg += f"  - Performance analysis: included\n"
+            response_msg += f"  - Saved to: {output_path}"
 
-            return PhaseResult(
-                phase_name="report_data_preparation",
+
+            logger.info(f"[PHASE 4] Creating PhaseResult, execution time={execution_time:.2f}s")
+
+            result = PhaseResult(
+                phase_name=PHASE_REPORT_DATA_PREPARATION,
                 status=PhaseStatus.COMPLETED,
                 agent_response=response_msg,
                 extracted_data={
                     "report_data_path": str(output_path),
-                    "viewer_path": str(viewer_output_path) if viewer_copied else None,
-                    "athlete_id": athlete_data["id"],
-                    "athlete_name": athlete_data["name"],
+                    "athlete_name": athlete_name,
                     "report_data": report_data,  # Make available for Phase 5
+                    "has_performance_analysis": performance_analysis is not None,
                 },
                 execution_time_seconds=execution_time,
             )
+
+            logger.info(f"[PHASE 4] Returning PhaseResult with status={result.status}")
+            return result
 
         except Exception as e:
             phase_end = datetime.now()
             execution_time = (phase_end - phase_start).total_seconds()
 
+            import traceback
+            error_details = traceback.format_exc()
+            logger.error(f"[PHASE 4] Error: {error_details}")
+
             return PhaseResult(
-                phase_name="report_data_preparation",
+                phase_name=PHASE_REPORT_DATA_PREPARATION,
                 status=PhaseStatus.FAILED,
                 agent_response=f"Report data preparation failed: {str(e)}",
-                errors=[str(e)],
+                errors=[str(e), error_details],
                 execution_time_seconds=execution_time,
             )
 
@@ -752,9 +1093,10 @@ class MultiAgentOrchestrator:
         self, config: WorkflowConfig, all_results: list[PhaseResult]
     ) -> PhaseResult:
         """
-        Execute Phase 5: Report Generation.
+        Execute Phase 5: HTML Report Generation.
 
-        Generates HTML reports using structured data from Phase 4.
+        Generates HTML reports using template-based rendering (NO LLM).
+        Reads complete data from Phase 4's report_data.json.
 
         Args:
             config: Workflow configuration
@@ -763,45 +1105,94 @@ class MultiAgentOrchestrator:
         Returns:
             PhaseResult for report generation phase
         """
-        # Get structured report data from Phase 4
-        phase4_result = all_results[-1]  # Phase 4 is the last result
-        report_data = phase4_result.extracted_data.get("report_data")
+        from cycling_ai.tools.performance_report_generator import generate_performance_html_from_json
 
-        if not report_data:
-            # Fallback: try loading from file
-            report_data_path = config.output_dir / "report_data.json"
-            if report_data_path.exists():
-                with open(report_data_path) as f:
-                    report_data = json.load(f)
-            else:
-                return PhaseResult(
-                    phase_name="report_generation",
-                    status=PhaseStatus.FAILED,
-                    agent_response="No structured data available from Phase 4",
-                    errors=["report_data not found in Phase 4 results or file system"],
-                )
+        phase_start = datetime.now()
 
-        # Combine with any additional context from previous phases
-        combined_data = {
-            "report_data": report_data,
-        }
+        try:
+            # Get report data from Phase 4
+            phase4_result = all_results[-1]  # Phase 4 is the last result
+            report_data = phase4_result.extracted_data.get("report_data")
+            report_data_path = phase4_result.extracted_data.get("report_data_path")
 
-        # Add performance/zones data if needed
-        for result in all_results[:-1]:  # Exclude Phase 4
-            combined_data.update(result.extracted_data)
+            if not report_data:
+                # Fallback: try loading from file
+                report_data_path = config.output_dir / "report_data.json"
+                if report_data_path.exists():
+                    import json
+                    with open(report_data_path) as f:
+                        report_data = json.load(f)
+                else:
+                    return PhaseResult(
+                        phase_name=PHASE_REPORT_GENERATION,
+                        status=PhaseStatus.FAILED,
+                        agent_response="No structured data available from Phase 4",
+                        errors=["report_data not found in Phase 4 results or file system"],
+                    )
 
-        user_message = self.prompts_manager.get_report_generation_user_prompt(
-            output_dir=str(config.output_dir)
-        )
+            # Check if we have performance analysis
+            has_performance = phase4_result.extracted_data.get("has_performance_analysis", False)
 
-        return self._execute_phase(
-            phase_name="report_generation",
-            config=config,
-            prompt_getter=self.prompts_manager.get_report_generation_prompt,
-            tools=["generate_report"],
-            phase_context=combined_data,
-            user_message=user_message,
-        )
+            # Generate HTML report using template-based rendering
+            # This is a deterministic process - no LLM involved
+            output_html_path = config.output_dir / "performance_report.html"
+
+            logger.info(f"[PHASE 5] Generating HTML report from report_data.json")
+            logger.info(f"[PHASE 5] Performance analysis included: {has_performance}")
+
+            # Call template-based HTML generator
+            generate_performance_html_from_json(
+                report_data=report_data,
+                output_path=output_html_path
+            )
+
+            logger.info("[PHASE 5] HTML generation function returned successfully")
+
+            phase_end = datetime.now()
+            execution_time = (phase_end - phase_start).total_seconds()
+
+            logger.info(f"[PHASE 5] Building response message, execution time={execution_time:.2f}s")
+
+            response_msg = f"HTML report generated successfully:\n"
+            response_msg += f"  - Report: {output_html_path}\n"
+            response_msg += f"  - Data source: {report_data_path}\n"
+            if has_performance:
+                response_msg += f"  - Includes performance analysis"
+            response_msg += f"\n  - Generation time: {execution_time:.2f}s (template-based, no LLM)"
+
+            logger.info("[PHASE 5] Creating PhaseResult for return")
+
+            result = PhaseResult(
+                phase_name=PHASE_REPORT_GENERATION,
+                status=PhaseStatus.COMPLETED,
+                agent_response=response_msg,
+                extracted_data={
+                    "report_html_path": str(output_html_path),
+                    "report_data_path": str(report_data_path),
+                },
+                execution_time_seconds=execution_time,
+                tokens_used=0,  # No LLM, so 0 tokens
+            )
+
+            logger.info(f"[PHASE 5] Returning PhaseResult with status={result.status}")
+            return result
+
+        except Exception as e:
+            phase_end = datetime.now()
+            execution_time = (phase_end - phase_start).total_seconds()
+
+            import traceback
+            error_details = traceback.format_exc()
+            logger.error(f"[PHASE 5] Error: {error_details}")
+
+            return PhaseResult(
+                phase_name=PHASE_REPORT_GENERATION,
+                status=PhaseStatus.FAILED,
+                agent_response=f"HTML report generation failed: {str(e)}",
+                errors=[str(e), error_details],
+                execution_time_seconds=execution_time,
+                tokens_used=0,
+            )
 
     def execute_workflow(self, config: WorkflowConfig) -> WorkflowResult:
         """
@@ -810,11 +1201,15 @@ class MultiAgentOrchestrator:
         Flow:
         1. Validate configuration
         2. Execute Phase 1: Data Preparation (or skip if cache exists)
-        3. Execute Phase 2: Performance Analysis (uses Phase 1 data)
-        4. Execute Phase 3: Training Planning (optional, uses Phase 2 data)
-        5. Execute Phase 4: Report Data Preparation (consolidates into report_data.json)
-        6. Execute Phase 5: Report Generation (LLM generates HTML using Phase 4 data)
+        3. Execute Phase 2: Performance Analysis (LLM - uses Phase 1 data)
+        4. Execute Phase 3: Training Planning (LLM - uses Phase 2 data)
+        5. Execute Phase 4: Report Data Consolidation (consolidates Phase 2 + 3 into report_data.json)
+           ↑ FINAL DATA GENERATION - ALL LLM OUTPUT COMPLETE
+        6. Execute Phase 5: HTML Report Generation (Template-based, NO LLM - uses report_data.json)
         7. Return aggregated WorkflowResult
+
+        NOTE: Phase 4 is the last step that involves LLM output. Phase 5 is purely
+        template-based HTML generation using the complete report_data.json.
 
         Args:
             config: Workflow configuration
@@ -838,7 +1233,7 @@ class MultiAgentOrchestrator:
             # Populate extracted_data with cache file paths for Phase 2
             cache_file_path = str(config.output_dir / "cache" / "activities_processed.parquet")
             phase1_result = PhaseResult(
-                phase_name="data_preparation",
+                phase_name=PHASE_DATA_PREPARATION,
                 status=PhaseStatus.SKIPPED,
                 agent_response="Data preparation skipped - using existing cache",
                 extracted_data={
@@ -848,7 +1243,7 @@ class MultiAgentOrchestrator:
                 },
             )
             if self.progress_callback:
-                self.progress_callback("data_preparation", PhaseStatus.SKIPPED)
+                self.progress_callback(PHASE_DATA_PREPARATION, PhaseStatus.SKIPPED)
         else:
             # Execute Phase 1 normally
             phase1_result = self._execute_phase_1(config)
@@ -884,7 +1279,7 @@ class MultiAgentOrchestrator:
             # Skip training planning
             phase_results.append(
                 PhaseResult(
-                    phase_name="training_planning",
+                    phase_name=PHASE_TRAINING_PLANNING,
                     status=PhaseStatus.SKIPPED,
                     agent_response="Training plan generation was not requested",
                 )
@@ -904,7 +1299,7 @@ class MultiAgentOrchestrator:
             # Skip if no training plan was generated
             phase_results.append(
                 PhaseResult(
-                    phase_name="report_data_preparation",
+                    phase_name=PHASE_REPORT_DATA_PREPARATION,
                     status=PhaseStatus.SKIPPED,
                     agent_response="Report data preparation skipped - no training plan generated",
                 )

@@ -194,7 +194,7 @@ elif tool_name in ("generate_training_plan", "finalize_training_plan"):
        "phase_rationale": "Building aerobic base while introducing threshold...",
        "workouts": {...},
        "weekly_focus": "Consistency and proper recovery between sessions",
-       "monitoring_notes": "Watch RPE - should feel controlled"
+       "weekly_watch_points": "Watch RPE - should feel controlled"
      },
      ...
    ]

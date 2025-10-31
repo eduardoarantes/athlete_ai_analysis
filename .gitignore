@@ -51,3 +51,4 @@ htmlcov/
 cache/
 reports/
 logs
+logs/notification.json

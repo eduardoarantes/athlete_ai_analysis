@@ -1,0 +1,207 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Performance Analysis Output Schema",
+  "description": "Schema for Phase 2 Performance Analysis LLM output",
+  "type": "object",
+  "required": [
+    "athlete_profile",
+    "performance_comparison",
+    "time_in_zones",
+    "key_trends",
+    "insights",
+    "recommendations",
+    "analysis_period_months"
+  ],
+  "properties": {
+    "athlete_profile": {
+      "type": "object",
+      "required": ["name", "current_ftp", "weight", "w_kg", "age", "experience_level"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Athlete name"
+        },
+        "current_ftp": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Current Functional Threshold Power in watts"
+        },
+        "weight": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Body weight in kilograms"
+        },
+        "w_kg": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Power to weight ratio (watts per kilogram)"
+        },
+        "age": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 120,
+          "description": "Athlete age in years"
+        },
+        "experience_level": {
+          "type": "string",
+          "description": "Athlete experience level (e.g., 'beginner', 'intermediate', 'advanced', 'strong recreational')"
+        }
+      }
+    },
+    "performance_comparison": {
+      "type": "array",
+      "description": "Array of performance metric comparisons between periods",
+      "items": {
+        "type": "object",
+        "required": ["metric", "previous", "current", "change", "trend"],
+        "properties": {
+          "metric": {
+            "type": "string",
+            "description": "Name of the performance metric"
+          },
+          "previous": {
+            "type": "string",
+            "description": "Value in previous period"
+          },
+          "current": {
+            "type": "string",
+            "description": "Value in current period"
+          },
+          "change": {
+            "type": "string",
+            "description": "Change between periods"
+          },
+          "trend": {
+            "type": "string",
+            "enum": ["up", "down", "neutral"],
+            "description": "Direction of trend: 'up' for improvements, 'down' for declines, 'neutral' for stable"
+          }
+        }
+      }
+    },
+    "time_in_zones": {
+      "type": "array",
+      "description": "Time spent in each power zone (empty array if zone data not available)",
+      "items": {
+        "type": "object",
+        "required": ["zone", "name", "percentage", "hours"],
+        "properties": {
+          "zone": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5,
+            "description": "Zone number (1-5)"
+          },
+          "name": {
+            "type": "string",
+            "description": "Zone name (e.g., 'Recovery', 'Endurance', 'Tempo', 'Threshold', 'VO2 Max')"
+          },
+          "percentage": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Percentage of total time spent in this zone"
+          },
+          "hours": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Total hours spent in this zone"
+          }
+        }
+      }
+    },
+    "key_trends": {
+      "type": "array",
+      "description": "Key trends identified in the analysis (3-5 items)",
+      "minItems": 3,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "required": ["title", "description"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Short trend title"
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description with concrete numbers and significance"
+          }
+        }
+      }
+    },
+    "insights": {
+      "type": "array",
+      "description": "Actionable insights from the analysis (3-5 items)",
+      "minItems": 3,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "required": ["title", "description"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Short insight title"
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed explanation of the insight"
+          }
+        }
+      }
+    },
+    "recommendations": {
+      "type": "object",
+      "required": ["short_term", "long_term", "recovery_nutrition"],
+      "properties": {
+        "short_term": {
+          "type": "array",
+          "description": "Short-term recommendations",
+          "items": {
+            "type": "object",
+            "required": ["text"],
+            "properties": {
+              "text": {
+                "type": "string",
+                "description": "Recommendation text"
+              }
+            }
+          }
+        },
+        "long_term": {
+          "type": "array",
+          "description": "Long-term recommendations",
+          "items": {
+            "type": "object",
+            "required": ["text"],
+            "properties": {
+              "text": {
+                "type": "string",
+                "description": "Recommendation text"
+              }
+            }
+          }
+        },
+        "recovery_nutrition": {
+          "type": "array",
+          "description": "Recovery and nutrition recommendations",
+          "items": {
+            "type": "object",
+            "required": ["text"],
+            "properties": {
+              "text": {
+                "type": "string",
+                "description": "Recommendation text"
+              }
+            }
+          }
+        }
+      }
+    },
+    "analysis_period_months": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Number of months analyzed in the performance comparison"
+    }
+  }
+}

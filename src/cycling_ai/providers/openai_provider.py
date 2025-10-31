@@ -189,11 +189,26 @@ class OpenAIProvider(BaseProvider):
         Example:
             >>> result = provider.invoke_tool("analyze_performance", {"period_months": 6})
         """
+        import logging
         from cycling_ai.tools.registry import get_global_registry
 
-        registry = get_global_registry()
-        tool = registry.get_tool(tool_name)
-        return tool.execute(**parameters)
+        logger = logging.getLogger(__name__)
+        logger.debug(f"[OPENAI PROVIDER] invoke_tool called: {tool_name}")
+        logger.debug(f"[OPENAI PROVIDER] Parameters: {parameters}")
+
+        try:
+            registry = get_global_registry()
+            tool = registry.get_tool(tool_name)
+            logger.debug(f"[OPENAI PROVIDER] Tool retrieved from registry: {tool.definition.name}")
+
+            result = tool.execute(**parameters)
+            logger.info(f"[OPENAI PROVIDER] Tool {tool_name} executed: success={result.success}")
+            if not result.success:
+                logger.warning(f"[OPENAI PROVIDER] Tool {tool_name} errors: {result.errors}")
+            return result
+        except Exception as e:
+            logger.error(f"[OPENAI PROVIDER] Tool {tool_name} execution failed: {e}", exc_info=True)
+            raise
 
     def format_response(self, result: ToolExecutionResult) -> dict[str, Any]:
         """
@@ -220,6 +235,7 @@ class OpenAIProvider(BaseProvider):
         self,
         messages: list[ProviderMessage],
         tools: list[ToolDefinition] | None = None,
+        force_tool_call: bool = False,
     ) -> CompletionResponse:
         """
         Create completion using OpenAI Chat Completion API.
@@ -227,6 +243,7 @@ class OpenAIProvider(BaseProvider):
         Args:
             messages: Conversation messages
             tools: Available tools (optional)
+            force_tool_call: If True, force LLM to call tool instead of responding with text
 
         Returns:
             Standardized completion response
@@ -281,6 +298,12 @@ class OpenAIProvider(BaseProvider):
             if tools:
                 request_params["tools"] = self.convert_tool_schema(tools)
 
+                # Force tool calling if requested by phase configuration
+                # This is crucial for phases like training_planning where the LLM
+                # must call the tool rather than just explaining what it plans to do
+                if force_tool_call:
+                    request_params["tool_choice"] = "required"
+
             # Track timing
             start_time = time.time()
 
@@ -296,14 +319,29 @@ class OpenAIProvider(BaseProvider):
 
             # Extract tool calls if present
             if response.choices[0].message.tool_calls:
-                tool_calls = [
-                    {
-                        "name": tc.function.name,
-                        "arguments": json.loads(tc.function.arguments),
-                        "id": tc.id,
-                    }
-                    for tc in response.choices[0].message.tool_calls
-                ]
+                tool_calls = []
+                for tc in response.choices[0].message.tool_calls:
+                    try:
+                        arguments = json.loads(tc.function.arguments)
+                        tool_calls.append({
+                            "name": tc.function.name,
+                            "arguments": arguments,
+                            "id": tc.id,
+                        })
+                    except json.JSONDecodeError as e:
+                        # Log the malformed JSON for debugging
+                        logger.error(
+                            f"Failed to parse tool call arguments for {tc.function.name}: {e}"
+                        )
+                        logger.error(f"Malformed JSON (first 500 chars): {tc.function.arguments[:500]}")
+                        logger.error(f"Malformed JSON (last 500 chars): {tc.function.arguments[-500:]}")
+                        logger.error(f"JSON length: {len(tc.function.arguments)} characters")
+                        # Re-raise as a permanent error
+                        raise ValueError(
+                            f"OpenAI returned malformed JSON for tool call {tc.function.name}: {e}. "
+                            f"JSON length: {len(tc.function.arguments)} characters. "
+                            f"This may indicate the response payload is too large."
+                        ) from e
 
             completion_response = CompletionResponse(
                 content=content,

@@ -6,6 +6,7 @@ from cycling data in a single command.
 """
 from __future__ import annotations
 
+import logging
 import os
 from pathlib import Path
 from typing import Any
@@ -130,7 +131,7 @@ class PhaseProgressTracker:
     "csv_file",
     type=click.Path(exists=True, path_type=Path),
     required=False,
-    help="Path to Strava activities CSV export (optional if using --fit-dir only)",
+    help="Path to Strava activities CSV export (optional if using --fit-dir or profile's raw_training_data_path)",
 )
 @click.option(
     "--profile",
@@ -142,7 +143,7 @@ class PhaseProgressTracker:
 @click.option(
     "--fit-dir",
     type=click.Path(exists=True, path_type=Path),
-    help="Directory containing FIT files for zone analysis",
+    help="Directory containing FIT files (optional if specified in athlete profile as 'raw_training_data_path')",
 )
 @click.option(
     "--output-dir",
@@ -159,7 +160,7 @@ class PhaseProgressTracker:
 @click.option(
     "--training-plan-weeks",
     type=int,
-    default=12,
+    default=4,
     help="Number of weeks for training plan",
 )
 @click.option(
@@ -185,7 +186,17 @@ class PhaseProgressTracker:
 @click.option(
     "--prompts-dir",
     type=click.Path(exists=True, path_type=Path),
-    help="Directory containing custom agent prompts",
+    help="Base directory containing prompt files (defaults to ./prompts)",
+)
+@click.option(
+    "--prompt-model",
+    default="default",
+    help="Prompt model to use (e.g., 'default', 'gemini')",
+)
+@click.option(
+    "--prompt-version",
+    default="1.1",
+    help="Prompt version to use (e.g., '1.0', '1.1')",
 )
 def generate(
     csv_file: Path | None,
@@ -199,6 +210,8 @@ def generate(
     provider: str,
     model: str | None,
     prompts_dir: Path | None,
+    prompt_model: str,
+    prompt_version: str,
 ) -> None:
     """
     Generate comprehensive cycling analysis reports.
@@ -208,7 +221,11 @@ def generate(
     training recommendations, and visual dashboards.
 
     \b
-    Example:
+    Examples:
+        # Using profile with raw_training_data_path (simplest)
+        cycling-ai generate --profile athlete.json
+
+        # Explicit data sources
         cycling-ai generate \\
             --csv activities.csv \\
             --profile athlete.json \\
@@ -222,11 +239,39 @@ def generate(
         - performance_dashboard.html - Visual data dashboard
     """
     try:
+        # Load athlete profile early to check for raw_training_data_path
+        try:
+            import json
+            with open(profile_file, 'r') as f:
+                athlete_profile = json.load(f)
+        except Exception as e:
+            console.print(f"[red]Error loading athlete profile: {str(e)}[/red]")
+            raise click.Abort()
+
+        # Determine data sources (CLI args override profile)
+        profile_data_path = athlete_profile.get('raw_training_data_path')
+
+        # Use profile path as fallback if CLI args not provided
+        if fit_dir is None and profile_data_path:
+            fit_dir = Path(profile_data_path)
+            console.print(f"[dim]Using data path from athlete profile: {fit_dir}[/dim]")
+            console.print()
+
         # Validate that we have at least one data source
         if csv_file is None and fit_dir is None:
             console.print(
-                "[red]Error: Must provide either --csv or --fit-dir (or both)[/red]\n"
-                "[dim]Use --csv for CSV mode or --fit-dir for FIT-only mode[/dim]"
+                "[red]Error: No data source found[/red]\n"
+                "[dim]Provide either:[/dim]\n"
+                "[dim]  1. --csv and/or --fit-dir arguments[/dim]\n"
+                "[dim]  2. 'raw_training_data_path' in athlete profile JSON[/dim]"
+            )
+            raise click.Abort()
+
+        # Validate that FIT directory exists if provided/inferred
+        if fit_dir and not fit_dir.is_dir():
+            console.print(
+                f"[red]Error: FIT directory not found: {fit_dir}[/red]\n"
+                "[dim]Check the path in your athlete profile or --fit-dir argument[/dim]"
             )
             raise click.Abort()
 
@@ -254,12 +299,12 @@ def generate(
         # Validate output directory is writable
         _validate_output_directory(Path(output_dir))
 
-        # Load configuration
+        # Load configuration (finds .cycling-ai.yaml)
         try:
             config = load_config()
         except Exception as e:
             console.print(
-                f"[yellow]Warning: Could not load config file: {str(e)}[/yellow]"
+                f"[yellow]Warning: Could not load config file (.cycling-ai.yaml): {str(e)}[/yellow]"
             )
             console.print("[dim]Continuing with defaults and environment variables...[/dim]")
             config = None
@@ -278,11 +323,19 @@ def generate(
         console.print()
 
         # Initialize prompts manager
-        prompts_manager = AgentPromptsManager(prompts_dir=prompts_dir)
+        prompts_manager = AgentPromptsManager(
+            prompts_dir=prompts_dir,
+            model=prompt_model,
+            version=prompt_version,
+        )
         if prompts_dir:
-            console.print(f"[cyan]Using custom prompts from: {prompts_dir}[/cyan]")
+            console.print(
+                f"[cyan]Using prompts from: {prompts_dir}/{prompt_model}/{prompt_version}[/cyan]"
+            )
         else:
-            console.print("[cyan]Using embedded default prompts[/cyan]")
+            console.print(
+                f"[cyan]Using default prompts: {prompt_model}/{prompt_version}[/cyan]"
+            )
         console.print()
 
         # Create workflow configuration
@@ -324,10 +377,25 @@ def generate(
         console.print()
 
         try:
-            with Live(phase_tracker.get_table(), refresh_per_second=4, console=console) as live:
-                # Update live display reference in phase tracker
-                phase_tracker._live = live
-                result = orchestrator.execute_workflow(workflow_config)
+            # Temporarily suppress console logging during Live display to prevent flickering
+            root_logger = logging.getLogger()
+            console_handlers = [h for h in root_logger.handlers if isinstance(h, logging.StreamHandler) and h.stream.name == '<stderr>']
+            original_levels = {}
+
+            # Store original levels and set to WARNING (suppress INFO/DEBUG)
+            for handler in console_handlers:
+                original_levels[handler] = handler.level
+                handler.setLevel(logging.WARNING)
+
+            try:
+                with Live(phase_tracker.get_table(), refresh_per_second=4, console=console) as live:
+                    # Update live display reference in phase tracker
+                    phase_tracker._live = live
+                    result = orchestrator.execute_workflow(workflow_config)
+            finally:
+                # Restore original logging levels
+                for handler, level in original_levels.items():
+                    handler.setLevel(level)
         except KeyboardInterrupt:
             console.print()
             console.print("[yellow]Workflow interrupted by user[/yellow]")

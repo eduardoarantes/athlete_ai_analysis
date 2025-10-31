@@ -51,18 +51,6 @@ class AgentPromptsManager:
                 f"Model: {self._prompt_loader.model}, Version: {self._prompt_loader.version}"
             )
 
-    def get_data_preparation_prompt(self) -> str:
-        """
-        Get data preparation agent system prompt.
-
-        Returns:
-            System prompt for data preparation phase
-
-        Raises:
-            FileNotFoundError: If prompt file doesn't exist
-        """
-        return self._prompt_loader.get_data_preparation_prompt()
-
     def get_performance_analysis_prompt(self) -> str:
         """
         Get performance analysis agent system prompt.
@@ -98,21 +86,6 @@ class AgentPromptsManager:
             FileNotFoundError: If prompt file doesn't exist
         """
         return self._prompt_loader.get_report_generation_prompt()
-
-    def get_data_preparation_user_prompt(self, **kwargs: str) -> str:
-        """
-        Get data preparation user prompt with template formatting.
-
-        Args:
-            **kwargs: Template variables (csv_file_path, athlete_profile_path, fit_dir_path)
-
-        Returns:
-            Formatted user prompt
-
-        Raises:
-            FileNotFoundError: If prompt file doesn't exist
-        """
-        return self._prompt_loader.get_data_preparation_user_prompt(**kwargs)
 
     def get_performance_analysis_user_prompt(self, **kwargs: str) -> str:
         """

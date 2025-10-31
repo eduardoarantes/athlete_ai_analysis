@@ -2,12 +2,12 @@
 External prompt loader for multi-agent workflows.
 
 Loads prompts from external files organized by model and version:
-    prompts/{model}/{version}/data_preparation.txt
     prompts/{model}/{version}/performance_analysis.txt
     prompts/{model}/{version}/training_planning.txt
     prompts/{model}/{version}/report_generation.txt
 
-Defaults to 'default' model and '1.0' version if not specified.
+Note: Phase 1 (data preparation) no longer uses LLM prompts.
+Defaults to 'default' model and '1.1' version if not specified.
 """
 from __future__ import annotations
 
@@ -23,9 +23,8 @@ class PromptLoader:
     Directory structure:
         prompts/
             default/
-                1.0/
+                1.1/
                     metadata.json
-                    data_preparation.txt
                     performance_analysis.txt
                     training_planning.txt
                     report_generation.txt
@@ -41,7 +40,7 @@ class PromptLoader:
         self,
         prompts_base_dir: Path | str | None = None,
         model: str = "default",
-        version: str = "1.0",
+        version: str = "1.1",
     ):
         """
         Initialize prompt loader.
@@ -150,10 +149,6 @@ class PromptLoader:
 
         return prompts
 
-    def get_data_preparation_prompt(self) -> str:
-        """Get data preparation agent prompt."""
-        return self.load_prompt("data_preparation")
-
     def get_performance_analysis_prompt(self) -> str:
         """Get performance analysis agent prompt."""
         return self.load_prompt("performance_analysis")
@@ -202,10 +197,6 @@ class PromptLoader:
 
         # Format with provided variables
         return template.format(**kwargs)
-
-    def get_data_preparation_user_prompt(self, **kwargs: Any) -> str:
-        """Get data preparation user prompt with formatting."""
-        return self.load_user_prompt("data_preparation", **kwargs)
 
     def get_performance_analysis_user_prompt(self, **kwargs: Any) -> str:
         """Get performance analysis user prompt with formatting."""
@@ -287,5 +278,5 @@ def get_prompt_loader(
     return PromptLoader(
         prompts_base_dir=prompts_dir,
         model=model or "default",
-        version=version or "1.0",
+        version=version or "1.1",
     )
