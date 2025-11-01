@@ -179,6 +179,14 @@ class PlanOverviewTool(BaseTool):
                 raise ValueError("athlete_profile_json is required")
             if not total_weeks:
                 raise ValueError("total_weeks is required")
+
+            # Validate plan duration early (fail fast)
+            if total_weeks < 4 or total_weeks > 24:
+                raise ValueError(
+                    f"Plan duration must be between 4 and 24 weeks. Got {total_weeks} weeks.\n"
+                    f"For testing, use at least 4 weeks. For real plans, 8-16 weeks is recommended."
+                )
+
             if not target_ftp:
                 raise ValueError("target_ftp is required")
             if not weekly_overview:
