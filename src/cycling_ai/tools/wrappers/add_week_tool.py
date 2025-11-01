@@ -218,6 +218,7 @@ class AddWeekDetailsTool(BaseTool):
             target_tss = week_overview.get("target_tss")
             target_hours = week_overview.get("total_hours")
             current_ftp = overview_data.get("target_ftp", 250)  # Default FTP if not provided
+            week_phase = week_overview.get("phase", "").lower()
 
             # Calculate actual weekly metrics
             total_duration_min = sum(
@@ -233,36 +234,53 @@ class AddWeekDetailsTool(BaseTool):
             validation_warnings = []
             validation_errors = []
 
-            # Check weekly time budget (±10% tolerance is OK, >20% is error)
+            # Phase-aware tolerance: stricter for Recovery/Taper weeks
+            is_recovery_week = week_phase in ["recovery", "taper"]
+            if is_recovery_week:
+                # Recovery weeks: tighter tolerances to ensure reduced volume
+                time_warn_threshold = 8   # ±8% warning
+                time_error_threshold = 15  # ±15% error (stricter than normal 20%)
+                tss_warn_threshold = 12   # ±12% warning
+                tss_error_threshold = 20  # ±20% error (stricter than normal 25%)
+            else:
+                # Normal weeks: standard tolerances
+                time_warn_threshold = 10
+                time_error_threshold = 20
+                tss_warn_threshold = 15
+                tss_error_threshold = 25
+
+            # Check weekly time budget with phase-aware tolerances
             if target_hours:
                 time_diff_pct = abs(total_hours - target_hours) / target_hours * 100
-                if time_diff_pct > 20:
+                if time_diff_pct > time_error_threshold:
+                    phase_note = " (Recovery week - stricter tolerance)" if is_recovery_week else ""
                     validation_errors.append(
                         f"Week {week_number} time budget violation: "
                         f"Planned {total_hours:.1f}h vs target {target_hours:.1f}h "
-                        f"({time_diff_pct:.0f}% difference, max 20% allowed)"
+                        f"({time_diff_pct:.0f}% difference, max {time_error_threshold}% allowed{phase_note})"
                     )
-                elif time_diff_pct > 10:
+                elif time_diff_pct > time_warn_threshold:
                     validation_warnings.append(
                         f"Week {week_number} time budget warning: "
                         f"Planned {total_hours:.1f}h vs target {target_hours:.1f}h "
-                        f"({time_diff_pct:.0f}% difference, recommend ±10%)"
+                        f"({time_diff_pct:.0f}% difference, recommend ±{time_warn_threshold}%)"
                     )
 
-            # Check weekly TSS target (±15% tolerance is OK, >25% is error)
+            # Check weekly TSS target with phase-aware tolerances
             if target_tss:
                 tss_diff_pct = abs(actual_tss - target_tss) / target_tss * 100
-                if tss_diff_pct > 25:
+                if tss_diff_pct > tss_error_threshold:
+                    phase_note = " (Recovery week - stricter tolerance)" if is_recovery_week else ""
                     validation_errors.append(
                         f"Week {week_number} TSS target violation: "
                         f"Actual {actual_tss:.0f} TSS vs target {target_tss:.0f} TSS "
-                        f"({tss_diff_pct:.0f}% difference, max 25% allowed)"
+                        f"({tss_diff_pct:.0f}% difference, max {tss_error_threshold}% allowed{phase_note})"
                     )
-                elif tss_diff_pct > 15:
+                elif tss_diff_pct > tss_warn_threshold:
                     validation_warnings.append(
                         f"Week {week_number} TSS target warning: "
                         f"Actual {actual_tss:.0f} TSS vs target {target_tss:.0f} TSS "
-                        f"({tss_diff_pct:.0f}% difference, recommend ±15%)"
+                        f"({tss_diff_pct:.0f}% difference, recommend ±{tss_warn_threshold}%)"
                     )
 
             # Log warnings
