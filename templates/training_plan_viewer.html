@@ -309,7 +309,35 @@
 
         .section-content p {
             color: var(--text-secondary);
-            margin: 0;
+            margin: 0 0 1rem 0;
+        }
+
+        .section-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-content strong {
+            color: var(--text-primary);
+            font-weight: 700;
+        }
+
+        .section-content ul {
+            color: var(--text-secondary);
+            margin: 0 0 1rem 0;
+            padding-left: 1.5rem;
+        }
+
+        .section-content ul:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-content li {
+            margin-bottom: 0.5rem;
+            line-height: 1.6;
+        }
+
+        .section-content li:last-child {
+            margin-bottom: 0;
         }
 
         /* Calendar Section Header */
@@ -1207,6 +1235,46 @@
             }
         }
 
+        // Convert simple markdown to HTML
+        function convertMarkdownToHTML(text) {
+            if (!text) return '';
+
+            // Escape HTML to prevent XSS
+            const escapeHTML = (str) => {
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            };
+
+            let html = escapeHTML(text);
+
+            // Convert **bold** to <strong>
+            html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+            // Convert *italic* to <em>
+            html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+            // Convert paragraphs (double line breaks)
+            html = html.split('\n\n').map(para => {
+                para = para.trim();
+                if (!para) return '';
+
+                // Check if it's a list
+                if (para.includes('\n- ') || para.startsWith('- ')) {
+                    const items = para.split('\n').filter(line => line.trim().startsWith('- '));
+                    const listItems = items.map(item =>
+                        `<li>${item.substring(2).trim()}</li>`
+                    ).join('');
+                    return `<ul>${listItems}</ul>`;
+                }
+
+                // Regular paragraph
+                return `<p>${para.replace(/\n/g, '<br>')}</p>`;
+            }).join('');
+
+            return html;
+        }
+
         // Load athlete data
         function loadAthlete(athleteId) {
             currentAthleteId = athleteId;
@@ -1244,12 +1312,12 @@
 
             // Update coaching notes and monitoring guidance
             if (trainingPlanData.coaching_notes) {
-                document.getElementById('coaching-notes-text').textContent = trainingPlanData.coaching_notes;
+                document.getElementById('coaching-notes-text').innerHTML = convertMarkdownToHTML(trainingPlanData.coaching_notes);
                 document.getElementById('coaching-notes-section').style.display = 'block';
             }
 
             if (trainingPlanData.monitoring_guidance) {
-                document.getElementById('monitoring-guidance-text').textContent = trainingPlanData.monitoring_guidance;
+                document.getElementById('monitoring-guidance-text').innerHTML = convertMarkdownToHTML(trainingPlanData.monitoring_guidance);
                 document.getElementById('monitoring-guidance-section').style.display = 'block';
             }
 
