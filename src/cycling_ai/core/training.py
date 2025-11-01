@@ -175,13 +175,13 @@ def validate_training_plan(
 
                 week_minutes += day_minutes
 
-            # Check weekly hours constraint (with 10% tolerance)
+            # Check weekly hours constraint (with 20% tolerance to match add_week_details validation)
             max_weekly_minutes = weekly_hours * 60
-            tolerance = 0.10  # 10% tolerance
+            tolerance = 0.20  # 20% tolerance (aligned with add_week_details per-week validation)
             max_with_tolerance = max_weekly_minutes * (1 + tolerance)
             if week_minutes > max_with_tolerance:
                 errors.append(
-                    f"Week {week_num}: Total duration {week_minutes} min exceeds weekly limit of {max_weekly_minutes} min ({weekly_hours} hours) + 10% tolerance ({max_with_tolerance} min)"
+                    f"Week {week_num}: Total duration {week_minutes} min exceeds weekly limit of {max_weekly_minutes} min ({weekly_hours} hours) + 20% tolerance ({max_with_tolerance} min)"
                 )
 
     except Exception as e:
