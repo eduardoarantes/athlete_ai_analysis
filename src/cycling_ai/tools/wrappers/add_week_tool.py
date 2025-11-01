@@ -11,6 +11,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
+from cycling_ai.core.tss import calculate_weekly_tss
 from cycling_ai.tools.base import (
     BaseTool,
     ToolDefinition,
@@ -204,6 +205,84 @@ class AddWeekDetailsTool(BaseTool):
                                 f"Workout {i+1}, segment {j+1} missing required field: '{field}'"
                             )
 
+            # Get week-specific targets from overview
+            week_overview = next(
+                (w for w in overview_data.get("weekly_overview", []) if w.get("week_number") == week_number),
+                None
+            )
+
+            if not week_overview:
+                logger.warning(f"No overview found for week {week_number}, skipping target validation")
+                week_overview = {}
+
+            target_tss = week_overview.get("target_tss")
+            target_hours = week_overview.get("total_hours")
+            current_ftp = overview_data.get("target_ftp", 250)  # Default FTP if not provided
+
+            # Calculate actual weekly metrics
+            total_duration_min = sum(
+                sum(seg.get("duration_min", 0) for seg in workout.get("segments", []))
+                for workout in workouts
+            )
+            total_hours = total_duration_min / 60.0
+
+            # Calculate actual TSS
+            actual_tss = calculate_weekly_tss(workouts, current_ftp)
+
+            # Validation warnings/errors
+            validation_warnings = []
+            validation_errors = []
+
+            # Check weekly time budget (±10% tolerance is OK, >20% is error)
+            if target_hours:
+                time_diff_pct = abs(total_hours - target_hours) / target_hours * 100
+                if time_diff_pct > 20:
+                    validation_errors.append(
+                        f"Week {week_number} time budget violation: "
+                        f"Planned {total_hours:.1f}h vs target {target_hours:.1f}h "
+                        f"({time_diff_pct:.0f}% difference, max 20% allowed)"
+                    )
+                elif time_diff_pct > 10:
+                    validation_warnings.append(
+                        f"Week {week_number} time budget warning: "
+                        f"Planned {total_hours:.1f}h vs target {target_hours:.1f}h "
+                        f"({time_diff_pct:.0f}% difference, recommend ±10%)"
+                    )
+
+            # Check weekly TSS target (±15% tolerance is OK, >25% is error)
+            if target_tss:
+                tss_diff_pct = abs(actual_tss - target_tss) / target_tss * 100
+                if tss_diff_pct > 25:
+                    validation_errors.append(
+                        f"Week {week_number} TSS target violation: "
+                        f"Actual {actual_tss:.0f} TSS vs target {target_tss:.0f} TSS "
+                        f"({tss_diff_pct:.0f}% difference, max 25% allowed)"
+                    )
+                elif tss_diff_pct > 15:
+                    validation_warnings.append(
+                        f"Week {week_number} TSS target warning: "
+                        f"Actual {actual_tss:.0f} TSS vs target {target_tss:.0f} TSS "
+                        f"({tss_diff_pct:.0f}% difference, recommend ±15%)"
+                    )
+
+            # Log warnings
+            if validation_warnings:
+                for warning in validation_warnings:
+                    logger.warning(warning)
+
+            # Fail if validation errors
+            if validation_errors:
+                error_msg = "\n".join(validation_errors)
+                logger.error(f"Week {week_number} validation failed:\n{error_msg}")
+                raise ValueError(
+                    f"Week {week_number} validation failed. Please adjust workouts:\n{error_msg}\n\n"
+                    f"Suggestions:\n"
+                    f"- To reduce time: Shorten segment durations or remove recovery segments\n"
+                    f"- To increase time: Add warmup/cooldown or extend main set duration\n"
+                    f"- To reduce TSS: Lower power targets or shorten high-intensity intervals\n"
+                    f"- To increase TSS: Raise power targets or extend work intervals"
+                )
+
             # Create week data structure
             week_data = {
                 "week_number": week_number,
@@ -238,6 +317,28 @@ class AddWeekDetailsTool(BaseTool):
                 else "All weeks complete! Your work in this phase is done. The plan will be finalized automatically."
             )
 
+            # Build success message with validation metrics
+            success_message = f"Week {week_number} details added. {weeks_completed}/{total_weeks} weeks complete."
+
+            # Add validation summary
+            validation_summary = []
+            if target_hours:
+                time_status = "✓" if abs(total_hours - target_hours) / target_hours * 100 <= 10 else "⚠"
+                validation_summary.append(
+                    f"{time_status} Time: {total_hours:.1f}h (target: {target_hours:.1f}h)"
+                )
+            if target_tss:
+                tss_status = "✓" if abs(actual_tss - target_tss) / target_tss * 100 <= 15 else "⚠"
+                validation_summary.append(
+                    f"{tss_status} TSS: {actual_tss:.0f} (target: {target_tss:.0f})"
+                )
+
+            if validation_summary:
+                success_message += "\n" + " | ".join(validation_summary)
+
+            if validation_warnings:
+                success_message += f"\n⚠ Warnings: {len(validation_warnings)}"
+
             return ToolExecutionResult(
                 success=True,
                 data={
@@ -248,7 +349,15 @@ class AddWeekDetailsTool(BaseTool):
                     "weeks_remaining": weeks_remaining,
                     "total_weeks": total_weeks,
                     "next_step": next_step,
-                    "message": f"Week {week_number} details added. {weeks_completed}/{total_weeks} weeks complete.",
+                    "message": success_message,
+                    "validation": {
+                        "target_hours": target_hours,
+                        "actual_hours": round(total_hours, 1),
+                        "target_tss": target_tss,
+                        "actual_tss": round(actual_tss, 1),
+                        "warnings": validation_warnings,
+                        "within_tolerance": len(validation_warnings) == 0,
+                    },
                 },
                 format="json",
                 metadata={
