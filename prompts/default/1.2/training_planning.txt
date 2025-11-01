@@ -101,6 +101,39 @@ Call add_week_details with:
 - Structure intensity workouts: warmup (10-15 min) + main set + cooldown (~10 min)
 - Endurance rides may omit warmup/cooldown
 
+**AUTOMATIC VALIDATION** (happens immediately after each week):
+After you call `add_week_details`, the tool automatically validates your week against the targets you set in `create_plan_overview`:
+
+✅ **Time Budget Validation**:
+- ±10% tolerance = ✓ Success with warning
+- >20% difference = ❌ FAILS - you must retry that week
+- Example: If target is 7.0h, acceptable range is 6.3h-7.7h (±10%), max range is 5.6h-8.4h (±20%)
+
+✅ **TSS Target Validation**:
+- ±15% tolerance = ✓ Success with warning
+- >25% difference = ❌ FAILS - you must retry that week
+- Example: If target is 300 TSS, acceptable range is 255-345 (±15%), max range is 225-375 (±25%)
+
+**If validation fails**, you'll receive:
+```
+Error: Week 3 validation failed. Please adjust workouts:
+Week 3 TSS target violation: Actual 410 TSS vs target 300 TSS (37% difference, max 25% allowed)
+
+Suggestions:
+- To reduce TSS: Lower power targets or shorten high-intensity intervals
+- To increase TSS: Raise power targets or extend work intervals
+```
+
+**Action required**: Call `add_week_details` again for the same week with adjusted workouts. DO NOT proceed to the next week until validation passes.
+
+**If validation succeeds**, you'll see:
+```
+Week 3 details added. 3/12 weeks complete.
+✓ Time: 7.2h (target: 7.0h) | ✓ TSS: 312 (target: 300)
+```
+
+Proceed to the next week!
+
 ## PHASE 3: Finalize Plan
 
 **Tool**: `finalize_plan` (call ONCE after all weeks added)
@@ -140,6 +173,12 @@ Assembles complete plan from overview + all week details, validates, and saves.
 ✅ **Progression**: Week-to-week changes ≤10% volume/intensity
 
 ✅ **Power zones**: Use athlete's FTP zones (0-200% FTP)
+
+✅ **Validation retry**: If `add_week_details` fails validation:
+   - DO NOT proceed to next week
+   - Call `add_week_details` AGAIN for same week_number with corrected workouts
+   - The tool will overwrite the failed attempt
+   - Only move to next week after validation passes
 
 ---
 
@@ -213,6 +252,30 @@ If required inputs (athlete profile path, available days, weekly hours) are abse
 ## Quality Checks
 
 Before calling each tool, verify:
-- create_plan_overview: All {training_plan_weeks} weeks in weekly_overview?
-- add_week_details: Does week match overview? All segments valid?
-- finalize_plan: Have you called add_week_details {training_plan_weeks} times?
+
+**create_plan_overview**:
+- All {training_plan_weeks} weeks in weekly_overview?
+- TSS targets realistic for each phase? (Foundation: 200-300, Build: 300-450, Recovery: 150-250)
+- Weekly hours match athlete's available time?
+
+**add_week_details** (CRITICAL - Calculate before calling):
+1. **Calculate total weekly hours**:
+   - Sum ALL segment durations across ALL workouts
+   - Example: 3 workouts × (15min warmup + 60min work + 10min cooldown) = 255min = 4.25h
+   - Check: Is this within ±20% of target_hours from overview?
+
+2. **Estimate weekly TSS**:
+   - Quick estimate: Z2 ride (70% FTP) for 1h ≈ 50 TSS
+   - Quick estimate: Threshold work (95% FTP) for 1h ≈ 90 TSS
+   - Quick estimate: VO2 intervals (110% FTP) for 1h ≈ 120 TSS
+   - Check: Is this within ±25% of target_tss from overview?
+
+3. **If estimates are outside tolerance**:
+   - Adjust segment durations (±5-10 min per workout)
+   - Adjust power targets (±5-10% FTP)
+   - Add/remove recovery segments
+   - Then recalculate before calling tool
+
+**finalize_plan**:
+- Have you called add_week_details {training_plan_weeks} times?
+- Did ALL weeks pass validation?
