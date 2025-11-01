@@ -469,8 +469,23 @@
             title.textContent = workout.weekday;
             card.appendChild(title);
 
+            // Workout name (short)
+            const workoutName = workout.name || workout.description || 'Workout';
+            const nameP = document.createElement('p');
+            nameP.className = 'workout-name-text';
+            nameP.style.fontWeight = 'bold';
+            nameP.style.marginBottom = '0.5rem';
+            nameP.textContent = workoutName;
+            card.appendChild(nameP);
+
+            // Detailed description (if available)
+            const detailedDesc = workout.detailed_description || workout.description || 'No description';
             const description = document.createElement('p');
-            description.textContent = workout.description || 'No description';
+            description.className = 'workout-detailed-description';
+            description.style.fontSize = '0.9rem';
+            description.style.lineHeight = '1.6';
+            description.style.marginBottom = '1rem';
+            description.textContent = detailedDesc;
             card.appendChild(description);
 
             const segmentsDiv = document.createElement('div');

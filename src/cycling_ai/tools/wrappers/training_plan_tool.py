@@ -120,9 +120,23 @@ class TrainingPlanTool(BaseTool):
                                             "type": "STRING",
                                             "description": "Day of the week (Monday-Sunday)"
                                         },
+                                        "name": {
+                                            "type": "STRING",
+                                            "description": "Short workout name (3-10 words). Examples: 'VO2 Max intervals', 'Threshold repeats', 'Endurance base'"
+                                        },
+                                        "detailed_description": {
+                                            "type": "STRING",
+                                            "description": (
+                                                "Comprehensive workout explanation (100-250 words) including: "
+                                                "1) Environment recommendation (indoor/outdoor), "
+                                                "2) Physiological target (what system this trains), "
+                                                "3) Training benefits (how this improves performance), "
+                                                "4) Execution guidance (how to perform effectively). REQUIRED for all workouts."
+                                            )
+                                        },
                                         "description": {
                                             "type": "STRING",
-                                            "description": "Workout purpose and coaching notes"
+                                            "description": "DEPRECATED: Use 'name' instead. Kept for backward compatibility."
                                         },
                                         "segments": {
                                             "type": "ARRAY",
@@ -155,7 +169,9 @@ class TrainingPlanTool(BaseTool):
                                             }
                                         }
                                     },
-                                    "required": ["weekday", "description", "segments"]
+                                    "required": ["weekday", "segments"]
+                                    # Note: name and description are optional to support both old and new formats
+                                    # Validation will check that at least one is present
                                 }
                             },
                             "weekly_focus": {
@@ -279,6 +295,42 @@ class TrainingPlanTool(BaseTool):
                 )
 
             logger.info(f"[TRAINING PLAN TOOL] Validating plan structure...")
+
+            # Validate workout fields (name/description)
+            for week in weekly_plan:
+                week_num = week.get("week_number", "?")
+                for workout in week.get("workouts", []):
+                    weekday = workout.get("weekday", "?")
+
+                    # Check for name field (new) or description field (old)
+                    if "name" not in workout and "description" not in workout:
+                        return ToolExecutionResult(
+                            success=False,
+                            data=None,
+                            format="json",
+                            errors=[
+                                f"Week {week_num}, {weekday}: "
+                                f"Workout missing both 'name' and 'description' fields. "
+                                f"At least one is required."
+                            ],
+                        )
+
+                    # Encourage detailed_description
+                    if "detailed_description" not in workout:
+                        logger.warning(
+                            f"[TRAINING PLAN TOOL] Week {week_num}, {weekday}: "
+                            f"Workout missing 'detailed_description' field. "
+                            f"Consider adding for better user experience."
+                        )
+                    elif workout["detailed_description"]:
+                        desc_len = len(workout["detailed_description"])
+                        if desc_len < 100:
+                            logger.warning(
+                                f"[TRAINING PLAN TOOL] Week {week_num}, {weekday}: "
+                                f"'detailed_description' is short ({desc_len} chars). "
+                                f"Recommend 100-250 characters for comprehensive guidance."
+                            )
+
             # Perform comprehensive validation before finalizing
             available_days = athlete_profile.get_training_days()
             weekly_hours = athlete_profile.get_weekly_training_hours()

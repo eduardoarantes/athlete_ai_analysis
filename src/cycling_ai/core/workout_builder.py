@@ -41,9 +41,17 @@ class WorkoutSegment:
 class Workout:
     """Represents a complete structured workout"""
 
-    def __init__(self, weekday: str, description: str = ""):
+    def __init__(
+        self,
+        weekday: str,
+        name: str = "",
+        detailed_description: str = "",
+        description: str = "",  # Deprecated: kept for backward compatibility
+    ):
         self.weekday = weekday
-        self.description = description
+        # Use name if provided, otherwise fall back to description for backward compatibility
+        self.name = name if name else description
+        self.detailed_description = detailed_description
         self.segments: list[WorkoutSegment] = []
 
     def add_segment(self, segment: WorkoutSegment):
@@ -123,7 +131,9 @@ class Workout:
         """
         result = {
             'weekday': self.weekday,
-            'description': self.description,
+            'name': self.name,
+            'detailed_description': self.detailed_description,
+            'description': self.name,  # Backward compatibility: alias to name
             'total_duration_min': self.total_duration(),
             'work_time_min': self.work_time(),
             'segments': [s.to_dict() for s in self.segments]
@@ -148,7 +158,16 @@ def build_threshold_workout(ftp: int, weekday: str, intervals: str = "2x20", wee
     Returns:
         Structured Workout object
     """
-    workout = Workout(weekday, "Build sustainable power at FTP")
+    name = "Threshold intervals"
+    detailed_description = (
+        "This workout works equally well indoors on a trainer or outdoors on steady terrain. "
+        "Threshold intervals target your lactate threshold, the highest sustainable power output "
+        "you can maintain for approximately one hour. By accumulating time at or near FTP (90-105%), "
+        "you improve your body's ability to buffer lactate and sustain higher power outputs for "
+        "extended periods. Maintain smooth, consistent power throughout each interval—avoid surges "
+        "or power spikes. Focus on controlled breathing and efficient pedaling technique."
+    )
+    workout = Workout(weekday, name=name, detailed_description=detailed_description)
 
     # Parse intervals
     sets, duration = intervals.split('x')
@@ -179,7 +198,17 @@ def build_threshold_workout(ftp: int, weekday: str, intervals: str = "2x20", wee
 
 def build_vo2max_workout(ftp: int, weekday: str, intervals: str = "5x5", week: int = 1) -> Workout:
     """Build a VO2 max workout"""
-    workout = Workout(weekday, "High intensity intervals to boost aerobic capacity")
+    name = "VO2 Max intervals"
+    detailed_description = (
+        "Ideally perform this on your trainer, although outdoors works fine too. "
+        "Short interval HIIT is an effective means of enhancing your maximal oxygen uptake (VO2max) "
+        "and performance. The workout uses short bouts of work above your pVO2max, with passive "
+        "relief periods, to enable recruitment of your larger fast twitch muscles, as well as "
+        "stimulation of maximal cardiac output (your heart). Focus on maintaining consistent power "
+        "throughout each interval and use the recovery periods to let your heart rate drop before "
+        "the next effort."
+    )
+    workout = Workout(weekday, name=name, detailed_description=detailed_description)
 
     sets, duration = intervals.split('x')
     sets = int(sets)
@@ -215,7 +244,16 @@ def build_vo2max_workout(ftp: int, weekday: str, intervals: str = "5x5", week: i
 
 def build_sweetspot_workout(ftp: int, weekday: str, intervals: str = "3x15") -> Workout:
     """Build a sweet spot workout"""
-    workout = Workout(weekday, "Sub-threshold intervals for FTP development")
+    name = "Sweet Spot intervals"
+    detailed_description = (
+        "This workout is suitable for both indoor trainer and outdoor riding. Sweet spot training "
+        "targets the intersection of aerobic capacity and lactate threshold, maximizing FTP gains "
+        "while remaining sustainable. These sub-threshold intervals (88-93% FTP) accumulate "
+        "significant time-in-zone without the fatigue cost of true threshold work, making them "
+        "ideal for building race-ready endurance. Maintain smooth, controlled power and focus on "
+        "efficient pedaling throughout each interval."
+    )
+    workout = Workout(weekday, name=name, detailed_description=detailed_description)
 
     sets, duration = intervals.split('x')
     sets = int(sets)
@@ -245,7 +283,15 @@ def build_sweetspot_workout(ftp: int, weekday: str, intervals: str = "3x15") -> 
 
 def build_tempo_workout(ftp: int, weekday: str, intervals: str = "3x15") -> Workout:
     """Build a tempo workout"""
-    workout = Workout(weekday, "Aerobic endurance at moderate intensity")
+    name = "Tempo intervals"
+    detailed_description = (
+        "Best performed outdoors where you can sustain steady efforts on rolling terrain. Tempo "
+        "work (76-85% FTP) develops aerobic endurance and muscular stamina while remaining below "
+        "your lactate threshold. This 'comfortably hard' effort improves fat oxidation, "
+        "mitochondrial density, and mental resilience for long events. Keep power steady and avoid "
+        "the temptation to drift into threshold—tempo should feel sustainable for the entire duration."
+    )
+    workout = Workout(weekday, name=name, detailed_description=detailed_description)
 
     sets, duration = intervals.split('x')
     sets = int(sets)
@@ -275,7 +321,16 @@ def build_tempo_workout(ftp: int, weekday: str, intervals: str = "3x15") -> Work
 
 def build_endurance_workout(ftp: int, weekday: str, duration_min: int = 60) -> Workout:
     """Build an endurance workout"""
-    workout = Workout(weekday, "Aerobic base building")
+    name = "Endurance ride"
+    detailed_description = (
+        "Best performed outdoors on varied terrain to build mental resilience and handling skills. "
+        "Long endurance rides develop aerobic capacity through mitochondrial biogenesis and improved "
+        "fat oxidation, creating the foundation for all higher-intensity work. Zone 2 efforts should "
+        "feel conversational—you should be able to talk in complete sentences. Stay disciplined with "
+        "power targets; going too hard defeats the purpose of aerobic base building. Focus on smooth "
+        "pedaling and enjoying the ride."
+    )
+    workout = Workout(weekday, name=name, detailed_description=detailed_description)
 
     # Get power targets using centralized helper
     targets = get_workout_power_targets(ftp)

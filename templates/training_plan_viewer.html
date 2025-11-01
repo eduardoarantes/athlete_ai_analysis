@@ -1611,13 +1611,15 @@
                         // Add intensity indicator from description or segment types
                         const intensity = getIntensityFromWorkout(workout);
                         const tssDisplay = workout.tss ? `<div class="workout-tss">${Math.round(workout.tss)} TSS</div>` : '';
-                        const descDisplay = workout.description ? `<div class="workout-desc">${workout.description}</div>` : '';
+                        // Use name if available, fall back to description for backward compatibility
+                        const workoutName = workout.name || workout.description || 'Workout';
+                        const nameDisplay = `<div class="workout-desc">${workoutName}</div>`;
                         dayCell.innerHTML = `
                             <div class="workout-intensity ${intensity}"></div>
                             <div class="workout-name">${day}</div>
                             <div class="workout-duration">${totalDuration}min</div>
                             ${tssDisplay}
-                            ${descDisplay}
+                            ${nameDisplay}
                             ${miniProfileDisplay}
                         `;
 
@@ -1638,12 +1640,12 @@
 
         // Get intensity class from workout structure
         function getIntensityFromWorkout(workout) {
-            // Analyze description for intensity keywords
-            const description = workout.description?.toLowerCase() || '';
-            if (description.includes('vo2') || description.includes('vo2max')) return 'intensity-vo2max';
-            if (description.includes('threshold')) return 'intensity-threshold';
-            if (description.includes('tempo')) return 'intensity-tempo';
-            if (description.includes('sweet spot')) return 'intensity-threshold';
+            // Analyze name and description for intensity keywords
+            const workoutText = `${workout.name || ''} ${workout.description || ''}`.toLowerCase();
+            if (workoutText.includes('vo2') || workoutText.includes('vo2max')) return 'intensity-vo2max';
+            if (workoutText.includes('threshold')) return 'intensity-threshold';
+            if (workoutText.includes('tempo')) return 'intensity-tempo';
+            if (workoutText.includes('sweet spot')) return 'intensity-threshold';
 
             // Analyze segments to determine intensity
             const segments = workout.segments || [];
@@ -1678,8 +1680,11 @@
             document.getElementById('modal-tss').textContent = workout.tss ? Math.round(workout.tss) : 'N/A';
             document.getElementById('modal-intensity').textContent = workout.intensity_zone || 'Mixed';
 
-            // Update description
-            document.getElementById('modal-description').textContent = workout.description || 'No description available';
+            // Update workout name and detailed description
+            // Use name for title, detailed_description for body (with backward compatibility)
+            const workoutName = workout.name || workout.description || 'Workout';
+            const detailedDesc = workout.detailed_description || workout.description || 'No description available';
+            document.getElementById('modal-description').textContent = detailedDesc;
 
             // Generate and display SVG visualization
             if (workout.segments && workout.segments.length > 0) {
