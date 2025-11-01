@@ -1,0 +1,191 @@
+{
+  "plan_metadata": {
+    "total_weeks": 2,
+    "current_ftp": 265,
+    "target_ftp": 280,
+    "start_date": "2024-11-04",
+    "phase": "Base Building"
+  },
+  "weekly_plan": [
+    {
+      "week_number": 1,
+      "week_start_date": "2024-11-04",
+      "phase": "Base Building",
+      "total_tss": 235,
+      "workouts": [
+        {
+          "weekday": "Monday",
+          "date": "2024-11-04",
+          "workout_type": "endurance",
+          "total_duration_minutes": 80,
+          "planned_tss": 65,
+          "description": "Easy endurance ride to build aerobic base",
+          "segments": [
+            {
+              "type": "warmup",
+              "duration_min": 10,
+              "power_low_pct": 50,
+              "power_high_pct": 60
+            },
+            {
+              "type": "steady",
+              "duration_min": 60,
+              "power_low_pct": 65,
+              "power_high_pct": 75
+            },
+            {
+              "type": "cooldown",
+              "duration_min": 10,
+              "power_low_pct": 45,
+              "power_high_pct": 55
+            }
+          ]
+        },
+        {
+          "weekday": "Wednesday",
+          "date": "2024-11-06",
+          "workout_type": "threshold",
+          "total_duration_minutes": 75,
+          "planned_tss": 85,
+          "description": "Threshold intervals 3x10min @ FTP",
+          "segments": [
+            {
+              "type": "warmup",
+              "duration_min": 15,
+              "power_low_pct": 50,
+              "power_high_pct": 60
+            },
+            {
+              "type": "interval",
+              "duration_min": 10,
+              "power_low_pct": 95,
+              "power_high_pct": 105
+            },
+            {
+              "type": "recovery",
+              "duration_min": 5,
+              "power_low_pct": 45,
+              "power_high_pct": 55
+            },
+            {
+              "type": "interval",
+              "duration_min": 10,
+              "power_low_pct": 95,
+              "power_high_pct": 105
+            },
+            {
+              "type": "recovery",
+              "duration_min": 5,
+              "power_low_pct": 45,
+              "power_high_pct": 55
+            },
+            {
+              "type": "interval",
+              "duration_min": 10,
+              "power_low_pct": 95,
+              "power_high_pct": 105
+            },
+            {
+              "type": "cooldown",
+              "duration_min": 20,
+              "power_low_pct": 45,
+              "power_high_pct": 55
+            }
+          ]
+        },
+        {
+          "weekday": "Saturday",
+          "date": "2024-11-09",
+          "workout_type": "endurance",
+          "total_duration_minutes": 150,
+          "planned_tss": 105,
+          "description": "Long endurance ride with some tempo work",
+          "segments": [
+            {
+              "type": "warmup",
+              "duration_min": 15,
+              "power_low_pct": 50,
+              "power_high_pct": 60
+            },
+            {
+              "type": "steady",
+              "duration_min": 120,
+              "power_low_pct": 65,
+              "power_high_pct": 75
+            },
+            {
+              "type": "cooldown",
+              "duration_min": 15,
+              "power_low_pct": 45,
+              "power_high_pct": 55
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "week_number": 2,
+      "week_start_date": "2024-11-11",
+      "phase": "Base Building",
+      "total_tss": 125,
+      "workouts": [
+        {
+          "weekday": "Monday",
+          "date": "2024-11-11",
+          "workout_type": "recovery",
+          "total_duration_minutes": 45,
+          "planned_tss": 25,
+          "description": "Easy recovery spin",
+          "segments": [
+            {
+              "type": "recovery",
+              "duration_min": 45,
+              "power_low_pct": 45,
+              "power_high_pct": 55
+            }
+          ]
+        },
+        {
+          "weekday": "Wednesday",
+          "date": "2024-11-13",
+          "workout_type": "tempo",
+          "total_duration_minutes": 90,
+          "planned_tss": 70,
+          "description": "Tempo intervals 2x20min @ 85-90% FTP",
+          "segments": [
+            {
+              "type": "warmup",
+              "duration_min": 15,
+              "power_low_pct": 50,
+              "power_high_pct": 60
+            },
+            {
+              "type": "interval",
+              "duration_min": 20,
+              "power_low_pct": 85,
+              "power_high_pct": 90
+            },
+            {
+              "type": "recovery",
+              "duration_min": 10,
+              "power_low_pct": 45,
+              "power_high_pct": 55
+            },
+            {
+              "type": "interval",
+              "duration_min": 20,
+              "power_low_pct": 85,
+              "power_high_pct": 90
+            },
+            {
+              "type": "cooldown",
+              "duration_min": 25,
+              "power_low_pct": 45,
+              "power_high_pct": 55
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

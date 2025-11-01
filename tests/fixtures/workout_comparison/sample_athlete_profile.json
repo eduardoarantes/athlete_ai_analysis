@@ -1,0 +1,15 @@
+{
+  "name": "Test Athlete",
+  "age": 35,
+  "weight": "70kg",
+  "FTP": "265w",
+  "critical_HR": 186,
+  "gender": "male",
+  "training_availability": {
+    "hours_per_week": 8,
+    "week_days": "Monday, Wednesday, Saturday, Sunday"
+  },
+  "goals": "Improve FTP to 280w over 12 weeks",
+  "current_training_status": "recreational",
+  "experience_level": "intermediate"
+}
