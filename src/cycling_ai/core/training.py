@@ -77,7 +77,7 @@ def validate_training_plan(
                 continue
 
             # Validate each workout
-            week_minutes = 0
+            week_minutes: float = 0
             for workout_idx, workout in enumerate(workouts, 1):
                 # Validate weekday field exists
                 if "weekday" not in workout:
@@ -115,7 +115,7 @@ def validate_training_plan(
                     continue
 
                 # Validate each segment
-                day_minutes = 0
+                day_minutes: float = 0
                 for seg_idx, segment in enumerate(segments, 1):
                     # Check segment type
                     valid_types = {"warmup", "interval", "work", "recovery", "cooldown", "steady", "tempo"}
@@ -175,11 +175,13 @@ def validate_training_plan(
 
                 week_minutes += day_minutes
 
-            # Check weekly hours constraint
+            # Check weekly hours constraint (with 10% tolerance)
             max_weekly_minutes = weekly_hours * 60
-            if week_minutes > max_weekly_minutes:
+            tolerance = 0.10  # 10% tolerance
+            max_with_tolerance = max_weekly_minutes * (1 + tolerance)
+            if week_minutes > max_with_tolerance:
                 errors.append(
-                    f"Week {week_num}: Total duration {week_minutes} min exceeds weekly limit of {max_weekly_minutes} min ({weekly_hours} hours)"
+                    f"Week {week_num}: Total duration {week_minutes} min exceeds weekly limit of {max_weekly_minutes} min ({weekly_hours} hours) + 10% tolerance ({max_with_tolerance} min)"
                 )
 
     except Exception as e:

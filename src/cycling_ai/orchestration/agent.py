@@ -168,28 +168,54 @@ class LLMAgent:
                     )
                     self.session.add_message(tool_result_msg)
 
-                # Check if finalize_training_plan was called AND succeeded - if so, force completion
-                finalize_idx = None
-                for idx, tc in enumerate(response.tool_calls):
-                    if tc.get("name") == "finalize_training_plan":
-                        finalize_idx = idx
-                        break
+                # Check for phase-completion tools (single-call phases should exit immediately)
+                phase_completion_tools = {
+                    "finalize_training_plan": "Training plan has been successfully created and saved.",
+                    "create_plan_overview": "Training plan overview has been created.",
+                }
 
-                if finalize_idx is not None:
-                    # Check if the tool execution was successful
-                    finalize_result = tool_results[finalize_idx]
-                    if finalize_result.success:
-                        logger.info("[AGENT LOOP] finalize_training_plan succeeded. Forcing completion.")
-                        final_msg = "Training plan has been successfully created and saved."
-                        self.session.add_message(
-                            ConversationMessage(role="assistant", content=final_msg)
-                        )
-                        return final_msg
-                    else:
-                        logger.warning(
-                            f"[AGENT LOOP] finalize_training_plan failed with errors: {finalize_result.errors}. "
-                            "Continuing to give LLM a chance to retry."
-                        )
+                for tool_name, completion_msg in phase_completion_tools.items():
+                    tool_idx = None
+                    for idx, tc in enumerate(response.tool_calls):
+                        if tc.get("name") == tool_name:
+                            tool_idx = idx
+                            break
+
+                    if tool_idx is not None:
+                        # Check if the tool execution was successful
+                        tool_result = tool_results[tool_idx]
+                        if tool_result.success:
+                            logger.info(f"[AGENT LOOP] {tool_name} succeeded. Forcing completion.")
+                            self.session.add_message(
+                                ConversationMessage(role="assistant", content=completion_msg)
+                            )
+                            return completion_msg
+                        else:
+                            logger.warning(
+                                f"[AGENT LOOP] {tool_name} failed with errors: {tool_result.errors}. "
+                                "Continuing to give LLM a chance to retry."
+                            )
+
+                # Check for add_week_details completion (all weeks done)
+                for idx, tc in enumerate(response.tool_calls):
+                    if tc.get("name") == "add_week_details":
+                        tool_result = tool_results[idx]
+                        if tool_result.success and tool_result.data:
+                            # Check if all weeks are complete
+                            weeks_remaining = tool_result.data.get("weeks_remaining", 1)
+                            weeks_completed = tool_result.data.get("weeks_completed", 0)
+                            total_weeks = tool_result.data.get("total_weeks", 0)
+
+                            if weeks_remaining == 0:
+                                logger.info(
+                                    f"[AGENT LOOP] add_week_details completed all weeks "
+                                    f"({weeks_completed}/{total_weeks}). Forcing completion."
+                                )
+                                completion_msg = f"All {total_weeks} weeks generated successfully. Phase 3b complete."
+                                self.session.add_message(
+                                    ConversationMessage(role="assistant", content=completion_msg)
+                                )
+                                return completion_msg
 
                 logger.info(f"[AGENT LOOP] Session now has {len(self.session.messages)} messages. Continuing to next iteration...")
 
@@ -225,6 +251,10 @@ class LLMAgent:
 
         for tool_call in tool_calls:
             tool_name = tool_call.get("name")
+            if not tool_name:
+                # Skip tool calls without a name
+                continue
+
             # Support both "parameters" and "arguments" keys for compatibility
             parameters = tool_call.get("parameters") or tool_call.get("arguments", {})
 

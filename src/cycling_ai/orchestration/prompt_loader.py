@@ -7,7 +7,7 @@ Loads prompts from external files organized by model and version:
     prompts/{model}/{version}/report_generation.txt
 
 Note: Phase 1 (data preparation) no longer uses LLM prompts.
-Defaults to 'default' model and '1.1' version if not specified.
+Defaults to 'default' model and '1.2' version if not specified.
 """
 from __future__ import annotations
 
@@ -40,7 +40,7 @@ class PromptLoader:
         self,
         prompts_base_dir: Path | str | None = None,
         model: str = "default",
-        version: str = "1.1",
+        version: str = "1.2",
     ):
         """
         Initialize prompt loader.
@@ -49,7 +49,7 @@ class PromptLoader:
             prompts_base_dir: Base directory containing prompts.
                              Defaults to ./prompts relative to project root
             model: Model name (e.g., "default", "gemini", "gpt4")
-            version: Version string (e.g., "1.0", "2.0")
+            version: Version string (e.g., "1.2", "1.1")
         """
         if prompts_base_dir is None:
             # Default to prompts/ in project root
@@ -153,9 +153,28 @@ class PromptLoader:
         """Get performance analysis agent prompt."""
         return self.load_prompt("performance_analysis")
 
-    def get_training_planning_prompt(self) -> str:
-        """Get training planning agent prompt."""
-        return self.load_prompt("training_planning")
+    def get_training_planning_prompt(self, **kwargs: Any) -> str:
+        """
+        Get training planning agent prompt (system prompt with template variables).
+
+        Args:
+            **kwargs: Template variables for formatting the system prompt
+
+        Returns:
+            Formatted system prompt for training planning
+        """
+        # Load the prompt template
+        prompt_template = self.load_prompt("training_planning")
+
+        # Format with provided variables (v1.2 prompts use template variables)
+        try:
+            return prompt_template.format(**kwargs)
+        except KeyError as e:
+            # If template variable is missing, return unformatted
+            # (for backward compatibility with v1.1 prompts that don't use variables)
+            import logging
+            logging.warning(f"Missing template variable in training_planning prompt: {e}")
+            return prompt_template
 
     def get_report_generation_prompt(self) -> str:
         """Get report generation agent prompt."""
@@ -202,8 +221,135 @@ class PromptLoader:
         """Get performance analysis user prompt with formatting."""
         return self.load_user_prompt("performance_analysis", **kwargs)
 
+    def get_training_planning_overview_prompt(self, **kwargs: Any) -> str:
+        """Get training planning overview system prompt (Phase 3a)."""
+        prompt_template = self.load_prompt("training_planning_overview")
+        try:
+            return prompt_template.format(**kwargs)
+        except KeyError as e:
+            import logging
+            logging.warning(f"Missing template variable in training_planning_overview prompt: {e}")
+            return prompt_template
+
+    def get_training_planning_overview_user_prompt(self, **kwargs: Any) -> str:
+        """Get training planning overview user prompt (Phase 3a)."""
+        return self.load_user_prompt("training_planning_overview", **kwargs)
+
+    def get_training_planning_weeks_prompt(self, **kwargs: Any) -> str:
+        """Get training planning weeks system prompt (Phase 3b)."""
+        prompt_template = self.load_prompt("training_planning_weeks")
+        try:
+            return prompt_template.format(**kwargs)
+        except KeyError as e:
+            import logging
+            logging.warning(f"Missing template variable in training_planning_weeks prompt: {e}")
+            return prompt_template
+
+    def get_training_planning_weeks_user_prompt(self, **kwargs: Any) -> str:
+        """Get training planning weeks user prompt (Phase 3b)."""
+        return self.load_user_prompt("training_planning_weeks", **kwargs)
+
     def get_training_planning_user_prompt(self, **kwargs: Any) -> str:
-        """Get training planning user prompt with formatting."""
+        """
+        Get training planning user prompt with dynamic example generation.
+
+        Generates a personalized example week based on athlete's available days
+        and weekly time budget.
+        """
+        # Generate dynamic example workouts based on available days
+        available_days_str = kwargs.get("available_days", "")
+        weekly_hours = float(kwargs.get("weekly_time_budget_hours", 7))
+
+        # Parse available days
+        available_days = [day.strip() for day in available_days_str.split(",")]
+        num_days = len(available_days)
+
+        # Calculate example durations to hit ~90% of weekly budget
+        target_minutes = int(weekly_hours * 60 * 0.9)  # Aim for 90% to leave margin
+
+        # Distribute time across days (longer on weekends, shorter on weekdays)
+        example_workouts_list = []
+        total_minutes = 0
+
+        # Count weekend vs weekday days
+        weekend_days = [d for d in available_days if d in ["Saturday", "Sunday"]]
+        weekday_days = [d for d in available_days if d not in ["Saturday", "Sunday"]]
+
+        # Allocate 60% to weekends, 40% to weekdays (if both exist)
+        if weekend_days and weekday_days:
+            weekend_total = int(target_minutes * 0.60)
+            weekday_total = target_minutes - weekend_total
+            weekend_per_day = weekend_total // len(weekend_days)
+            weekday_per_day = weekday_total // len(weekday_days)
+        elif weekend_days:
+            # Only weekends available
+            weekend_per_day = target_minutes // len(weekend_days)
+            weekday_per_day = 0
+        else:
+            # Only weekdays available
+            weekday_per_day = target_minutes // len(weekday_days)
+            weekend_per_day = 0
+
+        for i, day in enumerate(available_days):
+            # Assign duration based on day type
+            if day in ["Saturday", "Sunday"]:
+                duration = weekend_per_day
+            else:
+                duration = weekday_per_day
+
+            # Round to nice numbers
+            duration = max(40, min(240, duration))  # Between 40 and 240 minutes
+            duration = int(duration / 10) * 10  # Round to nearest 10
+
+            total_minutes += duration
+
+            # Create workout example
+            if duration >= 150:  # Long ride
+                workout_json = f"""    {{
+      "weekday": "{day}",
+      "description": "Long endurance ride",
+      "segments": [{{"type": "steady", "duration_min": {duration}, "power_low_pct": 56, "power_high_pct": 75, "description": "Z2 aerobic base"}}]
+    }}"""
+            elif duration >= 70:  # Interval workout
+                warmup = 15
+                cooldown = 15
+                work = duration - warmup - cooldown
+                interval_time = work // 3
+                recovery_time = work - (interval_time * 2)
+
+                workout_json = f"""    {{
+      "weekday": "{day}",
+      "description": "Tempo intervals",
+      "segments": [
+        {{"type": "warmup", "duration_min": {warmup}, "power_low_pct": 50, "power_high_pct": 65, "description": "Easy spin"}},
+        {{"type": "interval", "duration_min": {interval_time}, "power_low_pct": 76, "power_high_pct": 90, "description": "Z3 tempo"}},
+        {{"type": "recovery", "duration_min": {recovery_time}, "power_low_pct": 50, "power_high_pct": 65, "description": "Easy spin"}},
+        {{"type": "interval", "duration_min": {interval_time}, "power_low_pct": 76, "power_high_pct": 90, "description": "Z3 tempo"}},
+        {{"type": "cooldown", "duration_min": {cooldown}, "power_low_pct": 50, "power_high_pct": 60, "description": "Cool down"}}
+      ]
+    }}"""
+            else:  # Recovery ride
+                workout_json = f"""    {{
+      "weekday": "{day}",
+      "description": "Recovery ride",
+      "segments": [{{"type": "steady", "duration_min": {duration}, "power_low_pct": 50, "power_high_pct": 55, "description": "Z1 recovery"}}]
+    }}"""
+
+            example_workouts_list.append(workout_json)
+
+        # Join workouts with commas
+        example_workouts = ",\n".join(example_workouts_list)
+
+        # Calculate totals
+        example_total_hours = round(total_minutes / 60, 1)
+
+        # Add generated fields to kwargs
+        kwargs["num_available_days"] = num_days
+        kwargs["example_workouts"] = example_workouts
+        kwargs["example_total_minutes"] = total_minutes
+        kwargs["example_total_hours"] = example_total_hours
+
+        # Now load and format the prompt with all kwargs
         return self.load_user_prompt("training_planning", **kwargs)
 
     def get_report_generation_user_prompt(self, **kwargs: Any) -> str:
@@ -300,7 +446,7 @@ def get_prompt_loader(
 
     Args:
         model: Model name (defaults to "default")
-        version: Version string (defaults to "1.0")
+        version: Version string (defaults to "1.2")
         prompts_dir: Base directory (defaults to ./prompts)
 
     Returns:
@@ -309,5 +455,5 @@ def get_prompt_loader(
     return PromptLoader(
         prompts_base_dir=prompts_dir,
         model=model or "default",
-        version=version or "1.1",
+        version=version or "1.2",
     )

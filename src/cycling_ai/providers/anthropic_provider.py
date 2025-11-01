@@ -7,6 +7,8 @@ Supports native tool use via the Messages API.
 from __future__ import annotations
 
 import json
+import logging
+import time
 from typing import Any
 
 import anthropic
@@ -17,8 +19,46 @@ from cycling_ai.providers.base import (
     ProviderConfig,
     ProviderMessage,
 )
+from cycling_ai.providers.interaction_logger import get_interaction_logger
 from cycling_ai.providers.provider_utils import retry_with_exponential_backoff
 from cycling_ai.tools.base import ToolDefinition, ToolExecutionResult
+
+logger = logging.getLogger(__name__)
+
+
+def _normalize_schema_types(schema: dict[str, Any]) -> dict[str, Any]:
+    """
+    Recursively normalize type values to lowercase for JSON Schema draft 2020-12 compliance.
+
+    Anthropic requires strict adherence to JSON Schema specification, which mandates
+    lowercase type values (e.g., "object", not "OBJECT").
+
+    Args:
+        schema: Schema dictionary to normalize
+
+    Returns:
+        Normalized schema with lowercase types
+    """
+    result: dict[str, Any] = {}
+
+    for key, value in schema.items():
+        if key == "type" and isinstance(value, str):
+            # Normalize type to lowercase
+            result[key] = value.lower()
+        elif key == "properties" and isinstance(value, dict):
+            # Recursively normalize nested properties
+            result[key] = {
+                prop_name: _normalize_schema_types(prop_value)
+                for prop_name, prop_value in value.items()
+            }
+        elif key == "items" and isinstance(value, dict):
+            # Recursively normalize array item schemas
+            result[key] = _normalize_schema_types(value)
+        else:
+            # Copy other fields as-is
+            result[key] = value
+
+    return result
 
 
 class AnthropicProvider(BaseProvider):
@@ -71,11 +111,15 @@ class AnthropicProvider(BaseProvider):
 
             for param in tool.parameters:
                 properties[param.name] = {
-                    "type": param.type,
+                    "type": param.type.lower(),  # Normalize to lowercase for JSON Schema compliance
                     "description": param.description,
                 }
                 if param.enum:
                     properties[param.name]["enum"] = param.enum
+                if param.items:
+                    # Handle array item schemas (for array-type parameters)
+                    # Normalize types recursively for JSON Schema draft 2020-12 compliance
+                    properties[param.name]["items"] = _normalize_schema_types(param.items)
                 if param.required:
                     required.append(param.name)
 
@@ -143,6 +187,7 @@ class AnthropicProvider(BaseProvider):
         self,
         messages: list[ProviderMessage],
         tools: list[ToolDefinition] | None = None,
+        force_tool_call: bool = False,
     ) -> CompletionResponse:
         """
         Create completion using Anthropic Messages API.
@@ -150,6 +195,7 @@ class AnthropicProvider(BaseProvider):
         Args:
             messages: Conversation messages
             tools: Available tools (optional)
+            force_tool_call: If True, force LLM to call tool instead of responding with text
 
         Returns:
             Standardized completion response
@@ -172,21 +218,53 @@ class AnthropicProvider(BaseProvider):
                     system_msg = msg.content
                 elif msg.role == "tool":
                     # Tool results must be sent as user messages with tool_result content
-                    import json
                     try:
                         tool_data = json.loads(msg.content) if msg.content else {}
                     except json.JSONDecodeError:
                         tool_data = {"response": msg.content}
 
+                    # Extract tool_call_id from tool_results
+                    tool_call_id = "unknown"
+                    if msg.tool_results and len(msg.tool_results) > 0:
+                        tool_call_id = msg.tool_results[0].get("tool_call_id", "unknown")
+
                     user_messages.append({
                         "role": "user",
                         "content": [{
                             "type": "tool_result",
-                            "tool_use_id": "unknown",  # TODO: Track tool call IDs
+                            "tool_use_id": tool_call_id,
                             "content": json.dumps(tool_data),
                         }]
                     })
+                elif msg.role == "assistant":
+                    # Assistant messages with tool calls need special handling
+                    if msg.tool_calls:
+                        # Convert tool calls to Anthropic's content block format
+                        content_blocks: list[dict[str, Any]] = []
+
+                        # Add text content if present
+                        if msg.content:
+                            content_blocks.append({"type": "text", "text": msg.content})
+
+                        # Add tool_use blocks
+                        for tc in msg.tool_calls:
+                            content_blocks.append({
+                                "type": "tool_use",
+                                "id": tc.get("id"),
+                                "name": tc.get("name"),
+                                "input": tc.get("arguments", {}),
+                            })
+
+                        user_messages.append({
+                            "role": "assistant",
+                            "content": content_blocks,
+                        })
+                    else:
+                        # Regular assistant message (skip if empty to avoid API errors)
+                        if msg.content:
+                            user_messages.append({"role": msg.role, "content": msg.content})
                 else:
+                    # User or other role messages
                     user_messages.append({"role": msg.role, "content": msg.content})
 
             # Build request parameters
@@ -205,8 +283,20 @@ class AnthropicProvider(BaseProvider):
             if tools:
                 request_params["tools"] = self.convert_tool_schema(tools)
 
+                # Force tool calling if requested by phase configuration
+                # This is crucial for phases like training_planning where the LLM
+                # must call the tool rather than just explaining what it plans to do
+                if force_tool_call:
+                    request_params["tool_choice"] = {"type": "any"}
+
+            # Track timing
+            start_time = time.time()
+
             # Call Anthropic API
             response = self.client.messages.create(**request_params)
+
+            # Calculate duration
+            duration_ms = (time.time() - start_time) * 1000
 
             # Parse content blocks
             content = ""
@@ -226,7 +316,7 @@ class AnthropicProvider(BaseProvider):
                         }
                     )
 
-            return CompletionResponse(
+            completion_response = CompletionResponse(
                 content=content,
                 tool_calls=tool_calls,
                 metadata={
@@ -238,6 +328,23 @@ class AnthropicProvider(BaseProvider):
                     "stop_reason": response.stop_reason,
                 },
             )
+
+            # Log the interaction
+            try:
+                interaction_logger = get_interaction_logger()
+                interaction_logger.log_interaction(
+                    provider_name="anthropic",
+                    model=self.config.model,
+                    messages=messages,
+                    tools=tools,
+                    response=completion_response,
+                    duration_ms=duration_ms,
+                )
+            except Exception as e:
+                # Don't fail the request if logging fails
+                logger.warning(f"Failed to log LLM interaction: {e}")
+
+            return completion_response
 
         except anthropic.AuthenticationError as e:
             raise ValueError(f"Invalid Anthropic API key: {e}") from e

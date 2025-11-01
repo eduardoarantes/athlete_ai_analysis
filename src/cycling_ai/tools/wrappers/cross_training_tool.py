@@ -6,6 +6,7 @@ Wraps core.cross_training.analyze_cross_training_impact() as a BaseTool for LLM 
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 from typing import Any
 
@@ -18,6 +19,8 @@ from cycling_ai.tools.base import (
     ToolParameter,
 )
 from cycling_ai.tools.registry import register_tool
+
+logger = logging.getLogger(__name__)
 
 
 class CrossTrainingTool(BaseTool):
@@ -103,11 +106,21 @@ class CrossTrainingTool(BaseTool):
         Returns:
             ToolExecutionResult with cross-training analysis or errors
         """
+        # Log job start with clear header
+        logger.info("=" * 80)
+        logger.info("TOOL EXECUTION START: analyze_cross_training_impact")
+        logger.info("=" * 80)
+
         try:
             # Extract parameters
             csv_file_path = kwargs.get("csv_file_path")
             cache_file_path = kwargs.get("cache_file_path")
             analysis_period_weeks = kwargs.get("analysis_period_weeks", 12)
+
+            logger.info(f"Parameters:")
+            logger.info(f"  - cache_file_path: {cache_file_path}")
+            logger.info(f"  - csv_file_path: {csv_file_path}")
+            logger.info(f"  - analysis_period_weeks: {analysis_period_weeks}")
 
             # Must provide either CSV or cache path
             if not csv_file_path and not cache_file_path:
@@ -132,11 +145,18 @@ class CrossTrainingTool(BaseTool):
 
                 try:
                     import pandas as pd
+
+                    logger.info(f"Loading cache from: {cache_path}")
                     df = pd.read_parquet(cache_path)
+                    logger.info(f"Loaded {len(df)} activities from cache")
 
                     # Verify cache has cross-training categorization
-                    required_columns = ["activity_category", "muscle_focus", "fatigue_impact", "recovery_hours"]
+                    required_columns = ["activity_category", "muscle_focus", "fatigue_impact", "recovery_hours", "intensity_category"]
                     missing_columns = [col for col in required_columns if col not in df.columns]
+
+                    logger.info(f"Validating required columns: {required_columns}")
+                    if missing_columns:
+                        logger.error(f"Missing columns: {missing_columns}")
 
                     if missing_columns:
                         return ToolExecutionResult(
@@ -216,23 +236,33 @@ class CrossTrainingTool(BaseTool):
                 )
 
             # Return successful result
+            total_activities = result_data.get("analysis_period", {}).get("total_activities", 0)
+            interference_events = result_data.get("interference_analysis", {}).get("total_events", 0)
+
+            logger.info(f"Analysis completed successfully:")
+            logger.info(f"  - Total activities analyzed: {total_activities}")
+            logger.info(f"  - Interference events detected: {interference_events}")
+            logger.info("=" * 80)
+            logger.info("TOOL EXECUTION COMPLETE: analyze_cross_training_impact")
+            logger.info("=" * 80)
+
             return ToolExecutionResult(
                 success=True,
                 data=result_data,
                 format="json",
                 metadata={
                     "analysis_period_weeks": analysis_period_weeks,
-                    "total_activities": result_data.get("analysis_period", {}).get(
-                        "total_activities", 0
-                    ),
-                    "interference_events": result_data.get("interference_analysis", {}).get(
-                        "total_events", 0
-                    ),
+                    "total_activities": total_activities,
+                    "interference_events": interference_events,
                 },
             )
 
         except ValueError as e:
             # Parameter validation errors
+            logger.error(f"Parameter validation error: {str(e)}")
+            logger.info("=" * 80)
+            logger.info("TOOL EXECUTION FAILED: analyze_cross_training_impact")
+            logger.info("=" * 80)
             return ToolExecutionResult(
                 success=False,
                 data=None,
@@ -241,6 +271,10 @@ class CrossTrainingTool(BaseTool):
             )
         except Exception as e:
             # Unexpected errors
+            logger.error(f"Unexpected error during execution: {str(e)}")
+            logger.info("=" * 80)
+            logger.info("TOOL EXECUTION FAILED: analyze_cross_training_impact")
+            logger.info("=" * 80)
             return ToolExecutionResult(
                 success=False,
                 data=None,

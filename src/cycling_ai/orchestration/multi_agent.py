@@ -428,6 +428,30 @@ class MultiAgentOrchestrator:
                             elif tool_name in ("analyze_zones", "analyze_time_in_zones"):
                                 data = json.loads(message.content)
                                 extracted["zones_data"] = data
+                            elif tool_name == "create_plan_overview":
+                                # Phase 3a: Extract plan_id from overview creation
+                                data = json.loads(message.content)
+                                logger.info(f"[PHASE {phase_name.upper()}] Extracting plan_id from create_plan_overview")
+                                logger.debug(f"[PHASE {phase_name.upper()}] Tool result data keys: {list(data.keys())}")
+
+                                if "plan_id" in data:
+                                    extracted["plan_id"] = data["plan_id"]
+                                    logger.info(f"[PHASE {phase_name.upper()}] Extracted plan_id: {data['plan_id']}")
+                                else:
+                                    logger.error(f"[PHASE {phase_name.upper()}] No plan_id found in create_plan_overview result")
+
+                                # Also store the full overview data
+                                extracted["plan_overview"] = data
+                            elif tool_name == "add_week_details":
+                                # Phase 3b: Track weekly details addition
+                                data = json.loads(message.content)
+                                logger.info(f"[PHASE {phase_name.upper()}] Week details added")
+                                logger.debug(f"[PHASE {phase_name.upper()}] Tool result: {data}")
+
+                                # Keep track of week count
+                                if "weeks_added" not in extracted:
+                                    extracted["weeks_added"] = 0
+                                extracted["weeks_added"] += 1
                             elif tool_name in ("generate_training_plan", "finalize_training_plan"):
                                 data = json.loads(message.content)
                                 logger.info(f"[PHASE {phase_name.upper()}] Extracting training plan from tool result")
@@ -513,7 +537,7 @@ class MultiAgentOrchestrator:
             # Validate against schema
             if self._validate_performance_analysis_schema(data):
                 logger.info("[PHASE 2] Successfully extracted and validated performance analysis JSON")
-                return data
+                return dict(data)  # Cast Any to dict[str, Any]
             else:
                 logger.warning("[PHASE 2] Performance analysis JSON does not match expected schema")
                 return None
@@ -594,7 +618,7 @@ class MultiAgentOrchestrator:
             List of violation dictionaries, empty if all weeks are within limits
             Each violation: {"week": int, "actual_hours": float, "max_allowed": float}
         """
-        violations = []
+        violations: list[dict[str, Any]] = []
 
         # Get the weekly hours guideline
         weekly_hours_guideline = plan_metadata.get("weekly_training_hours")
@@ -661,6 +685,64 @@ class MultiAgentOrchestrator:
         total_chars = sum(len(msg.content) for msg in session.messages)
         return total_chars // 4
 
+    def _generate_performance_summary(self, phase2_data: dict[str, Any]) -> str:
+        """
+        Generate a concise performance summary from phase 2 results.
+
+        Args:
+            phase2_data: Extracted data from phase 2 (performance analysis)
+
+        Returns:
+            Formatted text summary for training plan context
+        """
+        if not phase2_data:
+            return "No performance data available."
+
+        summary_lines = []
+
+        # Extract performance data
+        perf_data = phase2_data.get("performance_data", {})
+        if perf_data:
+            # Current period stats
+            current_stats = perf_data.get("current_period_stats", {})
+            if current_stats:
+                summary_lines.append("**Current Performance:**")
+                if "avg_power" in current_stats:
+                    summary_lines.append(f"- Average Power: {current_stats['avg_power']:.0f}W")
+                if "avg_speed" in current_stats:
+                    summary_lines.append(f"- Average Speed: {current_stats['avg_speed']:.1f} km/h")
+                if "total_distance" in current_stats:
+                    summary_lines.append(f"- Total Distance: {current_stats['total_distance']:.0f} km")
+                if "total_time" in current_stats:
+                    hours = current_stats['total_time'] / 3600
+                    summary_lines.append(f"- Total Time: {hours:.1f} hours")
+
+            # Trends
+            trends = perf_data.get("trends", {})
+            if trends:
+                summary_lines.append("\n**Trends:**")
+                if "power_trend" in trends:
+                    summary_lines.append(f"- Power: {trends['power_trend']}")
+                if "speed_trend" in trends:
+                    summary_lines.append(f"- Speed: {trends['speed_trend']}")
+
+        # Extract zones data
+        zones_data = phase2_data.get("zones_data", {})
+        if zones_data:
+            distribution = zones_data.get("zone_distribution", {})
+            if distribution:
+                summary_lines.append("\n**Training Distribution (time in zones):**")
+                for zone_id, zone_info in distribution.items():
+                    percentage = zone_info.get("percentage", 0)
+                    if percentage > 5:  # Only show zones with >5% time
+                        zone_name = zone_info.get("zone_name", zone_id)
+                        summary_lines.append(f"- {zone_name}: {percentage:.1f}%")
+
+        if not summary_lines:
+            return "Performance analysis completed. Use results to inform training plan."
+
+        return "\n".join(summary_lines)
+
     def _create_failed_workflow_result(
         self,
         phase_results: list[PhaseResult],
@@ -695,6 +777,7 @@ class MultiAgentOrchestrator:
         phase_context: dict[str, Any],
         user_message: str,
         force_tool_call: bool = False,
+        max_iterations: int | None = None,
     ) -> PhaseResult:
         """
         Execute a single workflow phase with session isolation.
@@ -707,6 +790,7 @@ class MultiAgentOrchestrator:
             phase_context: Context data for this phase
             user_message: User message to send to agent
             force_tool_call: If True, force LLM to call tool instead of responding with text
+            max_iterations: Override max iterations for this phase (defaults to config value)
 
         Returns:
             PhaseResult with execution details
@@ -714,10 +798,11 @@ class MultiAgentOrchestrator:
         phase_start = datetime.now()
 
         # Phase execution logging
+        effective_max_iterations = max_iterations or config.max_iterations_per_phase
         logger.info(f"[PHASE {phase_name.upper()}] Starting execution")
         logger.debug(f"[PHASE {phase_name.upper()}] Available tools: {tools}")
         logger.debug(f"[PHASE {phase_name.upper()}] Context keys: {list(phase_context.keys())}")
-        logger.debug(f"[PHASE {phase_name.upper()}] Max iterations: {config.max_iterations_per_phase}")
+        logger.debug(f"[PHASE {phase_name.upper()}] Max iterations: {effective_max_iterations}")
 
         # Notify progress callback
         if self.progress_callback:
@@ -741,7 +826,7 @@ class MultiAgentOrchestrator:
             agent = AgentFactory.create_agent(
                 provider=self.provider,
                 session=session,
-                max_iterations=config.max_iterations_per_phase,
+                max_iterations=effective_max_iterations,
                 allowed_tools=tools,
                 force_tool_call=force_tool_call,  # Pass flag to agent
             )
@@ -1001,18 +1086,21 @@ class MultiAgentOrchestrator:
             user_message=user_message,
         )
 
-    def _execute_phase_3(
+    def _execute_phase_3a_overview(
         self, config: WorkflowConfig, phase2_result: PhaseResult
     ) -> PhaseResult:
         """
-        Execute Phase 3: Training Planning.
+        Execute Phase 3a: Training Plan Overview Generation.
+
+        Generates high-level plan structure with weekly phases, TSS targets, and focus areas.
+        Returns plan_id for subsequent phases.
 
         Args:
             config: Workflow configuration
             phase2_result: Result from Phase 2
 
         Returns:
-            PhaseResult for training planning phase
+            PhaseResult with plan_id and overview data
         """
         from cycling_ai.core.power_zones import calculate_power_zones
         from cycling_ai.core.athlete import load_athlete_profile
@@ -1078,23 +1166,182 @@ class MultiAgentOrchestrator:
         available_days_str = ", ".join(available_days)
         daily_time_caps_json = json.dumps(daily_time_caps) if daily_time_caps else "None"
 
-        user_message = self.prompts_manager.get_training_planning_user_prompt(
-            training_plan_weeks=str(config.training_plan_weeks),
-            athlete_profile_path=athlete_profile_path,
-            power_zones=zones_text,
-            available_days=available_days_str,
-            weekly_time_budget_hours=str(weekly_time_budget_hours),
-            daily_time_caps_json=daily_time_caps_json,
-        )
+        # Prepare prompt parameters (used for both system and user prompts)
+        prompt_params = {
+            "training_plan_weeks": str(config.training_plan_weeks),
+            "athlete_profile_path": athlete_profile_path,
+            "power_zones": zones_text,
+            "available_days": available_days_str,
+            "weekly_time_budget_hours": str(weekly_time_budget_hours),
+            "daily_time_caps_json": daily_time_caps_json,
+        }
+
+        # Calculate additional template variables for v1.2 prompts
+        num_available_days = len(available_days)
+        num_rest_days = 7 - num_available_days
+        total_tool_calls = 1 + config.training_plan_weeks + 1  # overview + weeks + finalize
+        training_plan_weeks_plus_1 = config.training_plan_weeks + 1
+
+        # Extract performance summary from phase 2 results (if available)
+        performance_summary = self._generate_performance_summary(phase2_result.extracted_data)
+
+        # Add v1.2-specific template variables
+        prompt_params.update({
+            "num_available_days": str(num_available_days),
+            "num_rest_days": str(num_rest_days),
+            "total_tool_calls": str(total_tool_calls),
+            "training_plan_weeks_plus_1": str(training_plan_weeks_plus_1),
+            "performance_summary": performance_summary,
+        })
+
+        user_message = self.prompts_manager.get_training_planning_overview_user_prompt(**prompt_params)
 
         return self._execute_phase(
-            phase_name=PHASE_TRAINING_PLANNING,
+            phase_name="training_planning_overview",
             config=config,
-            prompt_getter=self.prompts_manager.get_training_planning_prompt,
-            tools=["finalize_training_plan"],  # Single-call pattern: workouts submitted inline
+            prompt_getter=lambda: self.prompts_manager.get_training_planning_overview_prompt(**prompt_params),
+            tools=["create_plan_overview"],  # Phase 3a: Only overview generation
             phase_context=phase2_result.extracted_data,
             user_message=user_message,
-            force_tool_call=True,  # Force LLM to call tool instead of just explaining
+            force_tool_call=True,  # Force LLM to call tool
+            max_iterations=5,  # Simple phase - just 1 tool call + buffer
+        )
+
+    def _execute_phase_3b_weeks(
+        self, config: WorkflowConfig, phase3a_result: PhaseResult
+    ) -> PhaseResult:
+        """
+        Execute Phase 3b: Weekly Workout Details Generation.
+
+        Generates detailed workouts for each week iteratively.
+        Uses plan_id from Phase 3a.
+
+        Args:
+            config: Workflow configuration
+            phase3a_result: Result from Phase 3a with plan_id
+
+        Returns:
+            PhaseResult with all weeks added
+        """
+        from cycling_ai.core.power_zones import calculate_power_zones
+        from cycling_ai.core.athlete import load_athlete_profile
+
+        # Extract plan_id from Phase 3a
+        plan_id = phase3a_result.extracted_data.get("plan_id")
+        if not plan_id:
+            raise ValueError(
+                "[PHASE 3b] Cannot proceed: No plan_id found in Phase 3a results. "
+                "Phase 3a must complete successfully first."
+            )
+
+        # Get athlete profile info (same as Phase 3a)
+        athlete_profile_path = phase3a_result.extracted_data.get(
+            "athlete_profile_path", str(config.athlete_profile_path)
+        )
+        athlete_profile = load_athlete_profile(athlete_profile_path)
+        ftp = athlete_profile.ftp
+        available_days = athlete_profile.get_training_days()
+        weekly_time_budget_hours = athlete_profile.get_weekly_training_hours()
+        daily_time_caps = getattr(athlete_profile, 'daily_time_caps', None)
+
+        # Pre-calculate power zones
+        power_zones = calculate_power_zones(ftp)
+        zones_text = f"**Power Zones (based on FTP {ftp}W):**\n"
+        for zone_id, zone_data in power_zones.items():
+            zones_text += f"- **{zone_id.upper()} ({zone_data['name']})**: {zone_data['min']}-{zone_data['max']}W ({int(zone_data['ftp_pct_min']*100)}-{int(zone_data['ftp_pct_max']*100)}% FTP) - {zone_data['description']}\n"
+
+        # Format prompt parameters
+        import json
+        available_days_str = ", ".join(available_days)
+        daily_time_caps_json = json.dumps(daily_time_caps) if daily_time_caps else "None"
+
+        prompt_params = {
+            "plan_id": plan_id,
+            "training_plan_weeks": str(config.training_plan_weeks),
+            "athlete_profile_path": athlete_profile_path,
+            "power_zones": zones_text,
+            "available_days": available_days_str,
+            "weekly_time_budget_hours": str(weekly_time_budget_hours),
+            "daily_time_caps_json": daily_time_caps_json,
+            "num_available_days": str(len(available_days)),
+            "num_rest_days": str(7 - len(available_days)),
+        }
+
+        user_message = self.prompts_manager.get_training_planning_weeks_user_prompt(**prompt_params)
+
+        return self._execute_phase(
+            phase_name="training_planning_weeks",
+            config=config,
+            prompt_getter=lambda: self.prompts_manager.get_training_planning_weeks_prompt(**prompt_params),
+            tools=["add_week_details"],  # Phase 3b: Only week details
+            phase_context=phase3a_result.extracted_data,
+            user_message=user_message,
+            force_tool_call=True,  # Force LLM to call tool initially
+            max_iterations=config.training_plan_weeks + 3,  # N weeks + small buffer for final response
+        )
+
+    def _execute_phase_3c_finalize(
+        self, config: WorkflowConfig, phase3a_result: PhaseResult
+    ) -> PhaseResult:
+        """
+        Execute Phase 3c: Training Plan Finalization (Python only - no LLM).
+
+        Assembles complete plan from overview + all weeks, validates, and saves.
+        Similar to Phase 1 data preparation - direct tool execution.
+
+        Args:
+            config: Workflow configuration
+            phase3a_result: Result from Phase 3a with plan_id
+
+        Returns:
+            PhaseResult with complete training plan
+        """
+        phase_start = datetime.now()
+
+        # Extract plan_id from Phase 3a
+        plan_id = phase3a_result.extracted_data.get("plan_id")
+        if not plan_id:
+            raise ValueError(
+                "[PHASE 3c] Cannot proceed: No plan_id found in Phase 3a results."
+            )
+
+        logger.info("[PHASE 3c FINALIZE] Starting plan finalization (no LLM)")
+        logger.info(f"[PHASE 3c FINALIZE] plan_id: {plan_id}")
+
+        # Directly call finalize_plan tool
+        from cycling_ai.tools.wrappers.finalize_plan_tool import FinalizePlanTool
+
+        finalize_tool = FinalizePlanTool()
+        result = finalize_tool.execute(plan_id=plan_id)
+
+        if not result.success:
+            errors = result.errors or ["Plan finalization failed"]
+            logger.error(f"[PHASE 3c FINALIZE] Finalization failed: {errors}")
+            return PhaseResult(
+                phase_name="training_planning_finalize",
+                status=PhaseStatus.FAILED,
+                agent_response="Plan finalization failed",
+                errors=errors,
+                execution_time_seconds=(datetime.now() - phase_start).total_seconds(),
+            )
+
+        logger.info("[PHASE 3c FINALIZE] Plan finalization complete")
+
+        # Extract training plan data
+        extracted_data = {
+            "training_plan": result.data,
+            "output_path": result.metadata.get("output_path"),
+        }
+
+        execution_time = (datetime.now() - phase_start).total_seconds()
+        logger.info(f"[PHASE 3c FINALIZE] Completed in {execution_time:.2f}s (no tokens used)")
+
+        return PhaseResult(
+            phase_name="training_planning_finalize",
+            status=PhaseStatus.COMPLETED,
+            agent_response=f"Training plan finalized and saved to {result.metadata.get('output_path')}",
+            extracted_data=extracted_data,
+            execution_time_seconds=execution_time,
         )
 
     def _execute_phase_4(
@@ -1350,15 +1597,30 @@ class MultiAgentOrchestrator:
                 phase_results, workflow_start, total_tokens
             )
 
-        # Phase 3: Training Planning (optional)
+        # Phase 3: Training Planning (optional) - Split into 3 sub-phases
         if config.generate_training_plan:
-            phase3_result = self._execute_phase_3(config, phase2_result)
-            phase_results.append(phase3_result)
-            total_tokens += phase3_result.tokens_used
+            # Phase 3a: Generate plan overview
+            phase3a_result = self._execute_phase_3a_overview(config, phase2_result)
+            phase_results.append(phase3a_result)
+            total_tokens += phase3a_result.tokens_used
 
-            if not phase3_result.success:
+            if not phase3a_result.success:
                 # Training plan failure is non-fatal, mark as skipped
-                phase3_result.status = PhaseStatus.SKIPPED
+                phase3a_result.status = PhaseStatus.SKIPPED
+            else:
+                # Phase 3b: Generate weekly details
+                phase3b_result = self._execute_phase_3b_weeks(config, phase3a_result)
+                phase_results.append(phase3b_result)
+                total_tokens += phase3b_result.tokens_used
+
+                if phase3b_result.success:
+                    # Phase 3c: Finalize plan (Python only - no LLM)
+                    phase3c_result = self._execute_phase_3c_finalize(config, phase3a_result)
+                    phase_results.append(phase3c_result)
+                    # No tokens used in Phase 3c
+                else:
+                    # Weekly details failed, mark as skipped
+                    phase3b_result.status = PhaseStatus.SKIPPED
         else:
             # Skip training planning
             phase_results.append(

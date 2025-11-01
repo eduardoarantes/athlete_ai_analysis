@@ -330,8 +330,8 @@ class GeminiProvider(BaseProvider):
 
             # Log the interaction
             try:
-                logger = get_interaction_logger()
-                logger.log_interaction(
+                interaction_logger = get_interaction_logger()
+                interaction_logger.log_interaction(
                     provider_name="gemini",
                     model=self.config.model,
                     messages=messages,

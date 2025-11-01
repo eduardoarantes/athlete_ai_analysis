@@ -190,8 +190,8 @@ class PhaseProgressTracker:
 )
 @click.option(
     "--prompt-version",
-    default="1.1",
-    help="Prompt version to use (e.g., '1.0', '1.1')",
+    default="1.2",
+    help="Prompt version to use (e.g., '1.0', '1.1', '1.2')",
 )
 def generate(
     csv_file: Path | None,
@@ -519,10 +519,11 @@ def _initialize_provider(
     """
     # Get provider config from configuration
     provider_config_data: dict[str, Any] | Any = {}
-    if hasattr(config, "providers"):
-        provider_config_data = getattr(config.providers, provider_name, {})
+    if config and hasattr(config, "providers"):
+        # config.providers is a dict, not an object with attributes
+        provider_config_data = config.providers.get(provider_name, {})
 
-    # Determine model (explicit > config > default)
+    # Determine model (explicit CLI arg > config file)
     if not model:
         if isinstance(provider_config_data, dict):
             model = provider_config_data.get("model")
@@ -530,14 +531,18 @@ def _initialize_provider(
             model = provider_config_data.model
 
         if not model:
-            # Fallback defaults
-            defaults = {
-                "openai": "gpt-4-turbo-2024-04-09",
-                "anthropic": "claude-3-5-sonnet-20241022",
-                "gemini": "gemini-2.5-flash",
-                "ollama": "llama3.2:3b",
-            }
-            model = defaults.get(provider_name, "gpt-4")
+            # No fallback - fail explicitly with clear error message
+            raise click.ClickException(
+                f"Model not specified for provider '{provider_name}'.\n\n"
+                f"Please specify a model either:\n"
+                f"  1. Via CLI: --model <model-name>\n"
+                f"  2. In config file (.cycling-ai.yaml) under providers.{provider_name}.model\n\n"
+                f"Example models:\n"
+                f"  - OpenAI: gpt-4o, gpt-4-turbo\n"
+                f"  - Anthropic: claude-sonnet-4, claude-3-5-sonnet-20241022\n"
+                f"  - Gemini: gemini-2.0-flash-exp, gemini-1.5-pro\n"
+                f"  - Ollama: llama3.2:3b, llama3.1:8b"
+            )
 
     # Get API key from config or environment
     api_key = ""

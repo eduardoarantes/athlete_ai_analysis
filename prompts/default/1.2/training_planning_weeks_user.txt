@@ -1,0 +1,56 @@
+Generate detailed workouts for all {training_plan_weeks} weeks using the plan_id: **{plan_id}**
+
+**Training Constraints**:
+- Available training days: {available_days} ({num_available_days} days/week)
+- Weekly time budget: {weekly_time_budget_hours} hours
+- **Daily duration limits**:
+  - **Weekdays** (Mon-Fri): Max 70 minutes per workout
+  - **Weekends** (Sat-Sun): 2-3 hours acceptable for long rides
+
+**Power Zones**:
+{power_zones}
+
+---
+
+## Your Task: Generate {training_plan_weeks} Weeks
+
+Call `add_week_details` EXACTLY {training_plan_weeks} TIMES in this sequence:
+
+**Week 1**: Call `add_week_details` with week_number=1, workouts=[...]
+**Week 2**: Call `add_week_details` with week_number=2, workouts=[...]
+**Week 3**: Call `add_week_details` with week_number=3, workouts=[...]
+**Week 4**: Call `add_week_details` with week_number=4, workouts=[...]
+
+After calling `add_week_details` for week {training_plan_weeks}, you will see the message:
+"All weeks complete! Your work in this phase is done. The plan will be finalized automatically."
+
+When you see this message, respond with:
+"All {training_plan_weeks} weeks generated successfully. Phase 3b complete."
+
+**DO NOT**:
+- Call `add_week_details` more than {training_plan_weeks} times
+- Restart from week 1 after completing week {training_plan_weeks}
+- Call any finalization tools
+
+---
+
+**Example workout structure for each week:**
+```json
+{{
+  "plan_id": "{plan_id}",
+  "week_number": <1 to {training_plan_weeks}>,
+  "workouts": [
+    {{
+      "weekday": "Tuesday",
+      "description": "Z2 endurance ride",
+      "segments": [
+        {{"type": "warmup", "duration_min": 10, "power_low_pct": 50, "power_high_pct": 65, "description": "Easy spin"}},
+        {{"type": "steady", "duration_min": 90, "power_low_pct": 56, "power_high_pct": 75, "description": "Z2 aerobic base"}},
+        {{"type": "cooldown", "duration_min": 10, "power_low_pct": 50, "power_high_pct": 60, "description": "Cool down"}}
+      ]
+    }}
+  ]
+}}
+```
+
+**Start now with week 1.**

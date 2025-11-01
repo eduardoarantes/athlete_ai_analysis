@@ -1,0 +1,49 @@
+Design a high-level {training_plan_weeks}-week training plan overview for this athlete.
+
+**Athlete Profile:** {athlete_profile_path}
+
+**Performance Data** (use this to inform your plan):
+{performance_summary}
+
+**Training Constraints**:
+- Available training days: {available_days} ({num_available_days} days/week)
+- Weekly time budget: {weekly_time_budget_hours} hours
+- Daily time caps: {daily_time_caps_json}
+
+**Power Zones** (for reference):
+{power_zones}
+
+---
+
+## Your Task
+
+Call `create_plan_overview` with:
+
+```json
+{{
+  "athlete_profile_json": "{athlete_profile_path}",
+  "total_weeks": {training_plan_weeks},
+  "target_ftp": <your calculated target FTP in watts>,
+  "weekly_overview": [
+    // Array of {training_plan_weeks} week objects
+    // Each week must include all required fields (see system prompt)
+    {{
+      "week_number": 1,
+      "phase": "Foundation",
+      "phase_rationale": "Establish aerobic base",
+      "weekly_focus": "Endurance building",
+      "weekly_watch_points": "Monitor fatigue and recovery",
+      "target_tss": 280,
+      "hard_days": 1,
+      "easy_days": 2,
+      "rest_days": {num_rest_days},
+      "total_hours": 6.8
+    }},
+    // ... weeks 2 through {training_plan_weeks}
+  ],
+  "coaching_notes": "<200-400 words explaining periodization strategy, target FTP rationale, progression logic>",
+  "monitoring_guidance": "<150-300 words on KPIs to track, warning signs, when to adjust>"
+}}
+```
+
+**Call the tool now to generate the plan overview.**

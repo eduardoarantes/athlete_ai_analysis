@@ -1,0 +1,46 @@
+**CROSS-TRAINING ANALYSIS (REQUIRED FOR THIS ATHLETE):**
+
+This athlete participates in multiple sports. You MUST analyze cross-training impact:
+
+5. Call analyze_cross_training_impact tool:
+   - Use cache_file_path parameter with the same cache file from above
+   - Set analysis_period_weeks to convert {period_months} months to weeks (multiply by 4.33)
+   - This tool analyzes activity distribution, load balance, and interference patterns
+
+6. Add "cross_training" field to your JSON response with these exact fields:
+   ```
+   "cross_training": {{
+     "analyzed": true,
+     "activity_distribution": [
+       {{"category": "Cycling", "count": 45, "percentage": 65.0}},
+       {{"category": "Strength", "count": 20, "percentage": 29.0}}
+     ],
+     "load_balance": {{
+       "cycling_percent": 68.5,
+       "strength_percent": 22.3,
+       "cardio_percent": 9.2,
+       "assessment": "Good balance for endurance cyclist with supplemental strength work"
+     }},
+     "interference_events": [
+       {{
+         "date": "2025-10-15",
+         "activity1": "Heavy Squats",
+         "activity2": "Threshold Intervals",
+         "hours_between": 18.5,
+         "score": 6,
+         "explanation": "Leg-focused strength < 24h before hard cycling"
+       }}
+     ],
+     "recommendations": [
+       {{"text": "Schedule strength training 48+ hours before hard cycling sessions"}},
+       {{"text": "Current 70/30 cycling/strength balance is appropriate for your goals"}}
+     ]
+   }}
+   ```
+
+**Important:**
+- Extract data from the analyze_cross_training_impact tool result
+- Use real numbers from the tool, not the example above
+- Focus recommendations on scheduling conflicts and load balance
+- If no interference events found, use empty array []
+- Assessment should be personalized based on athlete's goals and training status

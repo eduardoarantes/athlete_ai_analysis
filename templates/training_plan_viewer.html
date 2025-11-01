@@ -452,6 +452,15 @@
             border-radius: 6px;
         }
 
+        .week-hours-badge {
+            font-size: 0.7rem;
+            color: var(--accent-teal);
+            font-weight: 600;
+            background: rgba(0, 78, 137, 0.1);
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+        }
+
         /* Day Cell - Modern Design */
         .day-cell {
             padding: 1rem;
@@ -1375,13 +1384,22 @@
                 const weekRow = document.createElement('div');
                 weekRow.className = 'week-row';
 
+                // Calculate total weekly hours from workouts
+                const totalWeekMinutes = (week.workouts || []).reduce((sum, workout) => {
+                    const workoutDuration = (workout.segments || []).reduce((segSum, seg) => segSum + seg.duration_min, 0);
+                    return sum + workoutDuration;
+                }, 0);
+                const totalWeekHours = totalWeekMinutes / 60;
+
                 // Week label
                 const weekLabel = document.createElement('div');
                 weekLabel.className = 'week-label';
                 const weekTssBadge = week.week_tss ? `<div class="week-tss-badge">${Math.round(week.week_tss)} TSS</div>` : '';
+                const weekHoursBadge = totalWeekHours > 0 ? `<div class="week-hours-badge">${totalWeekHours.toFixed(1)}h</div>` : '';
                 weekLabel.innerHTML = `
                     <div class="week-number">W${week.week_number}</div>
                     <div class="phase-badge ${week.phase.toLowerCase()}">${week.phase}</div>
+                    ${weekHoursBadge}
                     ${weekTssBadge}
                 `;
                 weekRow.appendChild(weekLabel);

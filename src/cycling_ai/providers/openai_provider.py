@@ -289,13 +289,49 @@ class OpenAIProvider(BaseProvider):
 
                 openai_messages.append(msg)
 
-            # Build request parameters
+            # Build request parameters with model-specific logic
+            # Ensures compatibility across GPT-3.5, GPT-4, GPT-4o, GPT-5, and reasoning variants
+            model_name = self.config.model
+
+            # Base payload (always required)
             request_params: dict[str, Any] = {
-                "model": self.config.model,
+                "model": model_name,
                 "messages": openai_messages,
-                "max_tokens": self.config.max_tokens,
-                "temperature": self.config.temperature,
             }
+
+            # --- Token parameter logic ---
+            # Determine which token limit parameter to use based on model family
+            # IMPORTANT: Check reasoning models FIRST before checking gpt-4o/gpt-5
+            # (since "gpt-4o-reasoning" contains "gpt-4o")
+
+             # --- Token parameter logic ---
+            if any(m in model_name for m in [
+                "gpt-3.5",          # legacy models
+                "gpt-4-0613",
+                "gpt-4-turbo-1106"
+            ]):
+                request_params["max_tokens"] = self.config.max_tokens
+
+            elif any(m in model_name for m in [
+                "gpt-4.1",          # modern unified API
+                "gpt-4o", "gpt-4o-mini",
+                "gpt-5", "gpt-5-mini"
+            ]):
+                request_params["max_completion_tokens"] = self.config.max_tokens
+
+            elif "reasoning" in model_name:
+                request_params["max_output_tokens"] = self.config.max_tokens
+
+            else:
+                # Fallback — assume modern API structure
+                request_params["max_completion_tokens"] = self.config.max_tokens
+
+            # --- Temperature logic ---
+            # Reasoning models only accept temperature=1
+            if "reasoning" in model_name or any(m in model_name for m in ["o1", "o3"])  or model_name == "gpt-5-mini":
+                request_params["temperature"] = 1
+            else:
+                request_params["temperature"] = self.config.temperature
 
             # Add tools if provided
             if tools:
@@ -358,8 +394,8 @@ class OpenAIProvider(BaseProvider):
 
             # Log the interaction
             try:
-                logger = get_interaction_logger()
-                logger.log_interaction(
+                interaction_logger = get_interaction_logger()
+                interaction_logger.log_interaction(
                     provider_name="openai",
                     model=self.config.model,
                     messages=messages,

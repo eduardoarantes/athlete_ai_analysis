@@ -93,6 +93,12 @@ def _build_html(analysis: PerformanceAnalysis) -> str:
     css = _get_css()
     body = _build_body(analysis)
 
+    # Calculate date range for analysis period
+    from datetime import timedelta
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=analysis.analysis_period_months * 30)
+    date_range = f"{start_date.strftime('%B %Y')} - {end_date.strftime('%B %Y')}"
+
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -107,7 +113,8 @@ def _build_html(analysis: PerformanceAnalysis) -> str:
     <div class="report-container">
         <header class="report-header">
             <h1>Performance Analysis Report</h1>
-            <p class="report-subtitle">{analysis.athlete_profile.name} • {analysis.analysis_period_months} Month Analysis Period</p>
+            <p class="report-subtitle">{analysis.athlete_profile.name}</p>
+            <p class="report-period">Analysis Period: <strong>{date_range}</strong> ({analysis.analysis_period_months} months)</p>
         </header>
 
         <main class="report-content">
@@ -482,6 +489,23 @@ def _get_css() -> str:
             opacity: 0.95;
             font-weight: 400;
             margin-top: 0.5rem;
+        }
+
+        .report-period {
+            font-size: 1.0em;
+            opacity: 0.90;
+            font-weight: 300;
+            margin-top: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            display: inline-block;
+            border-left: 4px solid var(--accent-orange);
+        }
+
+        .report-period strong {
+            font-weight: 600;
+            color: var(--accent-yellow);
         }
 
         /* Content area */

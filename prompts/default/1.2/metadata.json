@@ -1,0 +1,29 @@
+{
+  "model": "default",
+  "version": "1.2",
+  "description": "Two-phase training plan generation (v1.2)",
+  "created": "2025-11-01",
+  "changes": [
+    "Split training plan generation into 3 phases (overview + weekly details + finalize)",
+    "Reduces JSON output size per tool call from ~14KB to ~1-2KB",
+    "Improves success rate with Claude Sonnet 4.5 and other models",
+    "Total weeks is now fully parameterized"
+  ],
+  "agents": {
+    "performance_analysis": {
+      "file": "performance_analysis.txt",
+      "user_file": "performance_analysis_user.txt",
+      "description": "Cycling performance analysis expert"
+    },
+    "training_planning": {
+      "file": "training_planning.txt",
+      "user_file": "training_planning_user.txt",
+      "description": "Training plan design specialist (3-phase approach)"
+    },
+    "report_generation": {
+      "file": "report_generation.txt",
+      "user_file": "report_generation_user.txt",
+      "description": "Report generation specialist"
+    }
+  }
+}

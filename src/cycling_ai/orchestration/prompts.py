@@ -63,17 +63,20 @@ class AgentPromptsManager:
         """
         return self._prompt_loader.get_performance_analysis_prompt()
 
-    def get_training_planning_prompt(self) -> str:
+    def get_training_planning_prompt(self, **kwargs: str) -> str:
         """
-        Get training planning agent system prompt.
+        Get training planning agent system prompt with optional template formatting.
+
+        Args:
+            **kwargs: Optional template variables for formatting (available_days, weekly_time_budget_hours, etc.)
 
         Returns:
-            System prompt for training planning phase
+            System prompt for training planning phase (formatted if kwargs provided)
 
         Raises:
             FileNotFoundError: If prompt file doesn't exist
         """
-        return self._prompt_loader.get_training_planning_prompt()
+        return self._prompt_loader.get_training_planning_prompt(**kwargs)
 
     def get_report_generation_prompt(self) -> str:
         """
@@ -116,6 +119,54 @@ class AgentPromptsManager:
             FileNotFoundError: If prompt file doesn't exist
         """
         return self._prompt_loader.get_training_planning_user_prompt(**kwargs)
+
+    def get_training_planning_overview_prompt(self, **kwargs: str) -> str:
+        """
+        Get training planning overview system prompt (Phase 3a).
+
+        Args:
+            **kwargs: Template variables
+
+        Returns:
+            Formatted system prompt
+        """
+        return self._prompt_loader.get_training_planning_overview_prompt(**kwargs)
+
+    def get_training_planning_overview_user_prompt(self, **kwargs: str) -> str:
+        """
+        Get training planning overview user prompt (Phase 3a).
+
+        Args:
+            **kwargs: Template variables
+
+        Returns:
+            Formatted user prompt
+        """
+        return self._prompt_loader.get_training_planning_overview_user_prompt(**kwargs)
+
+    def get_training_planning_weeks_prompt(self, **kwargs: str) -> str:
+        """
+        Get training planning weeks system prompt (Phase 3b).
+
+        Args:
+            **kwargs: Template variables
+
+        Returns:
+            Formatted system prompt
+        """
+        return self._prompt_loader.get_training_planning_weeks_prompt(**kwargs)
+
+    def get_training_planning_weeks_user_prompt(self, **kwargs: str) -> str:
+        """
+        Get training planning weeks user prompt (Phase 3b).
+
+        Args:
+            **kwargs: Template variables
+
+        Returns:
+            Formatted user prompt
+        """
+        return self._prompt_loader.get_training_planning_weeks_user_prompt(**kwargs)
 
     def get_report_generation_user_prompt(self, **kwargs: str) -> str:
         """
