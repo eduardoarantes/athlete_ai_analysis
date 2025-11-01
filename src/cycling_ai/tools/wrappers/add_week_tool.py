@@ -296,8 +296,12 @@ class AddWeekDetailsTool(BaseTool):
             with open(week_file, "w") as f:
                 json.dump(week_data, f, indent=2)
 
-            # Update overview progress counter
-            overview_data["weeks_completed"] = overview_data.get("weeks_completed", 0) + 1
+            # Track completed weeks as a set (not a count) to handle retries correctly
+            completed_weeks = set(overview_data.get("weeks_completed_list", []))
+            completed_weeks.add(week_number)
+            overview_data["weeks_completed_list"] = sorted(list(completed_weeks))
+            overview_data["weeks_completed"] = len(completed_weeks)  # Update count from unique weeks
+
             with open(overview_file, "w") as f:
                 json.dump(overview_data, f, indent=2)
 
