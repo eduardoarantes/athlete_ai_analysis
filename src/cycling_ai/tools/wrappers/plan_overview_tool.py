@@ -102,8 +102,9 @@ class PlanOverviewTool(BaseTool):
                         "Array of weekly overview objects (one per week). "
                         "Each week: week_number (1..total_weeks), phase (Foundation/Build/Recovery/Peak/Taper), "
                         "phase_rationale (why this phase), weekly_focus (key focus), "
-                        "weekly_watch_points (monitoring points), target_tss (weekly TSS), "
-                        "hard_days (count), easy_days (count), rest_days (count), "
+                        "weekly_watch_points (monitoring points), "
+                        "training_days (array of weekday names for training, max 5 days), "
+                        "target_tss (weekly TSS), hard_days (count), easy_days (count), rest_days (count), "
                         "total_hours (target weekly hours)"
                     ),
                     required=True,
@@ -115,6 +116,11 @@ class PlanOverviewTool(BaseTool):
                             "phase_rationale": {"type": "string"},
                             "weekly_focus": {"type": "string"},
                             "weekly_watch_points": {"type": "string"},
+                            "training_days": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "description": "Weekday names for training (max 5 days)",
+                            },
                             "target_tss": {"type": "number"},
                             "hard_days": {"type": "integer"},
                             "easy_days": {"type": "integer"},
@@ -195,6 +201,50 @@ class PlanOverviewTool(BaseTool):
                 raise ValueError(
                     f"weekly_overview must have exactly {total_weeks} entries, got {len(weekly_overview)}"
                 )
+
+            # Validate training_days in each week
+            valid_weekdays = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"}
+            for i, week in enumerate(weekly_overview):
+                week_num = week.get("week_number", i + 1)
+                training_days = week.get("training_days", [])
+
+                if not training_days:
+                    raise ValueError(
+                        f"Week {week_num} missing 'training_days' array. "
+                        f"You must specify which weekdays the athlete will train (max 5 days)."
+                    )
+
+                if len(training_days) > 5:
+                    raise ValueError(
+                        f"Week {week_num} has {len(training_days)} training days. "
+                        f"Maximum is 5 days to ensure adequate rest and recovery."
+                    )
+
+                # Validate weekday names
+                for day in training_days:
+                    if day not in valid_weekdays:
+                        raise ValueError(
+                            f"Week {week_num} has invalid training day '{day}'. "
+                            f"Must be one of: {', '.join(sorted(valid_weekdays))}"
+                        )
+
+                # Check for duplicates
+                if len(training_days) != len(set(training_days)):
+                    raise ValueError(
+                        f"Week {week_num} has duplicate training days: {training_days}"
+                    )
+
+                # Validate training_days count matches hard_days + easy_days
+                hard_days = week.get("hard_days", 0)
+                easy_days = week.get("easy_days", 0)
+                expected_training_days = hard_days + easy_days
+
+                if len(training_days) != expected_training_days:
+                    raise ValueError(
+                        f"Week {week_num} training_days array has {len(training_days)} days, "
+                        f"but hard_days ({hard_days}) + easy_days ({easy_days}) = {expected_training_days}. "
+                        f"These must match."
+                    )
 
             # Generate unique plan ID
             plan_id = str(uuid.uuid4())

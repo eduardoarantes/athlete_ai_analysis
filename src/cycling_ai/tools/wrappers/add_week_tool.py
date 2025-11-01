@@ -184,6 +184,21 @@ class AddWeekDetailsTool(BaseTool):
                     f"week_number must be between 1 and {total_weeks}, got {week_number}"
                 )
 
+            # Get week-specific targets from overview (needed for training_days validation)
+            week_overview = next(
+                (w for w in overview_data.get("weekly_overview", []) if w.get("week_number") == week_number),
+                None
+            )
+
+            if not week_overview:
+                logger.warning(f"No overview found for week {week_number}, skipping target validation")
+                week_overview = {}
+
+            # Get designated training days for this week
+            training_days = week_overview.get("training_days", [])
+            if not training_days:
+                logger.warning(f"No training_days found in week {week_number} overview, skipping training day validation")
+
             # Validate workouts structure
             for i, workout in enumerate(workouts):
                 if "weekday" not in workout:
@@ -196,6 +211,16 @@ class AddWeekDetailsTool(BaseTool):
                         f"Each workout must have at least one segment."
                     )
 
+                # Validate workout is on designated training day
+                workout_weekday = workout.get("weekday")
+                if training_days and workout_weekday not in training_days:
+                    raise ValueError(
+                        f"Workout {i+1} scheduled on '{workout_weekday}' but this week's "
+                        f"training_days are: {', '.join(training_days)}. "
+                        f"You can ONLY schedule workouts on designated training days. "
+                        f"Other days are rest days."
+                    )
+
                 # Validate each segment
                 for j, segment in enumerate(workout["segments"]):
                     required_fields = ["type", "duration_min", "power_low_pct", "description"]
@@ -205,15 +230,12 @@ class AddWeekDetailsTool(BaseTool):
                                 f"Workout {i+1}, segment {j+1} missing required field: '{field}'"
                             )
 
-            # Get week-specific targets from overview
-            week_overview = next(
-                (w for w in overview_data.get("weekly_overview", []) if w.get("week_number") == week_number),
-                None
-            )
-
-            if not week_overview:
-                logger.warning(f"No overview found for week {week_number}, skipping target validation")
-                week_overview = {}
+            # Validate number of workouts matches number of training days
+            if training_days and len(workouts) != len(training_days):
+                raise ValueError(
+                    f"Week {week_number} has {len(workouts)} workouts but {len(training_days)} training days. "
+                    f"You must create exactly one workout for each training day: {', '.join(training_days)}"
+                )
 
             target_tss = week_overview.get("target_tss")
             target_hours = week_overview.get("total_hours")

@@ -30,21 +30,42 @@ Design a complete, personalized {training_plan_weeks}-week training plan using a
     "phase_rationale": "Build aerobic base",
     "weekly_focus": "Endurance",
     "weekly_watch_points": "Monitor fatigue",
+    "training_days": ["Tuesday", "Thursday", "Saturday", "Sunday"],  // CRITICAL: Max 5 days
     "target_tss": 250,
     "hard_days": 1,
-    "easy_days": 2,
-    "rest_days": 1,  // CRITICAL: Always include 1-2 rest days per week for recovery
+    "easy_days": 3,
+    "rest_days": 3,
     "total_hours": 6.5
   }},
   // ... weeks 2-{training_plan_weeks}
 ]
 ```
 
+**CRITICAL - Training Day Selection**:
+- You MUST select specific training days in `training_days` array (max 5 days)
+- training_days = the specific weekdays athlete will train (e.g., ["Tuesday", "Thursday", "Saturday", "Sunday"])
+- MAXIMUM 5 training days per week to ensure adequate rest and recovery
+- If weekends (Saturday/Sunday) are available, PRIORITIZE including them (allows longer sessions)
+- Spacing: Distribute training days throughout the week (avoid consecutive hard days)
+- Validation: len(training_days) MUST equal hard_days + easy_days
+
+**Example Training Day Patterns**:
+- 4-day week: ["Tuesday", "Thursday", "Saturday", "Sunday"] - hard on Tue/Sat, easy on Thu/Sun
+- 5-day week: ["Monday", "Wednesday", "Thursday", "Saturday", "Sunday"] - includes both weekends
+- 3-day week (recovery): ["Wednesday", "Saturday", "Sunday"] - minimal frequency
+
 **CRITICAL - Rest Days**:
-- EVERY week MUST include rest_days (minimum 1, typically 1-2)
-- Rest is essential for adaptation and injury prevention
-- Even if athlete has 7 days available, they still need rest
+- Rest days = 7 - len(training_days)
+- Minimum 2 rest days per week (more for recovery weeks)
+- Rest days are NOT listed in training_days array (simply omit them)
 - hard_days + easy_days + rest_days should equal 7 (total days in week)
+
+**CRITICAL - Recovery/Rest Weeks**:
+- For plans 8+ weeks, include Recovery weeks every 3-4 weeks (e.g., weeks 4, 8, 12)
+- Recovery weeks have REDUCED volume: 40-60% of normal weekly hours
+- Example: If normal week = 8h/300 TSS, recovery week = 4-5h/150-200 TSS
+- Set phase="Recovery" and adjust total_hours and target_tss accordingly
+- This allows supercompensation and prevents overtraining
 
 **Output**: Returns `plan_id` for next phase.
 
@@ -151,11 +172,16 @@ Assembles complete plan from overview + all week details, validates, and saves.
 
 ✅ **weekly_overview array**: Must have exactly {training_plan_weeks} entries
 
-✅ **Available days**: ONLY schedule on: {available_days}
-   - These are days athlete CAN train (calendar availability)
-   - You MUST include rest days each week (typically 1-2 days)
-   - Rest days are NOT in workouts array (simply omit those days)
-   - Number of workouts = total_days - rest_days (from weekly_overview)
+✅ **training_days array**: Each week must specify training_days
+   - Maximum 5 training days per week
+   - Select from available days: {available_days}
+   - Prioritize weekends if available (allows longer sessions)
+   - len(training_days) must equal hard_days + easy_days
+   - Rest days = days NOT in training_days array
+
+✅ **Workout scheduling**: ONLY create workouts on designated training_days
+   - Phase 2 must schedule workouts ONLY on the training_days from weekly_overview
+   - Number of workouts must equal len(training_days)
 
 ✅ **Weekly time budget**: ~{weekly_time_budget_hours} hours per week (±10%)
    - Calculate: sum of all segment durations
@@ -257,6 +283,7 @@ Before calling each tool, verify:
 - All {training_plan_weeks} weeks in weekly_overview?
 - TSS targets realistic for each phase? (Foundation: 200-300, Build: 300-450, Recovery: 150-250)
 - Weekly hours match athlete's available time?
+- For 8+ week plans: Recovery weeks every 3-4 weeks with 40-60% volume?
 
 **add_week_details** (CRITICAL - Calculate before calling):
 1. **Calculate total weekly hours**:

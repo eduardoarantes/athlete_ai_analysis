@@ -15,8 +15,9 @@ For EACH week from 1 to {training_plan_weeks}:
    - workouts: Array of workout objects
 
 2. Each workout must have:
-   - weekday (use ONLY: {available_days})
-   - description (brief workout summary)
+   - weekday (use ONLY the training_days specified in weekly_overview for this week)
+   - name (3-10 words: short, scannable identifier)
+   - detailed_description (100-250 words: environment, physiology, benefits, execution)
    - segments (array of workout segments)
 
 3. Each segment must have:
@@ -29,10 +30,13 @@ For EACH week from 1 to {training_plan_weeks}:
 ## Requirements
 
 - Call `add_week_details` EXACTLY {training_plan_weeks} TIMES (once per week)
-- Use ONLY available days: {available_days}
+- **CRITICAL - Training Days**: Use ONLY the training_days specified in weekly_overview for each week
+  - Each week has a training_days array (e.g., ["Tuesday", "Thursday", "Saturday", "Sunday"])
+  - Create workouts ONLY for those specific days
+  - Number of workouts MUST equal len(training_days)
+  - Rest days are days NOT in training_days (do not create workouts for rest days)
 - Target ~{weekly_time_budget_hours} hours per week (±10%)
 - Match the weekly overview from Phase 1 (phases, TSS, hard/easy distribution)
-- Include ALL available days (except rest days)
 - Each workout must have ≥1 segment
 - Progression ≤10% week-to-week
 - **CRITICAL - Daily Duration Limits**:
