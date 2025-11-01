@@ -1378,9 +1378,9 @@ class MultiAgentOrchestrator:
                 None
             )
 
-            # Get Phase 3: Training Planning result
+            # Get Phase 3c: Training Planning Finalization result (contains complete plan)
             training_phase_result = next(
-                (r for r in all_results if r.phase_name == PHASE_TRAINING_PLANNING),
+                (r for r in all_results if r.phase_name == "training_planning_finalize"),
                 None
             )
 

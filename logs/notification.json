@@ -1846,5 +1846,26 @@
     "cwd": "/Users/eduardo/Documents/projects/cycling-ai-analysis",
     "hook_event_name": "Notification",
     "message": "Claude is waiting for your input"
+  },
+  {
+    "session_id": "d820a805-b5e7-4b72-a331-3651a4bf0af5",
+    "transcript_path": "/Users/eduardo/.claude/projects/-Users-eduardo-Documents-projects-cycling-ai-analysis/d820a805-b5e7-4b72-a331-3651a4bf0af5.jsonl",
+    "cwd": "/Users/eduardo/Documents/projects/cycling-ai-analysis",
+    "hook_event_name": "Notification",
+    "message": "Claude needs your permission to use Bash"
+  },
+  {
+    "session_id": "d820a805-b5e7-4b72-a331-3651a4bf0af5",
+    "transcript_path": "/Users/eduardo/.claude/projects/-Users-eduardo-Documents-projects-cycling-ai-analysis/d820a805-b5e7-4b72-a331-3651a4bf0af5.jsonl",
+    "cwd": "/Users/eduardo/Documents/projects/cycling-ai-analysis",
+    "hook_event_name": "Notification",
+    "message": "Claude needs your permission to use Bash"
+  },
+  {
+    "session_id": "d820a805-b5e7-4b72-a331-3651a4bf0af5",
+    "transcript_path": "/Users/eduardo/.claude/projects/-Users-eduardo-Documents-projects-cycling-ai-analysis/d820a805-b5e7-4b72-a331-3651a4bf0af5.jsonl",
+    "cwd": "/Users/eduardo/Documents/projects/cycling-ai-analysis",
+    "hook_event_name": "Notification",
+    "message": "Claude needs your permission to use Bash"
   }
 ]
