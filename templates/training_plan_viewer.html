@@ -468,7 +468,7 @@
             cursor: pointer;
             transition: all 0.2s ease;
             position: relative;
-            min-height: 100px;
+            min-height: 130px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -517,6 +517,20 @@
             color: var(--accent-orange);
             font-weight: 600;
             margin-top: 0.25rem;
+        }
+
+        .workout-desc {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+            margin-top: 0.25rem;
+            line-height: 1.2;
+            max-height: 2.4em;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
         }
 
         .workout-intensity {
@@ -1418,11 +1432,13 @@
                         // Add intensity indicator from description or segment types
                         const intensity = getIntensityFromWorkout(workout);
                         const tssDisplay = workout.tss ? `<div class="workout-tss">${Math.round(workout.tss)} TSS</div>` : '';
+                        const descDisplay = workout.description ? `<div class="workout-desc">${workout.description}</div>` : '';
                         dayCell.innerHTML = `
                             <div class="workout-intensity ${intensity}"></div>
                             <div class="workout-name">${day}</div>
                             <div class="workout-duration">${totalDuration}min</div>
                             ${tssDisplay}
+                            ${descDisplay}
                         `;
 
                         dayCell.onclick = () => openWorkoutModal(week.week_number, day, workout);
