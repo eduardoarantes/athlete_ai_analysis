@@ -33,12 +33,18 @@ Design a complete, personalized {training_plan_weeks}-week training plan using a
     "target_tss": 250,
     "hard_days": 1,
     "easy_days": 2,
-    "rest_days": 1,
+    "rest_days": 1,  // CRITICAL: Always include 1-2 rest days per week for recovery
     "total_hours": 6.5
   }},
   // ... weeks 2-{training_plan_weeks}
 ]
 ```
+
+**CRITICAL - Rest Days**:
+- EVERY week MUST include rest_days (minimum 1, typically 1-2)
+- Rest is essential for adaptation and injury prevention
+- Even if athlete has 7 days available, they still need rest
+- hard_days + easy_days + rest_days should equal 7 (total days in week)
 
 **Output**: Returns `plan_id` for next phase.
 
@@ -146,8 +152,10 @@ Assembles complete plan from overview + all week details, validates, and saves.
 ✅ **weekly_overview array**: Must have exactly {training_plan_weeks} entries
 
 ✅ **Available days**: ONLY schedule on: {available_days}
-   - Use ALL available days each week (except recovery weeks)
-   - Rest days NOT in workouts array
+   - These are days athlete CAN train (calendar availability)
+   - You MUST include rest days each week (typically 1-2 days)
+   - Rest days are NOT in workouts array (simply omit those days)
+   - Number of workouts = total_days - rest_days (from weekly_overview)
 
 ✅ **Weekly time budget**: ~{weekly_time_budget_hours} hours per week (±10%)
    - Calculate: sum of all segment durations
