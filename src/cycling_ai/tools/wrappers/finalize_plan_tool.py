@@ -186,10 +186,8 @@ class FinalizePlanTool(BaseTool):
             # Parse the plan JSON to get the properly formatted structure
             plan_data = json.loads(plan_json)
 
-            # Save to file
-            from cycling_ai.config.settings import get_config  # type: ignore[import-untyped]
-            config = get_config()
-            output_dir = config.output_dir / "training_plans"
+            # Save to file (use standard .cycling-ai directory)
+            output_dir = Path.home() / ".cycling-ai" / "training_plans"
             output_dir.mkdir(parents=True, exist_ok=True)
 
             athlete_name = athlete_profile.name.replace(" ", "_")
