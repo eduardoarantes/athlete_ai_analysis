@@ -171,10 +171,10 @@ class FinalizePlanTool(BaseTool):
 
             logger.info("Plan validation passed")
 
-            # Save complete plan using core finalize function
-            logger.info("Saving complete training plan...")
+            # Build complete plan using core finalize function
+            logger.info("Building complete training plan structure...")
 
-            output_path = finalize_training_plan(
+            plan_json = finalize_training_plan(
                 athlete_profile=athlete_profile,
                 total_weeks=total_weeks,
                 target_ftp=overview_data["target_ftp"],
@@ -183,7 +183,25 @@ class FinalizePlanTool(BaseTool):
                 monitoring_guidance=overview_data["monitoring_guidance"],
             )
 
-            logger.info(f"Training plan saved to: {output_path}")
+            # Parse the plan JSON to get the properly formatted structure
+            plan_data = json.loads(plan_json)
+
+            # Save to file
+            from cycling_ai.config.settings import get_config  # type: ignore[import-untyped]
+            config = get_config()
+            output_dir = config.output_dir / "training_plans"
+            output_dir.mkdir(parents=True, exist_ok=True)
+
+            athlete_name = athlete_profile.name.replace(" ", "_")
+            output_file = output_dir / f"training_plan_{athlete_name}_{plan_id}.json"
+
+            with open(output_file, "w") as f:
+                json.dump(plan_data, f, indent=2)
+
+            logger.info(f"Training plan saved to: {output_file}")
+
+            # Add output path to plan data for reference
+            plan_data["output_file_path"] = str(output_file)
 
             # Clean up temp files
             logger.info("Cleaning up temporary files...")
@@ -198,15 +216,15 @@ class FinalizePlanTool(BaseTool):
             logger.info("TOOL EXECUTION COMPLETE: finalize_plan")
             logger.info("=" * 80)
 
-            # Return complete plan
+            # Return the plan data (with correct format: plan_metadata + weekly_plan)
             return ToolExecutionResult(
                 success=True,
-                data=complete_plan,
+                data=plan_data,
                 format="json",
                 metadata={
                     "plan_id": plan_id,
                     "total_weeks": total_weeks,
-                    "output_path": str(output_path),
+                    "output_path": str(output_file),
                     "total_workouts": sum(len(week["workouts"]) for week in weekly_plan),
                 },
             )
