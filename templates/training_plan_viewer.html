@@ -1313,6 +1313,16 @@
             return svg;
         }
 
+        // Get power zone from FTP percentage
+        function getPowerZone(powerPct) {
+            if (powerPct < 56) return 'Z1';
+            if (powerPct < 76) return 'Z2';
+            if (powerPct < 90) return 'Z3';
+            if (powerPct < 105) return 'Z4';
+            if (powerPct < 120) return 'Z5';
+            return 'Z6';
+        }
+
         // Generate SVG visualization from workout segments
         function generateWorkoutSVG(segments, ftp) {
             if (!segments || segments.length === 0) return '';
@@ -1320,7 +1330,10 @@
             // Calculate total duration
             const totalDuration = segments.reduce((sum, seg) => sum + seg.duration_min, 0);
             const width = Math.max(600, totalDuration * 10); // 10px per minute, minimum 600px
-            const height = 120;
+            const chartHeight = 200; // Increased height for labels
+            const graphHeight = 140; // Height for the graph area
+            const topMargin = 20;
+            const bottomMargin = 40; // Space for duration labels
 
             // Power zone colors (matching existing color scheme)
             const getSegmentColor = (type) => {
@@ -1341,31 +1354,54 @@
             const getBarHeight = (powerLowPct, powerHighPct) => {
                 const avgPercent = (powerLowPct + powerHighPct) / 2;
                 // Scale: 50% FTP = 50% height, 100% FTP = 100% height
-                const heightPercent = Math.min(100, Math.max(20, avgPercent));
-                return (heightPercent / 100) * (height * 0.7); // Use 70% of height for bars
+                const heightPercent = Math.min(200, Math.max(20, avgPercent));
+                return (heightPercent / 200) * graphHeight; // Use 200% as max for VO2
             };
 
             // Generate SVG
-            let svg = `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" style="width: 100%; height: 120px;" xmlns="http://www.w3.org/2000/svg">\n`;
+            let svg = `<svg viewBox="0 0 ${width} ${chartHeight}" preserveAspectRatio="xMidYMid meet" style="width: 100%; height: auto;" xmlns="http://www.w3.org/2000/svg">\n`;
 
             // Add grid lines
-            svg += `<line x1="0" y1="${height * 0.25}" x2="${width}" y2="${height * 0.25}" stroke="#e4e6e8" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/>\n`;
-            svg += `<line x1="0" y1="${height * 0.5}" x2="${width}" y2="${height * 0.5}" stroke="#e4e6e8" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/>\n`;
-            svg += `<line x1="0" y1="${height * 0.75}" x2="${width}" y2="${height * 0.75}" stroke="#e4e6e8" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/>\n`;
+            const gridY1 = topMargin + graphHeight * 0.25;
+            const gridY2 = topMargin + graphHeight * 0.5;
+            const gridY3 = topMargin + graphHeight * 0.75;
 
-            // Add FTP line (at 100%)
-            const ftpY = height * 0.5;
-            svg += `<line x1="0" y1="${ftpY}" x2="${width}" y2="${ftpY}" stroke="#696cff" stroke-width="2" stroke-dasharray="6 4" vector-effect="non-scaling-stroke"/>\n`;
+            svg += `<line x1="0" y1="${gridY1}" x2="${width}" y2="${gridY1}" stroke="#e4e6e8" stroke-width="1" stroke-dasharray="4 4"/>\n`;
+            svg += `<line x1="0" y1="${gridY2}" x2="${width}" y2="${gridY2}" stroke="#e4e6e8" stroke-width="1" stroke-dasharray="4 4"/>\n`;
+            svg += `<line x1="0" y1="${gridY3}" x2="${width}" y2="${gridY3}" stroke="#e4e6e8" stroke-width="1" stroke-dasharray="4 4"/>\n`;
 
-            // Add segments as rectangles
+            // Add FTP line (at 100%) with label
+            const ftpY = topMargin + graphHeight * 0.5;
+            svg += `<line x1="0" y1="${ftpY}" x2="${width}" y2="${ftpY}" stroke="#696cff" stroke-width="2" stroke-dasharray="6 4"/>\n`;
+            svg += `<text x="5" y="${ftpY - 5}" font-size="12" font-weight="bold" fill="#696cff">FTP (${ftp}W)</text>\n`;
+
+            // Add segments as rectangles with labels
             let xOffset = 0;
-            segments.forEach(segment => {
+            segments.forEach((segment, index) => {
                 const segmentWidth = (segment.duration_min / totalDuration) * width;
+                const avgPowerPct = (segment.power_low_pct + segment.power_high_pct) / 2;
                 const barHeight = getBarHeight(segment.power_low_pct, segment.power_high_pct);
-                const y = height - barHeight;
+                const y = topMargin + graphHeight - barHeight;
                 const color = getSegmentColor(segment.type);
 
-                svg += `<rect x="${xOffset}" y="${y}" width="${segmentWidth}" height="${barHeight}" fill="${color}"/>\n`;
+                // Draw rectangle
+                svg += `<rect x="${xOffset}" y="${y}" width="${segmentWidth}" height="${barHeight}" fill="${color}" stroke="#fff" stroke-width="1"/>\n`;
+
+                // Add zone label inside the box (if box is tall and wide enough)
+                const zone = getPowerZone(avgPowerPct);
+                if (barHeight > 25 && segmentWidth > 30) {
+                    const textX = xOffset + segmentWidth / 2;
+                    const textY = y + barHeight / 2 + 5; // Center vertically
+                    svg += `<text x="${textX}" y="${textY}" font-size="14" font-weight="bold" fill="#fff" text-anchor="middle">${zone}</text>\n`;
+                }
+
+                // Add duration label below the box
+                const durationX = xOffset + segmentWidth / 2;
+                const durationY = topMargin + graphHeight + 20;
+                const durationText = segment.duration_min >= 60
+                    ? `${Math.floor(segment.duration_min / 60)}h${segment.duration_min % 60 > 0 ? (segment.duration_min % 60) + 'm' : ''}`
+                    : `${segment.duration_min}m`;
+                svg += `<text x="${durationX}" y="${durationY}" font-size="11" fill="#5a6c7d" text-anchor="middle">${durationText}</text>\n`;
 
                 xOffset += segmentWidth;
             });
