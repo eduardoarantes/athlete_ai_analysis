@@ -102,29 +102,21 @@ Call add_week_details with:
 - Endurance rides may omit warmup/cooldown
 
 **AUTOMATIC VALIDATION** (happens immediately after each week):
-After you call `add_week_details`, the tool automatically validates your week against the targets you set in `create_plan_overview`:
+After you call `add_week_details`, the tool automatically validates your week against the targets you set in `create_plan_overview`.
 
-✅ **Time Budget Validation**:
-- ±10% tolerance = ✓ Success with warning
-- >20% difference = ❌ FAILS - you must retry that week
-- Example: If target is 7.0h, acceptable range is 6.3h-7.7h (±10%), max range is 5.6h-8.4h (±20%)
+**Your Goal**: Match target_tss and total_hours from weekly_overview as closely as possible.
 
-✅ **TSS Target Validation**:
-- ±15% tolerance = ✓ Success with warning
-- >25% difference = ❌ FAILS - you must retry that week
-- Example: If target is 300 TSS, acceptable range is 255-345 (±15%), max range is 225-375 (±25%)
-
-**If validation fails**, you'll receive:
+**If validation fails**, you'll receive an error message:
 ```
 Error: Week 3 validation failed. Please adjust workouts:
-Week 3 TSS target violation: Actual 410 TSS vs target 300 TSS (37% difference, max 25% allowed)
+Week 3 TSS target violation: Actual 410 TSS vs target 300 TSS (37% over target)
 
 Suggestions:
 - To reduce TSS: Lower power targets or shorten high-intensity intervals
 - To increase TSS: Raise power targets or extend work intervals
 ```
 
-**Action required**: Call `add_week_details` again for the same week with adjusted workouts. DO NOT proceed to the next week until validation passes.
+**Action required**: Call `add_week_details` again for the same week_number with adjusted workouts. DO NOT proceed to the next week until validation passes.
 
 **If validation succeeds**, you'll see:
 ```

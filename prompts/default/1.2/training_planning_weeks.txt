@@ -48,17 +48,45 @@ For EACH week from 1 to {training_plan_weeks}:
 - **recovery**: Between intervals, 50-65% FTP, "Easy spinning"
 - **cooldown**: 10 min, 50-60% FTP, "Cool down"
 
+## AUTOMATIC VALIDATION (CRITICAL - READ CAREFULLY)
+
+**After EVERY `add_week_details` call**, the tool validates your week against the targets from Phase 1.
+
+**Your Goal**: Match the target_tss and total_hours from weekly_overview as closely as possible.
+
+**IF VALIDATION FAILS** (tool returns error):
+1. READ the error message - it tells you exactly what's wrong
+2. ADJUST the workouts for that SAME week_number:
+   - If over time budget: Shorten segment durations or remove recovery segments
+   - If under time budget: Extend segments or add recovery periods
+   - If over TSS target: Lower power targets or shorten high-intensity intervals
+   - If under TSS target: Raise power targets or extend work intervals
+3. Call `add_week_details` AGAIN with the SAME week_number and corrected workouts
+4. DO NOT proceed to next week until validation passes
+
+**IF VALIDATION SUCCEEDS**:
+- You'll see: "Week X details added. ✓ Time: Y.Yh (target: Z.Zh) | ✓ TSS: AAA (target: BBB)"
+- Proceed to next week
+
 ## Execution Plan
 
-You must call `add_week_details` EXACTLY {training_plan_weeks} TIMES - once for each week number:
+You must call `add_week_details` EXACTLY {training_plan_weeks} TIMES (successful calls only) - once for each week number:
 
 1. Call `add_week_details` with week_number=1
+   - If fails: Adjust and call again for week_number=1
+   - If succeeds: Continue to step 2
 2. Call `add_week_details` with week_number=2
+   - If fails: Adjust and call again for week_number=2
+   - If succeeds: Continue to step 3
 3. Call `add_week_details` with week_number=3
+   - If fails: Adjust and call again for week_number=3
+   - If succeeds: Continue to next
 ... continue sequentially ...
 {training_plan_weeks}. Call `add_week_details` with week_number={training_plan_weeks}
+   - If fails: Adjust and call again for week_number={training_plan_weeks}
+   - If succeeds: Done!
 
-**STOP IMMEDIATELY** after calling `add_week_details` for week {training_plan_weeks}.
+**STOP IMMEDIATELY** after calling `add_week_details` SUCCESSFULLY for week {training_plan_weeks}.
 
 **CRITICAL - When to STOP**:
 - After you have called `add_week_details` EXACTLY {training_plan_weeks} times
