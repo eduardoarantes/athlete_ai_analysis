@@ -1,0 +1,613 @@
+{
+  "version": "1.0.0",
+  "description": "Workout library for cycling training plans",
+  "ftp_reference": 1150.0,
+  "workouts": [
+    {
+      "id": "map_efforts",
+      "name": "M.A.P Efforts",
+      "detailed_description": "",
+      "type": "vo2max",
+      "intensity": "hard",
+      "suitable_phases": [
+        "Build",
+        "Peak"
+      ],
+      "suitable_weekdays": [
+        "Tuesday",
+        "Wednesday",
+        "Thursday"
+      ],
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 100,
+          "power_high_pct": 104,
+          "description": "Warm up 1"
+        },
+        {
+          "type": "steady",
+          "duration_min": 0,
+          "power_low_pct": 111,
+          "power_high_pct": 112,
+          "description": "Hard"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 0,
+          "power_low_pct": 100,
+          "power_high_pct": 102,
+          "description": "Easy"
+        },
+        {
+          "type": "interval",
+          "sets": 5,
+          "work": {
+            "duration_min": 0,
+            "power_low_pct": 111,
+            "power_high_pct": 112,
+            "description": "Hard"
+          },
+          "recovery": {
+            "duration_min": 0,
+            "power_low_pct": 100,
+            "power_high_pct": 102,
+            "description": "Easy"
+          }
+        },
+        {
+          "type": "warmup",
+          "duration_min": 3,
+          "power_low_pct": 100,
+          "power_high_pct": 104,
+          "description": "Warm up 2"
+        },
+        {
+          "type": "steady",
+          "duration_min": 3,
+          "power_low_pct": 111,
+          "power_high_pct": 112,
+          "description": "Hard"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 4,
+          "power_low_pct": 100,
+          "power_high_pct": 102,
+          "description": "Easy"
+        },
+        {
+          "type": "interval",
+          "sets": 2,
+          "work": {
+            "duration_min": 3,
+            "power_low_pct": 111,
+            "power_high_pct": 112,
+            "description": "Hard"
+          },
+          "recovery": {
+            "duration_min": 4,
+            "power_low_pct": 100,
+            "power_high_pct": 102,
+            "description": "Easy"
+          }
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 8,
+          "power_low_pct": 100,
+          "power_high_pct": 102,
+          "description": "Cool Down"
+        }
+      ],
+      "base_duration_min": 42,
+      "base_tss": 75.2,
+      "variable_components": {
+        "adjustable_field": "sets",
+        "min_value": 3,
+        "max_value": 8,
+        "tss_per_unit": 15
+      },
+      "source_file": "2025-04-04_M.A.PEffor.fit",
+      "source_format": "fit"
+    },
+    {
+      "id": "30_s_x_4m_interval_repeats",
+      "name": "30 s x 4m interval repeats",
+      "detailed_description": "",
+      "type": "vo2max",
+      "intensity": "hard",
+      "suitable_phases": [
+        "Build",
+        "Peak"
+      ],
+      "suitable_weekdays": [
+        "Tuesday",
+        "Wednesday",
+        "Thursday"
+      ],
+      "segments": [
+        {
+          "type": "steady",
+          "duration_min": 3,
+          "power_low_pct": 99,
+          "power_high_pct": 102,
+          "description": "Steady"
+        },
+        {
+          "type": "steady",
+          "duration_min": 3,
+          "power_low_pct": 102,
+          "power_high_pct": 104,
+          "description": "Steady"
+        },
+        {
+          "type": "steady",
+          "duration_min": 3,
+          "power_low_pct": 104,
+          "power_high_pct": 106,
+          "description": "Steady"
+        },
+        {
+          "type": "steady",
+          "duration_min": 1,
+          "power_low_pct": 106,
+          "power_high_pct": 109,
+          "description": "Steady"
+        },
+        {
+          "type": "warmup",
+          "duration_min": 5,
+          "power_low_pct": 96,
+          "power_high_pct": 98,
+          "description": "Warm up"
+        },
+        {
+          "type": "steady",
+          "duration_min": 0,
+          "power_low_pct": 114,
+          "power_high_pct": 121,
+          "description": "Hard"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 4,
+          "power_low_pct": 98,
+          "power_high_pct": 100,
+          "description": "Easy"
+        },
+        {
+          "type": "interval",
+          "sets": 3,
+          "work": {
+            "duration_min": 0,
+            "power_low_pct": 114,
+            "power_high_pct": 121,
+            "description": "Hard"
+          },
+          "recovery": {
+            "duration_min": 4,
+            "power_low_pct": 98,
+            "power_high_pct": 100,
+            "description": "Easy"
+          }
+        },
+        {
+          "type": "recovery",
+          "duration_min": 10,
+          "power_low_pct": 98,
+          "power_high_pct": 100,
+          "description": "Recovery"
+        },
+        {
+          "type": "steady",
+          "duration_min": 0,
+          "power_low_pct": 114,
+          "power_high_pct": 121,
+          "description": "Hard"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 4,
+          "power_low_pct": 98,
+          "power_high_pct": 100,
+          "description": "Easy"
+        },
+        {
+          "type": "interval",
+          "sets": 4,
+          "work": {
+            "duration_min": 0,
+            "power_low_pct": 114,
+            "power_high_pct": 121,
+            "description": "Hard"
+          },
+          "recovery": {
+            "duration_min": 4,
+            "power_low_pct": 98,
+            "power_high_pct": 100,
+            "description": "Easy"
+          }
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 96,
+          "power_high_pct": 98,
+          "description": "Cool down"
+        }
+      ],
+      "base_duration_min": 71,
+      "base_tss": 116.5,
+      "variable_components": {
+        "adjustable_field": "sets",
+        "min_value": 3,
+        "max_value": 6,
+        "tss_per_unit": 15
+      },
+      "source_file": "2025-11-04_30sx4minte.fit",
+      "source_format": "fit"
+    },
+    {
+      "id": "minute_monster_power",
+      "name": "Minute Monster (Power)",
+      "detailed_description": "",
+      "type": "vo2max",
+      "intensity": "hard",
+      "suitable_phases": [
+        "Build",
+        "Peak"
+      ],
+      "suitable_weekdays": [
+        "Tuesday",
+        "Wednesday",
+        "Thursday"
+      ],
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 5,
+          "power_low_pct": 96,
+          "power_high_pct": 98,
+          "description": "Warm up"
+        },
+        {
+          "type": "steady",
+          "duration_min": 0,
+          "power_low_pct": 110,
+          "power_high_pct": 112,
+          "description": "Hard"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 0,
+          "power_low_pct": 98,
+          "power_high_pct": 100,
+          "description": "Easy"
+        },
+        {
+          "type": "interval",
+          "sets": 3,
+          "work": {
+            "duration_min": 0,
+            "power_low_pct": 110,
+            "power_high_pct": 112,
+            "description": "Hard"
+          },
+          "recovery": {
+            "duration_min": 0,
+            "power_low_pct": 98,
+            "power_high_pct": 100,
+            "description": "Easy"
+          }
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 98,
+          "power_high_pct": 100,
+          "description": "Recovery"
+        },
+        {
+          "type": "steady",
+          "duration_min": 1,
+          "power_low_pct": 109,
+          "power_high_pct": 110,
+          "description": "Hard"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 1,
+          "power_low_pct": 98,
+          "power_high_pct": 100,
+          "description": "Easy"
+        },
+        {
+          "type": "interval",
+          "sets": 10,
+          "work": {
+            "duration_min": 1,
+            "power_low_pct": 109,
+            "power_high_pct": 110,
+            "description": "Hard"
+          },
+          "recovery": {
+            "duration_min": 1,
+            "power_low_pct": 98,
+            "power_high_pct": 100,
+            "description": "Easy"
+          }
+        },
+        {
+          "type": "recovery",
+          "duration_min": 10,
+          "power_low_pct": 98,
+          "power_high_pct": 100,
+          "description": "Recovery"
+        },
+        {
+          "type": "steady",
+          "duration_min": 1,
+          "power_low_pct": 109,
+          "power_high_pct": 110,
+          "description": "Hard"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 1,
+          "power_low_pct": 98,
+          "power_high_pct": 100,
+          "description": "Easy"
+        },
+        {
+          "type": "interval",
+          "sets": 10,
+          "work": {
+            "duration_min": 1,
+            "power_low_pct": 109,
+            "power_high_pct": 110,
+            "description": "Hard"
+          },
+          "recovery": {
+            "duration_min": 1,
+            "power_low_pct": 98,
+            "power_high_pct": 100,
+            "description": "Easy"
+          }
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 96,
+          "power_high_pct": 98,
+          "description": "Cool Down"
+        }
+      ],
+      "base_duration_min": 74,
+      "base_tss": 127.9,
+      "variable_components": {
+        "adjustable_field": "sets",
+        "min_value": 3,
+        "max_value": 6,
+        "tss_per_unit": 15
+      },
+      "source_file": "2025-11-04_MinuteMons.fit",
+      "source_format": "fit"
+    },
+    {
+      "id": "vo2_max_booster_6_x_3015_3_repeats",
+      "name": "VO2 Max Booster - 6 x 30/15 - 3 repeats",
+      "detailed_description": "",
+      "type": "vo2max",
+      "intensity": "hard",
+      "suitable_phases": [
+        "Build",
+        "Peak"
+      ],
+      "suitable_weekdays": [
+        "Tuesday",
+        "Wednesday",
+        "Thursday"
+      ],
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 96,
+          "power_high_pct": 98,
+          "description": "Warm up"
+        },
+        {
+          "type": "steady",
+          "duration_min": 3,
+          "power_low_pct": 99,
+          "power_high_pct": 102,
+          "description": "Steady"
+        },
+        {
+          "type": "steady",
+          "duration_min": 1,
+          "power_low_pct": 102,
+          "power_high_pct": 104,
+          "description": "Steady"
+        },
+        {
+          "type": "steady",
+          "duration_min": 1,
+          "power_low_pct": 104,
+          "power_high_pct": 106,
+          "description": "Steady"
+        },
+        {
+          "type": "steady",
+          "duration_min": 1,
+          "power_low_pct": 106,
+          "power_high_pct": 109,
+          "description": "Steady"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 3,
+          "power_low_pct": 98,
+          "power_high_pct": 100,
+          "description": "Recovery"
+        },
+        {
+          "type": "steady",
+          "duration_min": 0,
+          "power_low_pct": 112,
+          "power_high_pct": 113,
+          "description": "Hard"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 0,
+          "power_low_pct": 98,
+          "power_high_pct": 100,
+          "description": "Easy"
+        },
+        {
+          "type": "interval",
+          "sets": 6,
+          "work": {
+            "duration_min": 0,
+            "power_low_pct": 112,
+            "power_high_pct": 113,
+            "description": "Hard"
+          },
+          "recovery": {
+            "duration_min": 0,
+            "power_low_pct": 98,
+            "power_high_pct": 100,
+            "description": "Easy"
+          }
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 98,
+          "power_high_pct": 100,
+          "description": "Recovery"
+        },
+        {
+          "type": "steady",
+          "duration_min": 0,
+          "power_low_pct": 112,
+          "power_high_pct": 113,
+          "description": "Hard"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 0,
+          "power_low_pct": 98,
+          "power_high_pct": 100,
+          "description": "Easy"
+        },
+        {
+          "type": "interval",
+          "sets": 6,
+          "work": {
+            "duration_min": 0,
+            "power_low_pct": 112,
+            "power_high_pct": 113,
+            "description": "Hard"
+          },
+          "recovery": {
+            "duration_min": 0,
+            "power_low_pct": 98,
+            "power_high_pct": 100,
+            "description": "Easy"
+          }
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 98,
+          "power_high_pct": 100,
+          "description": "Recovery"
+        },
+        {
+          "type": "steady",
+          "duration_min": 0,
+          "power_low_pct": 112,
+          "power_high_pct": 113,
+          "description": "Hard"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 0,
+          "power_low_pct": 98,
+          "power_high_pct": 100,
+          "description": "Easy"
+        },
+        {
+          "type": "interval",
+          "sets": 6,
+          "work": {
+            "duration_min": 0,
+            "power_low_pct": 112,
+            "power_high_pct": 113,
+            "description": "Hard"
+          },
+          "recovery": {
+            "duration_min": 0,
+            "power_low_pct": 98,
+            "power_high_pct": 100,
+            "description": "Easy"
+          }
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 98,
+          "power_high_pct": 100,
+          "description": "Recovery"
+        },
+        {
+          "type": "steady",
+          "duration_min": 3,
+          "power_low_pct": 106,
+          "power_high_pct": 109,
+          "description": "Steady"
+        },
+        {
+          "type": "steady",
+          "duration_min": 3,
+          "power_low_pct": 104,
+          "power_high_pct": 106,
+          "description": "Steady"
+        },
+        {
+          "type": "steady",
+          "duration_min": 3,
+          "power_low_pct": 102,
+          "power_high_pct": 104,
+          "description": "Steady"
+        },
+        {
+          "type": "steady",
+          "duration_min": 3,
+          "power_low_pct": 99,
+          "power_high_pct": 102,
+          "description": "Steady"
+        }
+      ],
+      "base_duration_min": 46,
+      "base_tss": 77.3,
+      "variable_components": {
+        "adjustable_field": "sets",
+        "min_value": 4,
+        "max_value": 9,
+        "tss_per_unit": 15
+      },
+      "source_file": "2025-11-05_VO2MaxBoos.fit",
+      "source_format": "fit"
+    }
+  ],
+  "metadata": {
+    "total_workouts": 4,
+    "source": "FIT files from .claude/fit_samples/",
+    "created_by": "create_workout_library.py"
+  }
+}
