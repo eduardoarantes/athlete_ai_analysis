@@ -454,3 +454,85 @@ class TestParsedWorkout:
             ParsedWorkout(
                 metadata=metadata, segments=segments, base_duration_min=55, base_tss=-10
             )
+
+
+class TestFitWorkoutParser:
+    """Test FitWorkoutParser class."""
+
+    @pytest.fixture
+    def parser(self):
+        """Create parser instance."""
+        from cycling_ai.parsers.fit_workout_parser import FitWorkoutParser
+
+        return FitWorkoutParser()
+
+    @pytest.fixture
+    def sample_fit_dir(self):
+        """Path to sample FIT files."""
+        from pathlib import Path
+
+        return Path(".claude/fit_samples")
+
+    def test_init(self, parser):
+        """Test parser initialization."""
+        assert parser is not None
+
+    def test_parse_workout_file_missing_file(self, parser):
+        """Test error when file doesn't exist."""
+        with pytest.raises(FileNotFoundError, match="FIT file not found"):
+            parser.parse_workout_file("nonexistent.fit", ftp=260)
+
+    def test_parse_workout_file_invalid_ftp_zero(self, parser, sample_fit_dir):
+        """Test error when FTP is zero."""
+        fit_path = sample_fit_dir / "2025-11-04_MinuteMons.fit"
+
+        with pytest.raises(ValueError, match="Invalid FTP"):
+            parser.parse_workout_file(fit_path, ftp=0)
+
+    def test_parse_workout_file_invalid_ftp_negative(self, parser, sample_fit_dir):
+        """Test error when FTP is negative."""
+        fit_path = sample_fit_dir / "2025-11-04_MinuteMons.fit"
+
+        with pytest.raises(ValueError, match="Invalid FTP"):
+            parser.parse_workout_file(fit_path, ftp=-100)
+
+    def test_extract_metadata_minute_monster(self, parser, sample_fit_dir):
+        """Test metadata extraction from real FIT file."""
+        import fitdecode
+
+        fit_path = sample_fit_dir / "2025-11-04_MinuteMons.fit"
+        fit_file = fitdecode.FitReader(str(fit_path))
+
+        metadata = parser._extract_metadata(fit_file)
+
+        assert metadata.name == "Minute Monster (Power)"
+        assert metadata.sport == "cycling"
+        assert metadata.num_steps == 14
+        assert metadata.manufacturer == "peaksware"
+        assert metadata.time_created is not None
+
+    def test_extract_metadata_vo2max_booster(self, parser, sample_fit_dir):
+        """Test metadata extraction from VO2 Max workout."""
+        import fitdecode
+
+        fit_path = sample_fit_dir / "2025-11-05_VO2MaxBoos.fit"
+        fit_file = fitdecode.FitReader(str(fit_path))
+
+        metadata = parser._extract_metadata(fit_file)
+
+        assert "vo2" in metadata.name.lower()
+        assert metadata.sport == "cycling"
+        assert metadata.num_steps == 23
+
+    def test_validate_workout_structure_valid(self, parser):
+        """Test validation passes for valid workout."""
+        metadata = FitWorkoutMetadata(
+            name="Test Workout",
+            sport="cycling",
+            num_steps=5,
+        )
+
+        steps: list[FitWorkoutStep] = []
+
+        # Should not raise
+        parser._validate_workout_structure(metadata, steps)

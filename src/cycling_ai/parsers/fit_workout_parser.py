@@ -15,7 +15,10 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
+from pathlib import Path
 from typing import Any
+
+import fitdecode
 
 
 class FitIntensity(Enum):
@@ -425,3 +428,190 @@ class FitWorkoutParser:
     def __init__(self) -> None:
         """Initialize parser."""
         pass
+
+    def parse_workout_file(
+        self,
+        fit_path: Path | str,
+        ftp: float,
+    ) -> ParsedWorkout:
+        """
+        Parse FIT workout file into ParsedWorkout object.
+
+        Args:
+            fit_path: Path to FIT workout file
+            ftp: Athlete's FTP for power percentage calculations
+
+        Returns:
+            ParsedWorkout object ready for library format conversion
+
+        Raises:
+            FileNotFoundError: If FIT file doesn't exist
+            ValueError: If FIT file is invalid or not a workout file
+
+        Example:
+            >>> parser = FitWorkoutParser()
+            >>> workout = parser.parse_workout_file("vo2max.fit", ftp=260)
+            >>> workout.metadata.name
+            'VO2 Max intervals'
+        """
+        fit_path = Path(fit_path)
+
+        # Validate file exists
+        if not fit_path.exists():
+            raise FileNotFoundError(f"FIT file not found: {fit_path}")
+
+        # Validate FTP
+        if ftp <= 0:
+            raise ValueError(f"Invalid FTP: {ftp}. Must be positive.")
+
+        # Parse FIT file
+        try:
+            fit_file = fitdecode.FitReader(str(fit_path))
+        except Exception as e:
+            raise ValueError(f"Failed to parse FIT file: {e}") from e
+
+        # Extract metadata and steps
+        metadata = self._extract_metadata(fit_file)
+        steps = self._extract_steps(fit_file)
+
+        # Validate workout structure
+        self._validate_workout_structure(metadata, steps)
+
+        # Build segments from steps (placeholder for now - will be implemented in later cards)
+        # For CARD_002, we create a placeholder segment to satisfy ParsedWorkout validation
+        segments: list[dict[str, Any]] = [
+            {
+                "type": "placeholder",
+                "duration_min": 1,
+                "description": "Placeholder segment - will be implemented in later cards",
+            }
+        ]
+
+        # Calculate duration and TSS (placeholder for now)
+        duration = 1
+        tss = 1.0
+
+        return ParsedWorkout(
+            metadata=metadata,
+            segments=segments,
+            base_duration_min=duration,
+            base_tss=tss,
+        )
+
+    def _extract_metadata(self, fit_file: fitdecode.FitReader) -> FitWorkoutMetadata:
+        """
+        Extract workout metadata from FIT file.
+
+        Processes file_id and workout messages to get:
+        - Workout name
+        - Sport type
+        - Number of steps
+        - Creation time (optional)
+
+        Args:
+            fit_file: Parsed FIT file
+
+        Returns:
+            FitWorkoutMetadata object
+
+        Raises:
+            ValueError: If required metadata is missing
+        """
+        name = ""
+        sport = "cycling"
+        num_steps = 0
+        manufacturer = None
+        time_created = None
+
+        # Extract from workout message
+        for frame in fit_file:
+            if not isinstance(frame, fitdecode.FitDataMessage):
+                continue
+
+            if frame.name == "workout":
+                for field in frame.fields:
+                    if field.name == "wkt_name" and field.value:
+                        name = str(field.value)
+                    elif field.name == "sport" and field.value:
+                        sport = str(field.value)
+                    elif field.name == "num_valid_steps" and field.value:
+                        num_steps = int(field.value)
+
+            elif frame.name == "file_id":
+                for field in frame.fields:
+                    if field.name == "manufacturer" and field.value:
+                        manufacturer = str(field.value)
+                    elif field.name == "time_created" and field.value:
+                        time_created = field.value
+
+        # Validate required fields
+        if not name:
+            raise ValueError(
+                "Workout name not found in FIT file. "
+                "This may not be a valid workout file."
+            )
+
+        if num_steps == 0:
+            raise ValueError(
+                "Number of steps not found in FIT file. "
+                "This may not be a valid workout file."
+            )
+
+        return FitWorkoutMetadata(
+            name=name,
+            sport=sport,
+            num_steps=num_steps,
+            manufacturer=manufacturer,
+            time_created=time_created,
+        )
+
+    def _extract_steps(self, fit_file: fitdecode.FitReader) -> list[FitWorkoutStep]:
+        """
+        Extract all workout steps from FIT file.
+
+        Processes workout_step messages to extract:
+        - Duration and type
+        - Intensity level
+        - Power targets (zone or custom)
+        - Repeat structures
+
+        Args:
+            fit_file: Parsed FIT file
+
+        Returns:
+            List of FitWorkoutStep objects in order
+
+        Note:
+            This is a placeholder implementation for CARD_002.
+            Full implementation will be done in CARD_003.
+        """
+        # Placeholder: return empty list for now
+        # Will be implemented in CARD_003
+        return []
+
+    def _validate_workout_structure(
+        self,
+        metadata: FitWorkoutMetadata,
+        steps: list[FitWorkoutStep],
+    ) -> None:
+        """
+        Validate workout has logical structure.
+
+        Args:
+            metadata: Workout metadata
+            steps: List of workout steps
+
+        Raises:
+            ValueError: If structure is invalid
+
+        Note:
+            Basic validation for CARD_002. More thorough validation
+            will be added in CARD_003.
+        """
+        # For now, just validate we have metadata
+        # Step validation will be added in CARD_003 when steps are extracted
+        if not metadata.name:
+            raise ValueError("Workout must have a name")
+
+        if metadata.num_steps <= 0:
+            raise ValueError("Workout must have at least one step")
