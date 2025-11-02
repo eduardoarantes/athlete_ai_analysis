@@ -22,7 +22,12 @@ You **must** call:
      - **IMPORTANT**: Do NOT include rest days in the workouts array. If a day is a rest day, simply omit it from the array.
      - Each workout has:
        - `weekday` ∈ {{`Monday`,`Tuesday`,`Wednesday`,`Thursday`,`Friday`,`Saturday`,`Sunday`}} (REQUIRED)
-       - `description` (≤25 words)
+       - `name` (3-10 words, REQUIRED) - Short, scannable workout identifier (e.g., "VO2 Max intervals", "Threshold repeats", "Endurance base")
+       - `detailed_description` (100-250 words, REQUIRED) - Comprehensive workout explanation including:
+         1. **Environment recommendation** (indoor trainer / outdoor / either)
+         2. **Physiological target** (what system/adaptation this targets)
+         3. **Training benefits** (how this improves performance)
+         4. **Execution guidance** (how to perform effectively)
        - `segments` (array of ≥1 segment objects, REQUIRED - must have at least one segment)
          - Each segment MUST have these fields:
            `type` ∈ {{`warmup`,`interval`,`work`,`recovery`,`cooldown`,`steady`,`tempo`}} (REQUIRED, must not be empty)
@@ -45,16 +50,17 @@ You **must** call:
 9. **Validity**: JSON must be syntactically valid and **self-contained** (no external references). Arrays/objects must not be empty.
 
 ## Token & Length Controls (CRITICAL FOR 12-WEEK PLANS)
-- **ABSOLUTE LIMIT:** Total JSON must be <14,000 characters for 12-week plans
-- **Calculate as you build:** ~1,150 chars per week maximum
-- **Ultra-short text fields:**
+- **ABSOLUTE LIMIT:** Total JSON must be <22,000 characters for 12-week plans (increased to accommodate detailed descriptions)
+- **Calculate as you build:** ~1,800 chars per week maximum
+- **Field length requirements:**
   - `phase_rationale`: 3-5 words (e.g., "Build aerobic base")
   - `weekly_focus`: 2-3 words (e.g., "Endurance building")
   - `weekly_watch_points`: 3-5 words (e.g., "Monitor fatigue")
-  - Workout `description`: 3-5 words (e.g., "Z2 endurance ride")
+  - Workout `name`: 3-10 words (e.g., "VO2 Max intervals")
+  - Workout `detailed_description`: 100-250 words (REQUIRED - see examples below)
   - Segment `description`: 1-3 words (e.g., "Easy spin", "Hard effort")
 - **Coaching notes & monitoring:** Be concise but complete (<300 words each)
-- If you approach limits, **shorten all descriptions** - do NOT remove weeks or workouts
+- If you approach limits, **shorten segment descriptions first** - do NOT remove weeks, workouts, or detailed_descriptions
 
 ## If Context Is Missing
 If required inputs (e.g., athlete profile path, FTP zones, available days, weekly hours) are absent, **stop** and ask for only the missing items **before** any tool call.
@@ -99,7 +105,8 @@ If required inputs (e.g., athlete profile path, FTP zones, available days, weekl
         // the array should only contain 3 workout objects
         {
           "weekday": "Tuesday",
-          "description": "string <=25 words",
+          "name": "VO2 Max intervals",
+          "detailed_description": "Ideally perform this on your trainer, although outdoors works fine too. Short interval HIIT is an effective means of enhancing your maximal oxygen uptake (VO2max) and performance. The workout uses short bouts of work above your pVO2max, with passive relief periods, to enable recruitment of your larger fast twitch muscles, as well as stimulation of maximal cardiac output (your heart). Focus on maintaining consistent power throughout each interval and use the recovery periods to let your heart rate drop before the next effort.",
           "segments": [
             {
               "type": "warmup|interval|work|recovery|cooldown|steady|tempo",

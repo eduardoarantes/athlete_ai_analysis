@@ -1,358 +1,364 @@
-# Phase 4 Implementation Plan: LLM Natural Language Queries
+# FIT Workout File Parser - Implementation Task
 
-**Status:** Planning Complete ✅
-**Ready for:** Implementation
-**Phase:** 4A - Core LLM Orchestration
+**Status**: Planning Complete - Ready for Implementation
+**Created**: 2025-11-02
+**Task Type**: Feature Implementation
 
 ---
 
-## Quick Navigation
+## Overview
+
+Implement a FIT workout file parser that reads structured workout files (`.fit` format) and converts them into our internal workout library format. This enables importing proven workouts from external sources (TrainingPeaks, Garmin Connect, Wahoo, etc.) into our workout library system.
+
+---
+
+## Objectives
+
+1. ✅ Parse FIT workout files containing workout definitions (not activity recordings)
+2. ✅ Support all FIT workout message types (FileId, Workout, WorkoutStep)
+3. ✅ Handle complex interval/repeat structures correctly
+4. ✅ Convert power zones and custom power ranges to our format
+5. ✅ Map FIT intensity types to our segment types
+6. ✅ Full type safety (mypy --strict compliance)
+7. ✅ Comprehensive unit and integration tests
+
+---
+
+## Documentation
 
 ### Planning Documents
-- 📋 **[PLAN.md](PLAN.md)** - Master architecture plan (comprehensive)
-- 📝 **[IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)** - Quick reference guide
-- 🗂️ **[PLAN/](PLAN/)** - Implementation cards (detailed specs)
 
-### Implementation Cards (Execute in Order)
+1. **[PLAN.md](/Users/eduardo/Documents/projects/cycling-ai-analysis/.claude/current_task/PLAN.md)**
+   - Executive summary
+   - Architecture overview
+   - Data flow patterns
+   - Implementation strategy
+   - Testing strategy
+   - Risk analysis
+   - Open questions
 
-| # | Card | Component | Time | Status |
-|---|------|-----------|------|--------|
-| 1 | [CARD_001](PLAN/CARD_001.md) | Conversation Types | 2-3h | 🔲 Not Started |
-| 2 | [CARD_002](PLAN/CARD_002.md) | Prompt Template System | 3-4h | 🔲 Not Started |
-| 3 | [CARD_003](PLAN/CARD_003.md) | Conversation Manager | 4-5h | 🔲 Not Started |
-| 4 | [CARD_004](PLAN/CARD_004.md) | LLM Orchestrator (ReAct) | 6-8h | 🔲 Not Started |
-| 5 | [CARD_005](PLAN/CARD_005.md) | CLI "ask" Command | 3-4h | 🔲 Not Started |
+2. **Implementation Task Cards** (`.claude/current_task/PLAN/`)
+   - **CARD_001**: Set Up Module Structure and Data Classes
+   - **CARD_002**: Implement FIT File Reading and Metadata Extraction
+   - **CARD_003**: Implement Step Extraction and Validation (not yet created)
+   - **CARD_004**: Implement Simple Segment Conversion (not yet created)
+   - **CARD_005**: Implement Repeat Structure Handling
+   - **CARD_006**: Implement Power Conversion Logic (not yet created)
+   - **CARD_007-010**: Integration and polish (not yet created)
 
-**Total Estimated Time:** 18-24 hours (2-3 days focused work)
+### Technical References
 
----
+1. **[docs/FIT_WORKOUT_FILE_FORMAT.md](/Users/eduardo/Documents/projects/cycling-ai-analysis/docs/FIT_WORKOUT_FILE_FORMAT.md)**
+   - FIT file format specification
+   - Message structure definitions
+   - Enumerations (Intensity, Duration, Target types)
+   - Parsing strategies
+   - Example workouts
 
-## What We're Building
-
-Transform the system from **programmatic CLI tool** to **conversational AI coach**:
-
-### Current (Phase 3)
-```bash
-cycling-ai analyze performance --csv data.csv --profile profile.json --period-months 6
-```
-
-### Goal (Phase 4A)
-```bash
-cycling-ai ask "How has my performance improved in the last 6 months?" --profile profile.json
-```
-
-**The LLM will:**
-1. Understand the question
-2. Decide which tools to call (e.g., `analyze_performance`)
-3. Execute tools automatically
-4. Interpret results in natural language
-5. Provide personalized coaching advice
+2. **[plans/WORKOUT_LIBRARY_REFACTOR.md](/Users/eduardo/Documents/projects/cycling-ai-analysis/plans/WORKOUT_LIBRARY_REFACTOR.md)**
+   - Context: Workout library system design
+   - Target workout format schema
+   - Integration with training plan generation
 
 ---
 
-## Architecture at a Glance
+## Architecture
+
+### Module Structure
 
 ```
-User: "How has my performance improved?"
-    ↓
-ConversationManager (build context with athlete profile + history)
-    ↓
-LLMOrchestrator (ReAct loop: Think → Act → Observe → Answer)
-    ↓
-LLM Provider (OpenAI/Anthropic/Gemini/Ollama)
-    ↓
-Tool Execution (analyze_performance, analyze_zones, etc.)
-    ↓
-LLM Interpretation ("Your performance improved 15%...")
-    ↓
-Rich CLI Output (beautiful markdown formatting)
+src/cycling_ai/parsers/
+├── __init__.py              # Package exports
+└── fit_workout_parser.py    # Parser implementation
+    ├── Enumerations (FitIntensity, FitDurationType, FitTargetType)
+    ├── Data Classes (FitWorkoutMetadata, FitWorkoutStep, etc.)
+    └── FitWorkoutParser class
 ```
+
+### Key Components
+
+1. **Data Classes** (Type-safe data structures)
+   - `FitWorkoutMetadata`: Workout metadata from FIT file
+   - `FitWorkoutStep`: Single workout step
+   - `FitRepeatStructure`: Interval structure
+   - `ParsedWorkout`: Complete parsed workout
+
+2. **Parser Class** (`FitWorkoutParser`)
+   - `parse_workout_file()`: Main entry point
+   - `_extract_metadata()`: Parse file_id and workout messages
+   - `_extract_steps()`: Parse workout_step messages
+   - `_build_segments()`: Convert steps to segments
+   - `_handle_repeat_structure()`: Process interval structures
+
+3. **Conversion Functions**
+   - `_map_intensity_to_type()`: FIT Intensity → segment type
+   - `_get_power_pct()`: Power watts/zones → FTP percentage
+   - `_calculate_total_duration()`: Sum segment durations
+   - `_calculate_base_tss()`: Estimate Training Stress Score
 
 ---
 
 ## Implementation Approach
 
-### TDD (Test-Driven Development)
-1. ✅ Read implementation card
-2. ✅ Write tests first (red phase)
-3. ✅ Implement to pass tests (green phase)
-4. ✅ Refactor and polish (refactor phase)
-5. ✅ Move to next card
+### Test-Driven Development (TDD)
 
-### Execution Order
-**Cards must be completed in sequence (dependencies)**
+All implementation follows TDD:
+1. Write unit tests first (expected behavior)
+2. Implement minimal code to pass tests
+3. Refactor for clean code
+4. Add integration tests with real FIT files
 
-1. **CARD_001** - Foundation types (no dependencies)
-2. **CARD_002** - Prompt templates (uses types)
-3. **CARD_003** - Conversation manager (uses types + prompts)
-4. **CARD_004** - LLM orchestrator (uses all above)
-5. **CARD_005** - CLI command (uses orchestrator)
+### Implementation Sequence
+
+**Phase 1: Foundation** (Cards 1-3)
+- Module structure and data classes
+- FIT file reading and metadata extraction
+- Step extraction and validation
+
+**Phase 2: Core Parsing** (Cards 4-6)
+- Simple segment conversion (warmup, cooldown, steady)
+- Repeat structure handling (intervals)
+- Power conversion (zones, custom ranges)
+
+**Phase 3: Integration** (Cards 7-8)
+- Complete ParsedWorkout implementation
+- Library format conversion
+- Integration tests with sample files
+
+**Phase 4: Polish** (Cards 9-10)
+- Edge case handling
+- Comprehensive validation
+- Documentation and examples
 
 ---
 
-## Quick Start
+## Sample Data
 
-### 1. Read Planning Documents
-```bash
-# Start here (big picture)
-open PLAN.md
+### Available FIT Files
 
-# Then implementation summary (quick reference)
-open IMPLEMENTATION_SUMMARY.md
+Located in `.claude/fit_samples/`:
 
-# Then individual cards (detailed specs)
-open PLAN/CARD_001.md
+1. **2025-11-04_MinuteMons.fit** - "Minute Monster (Power)"
+   - Complex workout with multiple repeat structures
+   - 14 workout steps
+   - Good test for nested intervals
+
+2. **2025-11-05_VO2MaxBoos.fit** - "VO2 Max Booster - 6 x 30/15 - 3 repeats"
+   - Classic VO2 max interval workout
+   - 23 workout steps
+   - Tests short work/recovery intervals
+
+3. **2025-04-04_M.A.PEffor.fit** - "M.A.P Efforts"
+   - Maximal aerobic power workout
+   - 10 workout steps
+   - Tests different power targets
+
+4. **2025-11-04_30sx4minte.fit**
+   - Additional test case
+   - Different structure pattern
+
+### FIT File Structure Example
+
+```python
+# Metadata
+WorkoutMessage:
+  wkt_name: "VO2 Max Booster"
+  sport: cycling
+  num_valid_steps: 23
+
+# Steps
+WorkoutStepMessage[]:
+  Step 0: warmup, 10min @ 1107-1134W
+  Step 1: work, 30sec @ 1294-1307W
+  Step 2: recovery, 15sec @ 1134-1160W
+  Step 3: repeat steps 1-2, 6 times
+  Step 4: cooldown, 10min @ 1107-1134W
 ```
 
-### 2. Set Up Environment
+---
+
+## Testing Strategy
+
+### Test Coverage Goals
+
+- **Unit Tests**: 90%+ coverage
+  - All data classes
+  - All parser methods
+  - All conversion functions
+  - All edge cases
+
+- **Integration Tests**: 100% of sample files
+  - All 4 sample FIT files parse successfully
+  - Correct segment structure
+  - Accurate power percentages
+  - Valid library format output
+
+- **Type Checking**: 100% mypy --strict compliance
+
+### Running Tests
+
 ```bash
-# Activate virtual environment
-source .venv/bin/activate
+# All tests
+pytest tests/parsers/
 
-# Install dependencies (already done in Phase 1-3)
-uv pip install -e ".[dev]"
+# Specific test file
+pytest tests/parsers/test_fit_workout_parser.py -v
 
-# Set API keys
-export ANTHROPIC_API_KEY=your-actual-key-here
-export OPENAI_API_KEY=your-actual-key-here  # Optional for testing
-```
+# Integration tests only
+pytest tests/parsers/test_fit_workout_parser_integration.py -v
 
-### 3. Begin Implementation
-```bash
-# Start with CARD_001
-cd /Users/eduardo/Documents/projects/cycling-ai-analysis
-
-# Create directory structure
-mkdir -p src/cycling_ai/conversation
-mkdir -p src/cycling_ai/prompts
-mkdir -p tests/conversation
-mkdir -p tests/prompts
-
-# Create first file (following CARD_001)
-touch src/cycling_ai/conversation/__init__.py
-touch src/cycling_ai/conversation/types.py
-touch tests/conversation/__init__.py
-touch tests/conversation/test_types.py
-
-# Write tests first (TDD)
-# ... implement tests from CARD_001
-# ... implement code to pass tests
-# ... verify coverage > 90%
-```
-
-### 4. Validation After Each Card
-```bash
-# Run tests
-pytest tests/conversation/test_types.py -v
-
-# Check coverage
-pytest --cov=src/cycling_ai/conversation tests/conversation/
+# With coverage
+pytest tests/parsers/ --cov=src/cycling_ai/parsers --cov-report=html
 
 # Type checking
-mypy --strict src/cycling_ai/conversation/
+mypy src/cycling_ai/parsers --strict
 
-# Linting
-ruff check src/cycling_ai/conversation/
-ruff format src/cycling_ai/conversation/
-```
-
-### 5. Final Integration (After CARD_005)
-```bash
-# Full test suite
-pytest tests/ -v
-
-# Coverage report
-pytest --cov=src/cycling_ai --cov-report=html
-
-# Manual testing
-cycling-ai ask "How has my performance improved?" --profile path/to/profile.json
+# Code formatting
+ruff format src/cycling_ai/parsers tests/parsers
+ruff check src/cycling_ai/parsers tests/parsers
 ```
 
 ---
 
-## Key Design Decisions
+## Dependencies
 
-### 1. ReAct Pattern
-- **Think**: LLM reasons about what data it needs
-- **Act**: LLM calls tools to get data
-- **Observe**: System provides tool results
-- **Repeat**: Until LLM has enough information
-- **Answer**: LLM provides final response
+### Python Packages
 
-### 2. Context Management
-- **System prompt**: Always includes athlete profile
-- **Recent history**: Last 2-3 complete turns
-- **Compression**: Drop oldest when over token limit
-- **Max tokens**: Configurable budget (default 8000)
+```python
+fitparse==1.2.0  # FIT file parsing (already installed)
+dataclasses      # Built-in Python 3.7+
+pathlib          # Built-in Python 3.4+
+typing           # Built-in Python 3.5+
+```
 
-### 3. Tool Integration
-- Uses existing Phase 3 ToolExecutor ✅
-- Uses existing Phase 3 ToolRegistry ✅
-- Uses existing Phase 2 provider adapters ✅
-- **Zero changes needed to existing code!**
+### Internal Dependencies
 
-### 4. Multi-Provider Support
-- Works with OpenAI, Anthropic, Gemini, Ollama
-- Uses existing BaseProvider abstraction
-- Provider selection via CLI flag
-- Model override via CLI flag
+```python
+from cycling_ai.core.workout_builder import Workout, WorkoutSegment
+from cycling_ai.core.power_zones import calculate_power_zones
+from cycling_ai.core.tss import calculate_workout_tss
+```
 
 ---
 
 ## Success Criteria
 
 ### Functional
-- [ ] User can ask: "How has my performance improved?"
-- [ ] LLM automatically calls `analyze_performance` tool
-- [ ] LLM interprets results correctly
-- [ ] Response is natural language (not JSON)
-- [ ] Works with all 4 providers
-- [ ] Handles errors gracefully
+- [ ] Parse all 4 sample FIT files successfully
+- [ ] Extract workout metadata (name, sport, steps)
+- [ ] Convert all workout steps to segments
+- [ ] Handle repeat/interval structures correctly
+- [ ] Convert power zones and custom ranges to percentages
+- [ ] Calculate accurate duration and TSS
+- [ ] Generate valid workout library format
 
-### Quality
-- [ ] Test coverage > 85%
-- [ ] All tests pass
-- [ ] mypy --strict passes
-- [ ] No regressions in Phase 1-3
-- [ ] Code follows existing patterns
+### Non-Functional
+- [ ] 100% type safety (mypy --strict passes)
+- [ ] 90%+ test coverage (unit tests)
+- [ ] 100% integration test success (all samples)
+- [ ] Clear error messages for invalid files
+- [ ] Performance: Parse file in < 1 second
+- [ ] Documentation: All public methods documented
 
-### User Experience
-- [ ] Beautiful Rich CLI output
-- [ ] Progress indicators during execution
-- [ ] Clear error messages
-- [ ] Response time < 10s for typical queries
-
----
-
-## Example Queries (After Phase 4A)
-
-```bash
-# Performance analysis
-cycling-ai ask "How has my performance changed in the last 6 months?" -p profile.json
-
-# Zone distribution
-cycling-ai ask "Am I training with good polarization?" -p profile.json
-
-# Training advice
-cycling-ai ask "What should I focus on to improve my FTP?" -p profile.json
-
-# Multi-tool workflow
-cycling-ai ask "Analyze my performance and create a 12-week plan" -p profile.json
-
-# Different provider
-cycling-ai ask "How am I doing?" -p profile.json --provider openai
-
-# Debug mode
-cycling-ai ask "Test query" -p profile.json --show-tools
-```
+### Code Quality
+- [ ] PEP 8 compliance (ruff check passes)
+- [ ] No code duplication
+- [ ] Clear, descriptive naming
+- [ ] Comprehensive docstrings
+- [ ] Type hints on all functions
 
 ---
 
-## Phase 4 Roadmap
+## Getting Started
 
-### Phase 4A (Current) - Core LLM Orchestration
-**Goal:** Single-shot natural language queries
-**Time:** 2-3 days
-**Status:** Planning Complete ✅
+### For Implementation Agent
 
-### Phase 4B - Interactive Coaching
-**Goal:** Multi-turn conversational REPL
-**Time:** 1 week
-**Status:** Planned (not started)
+1. **Read Planning Documents**
+   - Review `PLAN.md` for full context
+   - Review `docs/FIT_WORKOUT_FILE_FORMAT.md` for FIT specification
 
-Features:
-- Interactive prompt with readline support
-- Session save/resume
-- Command system (/help, /save, /tools, /exit)
-- Conversation history navigation
+2. **Start with CARD_001**
+   - Create module structure
+   - Implement data classes
+   - Write unit tests for data classes
+   - Verify type checking passes
 
-### Phase 4C - Advanced Features
-**Goal:** Streaming, costs, optimization
-**Time:** 1 week
-**Status:** Planned (not started)
+3. **Progress Through Cards Sequentially**
+   - Complete each card fully before moving to next
+   - Run tests after each card
+   - Commit changes after each card
 
-Features:
-- Token-by-token streaming responses
-- Cost estimation and budgets
-- Rate limiting and retry logic
-- Multi-tool optimization
-- Enhanced error recovery
-
-### Phase 4D - Polish & Validation
-**Goal:** Production readiness
-**Time:** 1 week
-**Status:** Planned (not started)
-
-Features:
-- Real data testing (220+ activities)
-- Performance optimization
-- Comprehensive documentation
-- Video demos
-- Beta user testing
+4. **Test with Real Data Early**
+   - Use sample FIT files for integration tests
+   - Verify parser works with real-world data
+   - Catch edge cases early
 
 ---
 
-## Document Inventory
+## Notes
 
-### Planning Documents
-1. **PLAN.md** (15,000+ words)
-   - Executive summary
-   - Architecture diagrams
-   - Component specifications
-   - Testing strategy
-   - Risk analysis
-   - Key questions answered
+### Design Decisions
 
-2. **IMPLEMENTATION_SUMMARY.md** (4,000+ words)
-   - Quick reference guide
-   - Implementation checklist
-   - File structure
-   - Integration points
-   - Getting started guide
+1. **FTP Required**: Parser requires FTP to calculate power percentages
+   - Rationale: Workout library format uses percentages
+   - Alternative: Could store raw watts, but less flexible
 
-### Implementation Cards
-1. **CARD_001.md** - Conversation Types (data models)
-2. **CARD_002.md** - Prompt Template System (LLM instructions)
-3. **CARD_003.md** - Conversation Manager (state management)
-4. **CARD_004.md** - LLM Orchestrator (core engine)
-5. **CARD_005.md** - CLI "ask" Command (user interface)
+2. **Workout Type Inference**: Parser infers workout type from power zones
+   - Rationale: Provides reasonable defaults
+   - Alternative: Leave empty for manual classification
 
-**Total Planning Documentation:** ~25,000 words
+3. **Repeat Detection**: Look backward from repeat step for work/recovery
+   - Rationale: Simpler than tracking explicit ranges
+   - Edge Case: May miss non-adjacent repeats
 
----
+4. **Error Handling**: Fail fast with clear error messages
+   - Rationale: Better developer experience
+   - Alternative: Silent failures or warnings
 
-## Questions?
+### Open Questions
 
-Refer to:
-1. **PLAN.md** - Why decisions were made
-2. **IMPLEMENTATION_SUMMARY.md** - How to implement
-3. **CARD_XXX.md** - What to implement
-4. **Phase 1-3 docs** - Existing patterns
+1. Should parser support parsing without FTP? (Decision: No, require FTP)
+2. How to handle missing workout names? (Decision: Raise error)
+3. How to infer suitable phases? (Decision: Based on intensity)
+4. Should we generate detailed descriptions? (Decision: Leave empty, add manually)
 
 ---
 
-## Status: Ready for Implementation ✅
+## Timeline
 
-**Next Action:** Begin CARD_001 implementation
+**Estimated Total Time**: 8-12 hours (1.5-2 days)
 
-```bash
-# Open CARD_001
-open .claude/current_task/PLAN/CARD_001.md
-
-# Create files
-touch src/cycling_ai/conversation/types.py
-touch tests/conversation/test_types.py
-
-# Start TDD
-# 1. Write tests (from CARD_001)
-# 2. Run tests (they fail)
-# 3. Implement code (to pass tests)
-# 4. Refactor and polish
-# 5. Move to CARD_002
-```
+- Phase 1 (Cards 1-3): 4-5 hours
+- Phase 2 (Cards 4-6): 3-4 hours
+- Phase 3 (Cards 7-8): 1-2 hours
+- Phase 4 (Cards 9-10): 1-2 hours
 
 ---
 
-**Planning Complete:** 2025-10-24
-**Estimated Implementation Time:** 18-24 hours (Phase 4A)
-**Total Time to Production (All Phases):** ~4 weeks
+## Related Work
+
+### Completed
+- Workout builder system (`src/cycling_ai/core/workout_builder.py`)
+- Power zones calculation (`src/cycling_ai/core/power_zones.py`)
+- TSS calculation (`src/cycling_ai/core/tss.py`)
+- FIT activity parsing (`src/cycling_ai/utils/fit_parser.py`)
+
+### In Progress
+- FIT workout file parser (this task)
+
+### Future
+- Workout library JSON creation
+- Training plan workout selection refactor
+- FIT workout file export (bi-directional conversion)
+
+---
+
+## Contact
+
+**Task Owner**: Task Implementation Preparation Architect
+**Reviewer**: Eduardo
+**Created**: 2025-11-02
+
+---
+
+**Status**: ✅ PLANNING COMPLETE - READY FOR IMPLEMENTATION AGENT

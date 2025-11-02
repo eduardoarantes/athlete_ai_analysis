@@ -536,3 +536,264 @@ class TestFitWorkoutParser:
 
         # Should not raise
         parser._validate_workout_structure(metadata, steps)
+
+    def test_extract_steps_minute_monster(self, parser, sample_fit_dir):
+        """Test step extraction from Minute Monster workout."""
+        import fitdecode
+
+        fit_path = sample_fit_dir / "2025-11-04_MinuteMons.fit"
+        fit_file = fitdecode.FitReader(str(fit_path))
+
+        steps = parser._extract_steps(fit_file)
+
+        # Based on manual analysis, Minute Monster has 14 steps
+        assert len(steps) == 14
+
+        # Check first step (warmup)
+        assert steps[0].message_index == 0
+        assert steps[0].intensity == FitIntensity.WARMUP
+        assert steps[0].duration_type == FitDurationType.TIME
+        assert steps[0].duration_value > 0
+
+        # Check for repeat steps
+        repeat_steps = [s for s in steps if s.is_repeat_step()]
+        assert len(repeat_steps) > 0
+
+    def test_extract_steps_with_power_zones(self, parser, sample_fit_dir):
+        """Test extraction of steps with power zone targets."""
+        import fitdecode
+
+        # Use a workout file that has power zone targets
+        fit_path = sample_fit_dir / "2025-11-04_MinuteMons.fit"
+        fit_file = fitdecode.FitReader(str(fit_path))
+
+        steps = parser._extract_steps(fit_file)
+
+        # At least some steps should have custom power ranges
+        steps_with_power = [
+            s for s in steps if s.has_custom_power() or s.has_power_zone()
+        ]
+        assert len(steps_with_power) > 0
+
+    def test_extract_steps_sorted_by_index(self, parser, sample_fit_dir):
+        """Test that extracted steps are sorted by message_index."""
+        import fitdecode
+
+        fit_path = sample_fit_dir / "2025-11-04_MinuteMons.fit"
+        fit_file = fitdecode.FitReader(str(fit_path))
+
+        steps = parser._extract_steps(fit_file)
+
+        # Check steps are sorted
+        for i in range(len(steps) - 1):
+            assert steps[i].message_index <= steps[i + 1].message_index
+
+    def test_convert_step_to_segment_warmup(self, parser):
+        """Test converting warmup step to segment."""
+        ftp = 260
+
+        step = FitWorkoutStep(
+            message_index=0,
+            intensity=FitIntensity.WARMUP,
+            duration_type=FitDurationType.TIME,
+            duration_value=900,  # 15 minutes
+            target_type=FitTargetType.POWER,
+            custom_power_low=130,  # 50% FTP
+            custom_power_high=169,  # 65% FTP
+            step_name="Warm up",
+        )
+
+        segment = parser._convert_step_to_segment(step, ftp)
+
+        assert segment is not None
+        assert segment["type"] == "warmup"
+        assert segment["duration_min"] == 15
+        assert segment["power_low_pct"] == 50
+        assert segment["power_high_pct"] == 65
+        assert segment["description"] == "Warm up"
+
+    def test_convert_step_to_segment_cooldown(self, parser):
+        """Test converting cooldown step to segment."""
+        ftp = 260
+
+        step = FitWorkoutStep(
+            message_index=10,
+            intensity=FitIntensity.COOLDOWN,
+            duration_type=FitDurationType.TIME,
+            duration_value=600,  # 10 minutes
+            target_type=FitTargetType.POWER,
+            custom_power_low=104,  # 40% FTP
+            custom_power_high=130,  # 50% FTP
+            step_name="Cool Down",
+        )
+
+        segment = parser._convert_step_to_segment(step, ftp)
+
+        assert segment is not None
+        assert segment["type"] == "cooldown"
+        assert segment["duration_min"] == 10
+        assert segment["power_low_pct"] == 40
+        assert segment["power_high_pct"] == 50
+
+    def test_convert_step_to_segment_skip_repeat(self, parser):
+        """Test that repeat steps are skipped."""
+        ftp = 260
+
+        step = FitWorkoutStep(
+            message_index=3,
+            intensity=None,
+            duration_type=FitDurationType.REPEAT_UNTIL_STEPS_COMPLETE,
+            duration_value=5,
+            target_type=FitTargetType.OPEN,
+            repeat_steps=5,
+        )
+
+        segment = parser._convert_step_to_segment(step, ftp)
+        assert segment is None
+
+    def test_convert_step_to_segment_skip_open(self, parser):
+        """Test that OPEN duration steps are skipped."""
+        ftp = 260
+
+        step = FitWorkoutStep(
+            message_index=13,
+            intensity=FitIntensity.COOLDOWN,
+            duration_type=FitDurationType.OPEN,
+            duration_value=0,
+            target_type=FitTargetType.OPEN,
+        )
+
+        segment = parser._convert_step_to_segment(step, ftp)
+        assert segment is None
+
+    def test_get_power_pct_custom_range(self, parser):
+        """Test power percentage from custom range."""
+        ftp = 250
+
+        step = FitWorkoutStep(
+            message_index=0,
+            intensity=FitIntensity.ACTIVE,
+            duration_type=FitDurationType.TIME,
+            duration_value=600,
+            target_type=FitTargetType.POWER,
+            custom_power_low=225,  # 90% FTP
+            custom_power_high=250,  # 100% FTP
+        )
+
+        assert parser._get_power_pct(step, ftp, is_low=True) == 90
+        assert parser._get_power_pct(step, ftp, is_low=False) == 100
+
+    def test_get_power_pct_zone(self, parser):
+        """Test power percentage from zone."""
+        ftp = 260
+
+        step = FitWorkoutStep(
+            message_index=0,
+            intensity=FitIntensity.ACTIVE,
+            duration_type=FitDurationType.TIME,
+            duration_value=600,
+            target_type=FitTargetType.POWER,
+            target_power_zone=4,  # Threshold zone
+        )
+
+        assert parser._get_power_pct(step, ftp, is_low=True) == 91
+        assert parser._get_power_pct(step, ftp, is_low=False) == 105
+
+    def test_zone_to_percentage(self, parser):
+        """Test power zone to percentage conversion."""
+        # Zone 2 (Endurance): 56-75%
+        assert parser._zone_to_percentage(2, is_low=True) == 56
+        assert parser._zone_to_percentage(2, is_low=False) == 75
+
+        # Zone 4 (Threshold): 91-105%
+        assert parser._zone_to_percentage(4, is_low=True) == 91
+        assert parser._zone_to_percentage(4, is_low=False) == 105
+
+        # Zone 5 (VO2 Max): 106-120%
+        assert parser._zone_to_percentage(5, is_low=True) == 106
+        assert parser._zone_to_percentage(5, is_low=False) == 120
+
+        # Invalid zone defaults to Z2
+        assert parser._zone_to_percentage(99, is_low=True) == 75
+
+    def test_parse_complete_workout_minute_monster(self, parser, sample_fit_dir):
+        """Test complete parsing of Minute Monster workout."""
+        fit_path = sample_fit_dir / "2025-11-04_MinuteMons.fit"
+        ftp = 1200
+
+        workout = parser.parse_workout_file(fit_path, ftp)
+
+        # Check metadata
+        assert workout.metadata.name == "Minute Monster (Power)"
+        assert workout.metadata.sport == "cycling"
+
+        # Check we have segments
+        assert len(workout.segments) > 0
+
+        # Check has warmup
+        assert any(s["type"] == "warmup" for s in workout.segments)
+
+        # Check has intervals
+        interval_segs = [s for s in workout.segments if s["type"] == "interval"]
+        assert len(interval_segs) > 0
+
+        # Check has cooldown
+        assert any(s["type"] == "cooldown" for s in workout.segments)
+
+        # Check duration
+        assert workout.base_duration_min > 0
+
+        # Check TSS
+        assert workout.base_tss > 0
+
+        # Check library format conversion
+        library_format = workout.to_library_format()
+        assert "id" in library_format
+        assert library_format["name"] == "Minute Monster (Power)"
+        assert "segments" in library_format
+        assert "base_tss" in library_format
+
+    def test_parse_complete_workout_vo2max_booster(self, parser, sample_fit_dir):
+        """Test complete parsing of VO2 Max Booster workout."""
+        fit_path = sample_fit_dir / "2025-11-05_VO2MaxBoos.fit"
+        ftp = 1200
+
+        workout = parser.parse_workout_file(fit_path, ftp)
+
+        assert "vo2" in workout.metadata.name.lower()
+        assert workout.metadata.num_steps == 23
+
+        # Should have multiple interval sets
+        interval_segments = [s for s in workout.segments if s["type"] == "interval"]
+        assert len(interval_segments) > 0
+
+        # Verify library format
+        library_format = workout.to_library_format()
+        assert library_format["type"] in ["vo2max", "threshold", "sweet_spot"]
+        assert library_format["intensity"] in ["hard", "easy"]
+
+    def test_parse_all_sample_files(self, parser, sample_fit_dir):
+        """Test parsing all sample FIT files."""
+        import glob
+
+        fit_files = glob.glob(str(sample_fit_dir / "*.fit"))
+        assert len(fit_files) >= 4
+
+        ftp = 1200
+
+        for fit_file in fit_files:
+            # Each file should parse successfully
+            workout = parser.parse_workout_file(fit_file, ftp)
+
+            # Basic validations
+            assert workout.metadata.name
+            assert workout.metadata.num_steps > 0
+            assert len(workout.segments) > 0
+            assert workout.base_duration_min > 0
+            assert workout.base_tss > 0
+
+            # Library format should be valid
+            library_format = workout.to_library_format()
+            assert "id" in library_format
+            assert "name" in library_format
+            assert "segments" in library_format

@@ -1,380 +1,438 @@
-# Task Card 002: Fix Pre-Existing Test Failures
+# CARD_002: Implement FIT File Reading and Metadata Extraction
 
-**Sub-Phase:** 4B - Fix Pre-Existing Test Failures
-**Priority:** HIGH
-**Duration:** 1 day
-**Dependencies:** CARD_001 (Real-world testing complete)
-**Status:** PENDING
+**Status**: Ready for Implementation
+**Priority**: P0 (Foundation)
+**Estimated Time**: 2 hours
+**Dependencies**: CARD_001
 
 ---
 
 ## Objective
 
-Fix 8 pre-existing test failures to achieve 100% test pass rate (253/253 tests passing). These failures existed before Phase 2-3 multi-agent implementation and are NOT related to the multi-agent orchestrator.
+Implement the FitWorkoutParser class initialization and metadata extraction methods. This card covers reading FIT files using fitparse and extracting workout-level metadata (name, sport, step count).
+
+---
+
+## Tasks
+
+### 1. Implement FitWorkoutParser Class
+
+**File**: `src/cycling_ai/parsers/fit_workout_parser.py`
+
+Add the main parser class:
+
+```python
+import fitparse
+
+
+class FitWorkoutParser:
+    """
+    Parse FIT workout files into workout library format.
+
+    This parser handles FIT files containing workout definitions
+    (not activity recordings). It extracts structured workout data
+    and converts it to our internal workout library schema.
+
+    Usage:
+        parser = FitWorkoutParser()
+        workout = parser.parse_workout_file(
+            fit_path="workout.fit",
+            ftp=260
+        )
+        library_format = workout.to_library_format()
+
+    Attributes:
+        None (stateless parser)
+    """
+
+    def __init__(self) -> None:
+        """Initialize parser."""
+        pass
+
+    def parse_workout_file(
+        self,
+        fit_path: Path | str,
+        ftp: float,
+    ) -> ParsedWorkout:
+        """
+        Parse FIT workout file into ParsedWorkout object.
+
+        Args:
+            fit_path: Path to FIT workout file
+            ftp: Athlete's FTP for power percentage calculations
+
+        Returns:
+            ParsedWorkout object ready for library format conversion
+
+        Raises:
+            FileNotFoundError: If FIT file doesn't exist
+            ValueError: If FIT file is invalid or not a workout file
+
+        Example:
+            >>> parser = FitWorkoutParser()
+            >>> workout = parser.parse_workout_file("vo2max.fit", ftp=260)
+            >>> workout.metadata.name
+            'VO2 Max intervals'
+        """
+        fit_path = Path(fit_path)
+
+        # Validate file exists
+        if not fit_path.exists():
+            raise FileNotFoundError(f"FIT file not found: {fit_path}")
+
+        # Validate FTP
+        if ftp <= 0:
+            raise ValueError(f"Invalid FTP: {ftp}. Must be positive.")
+
+        # Parse FIT file
+        try:
+            fit_file = fitparse.FitFile(str(fit_path))
+        except Exception as e:
+            raise ValueError(f"Failed to parse FIT file: {e}") from e
+
+        # Extract metadata and steps
+        metadata = self._extract_metadata(fit_file)
+        steps = self._extract_steps(fit_file)
+
+        # Validate workout structure
+        self._validate_workout_structure(metadata, steps)
+
+        # Build segments from steps (placeholder for now)
+        segments: list[dict[str, Any]] = []
+
+        # Calculate duration and TSS (placeholder for now)
+        duration = 0
+        tss = 0.0
+
+        return ParsedWorkout(
+            metadata=metadata,
+            segments=segments,
+            base_duration_min=duration,
+            base_tss=tss,
+        )
+
+    def _extract_metadata(self, fit_file: fitparse.FitFile) -> FitWorkoutMetadata:
+        """
+        Extract workout metadata from FIT file.
+
+        Processes file_id and workout messages to get:
+        - Workout name
+        - Sport type
+        - Number of steps
+        - Creation time (optional)
+
+        Args:
+            fit_file: Parsed FIT file
+
+        Returns:
+            FitWorkoutMetadata object
+
+        Raises:
+            ValueError: If required metadata is missing
+        """
+        name = ""
+        sport = "cycling"
+        num_steps = 0
+        manufacturer = None
+        time_created = None
+
+        # Extract from workout message
+        for record in fit_file.get_messages("workout"):
+            for field in record:
+                if field.name == "wkt_name" and field.value:
+                    name = str(field.value)
+                elif field.name == "sport" and field.value:
+                    sport = str(field.value)
+                elif field.name == "num_valid_steps" and field.value:
+                    num_steps = int(field.value)
+
+        # Extract from file_id message
+        for record in fit_file.get_messages("file_id"):
+            for field in record:
+                if field.name == "manufacturer" and field.value:
+                    manufacturer = str(field.value)
+                elif field.name == "time_created" and field.value:
+                    time_created = field.value
+
+        # Validate required fields
+        if not name:
+            raise ValueError(
+                "Workout name not found in FIT file. "
+                "This may not be a valid workout file."
+            )
+
+        if num_steps == 0:
+            raise ValueError(
+                "Number of steps not found in FIT file. "
+                "This may not be a valid workout file."
+            )
+
+        return FitWorkoutMetadata(
+            name=name,
+            sport=sport,
+            num_steps=num_steps,
+            manufacturer=manufacturer,
+            time_created=time_created,
+        )
+
+    def _extract_steps(self, fit_file: fitparse.FitFile) -> list[FitWorkoutStep]:
+        """
+        Extract all workout steps from FIT file.
+
+        Processes workout_step messages to extract:
+        - Duration and type
+        - Intensity level
+        - Power targets (zone or custom)
+        - Repeat structures
+
+        Args:
+            fit_file: Parsed FIT file
+
+        Returns:
+            List of FitWorkoutStep objects in order
+
+        Note:
+            This is a placeholder implementation for CARD_002.
+            Full implementation will be done in CARD_003.
+        """
+        # Placeholder: return empty list for now
+        # Will be implemented in CARD_003
+        return []
+
+    def _validate_workout_structure(
+        self,
+        metadata: FitWorkoutMetadata,
+        steps: list[FitWorkoutStep],
+    ) -> None:
+        """
+        Validate workout has logical structure.
+
+        Args:
+            metadata: Workout metadata
+            steps: List of workout steps
+
+        Raises:
+            ValueError: If structure is invalid
+
+        Note:
+            Basic validation for CARD_002. More thorough validation
+            will be added in CARD_003.
+        """
+        # For now, just validate we have metadata
+        # Step validation will be added in CARD_003 when steps are extracted
+        if not metadata.name:
+            raise ValueError("Workout must have a name")
+
+        if metadata.num_steps <= 0:
+            raise ValueError("Workout must have at least one step")
+```
+
+---
+
+## Testing
+
+### Unit Tests
+
+Add to **File**: `tests/parsers/test_fit_workout_parser.py`
+
+```python
+class TestFitWorkoutParser:
+    """Test FitWorkoutParser class."""
+
+    @pytest.fixture
+    def parser(self):
+        """Create parser instance."""
+        return FitWorkoutParser()
+
+    @pytest.fixture
+    def sample_fit_dir(self):
+        """Path to sample FIT files."""
+        return Path(".claude/fit_samples")
+
+    def test_init(self, parser):
+        """Test parser initialization."""
+        assert parser is not None
+
+    def test_parse_workout_file_missing_file(self, parser):
+        """Test error when file doesn't exist."""
+        with pytest.raises(FileNotFoundError, match="FIT file not found"):
+            parser.parse_workout_file("nonexistent.fit", ftp=260)
+
+    def test_parse_workout_file_invalid_ftp_zero(self, parser):
+        """Test error when FTP is zero."""
+        # Create a temp FIT file for this test
+        fit_path = Path(".claude/fit_samples/2025-11-04_MinuteMons.fit")
+
+        with pytest.raises(ValueError, match="Invalid FTP"):
+            parser.parse_workout_file(fit_path, ftp=0)
+
+    def test_parse_workout_file_invalid_ftp_negative(self, parser):
+        """Test error when FTP is negative."""
+        fit_path = Path(".claude/fit_samples/2025-11-04_MinuteMons.fit")
+
+        with pytest.raises(ValueError, match="Invalid FTP"):
+            parser.parse_workout_file(fit_path, ftp=-100)
+
+    def test_extract_metadata_minute_monster(self, parser, sample_fit_dir):
+        """Test metadata extraction from real FIT file."""
+        fit_path = sample_fit_dir / "2025-11-04_MinuteMons.fit"
+        fit_file = fitparse.FitFile(str(fit_path))
+
+        metadata = parser._extract_metadata(fit_file)
+
+        assert metadata.name == "Minute Monster (Power)"
+        assert metadata.sport == "cycling"
+        assert metadata.num_steps == 14
+        assert metadata.manufacturer == "peaksware"
+        assert metadata.time_created is not None
+
+    def test_extract_metadata_vo2max_booster(self, parser, sample_fit_dir):
+        """Test metadata extraction from VO2 Max workout."""
+        fit_path = sample_fit_dir / "2025-11-05_VO2MaxBoos.fit"
+        fit_file = fitparse.FitFile(str(fit_path))
+
+        metadata = parser._extract_metadata(fit_file)
+
+        assert "vo2" in metadata.name.lower()
+        assert metadata.sport == "cycling"
+        assert metadata.num_steps == 23
+
+    def test_extract_metadata_missing_name_raises_error(self, parser):
+        """Test error when workout name is missing."""
+        # Create mock FIT file without workout name
+        # This is a conceptual test - actual implementation may vary
+        # based on how we mock fitparse
+        pass  # Implement with mock if needed
+
+    def test_validate_workout_structure_valid(self, parser):
+        """Test validation passes for valid workout."""
+        metadata = FitWorkoutMetadata(
+            name="Test Workout",
+            sport="cycling",
+            num_steps=5,
+        )
+
+        steps: list[FitWorkoutStep] = []
+
+        # Should not raise
+        parser._validate_workout_structure(metadata, steps)
+
+    def test_validate_workout_structure_empty_name_raises_error(self, parser):
+        """Test validation fails for empty name."""
+        metadata = FitWorkoutMetadata(
+            name="",
+            sport="cycling",
+            num_steps=5,
+        )
+
+        steps: list[FitWorkoutStep] = []
+
+        with pytest.raises(ValueError, match="Workout must have a name"):
+            parser._validate_workout_structure(metadata, steps)
+```
+
+### Integration Tests
+
+Add to **File**: `tests/parsers/test_fit_workout_parser_integration.py`
+
+```python
+"""Integration tests for FIT workout parser."""
+
+import pytest
+from pathlib import Path
+from cycling_ai.parsers.fit_workout_parser import FitWorkoutParser
+
+
+class TestFitWorkoutParserIntegration:
+    """Integration tests with real FIT files."""
+
+    @pytest.fixture
+    def sample_fit_dir(self):
+        """Path to sample FIT files."""
+        return Path(".claude/fit_samples")
+
+    @pytest.fixture
+    def parser(self):
+        """FitWorkoutParser instance."""
+        return FitWorkoutParser()
+
+    def test_parse_minute_monster_metadata(self, parser, sample_fit_dir):
+        """Test parsing Minute Monster workout - metadata only."""
+        fit_path = sample_fit_dir / "2025-11-04_MinuteMons.fit"
+        ftp = 1200
+
+        # For CARD_002, we're just testing metadata extraction
+        # Full parsing will be tested in later cards
+        import fitparse
+        fit_file = fitparse.FitFile(str(fit_path))
+        metadata = parser._extract_metadata(fit_file)
+
+        assert metadata.name == "Minute Monster (Power)"
+        assert metadata.sport == "cycling"
+        assert metadata.num_steps == 14
+        assert metadata.manufacturer == "peaksware"
+
+    def test_parse_all_sample_files_metadata(self, parser, sample_fit_dir):
+        """Test that all sample files have extractable metadata."""
+        import fitparse
+
+        sample_files = list(sample_fit_dir.glob("*.fit"))
+        assert len(sample_files) >= 4, "Expected at least 4 sample files"
+
+        for fit_path in sample_files:
+            fit_file = fitparse.FitFile(str(fit_path))
+            metadata = parser._extract_metadata(fit_file)
+
+            # Basic assertions for all files
+            assert metadata.name, f"File {fit_path.name} has no name"
+            assert metadata.num_steps > 0, f"File {fit_path.name} has no steps"
+```
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] All 253 tests passing (100% pass rate)
-- [ ] Multi-agent tests still passing (102/102)
-- [ ] No regressions introduced
-- [ ] Test coverage maintained at 85%+
-- [ ] Type checking still passes (mypy --strict)
+- [ ] FitWorkoutParser class implemented with `__init__` and `parse_workout_file`
+- [ ] `_extract_metadata` method implemented and tested
+- [ ] `_validate_workout_structure` method implemented (basic validation)
+- [ ] Error handling for missing files
+- [ ] Error handling for invalid FTP
+- [ ] Error handling for invalid FIT files
+- [ ] All unit tests pass
+- [ ] All integration tests pass with sample FIT files
+- [ ] Type checking passes (`mypy --strict`)
+- [ ] Code formatting passes (`ruff format`, `ruff check`)
 
 ---
 
-## Current Test Status
+## Files Modified
 
-```
-Total tests: 253
-Passing: 245 (96.8%)
-Failing: 8 (3.2%)
-
-Multi-agent tests: 102/102 ✅ (no changes needed here)
-```
+- **Modified**: `src/cycling_ai/parsers/fit_workout_parser.py` (add FitWorkoutParser class)
+- **Modified**: `tests/parsers/test_fit_workout_parser.py` (add parser tests)
+- **New**: `tests/parsers/test_fit_workout_parser_integration.py`
 
 ---
 
-## Failures to Fix
+## Notes
 
-### 1. Config Loader Test (1 failure)
-
-**Test:** `tests/config/test_loader.py::test_get_config_path_current_directory`
-
-**Error:**
-```
-AssertionError: assert PosixPath('/Users/eduardo/.cycling-ai/config.yaml') ==
-                      PosixPath('/private/var/folders/.../test_get_config_path_current_d0/.cycling-ai.yaml')
-```
-
-**Root Cause:** Test expects config file in temp directory but finds user's home directory config.
-
-**Investigation Steps:**
-```bash
-# Run test with verbose output
-.venv/bin/pytest tests/config/test_loader.py::test_get_config_path_current_directory -vv
-
-# Check test code
-cat tests/config/test_loader.py | grep -A 20 "test_get_config_path_current_directory"
-
-# Check implementation
-cat src/cycling_ai/config/loader.py | grep -A 10 "get_config_path"
-```
-
-**Fix Strategy:**
-- Option A: Mock home directory in test
-- Option B: Update test to search in multiple locations
-- Option C: Fix path resolution logic to prioritize local over home
-
-**Recommended:** Option A (mock home directory)
+- This card implements **metadata extraction only**
+- Step extraction (`_extract_steps`) is a placeholder for CARD_003
+- Validation is basic for now - more thorough validation in CARD_003
+- Integration tests verify metadata extraction from all sample files
+- Error messages should be clear and actionable
 
 ---
 
-### 2. Cross-Training Tool Tests (2 failures)
+## Edge Cases to Consider
 
-**Test 2a:** `tests/tools/wrappers/test_cross_training.py::test_execute_success`
-
-**Error:**
-```
-AssertionError: assert False is True
- +  where False = ToolExecutionResult(success=False, ...).success
-```
-
-**Root Cause:** Tool execution fails, likely due to test data format or mock setup.
-
-**Investigation Steps:**
-```bash
-# Run with verbose output
-.venv/bin/pytest tests/tools/wrappers/test_cross_training.py::test_execute_success -vv -s
-
-# Check test setup
-cat tests/tools/wrappers/test_cross_training.py | grep -A 30 "test_execute_success"
-
-# Check what data the test provides
-```
-
-**Fix Strategy:**
-- Examine error message in tool result
-- Update test data to match expected format
-- Or update mock to return valid data
+1. **Missing workout name**: Raise clear error
+2. **Missing num_valid_steps**: Raise clear error
+3. **File not a workout file**: Raise clear error (might be activity file)
+4. **Corrupted FIT file**: Catch fitparse exceptions, re-raise as ValueError
+5. **Empty file**: fitparse should raise error, we catch and re-raise
 
 ---
 
-**Test 2b:** `tests/tools/wrappers/test_cross_training.py::test_execute_invalid_weeks`
-
-**Error:**
-```
-Failed: DID NOT RAISE <class 'ValueError'>
-```
-
-**Root Cause:** Validation not implemented or test bypasses validation.
-
-**Investigation Steps:**
-```bash
-# Check what validation exists
-cat src/cycling_ai/tools/wrappers/cross_training_tool.py | grep -i "weeks"
-
-# Check test expectations
-cat tests/tools/wrappers/test_cross_training.py | grep -A 10 "test_execute_invalid_weeks"
-```
-
-**Fix Strategy:**
-- Option A: Implement validation in tool (if missing)
-- Option B: Update test to not expect ValueError (if validation isn't needed)
-
-**Recommended:** Review if validation is actually needed based on tool design.
-
----
-
-### 3. Performance Tool Test (1 failure)
-
-**Test:** `tests/tools/wrappers/test_performance.py::test_execute_success`
-
-**Error:**
-```
-AssertionError: assert False is True
- +  where False = ToolExecutionResult(success=False, ...).success
-```
-
-**Root Cause:** Same pattern as cross-training test - data or mock issue.
-
-**Investigation Steps:**
-```bash
-.venv/bin/pytest tests/tools/wrappers/test_performance.py::test_execute_success -vv -s
-cat tests/tools/wrappers/test_performance.py | grep -A 30 "test_execute_success"
-```
-
-**Fix Strategy:** Update test data or mock to match tool expectations.
-
----
-
-### 4. Training Tool Test (1 failure)
-
-**Test:** `tests/tools/wrappers/test_training.py::test_execute_invalid_weeks`
-
-**Error:**
-```
-Failed: DID NOT RAISE <class 'ValueError'>
-```
-
-**Root Cause:** Same as cross-training invalid weeks test.
-
-**Fix Strategy:** Same approach - review if validation is needed.
-
----
-
-### 5. Zones Tool Tests (3 failures)
-
-**Test 5a:** `tests/tools/wrappers/test_zones.py::test_execute_success`
-
-**Error:**
-```
-AssertionError: assert False is True
- +  where False = ToolExecutionResult(success=False,
-                  data={'error': 'No power data found in processed files', ...}).success
-```
-
-**Root Cause:** Test FIT files don't have power data or parsing fails.
-
-**Investigation Steps:**
-```bash
-.venv/bin/pytest tests/tools/wrappers/test_zones.py::test_execute_success -vv -s
-
-# Check if test uses real FIT files or mocks
-cat tests/tools/wrappers/test_zones.py | grep -A 30 "test_execute_success"
-
-# Check if test data has power
-ls tests/data/fit_files/
-```
-
-**Fix Strategy:**
-- Use real FIT files with power data in test
-- Or mock the FIT processing to return power data
-
----
-
-**Test 5b:** `tests/tools/wrappers/test_zones.py::test_execute_invalid_period_months`
-
-**Error:**
-```
-Failed: DID NOT RAISE <class 'ValueError'>
-```
-
-**Root Cause:** Validation not implemented.
-
-**Fix Strategy:** Same as other validation tests.
-
----
-
-**Test 5c:** `tests/tools/wrappers/test_zones.py::test_execute_with_cache`
-
-**Error:**
-```
-AssertionError: assert (False is True or (not False and 'error' in 'no power data found...'))
-```
-
-**Root Cause:** Same as test_execute_success - no power data.
-
-**Fix Strategy:** Same fix as test_execute_success.
-
----
-
-## Implementation Approach
-
-### Step 1: Investigate Each Failure (30 min)
-
-```bash
-# Create investigation log
-touch .claude/current_task/PLAN/test_investigation.md
-
-# For each failing test:
-.venv/bin/pytest <test_path> -vv -s 2>&1 | tee -a investigation.log
-
-# Document findings
-```
-
-### Step 2: Fix Tests (3-4 hours)
-
-Priority order:
-1. Config loader (easiest)
-2. Validation tests (if validation not needed, update tests)
-3. Tool execution tests (need proper data/mocks)
-
-For each fix:
-1. Make minimal change
-2. Run the specific test
-3. Run full test suite to check for regressions
-4. Run multi-agent tests to ensure no impact
-
-### Step 3: Verification (30 min)
-
-```bash
-# Run full test suite
-.venv/bin/pytest tests/ -v
-
-# Should show: 253 passed
-
-# Verify coverage
-.venv/bin/pytest tests/ --cov=src/cycling_ai --cov-report=term-missing
-
-# Should maintain 85%+
-
-# Type check
-.venv/bin/mypy src/cycling_ai --strict
-
-# Should pass with no errors
-```
-
----
-
-## Testing Strategy
-
-**For Each Fix:**
-
-```bash
-# 1. Fix the test or code
-vim tests/path/to/test.py  # or src/path/to/code.py
-
-# 2. Run the specific test
-.venv/bin/pytest tests/path/to/test.py::test_name -vv
-
-# 3. If passes, run related tests
-.venv/bin/pytest tests/path/to/ -v
-
-# 4. Run multi-agent tests (regression check)
-.venv/bin/pytest tests/orchestration/test_multi_agent.py -v
-
-# 5. Run full suite
-.venv/bin/pytest tests/ -v
-
-# 6. If all pass, commit
-git add .
-git commit -m "Fix: <test name> - <brief description>"
-```
-
----
-
-## Expected Code Changes
-
-### Files Likely to Modify
-
-**Tests (prefer fixing tests over code):**
-- `tests/config/test_loader.py` - Add home directory mock
-- `tests/tools/wrappers/test_cross_training.py` - Fix test data or expectations
-- `tests/tools/wrappers/test_performance.py` - Fix test data or expectations
-- `tests/tools/wrappers/test_training.py` - Fix validation expectations
-- `tests/tools/wrappers/test_zones.py` - Fix test data (use real FIT files or mock)
-
-**Code (only if validation missing):**
-- Potentially: `src/cycling_ai/tools/wrappers/*_tool.py` - Add parameter validation
-
----
-
-## Success Criteria
-
-- [ ] All 8 failing tests now pass
-- [ ] Total: 253/253 tests passing (100%)
-- [ ] Multi-agent tests: 102/102 still passing
-- [ ] No new test failures introduced
-- [ ] Test coverage ≥ 85%
-- [ ] mypy --strict passes
-- [ ] All fixes committed with clear messages
-
----
-
-## Rollback Plan
-
-If a fix introduces regressions:
-
-```bash
-# 1. Identify the problematic commit
-git log --oneline
-
-# 2. Revert the commit
-git revert <commit-hash>
-
-# 3. Re-run tests
-.venv/bin/pytest tests/ -v
-
-# 4. Try alternative fix approach
-```
-
----
-
-## Deliverables
-
-1. **Investigation Report:**
-   - `.claude/current_task/PLAN/test_investigation.md`
-   - Root cause for each failure
-   - Fix strategy chosen
-
-2. **Fixed Test Files:**
-   - Modified test files with fixes applied
-
-3. **Test Results:**
-   - `.claude/current_task/PLAN/all_tests_passing.log`
-   - Output showing 253/253 passing
-
-4. **Git Commits:**
-   - One commit per fix (or logical grouping)
-   - Clear commit messages
-
----
-
-## Definition of Done
-
-Task is complete when:
-- [ ] All 8 pre-existing failures fixed
-- [ ] 253/253 tests passing
-- [ ] No regressions in multi-agent tests
-- [ ] Test coverage maintained
-- [ ] Type checking passes
-- [ ] All changes committed
-- [ ] Investigation report written
-
----
-
-**Status:** PENDING
-**Depends On:** CARD_001 (optional - can run in parallel)
-**Next Task:** CARD_003 (Performance Benchmarking)
+**Ready to Implement**: Yes (after CARD_001 complete)
+**Blocked By**: CARD_001
+**Next Card**: CARD_003 (Step Extraction and Validation)

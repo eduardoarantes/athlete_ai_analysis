@@ -1,1016 +1,1856 @@
-# Phase 4 Implementation Plan: Production Readiness & Final Validation
+# FIT Workout File Parser - Implementation Plan
 
-**Document Version:** 1.0.0
-**Date:** 2025-10-27
-**Status:** Ready for Execution
-**Phase:** Phase 4 (Final Validation & Production Readiness)
-**Previous Phase:** Phase 3 - COMPLETE AND APPROVED ✅
+**Status**: Planning Phase Complete
+**Date**: 2025-11-02
+**Prepared By**: Task Implementation Preparation Architect
 
 ---
 
 ## Executive Summary
 
-Phase 4 represents the **final validation and production readiness phase** for the Multi-Agent Orchestrator Architecture. While Phases 1-3 (Foundation, Orchestration, CLI Integration & Testing) have been completed and approved, this phase focuses on ensuring the system is truly production-ready through real-world validation, performance benchmarking, and comprehensive documentation.
+This plan details the implementation of a **FIT workout file parser** that reads structured workout files (`.fit` format) and converts them into our internal workout library format. The parser will enable importing proven workouts from external sources (TrainingPeaks, Garmin Connect, Wahoo, etc.) into our workout library system.
 
-### What is Phase 4?
+### Key Objectives
+1. Parse FIT workout files containing workout definitions (not activity recordings)
+2. Support all FIT workout message types (FileId, Workout, WorkoutStep)
+3. Handle complex interval/repeat structures correctly
+4. Convert power zones and custom power ranges to our format
+5. Map FIT intensity types to our segment types
+6. Full type safety (mypy --strict compliance)
+7. Comprehensive unit and integration tests
 
-According to the architecture document (Section 7.4 - Validation Checkpoints), **Checkpoint 4: Production Ready** requires:
-
-1. End-to-end tests with real data + real LLM pass
-2. Documentation complete
-3. Performance acceptable (< 5 min for typical dataset)
-4. Ready for user testing
-
-Phase 3 completed the implementation and initial testing with mocks. **Phase 4 validates everything works in production with real LLMs.**
-
----
-
-## Current State Analysis
-
-### What's Complete ✅
-
-**Phase 1-2: Foundation & Orchestration (Complete)**
-- ✅ `AgentPromptsManager` with 4 embedded prompts
-- ✅ `MultiAgentOrchestrator` with all 4 phases
-- ✅ MCP data extraction pattern
-- ✅ Session isolation
-- ✅ All dataclasses and types
-
-**Phase 3: Integration & Testing (Complete & Approved)**
-- ✅ `cycling-ai generate` CLI command
-- ✅ HTML report generation (3 files)
-- ✅ Output file validation
-- ✅ 23 new tests (Phase 3 specific)
-- ✅ 102/102 multi-agent tests passing
-- ✅ 94% code coverage on new modules
-- ✅ Type-safe (mypy --strict passes)
-- ✅ Zero regressions
-- ✅ Approved by task-implementation-reviewer (Score: 5.0/5.0)
-
-### What Remains ⏳
-
-**Phase 4: Production Readiness (This Phase)**
-- ⏳ Real-world testing with actual LLM providers
-- ⏳ End-to-end workflow validation with real cycling data
-- ⏳ Performance benchmarking and optimization
-- ⏳ Fix 8 pre-existing test failures (not related to multi-agent)
-- ⏳ Production deployment documentation
-- ⏳ User acceptance testing
-- ⏳ Final validation checkpoint completion
-
-### Pre-Existing Issues to Address
-
-**8 Test Failures (NOT from Phase 2-3 work):**
-1. `tests/config/test_loader.py::test_get_config_path_current_directory`
-2. `tests/tools/wrappers/test_cross_training.py::test_execute_success`
-3. `tests/tools/wrappers/test_cross_training.py::test_execute_invalid_weeks`
-4. `tests/tools/wrappers/test_performance.py::test_execute_success`
-5. `tests/tools/wrappers/test_training.py::test_execute_invalid_weeks`
-6. `tests/tools/wrappers/test_zones.py::test_execute_success`
-7. `tests/tools/wrappers/test_zones.py::test_execute_invalid_period_months`
-8. `tests/tools/wrappers/test_zones.py::test_execute_with_cache`
-
-**Analysis:** These failures existed before Phase 2-3 implementation and are related to test data setup, not functionality. Must be fixed for production readiness (100% test pass rate required).
+### Context
+This parser is part of the larger **Workout Library Refactor** initiative (see `plans/WORKOUT_LIBRARY_REFACTOR.md`). The workout library system will store pre-built workouts that can be:
+- Imported from FIT files (this parser)
+- Exported to FIT files (future feature)
+- Selected by code for training plan generation (replacing LLM-generated workouts)
 
 ---
 
-## Phase 4 Goals & Success Criteria
+## Git Context Analysis
 
-### Primary Goals
+### Recent Changes
+Based on `git diff origin/main --stat`, the current branch has:
+- Deleted extensive documentation files (cleanup phase)
+- Modified `logs/notification.json` (logging changes)
+- Modified `src/cycling_ai/core/workout_builder.py` (workout structure updates)
+- Modified `src/cycling_ai/tools/wrappers/training_plan_tool.py` (training plan updates)
+- New files: `docs/AWS_BEDROCK_INTEGRATION_PLAN.md`, `plans/WORKOUT_DETAILED_DESCRIPTIONS_PLAN.md`
 
-1. **Real-World Validation**: Test with actual LLM providers (not mocks)
-2. **Performance Verification**: Ensure < 5 min execution for typical datasets
-3. **Test Suite Health**: Achieve 100% test pass rate (253/253 tests)
-4. **Production Documentation**: Complete deployment guides and user documentation
-5. **User Acceptance Testing**: Validate with real-world scenarios
+### Recent Commits
+Recent work has focused on:
+1. **Workout descriptions**: Converting markdown to HTML, adding detailed coaching notes
+2. **UI enhancements**: Power profile visualizations, modal improvements
+3. **Training plan validation**: Per-week validation, strategic day selection, recovery week handling
 
-### Success Criteria
-
-**Mandatory (Must Have):**
-- [ ] Real LLM testing complete (minimum 2 providers: Ollama + 1 cloud)
-- [ ] All 4 phases execute successfully with real data
-- [ ] 3 HTML reports generated and validated
-- [ ] 253/253 tests passing (100%)
-- [ ] Performance < 5 minutes per workflow
-- [ ] Token usage documented and within budget
-- [ ] Deployment checklist complete
-- [ ] User guide finalized
-- [ ] No blocking issues
-
-**Optional (Nice to Have):**
-- [ ] Test with all 4 providers (OpenAI, Anthropic, Gemini, Ollama)
-- [ ] Performance optimizations applied
-- [ ] Video tutorial created
-- [ ] Community feedback incorporated
+### Integration Point
+This parser will integrate with:
+- **Workout Builder**: Existing `WorkoutSegment` and `Workout` classes in `src/cycling_ai/core/workout_builder.py`
+- **Power Zones**: Centralized zone calculations in `src/cycling_ai/core/power_zones.py`
+- **TSS Calculation**: Existing TSS calculations in `src/cycling_ai/core/tss.py`
+- **Workout Library**: Future `data/workout_library.json` (from refactor plan)
 
 ---
 
-## Architecture Compliance Review
+## Architecture Overview
 
-### Validation Checkpoints from Section 7.4
+### System Architecture
 
-**Checkpoint 1: Foundation Complete** ✅ VERIFIED
-- [x] AgentPromptsManager created with 4 embedded prompts
-- [x] Prompts can be loaded from files
-- [x] All dataclasses defined and tested
-- [x] Unit tests pass
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    FIT Workout Parser                        │
+└─────────────────────────────────────────────────────────────┘
+                         │
+         ┌───────────────┼───────────────┐
+         │               │               │
+         v               v               v
+┌─────────────────┐ ┌──────────────┐ ┌─────────────────┐
+│  FIT File       │ │  Parser      │ │  Workout        │
+│  Reader         │ │  Logic       │ │  Builder        │
+│  (fitparse)     │ │              │ │  (core)         │
+└─────────────────┘ └──────────────┘ └─────────────────┘
+         │               │               │
+         v               v               v
+┌─────────────────────────────────────────────────────────────┐
+│              Workout Library Format                          │
+│  {                                                           │
+│    "id": "vo2max_classic",                                   │
+│    "name": "VO2 Max intervals",                              │
+│    "segments": [...]                                         │
+│  }                                                           │
+└─────────────────────────────────────────────────────────────┘
+```
 
-**Checkpoint 2: Orchestration Complete** ✅ VERIFIED
-- [x] MultiAgentOrchestrator can execute all 4 phases
-- [x] MCP data extraction works correctly
-- [x] Session isolation verified
-- [x] Integration tests pass
+### Module Structure
 
-**Checkpoint 3: CLI Complete** ✅ VERIFIED
-- [x] `cycling-ai generate` command works
-- [x] Progress display functions correctly
-- [x] Error handling is robust
-- [x] Help text is clear
+```
+src/cycling_ai/parsers/
+├── __init__.py              # Package initialization
+└── fit_workout_parser.py    # Main parser implementation
 
-**Checkpoint 4: Production Ready** ⏳ THIS PHASE
-- [ ] End-to-end tests with real data + real LLM pass
-- [ ] Documentation complete
-- [ ] Performance acceptable (< 5 min for typical dataset)
-- [ ] Ready for user testing
+New Module: fit_workout_parser.py
+├── Data Classes (Type Safety)
+│   ├── FitWorkoutMetadata
+│   ├── FitWorkoutStep
+│   ├── FitRepeatStructure
+│   └── ParsedWorkout
+│
+├── Parser Class
+│   ├── FitWorkoutParser
+│   │   ├── parse_workout_file()      # Main entry point
+│   │   ├── _extract_metadata()       # Parse file_id and workout messages
+│   │   ├── _extract_steps()          # Parse workout_step messages
+│   │   ├── _build_segments()         # Convert steps to segments
+│   │   └── _handle_repeats()         # Process repeat structures
+│
+├── Conversion Functions
+│   ├── _map_intensity_to_type()      # FIT Intensity → segment type
+│   ├── _convert_power_target()       # Zone/custom → power range
+│   ├── _convert_duration()           # Seconds → minutes
+│   └── _generate_workout_id()        # Create unique workout ID
+│
+└── Validation Functions
+    ├── _validate_fit_file()          # Check FIT file validity
+    ├── _validate_workout_structure() # Ensure logical structure
+    └── _validate_power_ranges()      # Check power values make sense
+```
+
+---
+
+## Data Flow
+
+### Input: FIT Workout File
+
+```python
+# FIT File Structure (from sample analysis)
+FileIdMessage:
+  type: workout
+  manufacturer: peaksware
+  time_created: 2025-11-01 14:45:25
+
+WorkoutMessage:
+  wkt_name: "VO2 Max Booster - 6 x 30/15 - 3 repeats"
+  sport: cycling
+  num_valid_steps: 23
+
+WorkoutStepMessage[] (simplified):
+  Step 0: warmup, 10min @ 1107-1134W
+  Step 1: work, 3min @ 1294-1307W
+  Step 2: recovery, 3min @ 1134-1160W
+  Step 3: repeat steps 1-2, 5 times
+  Step 4: cooldown, 10min @ 1107-1134W
+```
+
+### Output: Workout Library Format
+
+```python
+{
+  "id": "vo2max_booster_6x30_15",
+  "name": "VO2 Max Booster - 6 x 30/15 - 3 repeats",
+  "detailed_description": "",  # Not available in FIT, leave empty
+  "type": "vo2max",
+  "intensity": "hard",
+  "suitable_phases": ["Build", "Peak"],  # Inferred from intensity
+  "suitable_weekdays": ["Tuesday", "Wednesday", "Thursday"],  # Default
+  "segments": [
+    {
+      "type": "warmup",
+      "duration_min": 10,
+      "power_low_pct": 80,  # Calculated from FTP
+      "power_high_pct": 85,
+      "description": "Warm up"
+    },
+    {
+      "type": "interval",
+      "sets": 5,
+      "work": {
+        "duration_min": 3,
+        "power_low_pct": 110,
+        "power_high_pct": 115,
+        "description": "Hard"
+      },
+      "recovery": {
+        "duration_min": 3,
+        "power_low_pct": 80,
+        "power_high_pct": 85,
+        "description": "Easy"
+      }
+    },
+    {
+      "type": "cooldown",
+      "duration_min": 10,
+      "power_low_pct": 80,
+      "power_high_pct": 85,
+      "description": "Cool Down"
+    }
+  ],
+  "base_duration_min": 55,
+  "base_tss": 85,
+  "variable_components": {
+    "adjustable_field": "sets",
+    "min_value": 4,
+    "max_value": 8,
+    "tss_per_unit": 17
+  }
+}
+```
+
+### Transformation Pipeline
+
+```
+┌───────────────────┐
+│  FIT File         │
+│  (binary format)  │
+└─────────┬─────────┘
+          │
+          v
+┌───────────────────────────────┐
+│  fitparse.FitFile             │
+│  - Reads binary format        │
+│  - Extracts messages          │
+│  - Returns Python objects     │
+└─────────┬─────────────────────┘
+          │
+          v
+┌───────────────────────────────┐
+│  FitWorkoutParser             │
+│  Step 1: Extract Metadata     │
+│    - workout name             │
+│    - sport type               │
+│    - step count               │
+└─────────┬─────────────────────┘
+          │
+          v
+┌───────────────────────────────┐
+│  Step 2: Extract Steps        │
+│    - duration                 │
+│    - intensity                │
+│    - power targets            │
+│    - repeat structures        │
+└─────────┬─────────────────────┘
+          │
+          v
+┌───────────────────────────────┐
+│  Step 3: Build Segments       │
+│    - Group steps logically    │
+│    - Detect intervals         │
+│    - Handle repeats           │
+│    - Convert units            │
+└─────────┬─────────────────────┘
+          │
+          v
+┌───────────────────────────────┐
+│  Step 4: Add Metadata         │
+│    - Infer workout type       │
+│    - Calculate base TSS       │
+│    - Determine suitable phases│
+└─────────┬─────────────────────┘
+          │
+          v
+┌───────────────────────────────┐
+│  Workout Library Format       │
+│  (JSON-serializable dict)     │
+└───────────────────────────────┘
+```
 
 ---
 
 ## Implementation Strategy
 
-Phase 4 is divided into 5 sub-phases executed sequentially:
+### Design Principles
 
-### Sub-Phase 4A: Real-World Testing with LLM Providers
-**Duration:** 1-2 days
-**Objective:** Validate multi-agent workflow with real LLM providers
+Following Uncle Bob's SOLID principles and Python best practices:
 
-### Sub-Phase 4B: Fix Pre-Existing Test Failures
-**Duration:** 1 day
-**Objective:** Achieve 100% test pass rate (253/253 tests)
+1. **Single Responsibility Principle**
+   - `FitWorkoutParser`: Parse FIT files only
+   - Conversion functions: Handle specific transformations
+   - Validation functions: Validate specific aspects
 
-### Sub-Phase 4C: Performance Benchmarking & Optimization
-**Duration:** 1 day
-**Objective:** Measure and document performance characteristics
+2. **Open/Closed Principle**
+   - Parser extensible for new FIT message types
+   - Conversion functions can be added without modifying core
 
-### Sub-Phase 4D: Production Documentation
-**Duration:** 1-2 days
-**Objective:** Create deployment guides and user documentation
+3. **Dependency Inversion Principle**
+   - Parser depends on abstractions (data classes), not concrete implementations
+   - Easy to swap fitparse for alternative library if needed
 
-### Sub-Phase 4E: User Acceptance Testing
-**Duration:** 1 day
-**Objective:** Validate with real-world scenarios and workflows
+4. **Type Safety First**
+   - All functions have full type hints
+   - Data classes for structured data
+   - `mypy --strict` compliance mandatory
 
-**Total Duration:** 5-7 days
+5. **Fail Fast**
+   - Validate inputs immediately
+   - Clear error messages
+   - Don't attempt to "fix" bad data
 
----
+### Python Best Practices
 
-## Sub-Phase 4A: Real-World Testing
+1. **PEP 8 Compliance**
+   - 100-character line length (project standard)
+   - Proper import organization (stdlib, third-party, local)
+   - Clear naming conventions
 
-### Objective
-Test the complete multi-agent workflow with actual LLM providers using real cycling data to ensure production readiness.
+2. **Modern Python Patterns**
+   - Use `dataclasses` for data structures
+   - Use `pathlib.Path` for file operations
+   - Use `from __future__ import annotations` for forward references
+   - Use `dict[str, Any]` over `Dict[str, Any]` (Python 3.9+)
 
-### Test Matrix
-
-| Provider | Model | Priority | Test Data | Expected Outcome |
-|----------|-------|----------|-----------|------------------|
-| Ollama | llama3.2:3b | REQUIRED | Real CSV + Profile + FIT | 3 HTML files |
-| Anthropic | claude-3-5-sonnet | REQUIRED | Same data | 3 HTML files |
-| OpenAI | gpt-4-turbo | Optional | Same data | 3 HTML files |
-| Gemini | gemini-1.5-pro | Optional | Same data | 3 HTML files |
-
-### Test Procedure
-
-**For Each Provider:**
-
-1. **Setup**
-   ```bash
-   # Environment configuration
-   export PROVIDER_API_KEY="..."
-
-   # Verify provider accessibility
-   cycling-ai providers list
-   ```
-
-2. **Execute Workflow**
-   ```bash
-   cycling-ai generate \
-     --csv tests/data/real_activities.csv \
-     --profile tests/data/test_profile.json \
-     --fit-dir tests/data/fit_files \
-     --output-dir /tmp/reports_{provider} \
-     --provider {provider} \
-     --period-months 6 \
-     --training-plan-weeks 10
-   ```
-
-3. **Validation Checks**
-   - [ ] All 4 phases complete (no failures)
-   - [ ] Phase 1 (Data Preparation) validates files
-   - [ ] Phase 2 (Performance Analysis) calls tools successfully
-   - [ ] Phase 3 (Training Planning) generates plan
-   - [ ] Phase 4 (Report Generation) creates 3 HTML files
-   - [ ] Files exist: `index.html`, `coaching_insights.html`, `performance_dashboard.html`
-   - [ ] HTML is valid and well-formed
-   - [ ] Reports contain actual data (not placeholders)
-   - [ ] Execution time < 5 minutes
-
-4. **Performance Metrics**
-   - Total execution time (seconds)
-   - Token usage per phase
-   - Cost (for cloud providers)
-   - Memory usage
-   - Report file sizes
-
-### Success Criteria
-
-- [ ] Minimum 2 providers tested successfully (Ollama + 1 cloud)
-- [ ] All 4 phases complete without errors
-- [ ] 3 HTML reports generated with valid content
-- [ ] Token usage < 30,000 tokens total
-- [ ] Execution time < 5 minutes
-- [ ] Cost < $0.50 per workflow (cloud providers)
-
-### Deliverables
-
-- **Test execution logs**: `/Users/eduardo/Documents/projects/cycling-ai-analysis/.claude/current_task/PLAN/test_results_{provider}.log`
-- **Performance data**: CSV with metrics per provider/phase
-- **Generated reports**: Sample HTML files for inspection
-- **Quality assessment**: Comparison of report quality across providers
+3. **Pythonic Idioms**
+   - List comprehensions over loops (where readable)
+   - Context managers for resources
+   - Generator expressions for large sequences
+   - Explicit is better than implicit
 
 ---
 
-## Sub-Phase 4B: Fix Pre-Existing Test Failures
+## Data Classes Design
 
-### Objective
-Address 8 pre-existing test failures to achieve 100% test pass rate.
+### FitWorkoutMetadata
 
-### Current Test Status
-- Total tests: 253
-- Passing: 245 (96.8%)
-- Failing: 8 (3.2%)
-- Multi-agent tests: 102/102 passing ✅
+```python
+from dataclasses import dataclass
+from datetime import datetime
 
-### Failures to Fix
+@dataclass
+class FitWorkoutMetadata:
+    """Metadata extracted from FIT file_id and workout messages."""
 
-**1. Config Loader Test (1 failure)**
-```
-tests/config/test_loader.py::test_get_config_path_current_directory
-Error: AssertionError - config path mismatch
-Root Cause: Test expects .cycling-ai.yaml in temp dir but finds ~/.cycling-ai/config.yaml
-Fix: Update test to mock home directory or fix path resolution
-```
+    name: str
+    sport: str
+    num_steps: int
+    manufacturer: str | None = None
+    time_created: datetime | None = None
 
-**2. Cross-Training Tool Tests (2 failures)**
-```
-tests/tools/wrappers/test_cross_training.py::test_execute_success
-Error: assert False is True (tool execution failed)
-Root Cause: Test data doesn't match expected format or tool expectations
-Fix: Update test data or mock setup
-
-tests/tools/wrappers/test_cross_training.py::test_execute_invalid_weeks
-Error: DID NOT RAISE ValueError
-Root Cause: Validation not implemented or bypassed in test
-Fix: Implement validation or update test expectation
+    def __post_init__(self) -> None:
+        """Validate metadata after initialization."""
+        if not self.name:
+            raise ValueError("Workout name cannot be empty")
+        if self.num_steps <= 0:
+            raise ValueError(f"Invalid step count: {self.num_steps}")
 ```
 
-**3. Performance Tool Test (1 failure)**
-```
-tests/tools/wrappers/test_performance.py::test_execute_success
-Error: assert False is True (tool execution failed)
-Root Cause: Similar to cross-training - test data or mock issue
-Fix: Update test data setup
-```
+### FitWorkoutStep
 
-**4. Training Tool Test (1 failure)**
-```
-tests/tools/wrappers/test_training.py::test_execute_invalid_weeks
-Error: DID NOT RAISE ValueError
-Root Cause: Validation not implemented
-Fix: Add validation or update test
-```
+```python
+from enum import Enum
+from typing import Optional
 
-**5. Zones Tool Tests (3 failures)**
-```
-tests/tools/wrappers/test_zones.py::test_execute_success
-Error: No power data found in processed files
-Root Cause: Test FIT files don't have power data or parsing issue
-Fix: Use real FIT files with power data or fix mock
+class FitIntensity(Enum):
+    """FIT intensity types (mapped from FIT SDK)."""
+    WARMUP = "warmup"
+    ACTIVE = "active"
+    REST = "rest"
+    COOLDOWN = "cooldown"
 
-tests/tools/wrappers/test_zones.py::test_execute_invalid_period_months
-Error: DID NOT RAISE ValueError
-Root Cause: Validation not implemented
-Fix: Add validation
+class FitDurationType(Enum):
+    """FIT duration types."""
+    TIME = "time"
+    DISTANCE = "distance"
+    OPEN = "open"
+    REPEAT_UNTIL_STEPS_COMPLETE = "repeat_until_steps_cmplt"
 
-tests/tools/wrappers/test_zones.py::test_execute_with_cache
-Error: No power data found
-Root Cause: Same as test_execute_success
-Fix: Fix test data
-```
+class FitTargetType(Enum):
+    """FIT target types."""
+    POWER = "power"
+    HEART_RATE = "heart_rate"
+    OPEN = "open"
 
-### Approach
+@dataclass
+class FitWorkoutStep:
+    """Single step from FIT workout."""
 
-For each failure:
-1. Investigate root cause with detailed pytest output
-2. Determine if it's a test issue or code issue
-3. Fix appropriately (prefer fixing tests to avoid breaking changes)
-4. Verify fix doesn't introduce regressions
-5. Run full test suite to ensure 253/253 passing
+    message_index: int
+    intensity: FitIntensity | None
+    duration_type: FitDurationType
+    duration_value: float  # Seconds for TIME, step count for REPEAT
+    target_type: FitTargetType
 
-### Success Criteria
+    # Power targets (only one set will be populated)
+    target_power_zone: int | None = None
+    custom_power_low: int | None = None
+    custom_power_high: int | None = None
 
-- [ ] All 253 tests passing
-- [ ] No regressions in multi-agent tests (102 still passing)
-- [ ] Test coverage maintained at 85%+
-- [ ] Type checking still passes (mypy --strict)
+    # Repeat structure (only for REPEAT steps)
+    repeat_from: int | None = None
+    repeat_to: int | None = None
+    repeat_steps: int | None = None
 
-### Deliverables
+    step_name: str = ""
 
-- Fixed test files
-- Test execution report showing 253/253 passing
-- Documentation of fixes applied
+    def is_repeat_step(self) -> bool:
+        """Check if this is a repeat structure step."""
+        return self.duration_type == FitDurationType.REPEAT_UNTIL_STEPS_COMPLETE
 
----
+    def has_power_zone(self) -> bool:
+        """Check if step uses power zone (not custom range)."""
+        return self.target_power_zone is not None and self.target_power_zone > 0
 
-## Sub-Phase 4C: Performance Benchmarking
-
-### Objective
-Measure and document performance characteristics to validate < 5 min requirement and provide cost estimates.
-
-### Metrics to Collect
-
-**1. Token Usage per Phase**
-```
-Expected (from architecture):
-Phase 1: Data Preparation      ~  1,000 tokens
-Phase 2: Performance Analysis  ~  8,000 tokens
-Phase 3: Training Planning     ~  5,000 tokens
-Phase 4: Report Generation     ~ 10,000 tokens
--------------------------------------------
-Total:                         ~ 24,000 tokens
+    def has_custom_power(self) -> bool:
+        """Check if step uses custom power range."""
+        return (
+            self.custom_power_low is not None
+            and self.custom_power_high is not None
+        )
 ```
 
-**2. Execution Time per Phase**
-```
-Target:
-Phase 1: < 10 seconds
-Phase 2: < 60 seconds
-Phase 3: < 45 seconds
-Phase 4: < 90 seconds
--------------------------------------------
-Total:  < 5 minutes (300 seconds)
-```
+### FitRepeatStructure
 
-**3. Cost Analysis** (Cloud Providers)
-```
-Claude Sonnet 3.5 (Anthropic):
-  Input:  24k tokens × $3/million   = $0.072
-  Output: 12k tokens × $15/million  = $0.180
-  Total per workflow:               = ~$0.25
+```python
+@dataclass
+class FitRepeatStructure:
+    """Represents a repeat/interval structure in FIT workout."""
 
-GPT-4 Turbo (OpenAI):
-  Input:  24k tokens × $10/million  = $0.240
-  Output: 12k tokens × $30/million  = $0.360
-  Total per workflow:               = ~$0.60
+    repeat_count: int
+    work_step: FitWorkoutStep
+    recovery_step: FitWorkoutStep | None = None
 
-Gemini 1.5 Pro (Google):
-  Input:  24k tokens × $1.25/million = $0.030
-  Output: 12k tokens × $5/million    = $0.060
-  Total per workflow:                = ~$0.09
+    def to_interval_segment(self, ftp: float) -> dict[str, Any]:
+        """
+        Convert repeat structure to interval segment.
 
-Ollama (Local):
-  Cost: $0 (compute only)
-```
+        Args:
+            ftp: Functional Threshold Power for % calculations
 
-**4. Resource Usage**
-- Memory footprint (MB)
-- Session storage size (MB)
-- Generated report sizes (KB)
-- CPU usage
+        Returns:
+            Interval segment dictionary
+        """
+        segment: dict[str, Any] = {
+            "type": "interval",
+            "sets": self.repeat_count,
+            "work": {
+                "duration_min": int(self.work_step.duration_value / 60),
+                "power_low_pct": self._calculate_power_pct(
+                    self.work_step.custom_power_low or 0, ftp
+                ),
+                "power_high_pct": self._calculate_power_pct(
+                    self.work_step.custom_power_high or 0, ftp
+                ),
+                "description": self.work_step.step_name,
+            }
+        }
 
-### Benchmark Procedure
+        if self.recovery_step:
+            segment["recovery"] = {
+                "duration_min": int(self.recovery_step.duration_value / 60),
+                "power_low_pct": self._calculate_power_pct(
+                    self.recovery_step.custom_power_low or 0, ftp
+                ),
+                "power_high_pct": self._calculate_power_pct(
+                    self.recovery_step.custom_power_high or 0, ftp
+                ),
+                "description": self.recovery_step.step_name,
+            }
 
-1. **Prepare Test Environment**
-   - Identical hardware for all tests
-   - Same test data for all providers
-   - Multiple runs (3 minimum) for averaging
+        return segment
 
-2. **Execute Benchmarks**
-   ```bash
-   # Automated benchmark script
-   .venv/bin/python scripts/benchmark_generate.py \
-     --providers ollama,anthropic \
-     --runs 3 \
-     --output benchmarks.csv
-   ```
-
-3. **Analyze Results**
-   - Average execution time per phase
-   - Token usage variance
-   - Cost projections
-   - Identify bottlenecks
-
-4. **Optimization** (if needed)
-   - If any phase exceeds target, investigate
-   - Apply optimizations (prompt tuning, caching, etc.)
-   - Re-benchmark to verify improvements
-
-### Success Criteria
-
-- [ ] Complete workflow in < 5 minutes (95% of runs)
-- [ ] Token usage within 20% of estimates
-- [ ] Cost per workflow < $1.00 for any provider
-- [ ] No memory leaks detected
-
-### Deliverables
-
-- **Performance report**: `/Users/eduardo/Documents/projects/cycling-ai-analysis/docs/PERFORMANCE_BENCHMARKS.md`
-- **Raw data**: CSV with all benchmark measurements
-- **Cost calculator**: Tool for users to estimate costs
-- **Optimization recommendations**: If applicable
-
----
-
-## Sub-Phase 4D: Production Documentation
-
-### Objective
-Create comprehensive documentation for production deployment and user onboarding.
-
-### Documents to Create
-
-**1. Deployment Checklist**
-```
-File: docs/DEPLOYMENT_CHECKLIST.md
-
-Contents:
-- System requirements (Python 3.11+, disk space, memory)
-- Installation steps (uv, pip, dependencies)
-- Provider setup (API keys, Ollama installation)
-- Configuration (environment variables, config files)
-- Verification tests (provider health checks)
-- Security considerations (API key protection)
-- Monitoring setup (logging, error tracking)
-- Rollback procedures
+    @staticmethod
+    def _calculate_power_pct(watts: int, ftp: float) -> int:
+        """Calculate power as percentage of FTP."""
+        if ftp <= 0:
+            raise ValueError(f"Invalid FTP: {ftp}")
+        return int((watts / ftp) * 100)
 ```
 
-**2. User Guide for Generate Command**
-```
-File: docs/USER_GUIDE_GENERATE.md
-
-Contents:
-- Quick start (5 minute guide)
-- Data preparation (CSV export, athlete profile creation)
-- Command usage (all options explained)
-- Provider selection guide (when to use which provider)
-- Custom prompts (how to customize agent behavior)
-- Reading reports (interpreting HTML outputs)
-- Example workflows (common use cases)
-- Cost optimization tips
-- FAQ
-```
-
-**3. Troubleshooting Guide**
-```
-File: docs/TROUBLESHOOTING.md
-
-Contents:
-- Common errors and solutions
-  - "API key not found"
-  - "CSV file invalid"
-  - "Phase X failed"
-  - "No power data found"
-  - Permission errors
-- Provider-specific issues
-- Performance troubleshooting
-- How to get help
-- Debug mode usage
-- Log file locations
-```
-
-**4. Performance Benchmarks Document**
-```
-File: docs/PERFORMANCE_BENCHMARKS.md
-
-Contents:
-- Benchmark methodology
-- Results by provider
-- Token usage analysis
-- Cost projections
-- Optimization recommendations
-- Hardware requirements impact
-```
-
-### Updates to Existing Files
-
-**README.md Updates:**
-- Update status to "Phase 4 Complete ✅"
-- Add Phase 4 completion link
-- Update test count (253 tests passing)
-- Add performance metrics summary
-- Update quick start with generate command
-
-### Success Criteria
-
-- [ ] All 4 documentation files created
-- [ ] README.md updated
-- [ ] Documentation reviewed for clarity
-- [ ] All commands tested and verified
-- [ ] Examples work with real data
-
-### Deliverables
-
-- 4 new documentation files
-- Updated README.md
-- Documentation review report
-
----
-
-## Sub-Phase 4E: User Acceptance Testing
-
-### Objective
-Validate the system with real-world scenarios to ensure production readiness from an end-user perspective.
-
-### Test Scenarios
-
-**Scenario 1: New User - First Time Setup**
-```
-Actor: New user with no prior experience
-Goal: Install and generate first report
-
-Steps:
-1. Clone repository
-2. Install dependencies (follow README)
-3. Configure API key (Anthropic)
-4. Prepare test data (CSV, profile)
-5. Run: cycling-ai generate --csv ... --profile ...
-6. Open generated HTML reports
-
-Success Criteria:
-- Setup completes in < 15 minutes
-- No confusing errors encountered
-- Reports generate successfully
-- User understands results
-```
-
-**Scenario 2: Regular User - Monthly Analysis**
-```
-Actor: Cyclist performing monthly performance review
-Goal: Generate updated reports with new data
-
-Steps:
-1. Export latest CSV from Strava
-2. Update athlete profile (if FTP changed)
-3. Run generate command
-4. Compare with previous month's reports
-
-Success Criteria:
-- Workflow completes in < 5 minutes
-- Reports reflect new data accurately
-- Insights are actionable
-```
-
-**Scenario 3: Advanced User - Custom Prompts**
-```
-Actor: User wanting customized analysis
-Goal: Use custom prompts for specialized coaching
-
-Steps:
-1. Create prompts directory: ~/.cycling-ai/prompts/
-2. Write custom performance_analysis.txt
-3. Run with: --prompts-dir ~/.cycling-ai/prompts
-4. Validate custom behavior in reports
-
-Success Criteria:
-- Custom prompts loaded correctly
-- Agent behavior reflects customizations
-- Reports show expected differences
-```
-
-**Scenario 4: Error Handling**
-```
-Actor: User with various data issues
-Goal: Understand and fix errors
-
-Steps:
-1. Try with invalid CSV file
-2. Try with missing API key
-3. Try with empty FIT directory
-4. Try with insufficient disk space
-
-Success Criteria:
-- Error messages are clear
-- Troubleshooting guide helps
-- User can resolve issues
-- No crashes or data loss
-```
-
-**Scenario 5: Multi-Provider Comparison**
-```
-Actor: User evaluating provider options
-Goal: Compare quality and cost across providers
-
-Steps:
-1. Generate report with Ollama (local, free)
-2. Generate report with Anthropic (cloud, paid)
-3. Compare:
-   - Report quality
-   - Insights depth
-   - Execution time
-   - Cost
-
-Success Criteria:
-- User can make informed provider choice
-- Quality differences documented
-- Cost/benefit clear
-```
-
-### UAT Execution
-
-For each scenario:
-1. **Prepare**: Set up test environment
-2. **Execute**: Follow steps precisely
-3. **Observe**: Note any issues, confusion, delays
-4. **Document**: Record feedback and issues
-5. **Fix**: Address blocking issues immediately
-
-### Success Criteria
-
-- [ ] All 5 scenarios completed successfully
-- [ ] No blocking issues identified
-- [ ] Error messages are clear and actionable
-- [ ] Documentation is sufficient for self-service
-- [ ] User experience is smooth
-
-### Deliverables
-
-- **UAT Report**: `/Users/eduardo/Documents/projects/cycling-ai-analysis/.claude/current_task/PLAN/UAT_REPORT.md`
-- **Issues List**: Any issues found (with severity)
-- **User Feedback**: Qualitative feedback on experience
-- **Go/No-Go Recommendation**: Production readiness decision
-
----
-
-## Risk Analysis & Mitigation
-
-### Technical Risks
-
-**RISK-1: Real LLM Failures**
-- **Severity:** High
-- **Probability:** Medium
-- **Impact:** Phase 4A could fail, blocking production
-- **Mitigation:**
-  - Test with multiple providers
-  - Have fallback providers ready
-  - Document provider-specific issues
-  - Implement retry logic for transient failures
-
-**RISK-2: Performance Issues**
-- **Severity:** Medium
-- **Probability:** Medium
-- **Impact:** Workflow exceeds 5 min target
-- **Mitigation:**
-  - Benchmark early in Phase 4C
-  - Identify bottlenecks quickly
-  - Apply optimizations (prompt tuning, caching)
-  - Consider parallel tool execution (future)
-
-**RISK-3: Test Fixes Break Functionality**
-- **Severity:** High
-- **Probability:** Low
-- **Impact:** Tools stop working in production
-- **Mitigation:**
-  - Prefer fixing tests over changing code
-  - Thorough regression testing
-  - Review each fix carefully
-  - Run multi-agent tests after each fix
-
-**RISK-4: Documentation Gaps**
-- **Severity:** Medium
-- **Probability:** Medium
-- **Impact:** Users unable to use system
-- **Mitigation:**
-  - UAT validates documentation
-  - Multiple reviewers
-  - Real user testing
-  - Iterate based on feedback
-
-### Operational Risks
-
-**RISK-5: API Key Issues**
-- **Severity:** Low
-- **Probability:** Medium
-- **Impact:** Testing delayed
-- **Mitigation:**
-  - Test with Ollama first (no key needed)
-  - Have backup API keys
-  - Document key setup clearly
-
-**RISK-6: Insufficient Test Data**
-- **Severity:** Medium
-- **Probability:** Low
-- **Impact:** Cannot validate with real data
-- **Mitigation:**
-  - Use existing test data (220+ activities)
-  - Generate synthetic data if needed
-  - Multiple test datasets
-
----
-
-## Quality Gates
-
-Each sub-phase has exit criteria that must be met before proceeding:
-
-**After 4A (Real-World Testing):**
-- [ ] At least 2 providers successfully tested
-- [ ] All 4 phases completed without errors
-- [ ] HTML reports validated for quality
-- [ ] Performance within acceptable range
-
-**After 4B (Test Fixes):**
-- [ ] All 253 tests passing (100%)
-- [ ] No new test failures introduced
-- [ ] Multi-agent tests still passing (102/102)
-- [ ] Coverage maintained at 85%+
-
-**After 4C (Benchmarking):**
-- [ ] Performance data collected for all tested providers
-- [ ] Token usage documented
-- [ ] Cost analysis complete
-- [ ] Optimization recommendations documented (if needed)
-
-**After 4D (Documentation):**
-- [ ] All 4 documentation files created and reviewed
-- [ ] README updated
-- [ ] Examples tested and verified
-- [ ] No broken links or commands
-
-**After 4E (UAT):**
-- [ ] All 5 test scenarios completed
-- [ ] No blocking issues found
-- [ ] User feedback positive
-- [ ] Production go/no-go decision made
-
----
-
-## Validation Commands
-
-### Real-World Testing
-```bash
-# Test with Ollama
-.venv/bin/cycling-ai generate \
-  --csv tests/data/real_activities.csv \
-  --profile tests/data/test_profile.json \
-  --fit-dir tests/data/fit_files \
-  --output-dir /tmp/reports_ollama \
-  --provider ollama \
-  --model llama3.2:3b
-
-# Test with Anthropic
-.venv/bin/cycling-ai generate \
-  --csv tests/data/real_activities.csv \
-  --profile tests/data/test_profile.json \
-  --fit-dir tests/data/fit_files \
-  --output-dir /tmp/reports_anthropic \
-  --provider anthropic \
-  --model claude-3-5-sonnet-20241022
-```
-
-### Test Suite Validation
-```bash
-# Run all tests
-.venv/bin/pytest tests/ -v
-
-# Run specific failing tests
-.venv/bin/pytest tests/config/test_loader.py::test_get_config_path_current_directory -vv
-.venv/bin/pytest tests/tools/wrappers/test_zones.py -vv
-
-# Check coverage
-.venv/bin/pytest tests/ --cov=src/cycling_ai --cov-report=term-missing
-
-# Type checking
-.venv/bin/mypy src/cycling_ai --strict
-```
-
-### Performance Benchmarking
-```bash
-# Time measurement
-time .venv/bin/cycling-ai generate \
-  --csv tests/data/real_activities.csv \
-  --profile tests/data/test_profile.json \
-  --output-dir /tmp/reports_benchmark \
-  --provider ollama
-
-# With detailed logging
-.venv/bin/cycling-ai generate \
-  --csv tests/data/real_activities.csv \
-  --profile tests/data/test_profile.json \
-  --output-dir /tmp/reports_verbose \
-  --provider anthropic \
-  --verbose
+### ParsedWorkout
+
+```python
+@dataclass
+class ParsedWorkout:
+    """Complete parsed workout ready for library format."""
+
+    metadata: FitWorkoutMetadata
+    segments: list[dict[str, Any]]
+    base_duration_min: int
+    base_tss: float
+
+    def to_library_format(self) -> dict[str, Any]:
+        """
+        Convert to workout library JSON format.
+
+        Returns:
+            Dictionary in workout library schema
+        """
+        workout_id = self._generate_workout_id()
+        workout_type = self._infer_workout_type()
+        intensity = self._infer_intensity()
+
+        return {
+            "id": workout_id,
+            "name": self.metadata.name,
+            "detailed_description": "",  # Not available from FIT
+            "type": workout_type,
+            "intensity": intensity,
+            "suitable_phases": self._get_suitable_phases(intensity),
+            "suitable_weekdays": ["Tuesday", "Wednesday", "Thursday"],
+            "segments": self.segments,
+            "base_duration_min": self.base_duration_min,
+            "base_tss": self.base_tss,
+            "variable_components": self._detect_variable_components(),
+        }
+
+    def _generate_workout_id(self) -> str:
+        """Generate unique workout ID from name."""
+        # Convert name to snake_case ID
+        import re
+        name = self.metadata.name.lower()
+        name = re.sub(r'[^\w\s-]', '', name)
+        name = re.sub(r'[-\s]+', '_', name)
+        return name[:50]  # Limit length
+
+    def _infer_workout_type(self) -> str:
+        """Infer workout type from segments."""
+        # Logic to determine if VO2max, threshold, sweet spot, etc.
+        # Based on power percentages in main intervals
+        pass
+
+    def _infer_intensity(self) -> str:
+        """Determine if workout is hard or easy."""
+        # Based on workout type and power zones
+        pass
+
+    def _get_suitable_phases(self, intensity: str) -> list[str]:
+        """Get training phases suitable for this workout."""
+        if intensity == "hard":
+            return ["Build", "Peak"]
+        else:
+            return ["Foundation", "Build", "Recovery"]
+
+    def _detect_variable_components(self) -> dict[str, Any]:
+        """Detect which components can be adjusted."""
+        # Check if workout has intervals (adjust sets)
+        # or steady segments (adjust duration)
+        pass
 ```
 
 ---
 
-## Definition of Done
+## Core Parser Implementation
 
-Phase 4 is complete when ALL of the following are true:
+### FitWorkoutParser Class
 
-**Testing:**
-- [ ] All 253 tests passing (100% pass rate)
-- [ ] Real-world testing complete with ≥2 providers
-- [ ] All 4 workflow phases execute successfully
-- [ ] 3 HTML reports generated and validated
+```python
+from pathlib import Path
+from typing import Any
+import fitparse
 
-**Performance:**
-- [ ] Workflow completes in < 5 minutes
-- [ ] Token usage documented and within budget (< 30k)
-- [ ] Cost analysis complete for all tested providers
-- [ ] No performance regressions
+class FitWorkoutParser:
+    """
+    Parse FIT workout files into workout library format.
 
-**Documentation:**
-- [ ] Deployment checklist created
-- [ ] User guide for generate command complete
-- [ ] Troubleshooting guide created
-- [ ] Performance benchmarks documented
-- [ ] README.md updated with Phase 4 status
+    This parser handles FIT files containing workout definitions
+    (not activity recordings). It extracts structured workout data
+    and converts it to our internal workout library schema.
 
-**Validation:**
-- [ ] User acceptance testing complete (all 5 scenarios)
-- [ ] No blocking issues identified
-- [ ] Production go/no-go decision: GO ✅
+    Usage:
+        parser = FitWorkoutParser()
+        workout = parser.parse_workout_file(
+            fit_path="workout.fit",
+            ftp=260
+        )
+        library_format = workout.to_library_format()
+    """
 
-**Deliverable:**
-- [ ] Phase 4 completion report written: `plans/PHASE4_COMPLETION.md`
+    def __init__(self) -> None:
+        """Initialize parser."""
+        pass
+
+    def parse_workout_file(
+        self,
+        fit_path: Path | str,
+        ftp: float,
+    ) -> ParsedWorkout:
+        """
+        Parse FIT workout file into ParsedWorkout object.
+
+        Args:
+            fit_path: Path to FIT workout file
+            ftp: Athlete's FTP for power percentage calculations
+
+        Returns:
+            ParsedWorkout object ready for library format conversion
+
+        Raises:
+            FileNotFoundError: If FIT file doesn't exist
+            ValueError: If FIT file is invalid or not a workout file
+
+        Example:
+            >>> parser = FitWorkoutParser()
+            >>> workout = parser.parse_workout_file("vo2max.fit", ftp=260)
+            >>> workout.metadata.name
+            'VO2 Max intervals'
+        """
+        fit_path = Path(fit_path)
+
+        # Validate file exists
+        if not fit_path.exists():
+            raise FileNotFoundError(f"FIT file not found: {fit_path}")
+
+        # Validate FTP
+        if ftp <= 0:
+            raise ValueError(f"Invalid FTP: {ftp}. Must be positive.")
+
+        # Parse FIT file
+        try:
+            fit_file = fitparse.FitFile(str(fit_path))
+        except Exception as e:
+            raise ValueError(f"Failed to parse FIT file: {e}") from e
+
+        # Extract metadata and steps
+        metadata = self._extract_metadata(fit_file)
+        steps = self._extract_steps(fit_file)
+
+        # Validate workout structure
+        self._validate_workout_structure(metadata, steps)
+
+        # Build segments from steps
+        segments = self._build_segments(steps, ftp)
+
+        # Calculate duration and TSS
+        duration = self._calculate_total_duration(segments)
+        tss = self._calculate_base_tss(segments, ftp)
+
+        return ParsedWorkout(
+            metadata=metadata,
+            segments=segments,
+            base_duration_min=duration,
+            base_tss=tss,
+        )
+
+    def _extract_metadata(
+        self,
+        fit_file: fitparse.FitFile
+    ) -> FitWorkoutMetadata:
+        """
+        Extract workout metadata from FIT file.
+
+        Processes file_id and workout messages to get:
+        - Workout name
+        - Sport type
+        - Number of steps
+        - Creation time (optional)
+
+        Args:
+            fit_file: Parsed FIT file
+
+        Returns:
+            FitWorkoutMetadata object
+
+        Raises:
+            ValueError: If required metadata is missing
+        """
+        name = ""
+        sport = "cycling"
+        num_steps = 0
+        manufacturer = None
+        time_created = None
+
+        # Extract from workout message
+        for record in fit_file.get_messages("workout"):
+            for field in record:
+                if field.name == "wkt_name":
+                    name = field.value
+                elif field.name == "sport":
+                    sport = str(field.value)
+                elif field.name == "num_valid_steps":
+                    num_steps = int(field.value)
+
+        # Extract from file_id message
+        for record in fit_file.get_messages("file_id"):
+            for field in record:
+                if field.name == "manufacturer":
+                    manufacturer = str(field.value)
+                elif field.name == "time_created":
+                    time_created = field.value
+
+        if not name:
+            raise ValueError("Workout name not found in FIT file")
+
+        if num_steps == 0:
+            raise ValueError("Number of steps not found in FIT file")
+
+        return FitWorkoutMetadata(
+            name=name,
+            sport=sport,
+            num_steps=num_steps,
+            manufacturer=manufacturer,
+            time_created=time_created,
+        )
+
+    def _extract_steps(
+        self,
+        fit_file: fitparse.FitFile
+    ) -> list[FitWorkoutStep]:
+        """
+        Extract all workout steps from FIT file.
+
+        Processes workout_step messages to extract:
+        - Duration and type
+        - Intensity level
+        - Power targets (zone or custom)
+        - Repeat structures
+
+        Args:
+            fit_file: Parsed FIT file
+
+        Returns:
+            List of FitWorkoutStep objects in order
+        """
+        steps: list[FitWorkoutStep] = []
+
+        for record in fit_file.get_messages("workout_step"):
+            step_data = {}
+
+            # Extract all fields
+            for field in record:
+                if field.value is not None:
+                    step_data[field.name] = field.value
+
+            # Build FitWorkoutStep
+            step = self._build_step_from_data(step_data)
+            steps.append(step)
+
+        # Sort by message_index
+        steps.sort(key=lambda s: s.message_index)
+
+        return steps
+
+    def _build_step_from_data(
+        self,
+        data: dict[str, Any]
+    ) -> FitWorkoutStep:
+        """
+        Build FitWorkoutStep from raw field data.
+
+        Args:
+            data: Dictionary of field name -> value from FIT message
+
+        Returns:
+            FitWorkoutStep object
+        """
+        # Map intensity string to enum
+        intensity_map = {
+            "warmup": FitIntensity.WARMUP,
+            "active": FitIntensity.ACTIVE,
+            "rest": FitIntensity.REST,
+            "cooldown": FitIntensity.COOLDOWN,
+        }
+
+        intensity_str = str(data.get("intensity", "")).lower()
+        intensity = intensity_map.get(intensity_str)
+
+        # Map duration type
+        duration_type_map = {
+            "time": FitDurationType.TIME,
+            "distance": FitDurationType.DISTANCE,
+            "open": FitDurationType.OPEN,
+            "repeat_until_steps_cmplt": FitDurationType.REPEAT_UNTIL_STEPS_COMPLETE,
+        }
+
+        duration_type_str = str(data.get("duration_type", "")).lower()
+        duration_type = duration_type_map.get(
+            duration_type_str, FitDurationType.TIME
+        )
+
+        # Map target type
+        target_type_map = {
+            "power": FitTargetType.POWER,
+            "heart_rate": FitTargetType.HEART_RATE,
+            "open": FitTargetType.OPEN,
+        }
+
+        target_type_str = str(data.get("target_type", "")).lower()
+        target_type = target_type_map.get(target_type_str, FitTargetType.OPEN)
+
+        # Extract duration value
+        if duration_type == FitDurationType.TIME:
+            duration_value = float(data.get("duration_time", 0))
+        elif duration_type == FitDurationType.REPEAT_UNTIL_STEPS_COMPLETE:
+            duration_value = float(data.get("repeat_steps", 0))
+        else:
+            duration_value = float(data.get("duration_value", 0))
+
+        return FitWorkoutStep(
+            message_index=int(data.get("message_index", 0)),
+            intensity=intensity,
+            duration_type=duration_type,
+            duration_value=duration_value,
+            target_type=target_type,
+            target_power_zone=data.get("target_power_zone"),
+            custom_power_low=data.get("custom_target_power_low"),
+            custom_power_high=data.get("custom_target_power_high"),
+            repeat_from=data.get("repeat_from"),
+            repeat_to=data.get("repeat_to"),
+            repeat_steps=data.get("repeat_steps"),
+            step_name=str(data.get("wkt_step_name", "")),
+        )
+
+    def _validate_workout_structure(
+        self,
+        metadata: FitWorkoutMetadata,
+        steps: list[FitWorkoutStep],
+    ) -> None:
+        """
+        Validate workout has logical structure.
+
+        Args:
+            metadata: Workout metadata
+            steps: List of workout steps
+
+        Raises:
+            ValueError: If structure is invalid
+        """
+        if len(steps) != metadata.num_steps:
+            raise ValueError(
+                f"Step count mismatch: metadata says {metadata.num_steps}, "
+                f"found {len(steps)} steps"
+            )
+
+        # Check for duplicate message indices
+        indices = [s.message_index for s in steps]
+        if len(indices) != len(set(indices)):
+            raise ValueError("Duplicate message indices found")
+
+        # Validate repeat structures
+        for i, step in enumerate(steps):
+            if step.is_repeat_step():
+                # Check repeat_steps is set
+                if step.repeat_steps is None or step.repeat_steps <= 0:
+                    raise ValueError(
+                        f"Step {i}: repeat step missing repeat_steps value"
+                    )
+
+    def _build_segments(
+        self,
+        steps: list[FitWorkoutStep],
+        ftp: float,
+    ) -> list[dict[str, Any]]:
+        """
+        Build workout segments from FIT steps.
+
+        This is the core transformation logic that:
+        1. Identifies repeat structures
+        2. Groups work/recovery pairs into intervals
+        3. Converts simple steps to segments
+        4. Handles power zone or custom power ranges
+
+        Args:
+            steps: List of FitWorkoutStep objects
+            ftp: Athlete's FTP for percentage calculations
+
+        Returns:
+            List of segment dictionaries
+        """
+        segments: list[dict[str, Any]] = []
+        i = 0
+
+        while i < len(steps):
+            step = steps[i]
+
+            if step.is_repeat_step():
+                # Handle repeat structure
+                repeat_segment = self._handle_repeat_structure(
+                    steps, i, ftp
+                )
+                segments.append(repeat_segment)
+                i += 1
+            else:
+                # Simple step (warmup, cooldown, steady)
+                segment = self._convert_step_to_segment(step, ftp)
+                if segment:  # Skip None (like OPEN steps)
+                    segments.append(segment)
+                i += 1
+
+        return segments
+
+    def _handle_repeat_structure(
+        self,
+        steps: list[FitWorkoutStep],
+        repeat_index: int,
+        ftp: float,
+    ) -> dict[str, Any]:
+        """
+        Handle repeat/interval structure.
+
+        FIT repeat structure:
+          Step N: work interval
+          Step N+1: recovery interval
+          Step N+2: repeat (repeat_steps=X, repeat from N to N+1)
+
+        Our format:
+          {
+            "type": "interval",
+            "sets": X,
+            "work": {...},
+            "recovery": {...}
+          }
+
+        Args:
+            steps: All workout steps
+            repeat_index: Index of the repeat step
+            ftp: Athlete's FTP
+
+        Returns:
+            Interval segment dictionary
+
+        Raises:
+            ValueError: If repeat structure is invalid
+        """
+        repeat_step = steps[repeat_index]
+
+        if not repeat_step.is_repeat_step():
+            raise ValueError(
+                f"Step {repeat_index} is not a repeat step"
+            )
+
+        # The repeat step tells us how many times to repeat
+        # and which step to start from (duration_step or implicit)
+        repeat_count = repeat_step.repeat_steps or 0
+
+        # Find the work and recovery steps before the repeat step
+        # Typically: repeat step points back to work/recovery pair
+
+        # Strategy: Look backward from repeat step for work/recovery
+        work_step = None
+        recovery_step = None
+
+        # Search backward for work interval (ACTIVE intensity)
+        for j in range(repeat_index - 1, -1, -1):
+            if steps[j].intensity == FitIntensity.ACTIVE:
+                work_step = steps[j]
+                break
+
+        # Search backward for recovery (REST intensity)
+        for j in range(repeat_index - 1, -1, -1):
+            if steps[j].intensity == FitIntensity.REST:
+                recovery_step = steps[j]
+                break
+
+        if not work_step:
+            raise ValueError(
+                f"Repeat step at {repeat_index} has no work interval"
+            )
+
+        # Build interval segment
+        segment: dict[str, Any] = {
+            "type": "interval",
+            "sets": repeat_count,
+            "work": {
+                "duration_min": int(work_step.duration_value / 60),
+                "power_low_pct": self._get_power_pct(
+                    work_step, ftp, is_low=True
+                ),
+                "power_high_pct": self._get_power_pct(
+                    work_step, ftp, is_low=False
+                ),
+                "description": work_step.step_name or "Work",
+            }
+        }
+
+        if recovery_step:
+            segment["recovery"] = {
+                "duration_min": int(recovery_step.duration_value / 60),
+                "power_low_pct": self._get_power_pct(
+                    recovery_step, ftp, is_low=True
+                ),
+                "power_high_pct": self._get_power_pct(
+                    recovery_step, ftp, is_low=False
+                ),
+                "description": recovery_step.step_name or "Recovery",
+            }
+
+        return segment
+
+    def _convert_step_to_segment(
+        self,
+        step: FitWorkoutStep,
+        ftp: float,
+    ) -> dict[str, Any] | None:
+        """
+        Convert single FIT step to segment.
+
+        Args:
+            step: FitWorkoutStep to convert
+            ftp: Athlete's FTP
+
+        Returns:
+            Segment dictionary or None if step should be skipped
+        """
+        # Skip repeat steps (handled separately)
+        if step.is_repeat_step():
+            return None
+
+        # Skip OPEN duration steps (no specific duration)
+        if step.duration_type == FitDurationType.OPEN:
+            return None
+
+        # Map intensity to segment type
+        segment_type = self._map_intensity_to_type(step.intensity)
+
+        # Convert duration to minutes
+        duration_min = int(step.duration_value / 60)
+
+        # Get power percentages
+        power_low_pct = self._get_power_pct(step, ftp, is_low=True)
+        power_high_pct = self._get_power_pct(step, ftp, is_low=False)
+
+        return {
+            "type": segment_type,
+            "duration_min": duration_min,
+            "power_low_pct": power_low_pct,
+            "power_high_pct": power_high_pct,
+            "description": step.step_name or segment_type.capitalize(),
+        }
+
+    def _map_intensity_to_type(
+        self,
+        intensity: FitIntensity | None
+    ) -> str:
+        """
+        Map FIT intensity to our segment type.
+
+        Args:
+            intensity: FIT intensity enum
+
+        Returns:
+            Segment type string
+        """
+        if intensity == FitIntensity.WARMUP:
+            return "warmup"
+        elif intensity == FitIntensity.COOLDOWN:
+            return "cooldown"
+        elif intensity == FitIntensity.ACTIVE:
+            return "interval"  # or "steady" depending on context
+        elif intensity == FitIntensity.REST:
+            return "recovery"
+        else:
+            return "steady"  # Default
+
+    def _get_power_pct(
+        self,
+        step: FitWorkoutStep,
+        ftp: float,
+        is_low: bool,
+    ) -> int:
+        """
+        Get power percentage from step.
+
+        Handles both power zones and custom power ranges.
+
+        Args:
+            step: FitWorkoutStep
+            ftp: Athlete's FTP
+            is_low: True for lower bound, False for upper bound
+
+        Returns:
+            Power as percentage of FTP
+        """
+        if step.has_custom_power():
+            # Use custom power range
+            watts = (
+                step.custom_power_low if is_low
+                else step.custom_power_high
+            )
+            return int((watts / ftp) * 100)
+
+        elif step.has_power_zone():
+            # Use power zone
+            # Note: This requires zone definitions
+            # For now, return placeholder
+            zone = step.target_power_zone
+            # TODO: Implement zone -> percentage mapping
+            return self._zone_to_percentage(zone, is_low)
+
+        else:
+            # No power target
+            return 50  # Default to easy effort
+
+    def _zone_to_percentage(
+        self,
+        zone: int,
+        is_low: bool
+    ) -> int:
+        """
+        Convert power zone number to FTP percentage.
+
+        Args:
+            zone: Zone number (1-7)
+            is_low: True for lower bound, False for upper
+
+        Returns:
+            Power percentage
+        """
+        # Standard zone definitions (Coggan/Allen model)
+        zone_ranges = {
+            1: (0, 55),      # Active Recovery
+            2: (56, 75),     # Endurance
+            3: (76, 90),     # Tempo
+            4: (91, 105),    # Threshold
+            5: (106, 120),   # VO2 Max
+            6: (121, 150),   # Anaerobic
+            7: (151, 200),   # Neuromuscular
+        }
+
+        if zone not in zone_ranges:
+            return 75  # Default to Z2
+
+        low, high = zone_ranges[zone]
+        return low if is_low else high
+
+    def _calculate_total_duration(
+        self,
+        segments: list[dict[str, Any]]
+    ) -> int:
+        """
+        Calculate total workout duration in minutes.
+
+        Args:
+            segments: List of segment dictionaries
+
+        Returns:
+            Total duration in minutes
+        """
+        total = 0
+
+        for seg in segments:
+            if seg["type"] == "interval":
+                # Interval: work + recovery * sets
+                work_min = seg["work"]["duration_min"]
+                recovery_min = seg.get("recovery", {}).get("duration_min", 0)
+                sets = seg["sets"]
+                total += (work_min + recovery_min) * sets
+            else:
+                # Simple segment
+                total += seg["duration_min"]
+
+        return total
+
+    def _calculate_base_tss(
+        self,
+        segments: list[dict[str, Any]],
+        ftp: float,
+    ) -> float:
+        """
+        Calculate base TSS for workout.
+
+        Uses existing TSS calculation from core module.
+
+        Args:
+            segments: List of segment dictionaries
+            ftp: Athlete's FTP
+
+        Returns:
+            Estimated TSS
+        """
+        from cycling_ai.core.tss import calculate_workout_tss
+
+        # Convert segments to format expected by TSS calculator
+        # This may need adjustment based on actual TSS module interface
+        return calculate_workout_tss(segments, ftp)
+```
 
 ---
 
-## File Structure
+## Edge Cases & Risk Analysis
 
-### New Files to Create
+### Edge Cases to Handle
 
-```
-docs/
-├── DEPLOYMENT_CHECKLIST.md       # Production deployment guide
-├── USER_GUIDE_GENERATE.md        # Comprehensive user guide
-├── TROUBLESHOOTING.md            # Common issues and solutions
-└── PERFORMANCE_BENCHMARKS.md     # Benchmark results
+1. **Nested Repeat Structures**
+   - **Risk**: Some workouts have repeats within repeats
+   - **Example**: Warmup → (Work → Recovery) × 3 → Rest → (Work → Recovery) × 3 → Cooldown
+   - **Mitigation**: Parser should detect and flatten nested structures
+   - **Testing**: Include sample file with nested repeats
 
-.claude/current_task/PLAN/
-├── test_results_ollama.log       # Ollama test execution log
-├── test_results_anthropic.log    # Anthropic test execution log
-├── test_results_openai.log       # OpenAI test execution log (if tested)
-├── test_results_gemini.log       # Gemini test execution log (if tested)
-├── benchmark_data.csv            # Raw performance data
-└── UAT_REPORT.md                 # User acceptance test results
+2. **Missing Power Targets**
+   - **Risk**: Some steps have no power target (open target)
+   - **Example**: "Ride at RPE 5" (no power specified)
+   - **Mitigation**: Default to moderate power (60-70% FTP) or mark as "open"
+   - **Testing**: Sample file with OPEN targets
 
-plans/
-└── PHASE4_COMPLETION.md          # Final Phase 4 completion report
-```
+3. **Power Zones vs Custom Ranges**
+   - **Risk**: Some FIT files use zones, others use exact watts
+   - **Example**: Zone 2 vs 150-180W
+   - **Mitigation**: Handle both, convert zones to percentages using standard definitions
+   - **Testing**: Test both zone-based and watt-based files
 
-### Files to Modify
+4. **Large Wattage Values**
+   - **Risk**: Some FIT files have unrealistic power values (e.g., 10000W)
+   - **Example**: Data corruption or bad exports
+   - **Mitigation**: Validate power ranges, reject if > 500% FTP
+   - **Testing**: Validation unit tests
 
-```
-README.md                         # Update with Phase 4 completion
-tests/config/test_loader.py       # Fix config path test
-tests/tools/wrappers/test_cross_training.py  # Fix 2 tests
-tests/tools/wrappers/test_performance.py     # Fix 1 test
-tests/tools/wrappers/test_training.py        # Fix 1 test
-tests/tools/wrappers/test_zones.py           # Fix 3 tests
-```
+5. **Missing Workout Name**
+   - **Risk**: Some FIT files have empty workout names
+   - **Mitigation**: Use filename or generate name from structure
+   - **Testing**: Test with unnamed workout file
+
+6. **Multiple Repeats in Sequence**
+   - **Risk**: Workout has multiple interval blocks
+   - **Example**: 5x3min @ VO2 → Rest → 3x10min @ Threshold
+   - **Mitigation**: Parser should handle multiple repeat structures
+   - **Testing**: Sample from real TrainingPeaks workouts
+
+7. **Duration Type DISTANCE**
+   - **Risk**: Some steps use distance (meters) not time
+   - **Example**: "Warmup: 5km @ Z2"
+   - **Mitigation**: Convert distance to estimated time (assume 30 km/h avg)
+   - **Testing**: Sample with distance-based steps
+
+8. **Heart Rate Targets**
+   - **Risk**: Some workouts target HR not power
+   - **Example**: "Interval @ 85-90% max HR"
+   - **Mitigation**: Skip HR-based workouts or convert to estimated power
+   - **Testing**: Sample with HR targets
+
+### Risk Mitigation Strategy
+
+| Risk | Likelihood | Impact | Mitigation |
+|------|-----------|--------|------------|
+| Nested repeats | Medium | High | Flatten structures, add validation |
+| Missing power targets | Medium | Medium | Default to moderate effort, log warning |
+| Invalid power values | Low | High | Validate ranges, reject outliers |
+| Missing metadata | Low | Medium | Use filename, generate defaults |
+| Unsupported duration type | Low | Medium | Skip unsupported steps, log warning |
+| FIT file corruption | Low | High | Catch parse errors, clear error messages |
+| Zone definition mismatch | Medium | Low | Use standard Coggan zones, document |
 
 ---
 
-## Implementation Timeline
+## Testing Strategy
 
-**Total Duration:** 5-7 days
+### Test Pyramid
 
-**Day 1: Real-World Testing (Sub-Phase 4A)**
-- Morning: Setup and test with Ollama
-- Afternoon: Test with Anthropic Claude
-- Evening: Collect metrics and validate reports
+```
+         ┌─────────────────┐
+         │  Integration    │  4 tests
+         │  Tests          │  (real FIT files)
+         └─────────────────┘
+              ▲
+         ┌────┴────┐
+         │  Unit   │  20+ tests
+         │  Tests  │  (individual functions)
+         └─────────┘
+```
 
-**Day 2: Continue Testing + Start Fixes (Sub-Phases 4A + 4B)**
-- Morning: Test with additional providers (if available)
-- Afternoon: Begin fixing pre-existing test failures
-- Evening: Run regression tests
+### Unit Tests
 
-**Day 3: Complete Test Fixes + Benchmarking (Sub-Phases 4B + 4C)**
-- Morning: Complete all test fixes, verify 253/253 passing
-- Afternoon: Run performance benchmarks
-- Evening: Analyze results, document findings
+**File**: `tests/parsers/test_fit_workout_parser.py`
 
-**Day 4: Documentation (Sub-Phase 4D)**
-- Morning: Write deployment checklist
-- Afternoon: Write user guide and troubleshooting guide
-- Evening: Write performance benchmarks document
+```python
+import pytest
+from pathlib import Path
+from cycling_ai.parsers.fit_workout_parser import (
+    FitWorkoutParser,
+    FitWorkoutStep,
+    FitIntensity,
+    FitDurationType,
+)
 
-**Day 5: User Acceptance Testing (Sub-Phase 4E)**
-- Morning: Execute UAT scenarios 1-3
-- Afternoon: Execute UAT scenarios 4-5
-- Evening: Write UAT report, make go/no-go decision
+class TestFitWorkoutParser:
+    """Unit tests for FitWorkoutParser."""
 
-**Day 6-7: Buffer + Final Review**
-- Address any issues from UAT
-- Final documentation review
-- Write Phase 4 completion report
-- Prepare for production deployment
+    def test_init(self):
+        """Test parser initialization."""
+        parser = FitWorkoutParser()
+        assert parser is not None
+
+    def test_parse_workout_file_missing_file(self):
+        """Test error when file doesn't exist."""
+        parser = FitWorkoutParser()
+
+        with pytest.raises(FileNotFoundError):
+            parser.parse_workout_file("nonexistent.fit", ftp=260)
+
+    def test_parse_workout_file_invalid_ftp(self):
+        """Test error when FTP is invalid."""
+        parser = FitWorkoutParser()
+
+        with pytest.raises(ValueError, match="Invalid FTP"):
+            parser.parse_workout_file("workout.fit", ftp=0)
+
+        with pytest.raises(ValueError, match="Invalid FTP"):
+            parser.parse_workout_file("workout.fit", ftp=-100)
+
+    def test_map_intensity_to_type(self):
+        """Test intensity mapping."""
+        parser = FitWorkoutParser()
+
+        assert parser._map_intensity_to_type(FitIntensity.WARMUP) == "warmup"
+        assert parser._map_intensity_to_type(FitIntensity.ACTIVE) == "interval"
+        assert parser._map_intensity_to_type(FitIntensity.REST) == "recovery"
+        assert parser._map_intensity_to_type(FitIntensity.COOLDOWN) == "cooldown"
+        assert parser._map_intensity_to_type(None) == "steady"
+
+    def test_zone_to_percentage(self):
+        """Test power zone to percentage conversion."""
+        parser = FitWorkoutParser()
+
+        # Zone 2 (Endurance): 56-75%
+        assert parser._zone_to_percentage(2, is_low=True) == 56
+        assert parser._zone_to_percentage(2, is_low=False) == 75
+
+        # Zone 4 (Threshold): 91-105%
+        assert parser._zone_to_percentage(4, is_low=True) == 91
+        assert parser._zone_to_percentage(4, is_low=False) == 105
+
+        # Invalid zone defaults to Z2
+        assert parser._zone_to_percentage(99, is_low=True) == 75
+
+    def test_get_power_pct_custom_range(self):
+        """Test power percentage from custom range."""
+        parser = FitWorkoutParser()
+        ftp = 250
+
+        step = FitWorkoutStep(
+            message_index=0,
+            intensity=FitIntensity.ACTIVE,
+            duration_type=FitDurationType.TIME,
+            duration_value=600,
+            target_type=FitTargetType.POWER,
+            custom_power_low=225,  # 90% FTP
+            custom_power_high=250,  # 100% FTP
+        )
+
+        assert parser._get_power_pct(step, ftp, is_low=True) == 90
+        assert parser._get_power_pct(step, ftp, is_low=False) == 100
+
+    def test_get_power_pct_zone(self):
+        """Test power percentage from zone."""
+        parser = FitWorkoutParser()
+        ftp = 260
+
+        step = FitWorkoutStep(
+            message_index=0,
+            intensity=FitIntensity.ACTIVE,
+            duration_type=FitDurationType.TIME,
+            duration_value=600,
+            target_type=FitTargetType.POWER,
+            target_power_zone=4,  # Threshold zone
+        )
+
+        assert parser._get_power_pct(step, ftp, is_low=True) == 91
+        assert parser._get_power_pct(step, ftp, is_low=False) == 105
+
+    def test_calculate_total_duration_simple(self):
+        """Test duration calculation for simple workout."""
+        parser = FitWorkoutParser()
+
+        segments = [
+            {"type": "warmup", "duration_min": 15},
+            {"type": "steady", "duration_min": 60},
+            {"type": "cooldown", "duration_min": 10},
+        ]
+
+        assert parser._calculate_total_duration(segments) == 85
+
+    def test_calculate_total_duration_intervals(self):
+        """Test duration calculation with intervals."""
+        parser = FitWorkoutParser()
+
+        segments = [
+            {"type": "warmup", "duration_min": 15},
+            {
+                "type": "interval",
+                "sets": 5,
+                "work": {"duration_min": 3},
+                "recovery": {"duration_min": 3},
+            },
+            {"type": "cooldown", "duration_min": 10},
+        ]
+
+        # 15 + (3+3)*5 + 10 = 55
+        assert parser._calculate_total_duration(segments) == 55
+
+    def test_convert_step_to_segment_warmup(self):
+        """Test converting warmup step to segment."""
+        parser = FitWorkoutParser()
+        ftp = 260
+
+        step = FitWorkoutStep(
+            message_index=0,
+            intensity=FitIntensity.WARMUP,
+            duration_type=FitDurationType.TIME,
+            duration_value=900,  # 15 minutes
+            target_type=FitTargetType.POWER,
+            custom_power_low=130,  # 50% FTP
+            custom_power_high=169,  # 65% FTP
+            step_name="Warm up",
+        )
+
+        segment = parser._convert_step_to_segment(step, ftp)
+
+        assert segment["type"] == "warmup"
+        assert segment["duration_min"] == 15
+        assert segment["power_low_pct"] == 50
+        assert segment["power_high_pct"] == 65
+        assert segment["description"] == "Warm up"
+
+    def test_convert_step_to_segment_skip_open(self):
+        """Test that OPEN duration steps are skipped."""
+        parser = FitWorkoutParser()
+        ftp = 260
+
+        step = FitWorkoutStep(
+            message_index=0,
+            intensity=FitIntensity.COOLDOWN,
+            duration_type=FitDurationType.OPEN,
+            duration_value=0,
+            target_type=FitTargetType.OPEN,
+        )
+
+        segment = parser._convert_step_to_segment(step, ftp)
+        assert segment is None
+
+    def test_validate_workout_structure_step_count_mismatch(self):
+        """Test validation catches step count mismatch."""
+        parser = FitWorkoutParser()
+
+        metadata = FitWorkoutMetadata(
+            name="Test", sport="cycling", num_steps=5
+        )
+
+        steps = [
+            FitWorkoutStep(
+                message_index=i,
+                intensity=FitIntensity.ACTIVE,
+                duration_type=FitDurationType.TIME,
+                duration_value=600,
+                target_type=FitTargetType.POWER,
+            )
+            for i in range(3)  # Only 3 steps, metadata says 5
+        ]
+
+        with pytest.raises(ValueError, match="Step count mismatch"):
+            parser._validate_workout_structure(metadata, steps)
+
+
+class TestFitWorkoutStep:
+    """Unit tests for FitWorkoutStep data class."""
+
+    def test_is_repeat_step(self):
+        """Test repeat step detection."""
+        step = FitWorkoutStep(
+            message_index=0,
+            intensity=None,
+            duration_type=FitDurationType.REPEAT_UNTIL_STEPS_COMPLETE,
+            duration_value=5,
+            target_type=FitTargetType.OPEN,
+            repeat_steps=5,
+        )
+
+        assert step.is_repeat_step() is True
+
+    def test_is_not_repeat_step(self):
+        """Test non-repeat step."""
+        step = FitWorkoutStep(
+            message_index=0,
+            intensity=FitIntensity.ACTIVE,
+            duration_type=FitDurationType.TIME,
+            duration_value=600,
+            target_type=FitTargetType.POWER,
+        )
+
+        assert step.is_repeat_step() is False
+
+    def test_has_power_zone(self):
+        """Test power zone detection."""
+        step = FitWorkoutStep(
+            message_index=0,
+            intensity=FitIntensity.ACTIVE,
+            duration_type=FitDurationType.TIME,
+            duration_value=600,
+            target_type=FitTargetType.POWER,
+            target_power_zone=4,
+        )
+
+        assert step.has_power_zone() is True
+        assert step.has_custom_power() is False
+
+    def test_has_custom_power(self):
+        """Test custom power range detection."""
+        step = FitWorkoutStep(
+            message_index=0,
+            intensity=FitIntensity.ACTIVE,
+            duration_type=FitDurationType.TIME,
+            duration_value=600,
+            target_type=FitTargetType.POWER,
+            custom_power_low=225,
+            custom_power_high=250,
+        )
+
+        assert step.has_power_zone() is False
+        assert step.has_custom_power() is True
+
+
+class TestParsedWorkout:
+    """Unit tests for ParsedWorkout data class."""
+
+    def test_generate_workout_id(self):
+        """Test workout ID generation."""
+        metadata = FitWorkoutMetadata(
+            name="VO2 Max intervals - 5x3min",
+            sport="cycling",
+            num_steps=7,
+        )
+
+        workout = ParsedWorkout(
+            metadata=metadata,
+            segments=[],
+            base_duration_min=55,
+            base_tss=85,
+        )
+
+        workout_id = workout._generate_workout_id()
+
+        assert workout_id == "vo2_max_intervals_5x3min"
+        assert len(workout_id) <= 50
+
+    def test_to_library_format_structure(self):
+        """Test conversion to library format."""
+        metadata = FitWorkoutMetadata(
+            name="Threshold workout",
+            sport="cycling",
+            num_steps=5,
+        )
+
+        segments = [
+            {"type": "warmup", "duration_min": 15},
+            {"type": "interval", "sets": 2},
+            {"type": "cooldown", "duration_min": 10},
+        ]
+
+        workout = ParsedWorkout(
+            metadata=metadata,
+            segments=segments,
+            base_duration_min=55,
+            base_tss=85,
+        )
+
+        library_format = workout.to_library_format()
+
+        assert "id" in library_format
+        assert library_format["name"] == "Threshold workout"
+        assert library_format["segments"] == segments
+        assert library_format["base_duration_min"] == 55
+        assert library_format["base_tss"] == 85
+        assert "suitable_phases" in library_format
+        assert "variable_components" in library_format
+```
+
+### Integration Tests
+
+**File**: `tests/parsers/test_fit_workout_parser_integration.py`
+
+```python
+import pytest
+from pathlib import Path
+from cycling_ai.parsers.fit_workout_parser import FitWorkoutParser
+
+class TestFitWorkoutParserIntegration:
+    """Integration tests with real FIT files."""
+
+    @pytest.fixture
+    def sample_fit_dir(self):
+        """Path to sample FIT files."""
+        return Path(".claude/fit_samples")
+
+    @pytest.fixture
+    def parser(self):
+        """FitWorkoutParser instance."""
+        return FitWorkoutParser()
+
+    def test_parse_minute_monster(self, parser, sample_fit_dir):
+        """Test parsing Minute Monster workout."""
+        fit_path = sample_fit_dir / "2025-11-04_MinuteMons.fit"
+        ftp = 1200  # Based on sample power values
+
+        workout = parser.parse_workout_file(fit_path, ftp)
+
+        # Check metadata
+        assert workout.metadata.name == "Minute Monster (Power)"
+        assert workout.metadata.sport == "cycling"
+        assert workout.metadata.num_steps == 14
+
+        # Check segments
+        assert len(workout.segments) > 0
+
+        # Check has warmup
+        assert any(s["type"] == "warmup" for s in workout.segments)
+
+        # Check has intervals
+        assert any(s["type"] == "interval" for s in workout.segments)
+
+        # Check has cooldown
+        assert any(s["type"] == "cooldown" for s in workout.segments)
+
+        # Check duration
+        assert workout.base_duration_min > 0
+
+        # Check TSS
+        assert workout.base_tss > 0
+
+    def test_parse_vo2max_booster(self, parser, sample_fit_dir):
+        """Test parsing VO2 Max Booster workout."""
+        fit_path = sample_fit_dir / "2025-11-05_VO2MaxBoos.fit"
+        ftp = 1200
+
+        workout = parser.parse_workout_file(fit_path, ftp)
+
+        assert "vo2" in workout.metadata.name.lower()
+        assert workout.metadata.num_steps == 23
+
+        # Should have multiple interval sets
+        interval_segments = [
+            s for s in workout.segments if s["type"] == "interval"
+        ]
+        assert len(interval_segments) > 0
+
+    def test_parse_map_efforts(self, parser, sample_fit_dir):
+        """Test parsing M.A.P Efforts workout."""
+        fit_path = sample_fit_dir / "2025-04-04_M.A.PEffor.fit"
+        ftp = 1200
+
+        workout = parser.parse_workout_file(fit_path, ftp)
+
+        assert "map" in workout.metadata.name.lower()
+        assert workout.metadata.num_steps == 10
+
+    def test_to_library_format_complete(self, parser, sample_fit_dir):
+        """Test complete conversion to library format."""
+        fit_path = sample_fit_dir / "2025-11-04_MinuteMons.fit"
+        ftp = 1200
+
+        workout = parser.parse_workout_file(fit_path, ftp)
+        library_format = workout.to_library_format()
+
+        # Validate all required fields
+        required_fields = [
+            "id",
+            "name",
+            "detailed_description",
+            "type",
+            "intensity",
+            "suitable_phases",
+            "suitable_weekdays",
+            "segments",
+            "base_duration_min",
+            "base_tss",
+            "variable_components",
+        ]
+
+        for field in required_fields:
+            assert field in library_format
+
+        # Validate segments structure
+        for segment in library_format["segments"]:
+            assert "type" in segment
+
+            if segment["type"] == "interval":
+                assert "sets" in segment
+                assert "work" in segment
+                assert "duration_min" in segment["work"]
+                assert "power_low_pct" in segment["work"]
+                assert "power_high_pct" in segment["work"]
+            else:
+                assert "duration_min" in segment
+                assert "power_low_pct" in segment
+                assert "power_high_pct" in segment
+```
+
+### Test Coverage Goals
+
+- **Unit Tests**: 90%+ coverage
+- **Integration Tests**: All sample FIT files
+- **Edge Cases**: 100% of identified edge cases tested
+- **Type Checking**: 100% mypy --strict compliance
+
+---
+
+## Implementation Sequence (Task Cards)
+
+The implementation will follow a **Test-Driven Development (TDD)** approach:
+
+### Phase 1: Foundation (Cards 1-3)
+1. **CARD_001**: Set up module structure and data classes
+2. **CARD_002**: Implement FIT file reading and metadata extraction
+3. **CARD_003**: Implement step extraction and validation
+
+### Phase 2: Core Parsing (Cards 4-6)
+4. **CARD_004**: Implement simple segment conversion
+5. **CARD_005**: Implement repeat structure handling
+6. **CARD_006**: Implement power conversion logic
+
+### Phase 3: Integration (Cards 7-8)
+7. **CARD_007**: Implement ParsedWorkout and library format conversion
+8. **CARD_008**: Integration tests with sample FIT files
+
+### Phase 4: Polish (Cards 9-10)
+9. **CARD_009**: Edge case handling and validation
+10. **CARD_010**: Documentation and examples
 
 ---
 
 ## Dependencies
 
-### Required Tools
-- pytest (installed ✅)
-- mypy (installed ✅)
-- LLM providers:
-  - Ollama (local) - REQUIRED
-  - Anthropic API key - REQUIRED
-  - OpenAI API key - Optional
-  - Google API key - Optional
+### Required Python Packages
 
-### Required Data
-- Test cycling data: `tests/data/real_activities.csv` ✅
-- Test athlete profile: `tests/data/test_profile.json` ✅
-- Test FIT files: `tests/data/fit_files/` (optional but recommended)
+```python
+# Already installed (from existing project)
+fitparse==1.2.0  # FIT file parsing
 
-### Environment Setup
-```bash
-# Install Ollama (if not already installed)
-# macOS: brew install ollama
-# Linux: curl https://ollama.ai/install.sh | sh
+# May need to install
+dataclasses  # Python 3.7+ (built-in)
+pathlib  # Python 3.4+ (built-in)
+typing  # Python 3.5+ (built-in)
+```
 
-# Pull required model
-ollama pull llama3.2:3b
+### Internal Dependencies
 
-# Start Ollama server
-ollama serve
-
-# Configure API keys
-export ANTHROPIC_API_KEY="sk-ant-..."  # REQUIRED
-export OPENAI_API_KEY="sk-..."        # Optional
-export GOOGLE_API_KEY="..."            # Optional
+```python
+from cycling_ai.core.workout_builder import Workout, WorkoutSegment
+from cycling_ai.core.power_zones import calculate_power_zones
+from cycling_ai.core.tss import calculate_workout_tss
 ```
 
 ---
 
-## Next Steps After Phase 4
+## Success Criteria
 
-Once Phase 4 is complete and approved:
+### Functional Requirements
+- [ ] Parse all 4 sample FIT files successfully
+- [ ] Extract workout metadata (name, sport, steps)
+- [ ] Convert all workout steps to segments
+- [ ] Handle repeat/interval structures correctly
+- [ ] Convert power zones and custom ranges to percentages
+- [ ] Calculate accurate duration and TSS
+- [ ] Generate valid workout library format
 
-1. **Merge to Main**
-   ```bash
-   git add .
-   git commit -m "Phase 4 Complete: Production Readiness Validated"
-   git push origin main
-   ```
+### Non-Functional Requirements
+- [ ] 100% type safety (mypy --strict passes)
+- [ ] 90%+ test coverage (unit tests)
+- [ ] 100% integration test success (all samples)
+- [ ] Clear error messages for invalid files
+- [ ] Performance: Parse file in < 1 second
+- [ ] Documentation: All public methods documented
 
-2. **Tag Release**
-   ```bash
-   git tag -a v1.0.0 -m "Multi-Agent Orchestrator v1.0.0 - Production Ready"
-   git push origin v1.0.0
-   ```
-
-3. **Deploy to Production**
-   - Follow `docs/DEPLOYMENT_CHECKLIST.md`
-   - Set up monitoring
-   - Configure logging
-
-4. **Announce Release**
-   - Update README with release notes
-   - Share with community
-   - Gather user feedback
-
-5. **Monitor and Iterate**
-   - Track usage metrics
-   - Monitor error rates
-   - Collect user feedback
-   - Plan Phase 5 (advanced features)
+### Code Quality
+- [ ] PEP 8 compliance (ruff check passes)
+- [ ] No code duplication
+- [ ] Clear, descriptive naming
+- [ ] Comprehensive docstrings
+- [ ] Type hints on all functions
 
 ---
 
-## Potential Phase 5 Features (Future)
+## Open Questions & Decisions Needed
 
-After Phase 4 is production-ready:
-- Streaming responses for real-time feedback
-- Parallel tool execution for faster workflows
-- Web UI for non-technical users
-- Advanced data visualization
-- Voice interface integration
-- Multi-agent collaboration
-- Automated FTP testing
-- PDF report generation
-- Email delivery integration
-- Webhook notifications
+### 1. FTP Requirement
+**Question**: Should parser require FTP as input or support parsing without FTP?
+
+**Options**:
+- A) Require FTP (current design) - enables power percentage calculations
+- B) Optional FTP - store raw watts if FTP not provided
+- C) Store both watts and percentages
+
+**Recommendation**: Option A (require FTP)
+- Reason: Workout library format requires percentages
+- Fallback: If FTP unknown, could use average power from sample files
+
+### 2. Workout Type Inference
+**Question**: How should parser infer workout type (VO2max, threshold, etc.)?
+
+**Options**:
+- A) Analyze power percentages in main intervals
+- B) Parse workout name for keywords
+- C) Leave empty for manual classification
+- D) Use both A and B with confidence score
+
+**Recommendation**: Option D
+- Reason: Most accurate, allows manual override if low confidence
+
+### 3. Variable Components Detection
+**Question**: How to detect which workout components are adjustable?
+
+**Options**:
+- A) Mark all intervals as adjustable (sets can change)
+- B) Use heuristics (if > 3 sets, adjustable)
+- C) Leave empty for manual configuration
+- D) Create separate "rigid" vs "flexible" workout categories
+
+**Recommendation**: Option A initially, refine later
+- Reason: Simple, conservative approach
+
+### 4. Missing Detailed Descriptions
+**Question**: FIT files don't include coaching notes. How to handle?
+
+**Options**:
+- A) Leave empty, add manually later
+- B) Generate generic description based on workout type
+- C) Use LLM to generate description from structure
+- D) Prompt user to add description during import
+
+**Recommendation**: Option A
+- Reason: Simplest, maintains data integrity
+
+### 5. Suitable Phases/Weekdays
+**Question**: How to determine suitable phases and weekdays?
+
+**Options**:
+- A) Use default values for all workouts
+- B) Infer from intensity (hard = Build/Peak, easy = all phases)
+- C) Leave empty for manual configuration
+- D) Create configuration file for mapping rules
+
+**Recommendation**: Option B
+- Reason: Provides reasonable defaults, can be overridden
 
 ---
 
-## Sign-off
+## Future Enhancements (Out of Scope)
 
-**Phase 4 Plan Created By:** task-prep-architect agent
-**Date:** 2025-10-27
-**Status:** Ready for Execution
-**Next Agent:** task-executor-tdd (will execute Phase 4)
-**Approval Required:** User approval to proceed with implementation
+1. **Bi-directional Conversion**
+   - Export our workout library format to FIT files
+   - Would enable creating workouts in our system, loading to Garmin
+
+2. **Advanced Workout Types**
+   - Support running workouts (pace zones)
+   - Support swim workouts (different structure)
+
+3. **Workout Variations**
+   - Detect workout "families" (same structure, different intensities)
+   - Auto-generate progressive variations
+
+4. **Metadata Enrichment**
+   - Use LLM to generate detailed descriptions
+   - Infer coaching notes from structure
+
+5. **Workout Validation**
+   - Physiological feasibility checks
+   - TSS/intensity warnings
 
 ---
 
-**END OF PHASE 4 IMPLEMENTATION PLAN**
+## Ready for Implementation
 
+This plan provides:
+- ✅ Clear architecture and data flow
+- ✅ Complete type-safe data class designs
+- ✅ Detailed parser implementation outline
+- ✅ Comprehensive testing strategy
+- ✅ Edge case analysis and mitigation
+- ✅ Clear success criteria
+- ✅ Implementation sequence (task cards)
+
+**Next Steps**:
+1. Review and approve this plan
+2. Create detailed implementation task cards (CARD_001 - CARD_010)
+3. Begin TDD implementation starting with CARD_001
+
+**Estimated Implementation Time**: 8-12 hours (1.5-2 days)
+
+---
+
+**Document Status**: COMPLETE - Ready for Task Card Generation
+**Author**: Task Implementation Preparation Architect
+**Date**: 2025-11-02

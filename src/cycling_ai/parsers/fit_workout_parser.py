@@ -464,32 +464,30 @@ class FitWorkoutParser:
         if ftp <= 0:
             raise ValueError(f"Invalid FTP: {ftp}. Must be positive.")
 
-        # Parse FIT file
+        # Parse FIT file - need to read multiple times, so don't use context manager
+        # Extract metadata
         try:
-            fit_file = fitdecode.FitReader(str(fit_path))
+            fit_file_metadata = fitdecode.FitReader(str(fit_path))
+            metadata = self._extract_metadata(fit_file_metadata)
         except Exception as e:
-            raise ValueError(f"Failed to parse FIT file: {e}") from e
+            raise ValueError(f"Failed to parse FIT file metadata: {e}") from e
 
-        # Extract metadata and steps
-        metadata = self._extract_metadata(fit_file)
-        steps = self._extract_steps(fit_file)
+        # Extract steps (need fresh reader since iterator is consumed)
+        try:
+            fit_file_steps = fitdecode.FitReader(str(fit_path))
+            steps = self._extract_steps(fit_file_steps)
+        except Exception as e:
+            raise ValueError(f"Failed to parse FIT file steps: {e}") from e
 
         # Validate workout structure
         self._validate_workout_structure(metadata, steps)
 
-        # Build segments from steps (placeholder for now - will be implemented in later cards)
-        # For CARD_002, we create a placeholder segment to satisfy ParsedWorkout validation
-        segments: list[dict[str, Any]] = [
-            {
-                "type": "placeholder",
-                "duration_min": 1,
-                "description": "Placeholder segment - will be implemented in later cards",
-            }
-        ]
+        # Build segments from steps
+        segments = self._build_segments(steps, ftp)
 
-        # Calculate duration and TSS (placeholder for now)
-        duration = 1
-        tss = 1.0
+        # Calculate duration and TSS
+        duration = self._calculate_total_duration(segments)
+        tss = self._calculate_base_tss(segments, ftp)
 
         return ParsedWorkout(
             metadata=metadata,
@@ -580,14 +578,463 @@ class FitWorkoutParser:
 
         Returns:
             List of FitWorkoutStep objects in order
-
-        Note:
-            This is a placeholder implementation for CARD_002.
-            Full implementation will be done in CARD_003.
         """
-        # Placeholder: return empty list for now
-        # Will be implemented in CARD_003
-        return []
+        steps: list[FitWorkoutStep] = []
+
+        for frame in fit_file:
+            if not isinstance(frame, fitdecode.FitDataMessage):
+                continue
+
+            if frame.name == "workout_step":
+                step_data: dict[str, Any] = {}
+
+                # Extract all fields from the frame
+                for field in frame.fields:
+                    if field.value is not None:
+                        step_data[field.name] = field.value
+
+                # Build FitWorkoutStep from extracted data
+                step = self._build_step_from_data(step_data)
+                steps.append(step)
+
+        # Sort by message_index to ensure correct order
+        steps.sort(key=lambda s: s.message_index)
+
+        return steps
+
+    def _build_step_from_data(self, data: dict[str, Any]) -> FitWorkoutStep:
+        """
+        Build FitWorkoutStep from raw field data.
+
+        Args:
+            data: Dictionary of field name -> value from FIT message
+
+        Returns:
+            FitWorkoutStep object
+        """
+        # Map intensity string to enum
+        intensity_map = {
+            "warmup": FitIntensity.WARMUP,
+            "active": FitIntensity.ACTIVE,
+            "rest": FitIntensity.REST,
+            "cooldown": FitIntensity.COOLDOWN,
+        }
+
+        intensity_str = str(data.get("intensity", "")).lower()
+        intensity = intensity_map.get(intensity_str)
+
+        # Map duration type
+        duration_type_map = {
+            "time": FitDurationType.TIME,
+            "distance": FitDurationType.DISTANCE,
+            "open": FitDurationType.OPEN,
+            "repeat_until_steps_cmplt": FitDurationType.REPEAT_UNTIL_STEPS_COMPLETE,
+        }
+
+        duration_type_str = str(data.get("duration_type", "")).lower()
+        duration_type = duration_type_map.get(duration_type_str, FitDurationType.TIME)
+
+        # Map target type
+        target_type_map = {
+            "power": FitTargetType.POWER,
+            "heart_rate": FitTargetType.HEART_RATE,
+            "open": FitTargetType.OPEN,
+        }
+
+        target_type_str = str(data.get("target_type", "")).lower()
+        target_type = target_type_map.get(target_type_str, FitTargetType.OPEN)
+
+        # Extract duration value based on duration type
+        if duration_type == FitDurationType.TIME:
+            duration_value = float(data.get("duration_time", 0))
+        elif duration_type == FitDurationType.REPEAT_UNTIL_STEPS_COMPLETE:
+            # For repeat steps, duration_value should be the repeat count
+            duration_value = float(data.get("repeat_steps", 0))
+        else:
+            duration_value = float(data.get("duration_value", 0))
+
+        # Extract repeat_steps for repeat structures
+        repeat_steps_value = None
+        if duration_type == FitDurationType.REPEAT_UNTIL_STEPS_COMPLETE:
+            repeat_steps_value = data.get("repeat_steps")
+            if repeat_steps_value is not None:
+                repeat_steps_value = int(repeat_steps_value)
+
+        return FitWorkoutStep(
+            message_index=int(data.get("message_index", 0)),
+            intensity=intensity,
+            duration_type=duration_type,
+            duration_value=duration_value,
+            target_type=target_type,
+            target_power_zone=data.get("target_power_zone"),
+            custom_power_low=data.get("custom_target_power_low"),
+            custom_power_high=data.get("custom_target_power_high"),
+            repeat_from=data.get("duration_step"),
+            repeat_to=None,  # Not directly in FIT messages
+            repeat_steps=repeat_steps_value,
+            step_name=str(data.get("wkt_step_name", "")),
+        )
+
+    def _convert_step_to_segment(
+        self,
+        step: FitWorkoutStep,
+        ftp: float,
+    ) -> dict[str, Any] | None:
+        """
+        Convert single FIT step to segment.
+
+        Handles simple steps (warmup, cooldown, steady).
+        Repeat steps are handled separately.
+
+        Args:
+            step: FitWorkoutStep to convert
+            ftp: Athlete's FTP for percentage calculations
+
+        Returns:
+            Segment dictionary or None if step should be skipped
+        """
+        # Skip repeat steps (handled separately)
+        if step.is_repeat_step():
+            return None
+
+        # Skip OPEN duration steps (no specific duration)
+        if step.duration_type == FitDurationType.OPEN:
+            return None
+
+        # Map intensity to segment type
+        segment_type = self._map_intensity_to_type(step.intensity)
+
+        # Convert duration to minutes
+        duration_min = int(step.duration_value / 60)
+
+        # Get power percentages
+        power_low_pct = self._get_power_pct(step, ftp, is_low=True)
+        power_high_pct = self._get_power_pct(step, ftp, is_low=False)
+
+        return {
+            "type": segment_type,
+            "duration_min": duration_min,
+            "power_low_pct": power_low_pct,
+            "power_high_pct": power_high_pct,
+            "description": step.step_name or segment_type.capitalize(),
+        }
+
+    def _map_intensity_to_type(self, intensity: FitIntensity | None) -> str:
+        """
+        Map FIT intensity to our segment type.
+
+        Args:
+            intensity: FIT intensity enum
+
+        Returns:
+            Segment type string
+        """
+        if intensity == FitIntensity.WARMUP:
+            return "warmup"
+        elif intensity == FitIntensity.COOLDOWN:
+            return "cooldown"
+        elif intensity == FitIntensity.ACTIVE:
+            return "steady"  # Simple active segments
+        elif intensity == FitIntensity.REST:
+            return "recovery"
+        else:
+            return "steady"  # Default
+
+    def _get_power_pct(
+        self,
+        step: FitWorkoutStep,
+        ftp: float,
+        is_low: bool,
+    ) -> int:
+        """
+        Get power percentage from step.
+
+        Handles both power zones and custom power ranges.
+
+        Args:
+            step: FitWorkoutStep
+            ftp: Athlete's FTP
+            is_low: True for lower bound, False for upper bound
+
+        Returns:
+            Power as percentage of FTP
+        """
+        if step.has_custom_power():
+            # Use custom power range
+            watts = step.custom_power_low if is_low else step.custom_power_high
+            if watts is None:
+                return 75  # Default to moderate effort
+            return int((watts / ftp) * 100)
+
+        elif step.has_power_zone():
+            # Use power zone
+            zone = step.target_power_zone
+            if zone is None:
+                return 75  # Default to moderate effort
+            return self._zone_to_percentage(zone, is_low)
+
+        else:
+            # No power target
+            return 50  # Default to easy effort
+
+    def _zone_to_percentage(self, zone: int, is_low: bool) -> int:
+        """
+        Convert power zone number to FTP percentage.
+
+        Uses standard Coggan/Allen power zone model.
+
+        Args:
+            zone: Zone number (1-7)
+            is_low: True for lower bound, False for upper
+
+        Returns:
+            Power percentage
+        """
+        # Standard zone definitions (Coggan/Allen model)
+        zone_ranges = {
+            1: (0, 55),  # Active Recovery
+            2: (56, 75),  # Endurance
+            3: (76, 90),  # Tempo
+            4: (91, 105),  # Threshold
+            5: (106, 120),  # VO2 Max
+            6: (121, 150),  # Anaerobic
+            7: (151, 200),  # Neuromuscular
+        }
+
+        if zone not in zone_ranges:
+            return 75  # Default to Z2
+
+        low, high = zone_ranges[zone]
+        return low if is_low else high
+
+    def _build_segments(
+        self,
+        steps: list[FitWorkoutStep],
+        ftp: float,
+    ) -> list[dict[str, Any]]:
+        """
+        Build workout segments from FIT steps.
+
+        This is the core transformation logic that:
+        1. Identifies repeat structures
+        2. Groups work/recovery pairs into intervals
+        3. Converts simple steps to segments
+        4. Handles power zone or custom power ranges
+
+        Args:
+            steps: List of FitWorkoutStep objects
+            ftp: Athlete's FTP for percentage calculations
+
+        Returns:
+            List of segment dictionaries
+        """
+        segments: list[dict[str, Any]] = []
+        processed_indices: set[int] = set()
+
+        i = 0
+        while i < len(steps):
+            # Skip if already processed (part of a repeat structure)
+            if i in processed_indices:
+                i += 1
+                continue
+
+            step = steps[i]
+
+            if step.is_repeat_step():
+                # Handle repeat structure
+                repeat_segment = self._handle_repeat_structure(steps, i, ftp)
+                segments.append(repeat_segment)
+
+                # Mark the steps that are part of this repeat as processed
+                if step.repeat_from is not None:
+                    # Mark steps from repeat_from to current index as processed
+                    for j in range(step.repeat_from, i):
+                        processed_indices.add(j)
+
+                i += 1
+            else:
+                # Simple step (warmup, cooldown, steady)
+                segment = self._convert_step_to_segment(step, ftp)
+                if segment:  # Skip None (like OPEN steps)
+                    segments.append(segment)
+                i += 1
+
+        return segments
+
+    def _handle_repeat_structure(
+        self,
+        steps: list[FitWorkoutStep],
+        repeat_index: int,
+        ftp: float,
+    ) -> dict[str, Any]:
+        """
+        Handle repeat/interval structure.
+
+        FIT repeat structure:
+          Step N: work interval
+          Step N+1: recovery interval
+          Step N+2: repeat (repeat_steps=X, repeat from N)
+
+        Our format:
+          {
+            "type": "interval",
+            "sets": X,
+            "work": {...},
+            "recovery": {...}
+          }
+
+        Args:
+            steps: All workout steps
+            repeat_index: Index of the repeat step
+            ftp: Athlete's FTP
+
+        Returns:
+            Interval segment dictionary
+
+        Raises:
+            ValueError: If repeat structure is invalid
+        """
+        repeat_step = steps[repeat_index]
+
+        if not repeat_step.is_repeat_step():
+            raise ValueError(f"Step {repeat_index} is not a repeat step")
+
+        # The repeat step tells us how many times to repeat
+        repeat_count = repeat_step.repeat_steps or 0
+
+        # Find the work and recovery steps
+        # repeat_from tells us which step to start repeating from
+        work_step = None
+        recovery_step = None
+
+        if repeat_step.repeat_from is not None:
+            # Use the repeat_from field to find the start of the repeat sequence
+            start_index = repeat_step.repeat_from
+
+            # Usually there are 2 steps: work and recovery
+            if start_index < len(steps):
+                work_step = steps[start_index]
+
+            if start_index + 1 < len(steps) and start_index + 1 < repeat_index:
+                recovery_step = steps[start_index + 1]
+        else:
+            # Fallback: search backward for work/recovery steps
+            for j in range(repeat_index - 1, -1, -1):
+                if steps[j].intensity == FitIntensity.ACTIVE and work_step is None:
+                    work_step = steps[j]
+                elif steps[j].intensity == FitIntensity.REST and recovery_step is None:
+                    recovery_step = steps[j]
+
+                if work_step and recovery_step:
+                    break
+
+        if not work_step:
+            raise ValueError(f"Repeat step at {repeat_index} has no work interval")
+
+        # Build interval segment
+        segment: dict[str, Any] = {
+            "type": "interval",
+            "sets": repeat_count,
+            "work": {
+                "duration_min": int(work_step.duration_value / 60),
+                "power_low_pct": self._get_power_pct(work_step, ftp, is_low=True),
+                "power_high_pct": self._get_power_pct(work_step, ftp, is_low=False),
+                "description": work_step.step_name or "Work",
+            },
+        }
+
+        if recovery_step:
+            segment["recovery"] = {
+                "duration_min": int(recovery_step.duration_value / 60),
+                "power_low_pct": self._get_power_pct(recovery_step, ftp, is_low=True),
+                "power_high_pct": self._get_power_pct(
+                    recovery_step, ftp, is_low=False
+                ),
+                "description": recovery_step.step_name or "Recovery",
+            }
+
+        return segment
+
+    def _calculate_total_duration(self, segments: list[dict[str, Any]]) -> int:
+        """
+        Calculate total workout duration in minutes.
+
+        Args:
+            segments: List of segment dictionaries
+
+        Returns:
+            Total duration in minutes
+        """
+        total = 0
+
+        for seg in segments:
+            if seg["type"] == "interval":
+                # Interval: work + recovery * sets
+                work_min = seg["work"]["duration_min"]
+                recovery_min = seg.get("recovery", {}).get("duration_min", 0)
+                sets = seg["sets"]
+                total += (work_min + recovery_min) * sets
+            else:
+                # Simple segment
+                total += seg.get("duration_min", 0)
+
+        return total
+
+    def _calculate_base_tss(
+        self,
+        segments: list[dict[str, Any]],
+        ftp: float,
+    ) -> float:
+        """
+        Calculate base TSS for workout.
+
+        Uses simplified TSS calculation based on power and duration.
+
+        Args:
+            segments: List of segment dictionaries
+            ftp: Athlete's FTP
+
+        Returns:
+            Estimated TSS
+        """
+        total_tss = 0.0
+
+        for seg in segments:
+            if seg["type"] == "interval":
+                # Calculate TSS for work intervals
+                work = seg["work"]
+                work_min = work["duration_min"]
+                work_power_pct = (work["power_low_pct"] + work["power_high_pct"]) / 2
+                work_if = work_power_pct / 100.0
+                work_tss = (work_min / 60.0) * work_if * work_if * 100
+
+                # Calculate TSS for recovery
+                recovery = seg.get("recovery")
+                recovery_tss = 0.0
+                if recovery:
+                    recovery_min = recovery["duration_min"]
+                    recovery_power_pct = (
+                        recovery["power_low_pct"] + recovery["power_high_pct"]
+                    ) / 2
+                    recovery_if = recovery_power_pct / 100.0
+                    recovery_tss = (
+                        (recovery_min / 60.0) * recovery_if * recovery_if * 100
+                    )
+
+                # Total for all sets
+                sets = seg["sets"]
+                total_tss += (work_tss + recovery_tss) * sets
+            else:
+                # Simple segment
+                duration_min = seg.get("duration_min", 0)
+                power_pct = (
+                    seg.get("power_low_pct", 75) + seg.get("power_high_pct", 75)
+                ) / 2
+                intensity_factor = power_pct / 100.0
+                tss = (duration_min / 60.0) * intensity_factor * intensity_factor * 100
+                total_tss += tss
+
+        return round(total_tss, 1)
 
     def _validate_workout_structure(
         self,
