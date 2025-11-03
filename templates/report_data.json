@@ -1,0 +1,1252 @@
+{
+  "version": "1.0",
+  "generated_timestamp": "2025-11-03T04:03:24.613616Z",
+  "generator": {
+    "tool": "cycling-ai",
+    "version": "0.1.0",
+    "command": "generate (integrated workflow)"
+  },
+  "athletes": [
+    {
+      "id": "athlete_name",
+      "name": "Athlete_Name",
+      "profile": {
+        "age": 51,
+        "gender": "male",
+        "ftp": 260,
+        "weight_kg": 84.0,
+        "max_hr": 149,
+        "training_availability": {
+          "hours_per_week": 8,
+          "week_days": "Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday",
+          "available_training_days": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday"
+          ],
+          "weekly_training_hours": 8
+        },
+        "goals": "Complete a 160km ride under 5 hours in 10 weeks",
+        "current_training_status": "strong recreational",
+        "power_to_weight": 3.095
+      },
+      "training_plan": {
+        "athlete_profile": {
+          "age": 51,
+          "ftp": 260.0,
+          "name": "Athlete_Name",
+          "gender": "male",
+          "weight_kg": 84.0,
+          "power_to_weight": 3.0952380952380953,
+          "max_hr": 149,
+          "training_availability": {
+            "hours_per_week": 8,
+            "week_days": "Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday"
+          },
+          "goals": "Complete a 160km ride under 5 hours in 10 weeks",
+          "current_training_status": "strong recreational",
+          "available_training_days": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday"
+          ],
+          "weekly_training_hours": 8.0
+        },
+        "plan_metadata": {
+          "total_weeks": 4,
+          "current_ftp": 260.0,
+          "target_ftp": 268.0,
+          "ftp_gain_watts": 8.0,
+          "ftp_gain_percent": 3.076923076923066,
+          "plan_type": "LLM-designed personalized plan"
+        },
+        "coaching_notes": "The 4-week plan is designed with a progressive periodization structure that incorporates a foundation week, two build weeks, and a recovery week. Week 1 focuses on establishing an aerobic base, ensuring the athlete builds endurance and prepares for the subsequent weeks of higher intensity. Weeks 2 and 3 aim to systematically increase training stress with a combination of sweet spot, threshold, and VO2 max, targeting FTP improvements. Progression is controlled with a ~10% increase in TSS week-to-week. Week 4 is a recovery phase to allow the athlete to absorb the training and avoid overtraining. The target FTP increase to 268W (a 3% improvement) is realistic given the athlete's consistent training availability and the structured progression in intensity and volume.",
+        "monitoring_guidance": "Key performance indicators (KPIs) to track include heart rate variability (HRV) for recovery status, heart rate response during endurance and intensity workouts, and perceived exertion as a subjective marker of fatigue. Weekly TSS and training hours should align with the plan to prevent overtraining. Warning signs include sustained elevated resting heart rate, poor sleep quality, persistent fatigue, or decreased motivation. If these arise, reduce intensity or volume for a few days. Regularly assess interval power consistency and recovery status to ensure the athlete is adapting positively to the training load.",
+        "weekly_plan": [
+          {
+            "week_number": 1,
+            "phase": "Foundation",
+            "phase_rationale": "Establish aerobic base and improve endurance.",
+            "weekly_focus": "Endurance and aerobic development.",
+            "weekly_watch_points": "Monitor HR drift and fatigue.",
+            "training_days": [
+              {
+                "weekday": "Monday",
+                "workout_type": "rest"
+              },
+              {
+                "weekday": "Tuesday",
+                "workout_type": "endurance"
+              },
+              {
+                "weekday": "Wednesday",
+                "workout_type": "recovery"
+              },
+              {
+                "weekday": "Thursday",
+                "workout_type": "tempo"
+              },
+              {
+                "weekday": "Friday",
+                "workout_type": "rest"
+              },
+              {
+                "weekday": "Saturday",
+                "workout_type": "endurance"
+              },
+              {
+                "weekday": "Sunday",
+                "workout_type": "endurance"
+              }
+            ],
+            "target_tss": 280,
+            "total_hours": 7.0,
+            "workouts": [
+              {
+                "weekday": "Tuesday",
+                "description": "Sweet spot intervals for base building",
+                "segments": [
+                  {
+                    "type": "warmup",
+                    "duration_min": 10,
+                    "power_low_pct": 50,
+                    "power_high_pct": 65,
+                    "description": "Easy spin"
+                  },
+                  {
+                    "type": "steady",
+                    "duration_min": 20,
+                    "power_low_pct": 88,
+                    "power_high_pct": 92,
+                    "description": "Sweet spot effort"
+                  },
+                  {
+                    "type": "recovery",
+                    "duration_min": 5,
+                    "power_low_pct": 50,
+                    "power_high_pct": 65,
+                    "description": "Recovery spin"
+                  },
+                  {
+                    "type": "steady",
+                    "duration_min": 20,
+                    "power_low_pct": 88,
+                    "power_high_pct": 92,
+                    "description": "Sweet spot effort"
+                  },
+                  {
+                    "type": "cooldown",
+                    "duration_min": 10,
+                    "power_low_pct": 50,
+                    "power_high_pct": 60,
+                    "description": "Cool down"
+                  }
+                ],
+                "tss": 67.3
+              },
+              {
+                "weekday": "Wednesday",
+                "description": "Recovery ride - easy spin",
+                "segments": [
+                  {
+                    "type": "steady",
+                    "duration_min": 40,
+                    "power_low_pct": 50,
+                    "power_high_pct": 60,
+                    "description": "Recovery spin"
+                  }
+                ],
+                "tss": 20.2
+              },
+              {
+                "weekday": "Thursday",
+                "description": "Cadence drills and endurance ride",
+                "segments": [
+                  {
+                    "type": "warmup",
+                    "duration_min": 10,
+                    "power_low_pct": 50,
+                    "power_high_pct": 65,
+                    "description": "Easy spin"
+                  },
+                  {
+                    "type": "interval",
+                    "duration_min": 5,
+                    "power_low_pct": 90,
+                    "power_high_pct": 100,
+                    "description": "High cadence drill"
+                  },
+                  {
+                    "type": "recovery",
+                    "duration_min": 5,
+                    "power_low_pct": 50,
+                    "description": "Easy spin",
+                    "power_high_pct": 50
+                  },
+                  {
+                    "type": "steady",
+                    "duration_min": 35,
+                    "power_low_pct": 65,
+                    "power_high_pct": 75,
+                    "description": "Aerobic endurance"
+                  },
+                  {
+                    "type": "cooldown",
+                    "duration_min": 10,
+                    "power_low_pct": 50,
+                    "power_high_pct": 60,
+                    "description": "Cool down"
+                  }
+                ],
+                "tss": 48.7
+              },
+              {
+                "weekday": "Saturday",
+                "description": "Endurance ride with tempo bursts",
+                "segments": [
+                  {
+                    "type": "warmup",
+                    "duration_min": 15,
+                    "power_low_pct": 50,
+                    "power_high_pct": 65,
+                    "description": "Easy spin"
+                  },
+                  {
+                    "type": "steady",
+                    "duration_min": 30,
+                    "power_low_pct": 65,
+                    "power_high_pct": 75,
+                    "description": "Aerobic endurance"
+                  },
+                  {
+                    "type": "interval",
+                    "duration_min": 6,
+                    "power_low_pct": 85,
+                    "power_high_pct": 95,
+                    "description": "Tempo burst"
+                  },
+                  {
+                    "type": "recovery",
+                    "duration_min": 4,
+                    "power_low_pct": 50,
+                    "description": "Easy spin",
+                    "power_high_pct": 50
+                  },
+                  {
+                    "type": "steady",
+                    "duration_min": 30,
+                    "power_low_pct": 65,
+                    "power_high_pct": 75,
+                    "description": "Aerobic endurance"
+                  },
+                  {
+                    "type": "cooldown",
+                    "duration_min": 10,
+                    "power_low_pct": 50,
+                    "power_high_pct": 60,
+                    "description": "Cool down"
+                  }
+                ],
+                "tss": 72.1
+              },
+              {
+                "weekday": "Sunday",
+                "description": "Long endurance ride for base building",
+                "segments": [
+                  {
+                    "type": "warmup",
+                    "duration_min": 15,
+                    "power_low_pct": 50,
+                    "power_high_pct": 65,
+                    "description": "Easy spin"
+                  },
+                  {
+                    "type": "steady",
+                    "duration_min": 90,
+                    "power_low_pct": 65,
+                    "power_high_pct": 75,
+                    "description": "Aerobic base"
+                  },
+                  {
+                    "type": "cooldown",
+                    "duration_min": 15,
+                    "power_low_pct": 50,
+                    "power_high_pct": 60,
+                    "description": "Cool down"
+                  }
+                ],
+                "tss": 89.3
+              }
+            ],
+            "week_tss": 297.6
+          },
+          {
+            "week_number": 2,
+            "phase": "Build",
+            "phase_rationale": "Introduce higher intensity to develop FTP.",
+            "weekly_focus": "FTP and sweet spot.",
+            "weekly_watch_points": "Monitor recovery and interval quality.",
+            "training_days": [
+              {
+                "weekday": "Monday",
+                "workout_type": "rest"
+              },
+              {
+                "weekday": "Tuesday",
+                "workout_type": "sweet_spot"
+              },
+              {
+                "weekday": "Wednesday",
+                "workout_type": "recovery"
+              },
+              {
+                "weekday": "Thursday",
+                "workout_type": "threshold"
+              },
+              {
+                "weekday": "Friday",
+                "workout_type": "rest"
+              },
+              {
+                "weekday": "Saturday",
+                "workout_type": "sweet_spot"
+              },
+              {
+                "weekday": "Sunday",
+                "workout_type": "endurance"
+              }
+            ],
+            "target_tss": 310,
+            "total_hours": 7.5,
+            "workouts": [
+              {
+                "weekday": "Tuesday",
+                "description": "Threshold intervals for sustained power",
+                "segments": [
+                  {
+                    "type": "warmup",
+                    "duration_min": 10,
+                    "power_low_pct": 50,
+                    "power_high_pct": 65,
+                    "description": "Easy spin"
+                  },
+                  {
+                    "type": "interval",
+                    "duration_min": 6,
+                    "power_low_pct": 95,
+                    "power_high_pct": 100,
+                    "description": "Threshold effort"
+                  },
+                  {
+                    "type": "recovery",
+                    "duration_min": 4,
+                    "power_low_pct": 50,
+                    "power_high_pct": 65,
+                    "description": "Easy spin"
+                  },
+                  {
+                    "type": "interval",
+                    "duration_min": 6,
+                    "power_low_pct": 95,
+                    "power_high_pct": 100,
+                    "description": "Threshold effort"
+                  },
+                  {
+                    "type": "recovery",
+                    "duration_min": 4,
+                    "power_low_pct": 50,
+                    "power_high_pct": 65,
+                    "description": "Easy spin"
+                  },
+                  {
+                    "type": "interval",
+                    "duration_min": 6,
+                    "power_low_pct": 95,
+                    "power_high_pct": 100,
+                    "description": "Threshold effort"
+                  },
+                  {
+                    "type": "cooldown",
+                    "duration_min": 10,
+                    "power_low_pct": 50,
+                    "power_high_pct": 60,
+                    "description": "Cool down"
+                  }
+                ],
+                "tss": 43.5
+              },
+              {
+                "weekday": "Wednesday",
+                "description": "Active recovery spin",
+                "segments": [
+                  {
+                    "type": "warmup",
+                    "duration_min": 5,
+                    "power_low_pct": 50,
+                    "power_high_pct": 60,
+                    "description": "Easy spin"
+                  },
+                  {
+                    "type": "recovery",
+                    "duration_min": 40,
+                    "power_low_pct": 50,
+                    "power_high_pct": 60,
+                    "description": "Active recovery"
+                  },
+                  {
+                    "type": "cooldown",
+                    "duration_min": 5,
+                    "power_low_pct": 50,
+                    "power_high_pct": 60,
+                    "description": "Cool down"
+                  }
+                ],
+                "tss": 25.2
+              },
+              {
+                "weekday": "Thursday",
+                "description": "Sweet spot over-unders",
+                "segments": [
+                  {
+                    "type": "warmup",
+                    "duration_min": 12,
+                    "power_low_pct": 50,
+                    "power_high_pct": 65,
+                    "description": "Easy spin"
+                  },
+                  {
+                    "type": "interval",
+                    "duration_min": 8,
+                    "power_low_pct": 85,
+                    "power_high_pct": 90,
+                    "description": "Sweet spot"
+                  },
+                  {
+                    "type": "recovery",
+                    "duration_min": 4,
+                    "power_low_pct": 50,
+                    "power_high_pct": 65,
+                    "description": "Easy spin"
+                  },
+                  {
+                    "type": "interval",
+                    "duration_min": 8,
+                    "power_low_pct": 85,
+                    "power_high_pct": 90,
+                    "description": "Sweet spot"
+                  },
+                  {
+                    "type": "cooldown",
+                    "duration_min": 10,
+                    "power_low_pct": 50,
+                    "power_high_pct": 60,
+                    "description": "Cool down"
+                  }
+                ],
+                "tss": 34.3
+              },
+              {
+                "weekday": "Saturday",
+                "description": "Endurance ride with tempo finish",
+                "segments": [
+                  {
+                    "type": "warmup",
+                    "duration_min": 15,
+                    "power_low_pct": 50,
+                    "power_high_pct": 65,
+                    "description": "Easy spin"
+                  },
+                  {
+                    "type": "steady",
+                    "duration_min": 80,
+                    "power_low_pct": 60,
+                    "power_high_pct": 70,
+                    "description": "Aerobic base"
+                  },
+                  {
+                    "type": "tempo",
+                    "duration_min": 20,
+                    "power_low_pct": 76,
+                    "power_high_pct": 85,
+                    "description": "Tempo pace"
+                  },
+                  {
+                    "type": "cooldown",
+                    "duration_min": 10,
+                    "power_low_pct": 50,
+                    "power_high_pct": 60,
+                    "description": "Cool down"
+                  }
+                ],
+                "tss": 91.2
+              },
+              {
+                "weekday": "Sunday",
+                "description": "Long endurance ride for aerobic base",
+                "segments": [
+                  {
+                    "type": "warmup",
+                    "duration_min": 15,
+                    "power_low_pct": 50,
+                    "power_high_pct": 65,
+                    "description": "Easy spin"
+                  },
+                  {
+                    "type": "steady",
+                    "duration_min": 120,
+                    "power_low_pct": 60,
+                    "power_high_pct": 70,
+                    "description": "Aerobic base"
+                  },
+                  {
+                    "type": "cooldown",
+                    "duration_min": 10,
+                    "power_low_pct": 50,
+                    "power_high_pct": 60,
+                    "description": "Cool down"
+                  }
+                ],
+                "tss": 97.8
+              }
+            ],
+            "week_tss": 292.0
+          },
+          {
+            "week_number": 3,
+            "phase": "Build",
+            "phase_rationale": "Build on intensity with controlled volume.",
+            "weekly_focus": "Threshold and VO2 Max.",
+            "weekly_watch_points": "Monitor for overreaching signs.",
+            "training_days": [
+              {
+                "weekday": "Monday",
+                "workout_type": "rest"
+              },
+              {
+                "weekday": "Tuesday",
+                "workout_type": "threshold"
+              },
+              {
+                "weekday": "Wednesday",
+                "workout_type": "recovery"
+              },
+              {
+                "weekday": "Thursday",
+                "workout_type": "vo2max"
+              },
+              {
+                "weekday": "Friday",
+                "workout_type": "rest"
+              },
+              {
+                "weekday": "Saturday",
+                "workout_type": "threshold"
+              },
+              {
+                "weekday": "Sunday",
+                "workout_type": "endurance"
+              }
+            ],
+            "target_tss": 340,
+            "total_hours": 8.0,
+            "workouts": [
+              {
+                "weekday": "Tuesday",
+                "description": "Threshold Interval Development",
+                "segments": [
+                  {
+                    "type": "warmup",
+                    "duration_min": 15,
+                    "power_low_pct": 50,
+                    "power_high_pct": 65,
+                    "description": "Easy spin"
+                  },
+                  {
+                    "type": "interval",
+                    "duration_min": 6,
+                    "power_low_pct": 95,
+                    "power_high_pct": 105,
+                    "description": "Threshold effort"
+                  },
+                  {
+                    "type": "recovery",
+                    "duration_min": 4,
+                    "power_low_pct": 50,
+                    "description": "Recovery spin",
+                    "power_high_pct": 50
+                  },
+                  {
+                    "type": "interval",
+                    "duration_min": 6,
+                    "power_low_pct": 95,
+                    "power_high_pct": 105,
+                    "description": "Threshold effort"
+                  },
+                  {
+                    "type": "recovery",
+                    "duration_min": 4,
+                    "power_low_pct": 50,
+                    "description": "Recovery spin",
+                    "power_high_pct": 50
+                  },
+                  {
+                    "type": "interval",
+                    "duration_min": 6,
+                    "power_low_pct": 95,
+                    "power_high_pct": 105,
+                    "description": "Threshold effort"
+                  },
+                  {
+                    "type": "cooldown",
+                    "duration_min": 10,
+                    "power_low_pct": 50,
+                    "description": "Cool down",
+                    "power_high_pct": 50
+                  }
+                ],
+                "tss": 45.8
+              },
+              {
+                "weekday": "Wednesday",
+                "description": "Recovery Ride",
+                "segments": [
+                  {
+                    "type": "warmup",
+                    "duration_min": 10,
+                    "power_low_pct": 50,
+                    "power_high_pct": 60,
+                    "description": "Easy spin"
+                  },
+                  {
+                    "type": "steady",
+                    "duration_min": 30,
+                    "power_low_pct": 56,
+                    "power_high_pct": 65,
+                    "description": "Recovery pace"
+                  },
+                  {
+                    "type": "cooldown",
+                    "duration_min": 10,
+                    "power_low_pct": 50,
+                    "description": "Cool down",
+                    "power_high_pct": 50
+                  }
+                ],
+                "tss": 27.5
+              },
+              {
+                "weekday": "Thursday",
+                "description": "VO2 Max Short Intervals",
+                "segments": [
+                  {
+                    "type": "warmup",
+                    "duration_min": 15,
+                    "power_low_pct": 50,
+                    "description": "Easy spin",
+                    "power_high_pct": 50
+                  },
+                  {
+                    "type": "interval",
+                    "duration_min": 2,
+                    "power_low_pct": 115,
+                    "power_high_pct": 125,
+                    "description": "Hard effort"
+                  },
+                  {
+                    "type": "recovery",
+                    "duration_min": 3,
+                    "power_low_pct": 50,
+                    "description": "Recovery spin",
+                    "power_high_pct": 50
+                  },
+                  {
+                    "type": "interval",
+                    "duration_min": 2,
+                    "power_low_pct": 115,
+                    "power_high_pct": 125,
+                    "description": "Hard effort"
+                  },
+                  {
+                    "type": "recovery",
+                    "duration_min": 3,
+                    "power_low_pct": 50,
+                    "description": "Recovery spin",
+                    "power_high_pct": 50
+                  },
+                  {
+                    "type": "interval",
+                    "duration_min": 2,
+                    "power_low_pct": 115,
+                    "power_high_pct": 125,
+                    "description": "Hard effort"
+                  },
+                  {
+                    "type": "recovery",
+                    "duration_min": 3,
+                    "power_low_pct": 50,
+                    "description": "Recovery spin",
+                    "power_high_pct": 50
+                  },
+                  {
+                    "type": "cooldown",
+                    "duration_min": 10,
+                    "power_low_pct": 50,
+                    "description": "Cool down",
+                    "power_high_pct": 50
+                  }
+                ],
+                "tss": 28.6
+              },
+              {
+                "weekday": "Saturday",
+                "description": "Endurance Ride with Tempo Finish",
+                "segments": [
+                  {
+                    "type": "warmup",
+                    "duration_min": 15,
+                    "power_low_pct": 50,
+                    "description": "Easy spin",
+                    "power_high_pct": 50
+                  },
+                  {
+                    "type": "steady",
+                    "duration_min": 90,
+                    "power_low_pct": 65,
+                    "power_high_pct": 75,
+                    "description": "Aerobic base"
+                  },
+                  {
+                    "type": "tempo",
+                    "duration_min": 15,
+                    "power_low_pct": 80,
+                    "power_high_pct": 85,
+                    "description": "Tempo effort"
+                  },
+                  {
+                    "type": "cooldown",
+                    "duration_min": 10,
+                    "power_low_pct": 50,
+                    "description": "Cool down",
+                    "power_high_pct": 50
+                  }
+                ],
+                "tss": 100.9
+              },
+              {
+                "weekday": "Sunday",
+                "description": "Long Aerobic Ride",
+                "segments": [
+                  {
+                    "type": "warmup",
+                    "duration_min": 15,
+                    "power_low_pct": 50,
+                    "description": "Easy spin",
+                    "power_high_pct": 50
+                  },
+                  {
+                    "type": "steady",
+                    "duration_min": 120,
+                    "power_low_pct": 65,
+                    "description": "Aerobic base",
+                    "power_high_pct": 65
+                  },
+                  {
+                    "type": "cooldown",
+                    "duration_min": 10,
+                    "power_low_pct": 50,
+                    "description": "Cool down",
+                    "power_high_pct": 50
+                  }
+                ],
+                "tss": 94.9
+              }
+            ],
+            "week_tss": 297.7
+          },
+          {
+            "week_number": 4,
+            "phase": "Recovery",
+            "phase_rationale": "Allow full recovery to absorb training.",
+            "weekly_focus": "Active recovery and adaptation.",
+            "weekly_watch_points": "Monitor subjective fatigue and HRV.",
+            "training_days": [
+              {
+                "weekday": "Monday",
+                "workout_type": "rest"
+              },
+              {
+                "weekday": "Tuesday",
+                "workout_type": "recovery"
+              },
+              {
+                "weekday": "Wednesday",
+                "workout_type": "endurance"
+              },
+              {
+                "weekday": "Thursday",
+                "workout_type": "rest"
+              },
+              {
+                "weekday": "Friday",
+                "workout_type": "recovery"
+              },
+              {
+                "weekday": "Saturday",
+                "workout_type": "endurance"
+              },
+              {
+                "weekday": "Sunday",
+                "workout_type": "recovery"
+              }
+            ],
+            "target_tss": 215,
+            "total_hours": 6.0,
+            "workouts": [
+              {
+                "weekday": "Tuesday",
+                "description": "Progressive tempo with endurance finish",
+                "segments": [
+                  {
+                    "type": "warmup",
+                    "duration_min": 10,
+                    "power_low_pct": 50,
+                    "power_high_pct": 60,
+                    "description": "Easy spin"
+                  },
+                  {
+                    "type": "tempo",
+                    "duration_min": 25,
+                    "power_low_pct": 75,
+                    "power_high_pct": 80,
+                    "description": "Sustained tempo effort"
+                  },
+                  {
+                    "type": "steady",
+                    "duration_min": 10,
+                    "power_low_pct": 65,
+                    "description": "Endurance pace",
+                    "power_high_pct": 65
+                  },
+                  {
+                    "type": "cooldown",
+                    "duration_min": 10,
+                    "power_low_pct": 50,
+                    "power_high_pct": 55,
+                    "description": "Cool down"
+                  }
+                ],
+                "tss": 41.7
+              },
+              {
+                "weekday": "Wednesday",
+                "description": "VO2 max intervals",
+                "segments": [
+                  {
+                    "type": "warmup",
+                    "duration_min": 15,
+                    "power_low_pct": 50,
+                    "power_high_pct": 60,
+                    "description": "Easy spin"
+                  },
+                  {
+                    "type": "interval",
+                    "duration_min": 3,
+                    "power_low_pct": 110,
+                    "power_high_pct": 115,
+                    "description": "Hard effort"
+                  },
+                  {
+                    "type": "recovery",
+                    "duration_min": 3,
+                    "power_low_pct": 50,
+                    "description": "Recovery spin",
+                    "power_high_pct": 50
+                  },
+                  {
+                    "type": "interval",
+                    "duration_min": 3,
+                    "power_low_pct": 110,
+                    "power_high_pct": 115,
+                    "description": "Hard effort"
+                  },
+                  {
+                    "type": "recovery",
+                    "duration_min": 3,
+                    "power_low_pct": 50,
+                    "description": "Recovery spin",
+                    "power_high_pct": 50
+                  },
+                  {
+                    "type": "cooldown",
+                    "duration_min": 10,
+                    "power_low_pct": 50,
+                    "power_high_pct": 55,
+                    "description": "Cool down"
+                  }
+                ],
+                "tss": 27.3
+              },
+              {
+                "weekday": "Friday",
+                "description": "Endurance ride with cadence drills",
+                "segments": [
+                  {
+                    "type": "warmup",
+                    "duration_min": 10,
+                    "power_low_pct": 50,
+                    "power_high_pct": 60,
+                    "description": "Easy spin"
+                  },
+                  {
+                    "type": "steady",
+                    "duration_min": 35,
+                    "power_low_pct": 65,
+                    "power_high_pct": 70,
+                    "description": "Endurance effort"
+                  },
+                  {
+                    "type": "interval",
+                    "duration_min": 1,
+                    "power_low_pct": 90,
+                    "description": "Cadence drill",
+                    "power_high_pct": 90
+                  },
+                  {
+                    "type": "recovery",
+                    "duration_min": 4,
+                    "power_low_pct": 50,
+                    "description": "Recovery spin",
+                    "power_high_pct": 50
+                  },
+                  {
+                    "type": "interval",
+                    "duration_min": 1,
+                    "power_low_pct": 90,
+                    "description": "Cadence drill",
+                    "power_high_pct": 90
+                  },
+                  {
+                    "type": "recovery",
+                    "duration_min": 4,
+                    "power_low_pct": 50,
+                    "description": "Recovery spin",
+                    "power_high_pct": 50
+                  },
+                  {
+                    "type": "cooldown",
+                    "duration_min": 10,
+                    "power_low_pct": 50,
+                    "power_high_pct": 55,
+                    "description": "Cool down"
+                  }
+                ],
+                "tss": 42.2
+              },
+              {
+                "weekday": "Saturday",
+                "description": "Endurance ride with short tempo",
+                "segments": [
+                  {
+                    "type": "warmup",
+                    "duration_min": 15,
+                    "power_low_pct": 50,
+                    "power_high_pct": 60,
+                    "description": "Easy spin"
+                  },
+                  {
+                    "type": "steady",
+                    "duration_min": 50,
+                    "power_low_pct": 65,
+                    "power_high_pct": 70,
+                    "description": "Endurance effort"
+                  },
+                  {
+                    "type": "tempo",
+                    "duration_min": 20,
+                    "power_low_pct": 75,
+                    "power_high_pct": 80,
+                    "description": "Moderate tempo"
+                  },
+                  {
+                    "type": "steady",
+                    "duration_min": 20,
+                    "power_low_pct": 65,
+                    "description": "Return to endurance",
+                    "power_high_pct": 65
+                  },
+                  {
+                    "type": "cooldown",
+                    "duration_min": 10,
+                    "power_low_pct": 50,
+                    "description": "Cool down",
+                    "power_high_pct": 50
+                  }
+                ],
+                "tss": 83.8
+              },
+              {
+                "weekday": "Sunday",
+                "description": "Recovery ride with short bursts",
+                "segments": [
+                  {
+                    "type": "warmup",
+                    "duration_min": 10,
+                    "power_low_pct": 50,
+                    "power_high_pct": 60,
+                    "description": "Easy spin"
+                  },
+                  {
+                    "type": "steady",
+                    "duration_min": 35,
+                    "power_low_pct": 60,
+                    "power_high_pct": 65,
+                    "description": "Recovery pace"
+                  },
+                  {
+                    "type": "interval",
+                    "duration_min": 1,
+                    "power_low_pct": 120,
+                    "description": "Short burst",
+                    "power_high_pct": 120
+                  },
+                  {
+                    "type": "recovery",
+                    "duration_min": 4,
+                    "power_low_pct": 50,
+                    "description": "Recovery spin",
+                    "power_high_pct": 50
+                  },
+                  {
+                    "type": "cooldown",
+                    "duration_min": 10,
+                    "power_low_pct": 50,
+                    "power_high_pct": 55,
+                    "description": "Cool down"
+                  }
+                ],
+                "tss": 36.5
+              }
+            ],
+            "week_tss": 231.5
+          }
+        ]
+      },
+      "metadata": {},
+      "performance_analysis": {
+        "athlete_profile": {
+          "name": "Athlete_Name",
+          "current_ftp": 260.0,
+          "weight": 84.0,
+          "w_kg": 3.1,
+          "age": 51,
+          "experience_level": "strong recreational"
+        },
+        "performance_comparison": [
+          {
+            "metric": "Total Distance (km)",
+            "previous": "4616.9",
+            "current": "4242.3",
+            "change": "-8.1%",
+            "trend": "down"
+          },
+          {
+            "metric": "Total Time (hours)",
+            "previous": "168.9",
+            "current": "149.5",
+            "change": "-11.5%",
+            "trend": "down"
+          },
+          {
+            "metric": "Total Elevation (m)",
+            "previous": "43645",
+            "current": "38018",
+            "change": "-12.9%",
+            "trend": "down"
+          },
+          {
+            "metric": "Average Power (W)",
+            "previous": "170.0",
+            "current": "170.9",
+            "change": "+0.5%",
+            "trend": "neutral"
+          },
+          {
+            "metric": "Rides per Week",
+            "previous": "4.43",
+            "current": "4.51",
+            "change": "+1.7%",
+            "trend": "up"
+          }
+        ],
+        "time_in_zones": [],
+        "key_trends": [
+          {
+            "title": "Decrease in Overall Training Volume",
+            "description": "There was an 8.1% reduction in total distance, an 11.5% decrease in total time, and a 12.9% drop in elevation gain compared to the previous period. This indicates a notable reduction in training volume."
+          },
+          {
+            "title": "Consistent Power Output",
+            "description": "The average power increased slightly by 0.5%, indicating that intensity levels remained stable despite the reduction in total training hours."
+          },
+          {
+            "title": "Improved Ride Frequency",
+            "description": "Rides per week increased by 1.7%, showing an improvement in consistency and frequency of cycling sessions."
+          },
+          {
+            "title": "Significant Decrease in Training Elevation",
+            "description": "Total elevation gain dropped by 12.9%, which could signal a shift toward flatter routes or less climbing-focused training."
+          },
+          {
+            "title": "Cross-Training Distribution Indicates Suboptimal Balance",
+            "description": "Cycling accounted for 62.3% of activities, which is below the recommended 65-80% range for masters athletes. Strength training made up 27%, which is slightly high for endurance goals."
+          }
+        ],
+        "insights": [
+          {
+            "title": "Focus Training on Climbing Strength",
+            "description": "The reduction in elevation gain suggests less emphasis on climbing. Reintroducing hill repeats or climbing-focused rides could enhance performance in hilly events."
+          },
+          {
+            "title": "Maintain or Increase Weekly Volume",
+            "description": "The decrease in overall training volume could hinder endurance development. Gradually increasing weekly hours and distance will align better with your 160km goal."
+          },
+          {
+            "title": "Optimize Cross-Training Balance",
+            "description": "Cycling percentage is lower than the ideal range for endurance-focused athletes. Adjusting the balance to prioritize cycling while maintaining some strength work is recommended."
+          },
+          {
+            "title": "Manage High-Interference Strength Sessions",
+            "description": "27 high-interference events were identified, where strength training negatively impacted cycling. Scheduling leg-focused strength sessions further from key rides will improve recovery."
+          },
+          {
+            "title": "Leverage Increased Ride Frequency",
+            "description": "The slight uptick in ride frequency is encouraging. Coupling this with structured workouts can help elevate your performance for long-distance events."
+          }
+        ],
+        "recommendations": {
+          "short_term": [
+            {
+              "text": "Focus on reintroducing climbing intervals to regain lost elevation training."
+            },
+            {
+              "text": "Increase weekly training hours gradually by 10% over the next 4 weeks to rebuild endurance."
+            },
+            {
+              "text": "Adjust strength training schedules to ensure at least 36 hours of recovery before key rides."
+            }
+          ],
+          "long_term": [
+            {
+              "text": "Aim to increase the cycling percentage in your cross-training balance to at least 70%."
+            },
+            {
+              "text": "Periodize your training to include higher-intensity sessions in preparation for your 160km goal."
+            },
+            {
+              "text": "Incorporate long rides over 100km consistently to build endurance for your event."
+            }
+          ],
+          "recovery_nutrition": [
+            {
+              "text": "Focus on protein intake (1.5-2g per kg of body weight daily) to support recovery from strength and cycling efforts."
+            },
+            {
+              "text": "Replenish glycogen stores post-ride with a 3:1 carb-to-protein ratio snack or meal."
+            },
+            {
+              "text": "Stay hydrated, especially after long rides or high-intensity sessions, to optimize recovery."
+            }
+          ]
+        },
+        "analysis_period_months": 6,
+        "cross_training": {
+          "activity_distribution": [
+            {
+              "category": "Cycling",
+              "count": 99,
+              "percentage": 62.3
+            },
+            {
+              "category": "Strength",
+              "count": 43,
+              "percentage": 27.0
+            },
+            {
+              "category": "Cardio",
+              "count": 16,
+              "percentage": 10.1
+            },
+            {
+              "category": "Other",
+              "count": 1,
+              "percentage": 0.6
+            }
+          ],
+          "load_balance": {
+            "cycling_percent": 62.3,
+            "strength_percent": 27.0,
+            "cardio_percent": 10.1,
+            "is_optimal": false,
+            "recommendation": "Increase cycling percentage to 70-80% and reduce strength to 15-20% for optimal endurance focus."
+          },
+          "interference_events": [
+            {
+              "date": "2025-05-12",
+              "activity1": "Workout - May 12, 2025",
+              "activity2": "Ride - May 13, 2025",
+              "hours_between": 21.9,
+              "explanation": "Strength < 36h before cycling; Leg-focused strength before cycling"
+            },
+            {
+              "date": "2025-06-02",
+              "activity1": "Workout - June 02, 2025",
+              "activity2": "Ride - June 02, 2025",
+              "hours_between": 14.3,
+              "explanation": "Strength < 36h before cycling; Leg-focused strength before cycling"
+            },
+            {
+              "date": "2025-06-04",
+              "activity1": "Workout - June 04, 2025",
+              "activity2": "Ride - June 05, 2025",
+              "hours_between": 23.5,
+              "explanation": "Strength < 36h before cycling; Leg-focused strength before cycling"
+            },
+            {
+              "date": "2025-06-10",
+              "activity1": "Workout - June 10, 2025",
+              "activity2": "Ride - June 11, 2025",
+              "hours_between": 22.9,
+              "explanation": "Strength < 36h before cycling; Leg-focused strength before cycling"
+            },
+            {
+              "date": "2025-06-12",
+              "activity1": "Workout - June 12, 2025",
+              "activity2": "Ride - June 13, 2025",
+              "hours_between": 23.6,
+              "explanation": "Strength < 36h before cycling; Leg-focused strength before cycling"
+            }
+          ],
+          "recommendations": [
+            {
+              "text": "Optimize strength training to avoid high-interference sessions before critical rides."
+            },
+            {
+              "text": "Focus on scheduling leg-intensive strength sessions at least 36 hours before endurance rides."
+            },
+            {
+              "text": "Monitor fatigue levels to ensure proper recovery between conflicting activities."
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

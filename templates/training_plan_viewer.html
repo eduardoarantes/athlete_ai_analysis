@@ -1811,7 +1811,12 @@
         });
 
         // Load data on page load
-        window.addEventListener('DOMContentLoaded', loadReportData);
+        // Since script is at end of body, DOM elements are available
+        // Call loadReportData after a brief delay to ensure everything is ready
+        setTimeout(() => {
+            console.log('[AUTO-LOAD] Calling loadReportData');
+            loadReportData();
+        }, 100);
     </script>
 </body>
 </html>
