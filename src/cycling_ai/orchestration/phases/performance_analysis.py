@@ -67,7 +67,7 @@ class PerformanceAnalysisPhase(BasePhase):
         Returns:
             Dictionary with tool results or None if execution fails
         """
-        from cycling_ai.tools.registry import get_tool_registry
+        from cycling_ai.tools.registry import get_global_registry
 
         try:
             # Get parameters from previous phase
@@ -82,7 +82,7 @@ class PerformanceAnalysisPhase(BasePhase):
 
             logger.info("[PHASE 2] Pre-executing tools (prefetch optimization)")
 
-            registry = get_tool_registry()
+            registry = get_global_registry()
             results: dict[str, Any] = {}
 
             # Execute analyze_performance
