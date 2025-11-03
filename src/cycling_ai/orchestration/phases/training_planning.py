@@ -360,8 +360,10 @@ class TrainingPlanningPhase(BasePhase):
         """
         Execute Phase 3b: Weekly Workout Details Generation.
 
-        Generates detailed workouts for each week iteratively.
-        Uses plan_id from Phase 3a.
+        Generates detailed workouts for each week iteratively with FRESH SESSION per week.
+        This prevents failed attempts from accumulating in conversation context.
+
+        Pattern: For each week, rebuild prompt with only successful week completions.
 
         Args:
             context: Phase context with plan_id from Phase 3a
@@ -403,11 +405,12 @@ class TrainingPlanningPhase(BasePhase):
                 f"- {zone_data['description']}\n"
             )
 
-        # Format prompt parameters
+        # Format prompt parameters (constant for all weeks)
         available_days_str = ", ".join(available_days)
         daily_time_caps_json = json.dumps(daily_time_caps) if daily_time_caps else "None"
 
-        prompt_params = {
+        # Base prompt parameters (shared across all weeks)
+        base_prompt_params = {
             "plan_id": plan_id,
             "training_plan_weeks": str(context.config.training_plan_weeks),
             "athlete_profile_path": athlete_profile_path,
@@ -420,58 +423,220 @@ class TrainingPlanningPhase(BasePhase):
             "num_rest_days": str(7 - len(available_days)),
         }
 
-        # Get prompts
-        system_prompt = context.prompts_manager.get_training_planning_weeks_prompt(
-            **prompt_params
-        )
-        user_message = context.prompts_manager.get_training_planning_weeks_user_prompt(
-            **prompt_params
+        # Accumulate successful week completions
+        weeks_added: list[int] = []
+        total_tokens = 0
+
+        # Generate each week with FRESH SESSION (rebuild pattern)
+        total_weeks = context.config.training_plan_weeks
+        for week_num in range(1, total_weeks + 1):
+            logger.info(f"[PHASE 3b] Generating week {week_num}/{total_weeks} (fresh session)")
+
+            try:
+                week_result = self._execute_single_week(
+                    context=context,
+                    week_number=week_num,
+                    base_params=base_prompt_params,
+                    successful_weeks=weeks_added,
+                )
+
+                if week_result["success"]:
+                    weeks_added.append(week_num)
+                    total_tokens += week_result["tokens_used"]
+                    logger.info(f"[PHASE 3b] Week {week_num} added successfully")
+                else:
+                    # Week failed permanently
+                    errors = week_result.get("errors", ["Unknown error"])
+                    logger.error(f"[PHASE 3b] Week {week_num} failed: {errors}")
+                    return PhaseResult(
+                        phase_name="training_planning_weeks",
+                        status=PhaseStatus.FAILED,
+                        agent_response=f"Week {week_num} generation failed: {errors}",
+                        errors=errors,
+                        execution_time_seconds=(datetime.now() - phase_start).total_seconds(),
+                        tokens_used=total_tokens,
+                    )
+
+            except Exception as e:
+                logger.error(f"[PHASE 3b] Week {week_num} exception: {e}")
+                return PhaseResult(
+                    phase_name="training_planning_weeks",
+                    status=PhaseStatus.FAILED,
+                    agent_response=f"Week {week_num} failed with exception: {str(e)}",
+                    errors=[str(e)],
+                    execution_time_seconds=(datetime.now() - phase_start).total_seconds(),
+                    tokens_used=total_tokens,
+                )
+
+        execution_time = (datetime.now() - phase_start).total_seconds()
+        logger.info(f"[PHASE 3b] All {total_weeks} weeks generated successfully in {execution_time:.2f}s")
+
+        return PhaseResult(
+            phase_name="training_planning_weeks",
+            status=PhaseStatus.COMPLETED,
+            agent_response=f"All {total_weeks} weeks generated successfully",
+            extracted_data={"weeks_added": weeks_added},
+            execution_time_seconds=execution_time,
+            tokens_used=total_tokens,
         )
 
-        # Create session with isolation
+    def _execute_single_week(
+        self,
+        context: PhaseContext,
+        week_number: int,
+        base_params: dict[str, str],
+        successful_weeks: list[int],
+    ) -> dict[str, Any]:
+        """
+        Execute single week generation with fresh session.
+
+        Rebuilds context with only successful week completions, preventing
+        failed attempts from polluting conversation.
+
+        Args:
+            context: Phase context
+            week_number: Week to generate (1-indexed)
+            base_params: Base prompt parameters
+            successful_weeks: List of successfully completed week numbers
+
+        Returns:
+            Dictionary with success, tokens_used, errors
+        """
+        # Build context string showing successful weeks
+        context_text = f"Successfully completed weeks: {successful_weeks if successful_weeks else 'None (first week)'}"
+
+        # Get prompts with week-specific context
+        system_prompt = context.prompts_manager.get_training_planning_weeks_prompt(
+            **base_params
+        )
+        user_message = (
+            f"{context_text}\n\n"
+            f"Add detailed workouts for week {week_number}."
+        )
+
+        # Create FRESH session for this week
         session = context.session_manager.create_session(
             provider_name=context.provider.config.provider_name,
             context=context.previous_phase_data,
             system_prompt=system_prompt,
         )
 
-        # Create agent with AgentFactory
-        max_iterations = context.config.training_plan_weeks + 3  # N weeks + buffer
+        # Create agent with limited iterations for single week
         agent = AgentFactory.create_agent(
             provider=context.provider,
             session=session,
             allowed_tools=self.required_tools[1:2],  # Only add_week_details
             force_tool_call=True,
-            max_iterations=max_iterations,
+            max_iterations=5,  # Single week should complete in 1-3 iterations
         )
 
-        # Execute with agent (iterative - adds all weeks)
-        try:
-            response = agent.process_message(user_message)
-        except Exception as e:
-            logger.error(f"[PHASE 3b] Agent execution failed: {e}")
-            return PhaseResult(
-                phase_name="training_planning_weeks",
-                status=PhaseStatus.FAILED,
-                agent_response=f"Weekly details generation failed: {str(e)}",
-                errors=[str(e)],
-                execution_time_seconds=(datetime.now() - phase_start).total_seconds(),
-            )
+        # Execute
+        max_retries = 3
+        for attempt in range(1, max_retries + 1):
+            try:
+                response = agent.process_message(user_message)
 
-        # Extract data from session
-        extracted_data = self._extract_phase_data(response, session)
+                # Extract week result
+                extracted = self._extract_phase_data(response, session)
 
-        execution_time = (datetime.now() - phase_start).total_seconds()
-        tokens_used = session.get_total_tokens()
+                # Check if week was added
+                if "weeks_added" in extracted and week_number in extracted["weeks_added"]:
+                    return {
+                        "success": True,
+                        "tokens_used": session.get_total_tokens(),
+                        "errors": [],
+                    }
 
-        return PhaseResult(
-            phase_name="training_planning_weeks",
-            status=PhaseStatus.COMPLETED,
-            agent_response=response,
-            extracted_data=extracted_data,
-            execution_time_seconds=execution_time,
-            tokens_used=tokens_used,
-        )
+                # Week not added - check for errors in session
+                error_details = self._extract_week_error_details(session)
+                if error_details:
+                    logger.warning(f"[PHASE 3b] Week {week_number} attempt {attempt}/{max_retries} had errors: {error_details['error_summary']}")
+
+                    if attempt < max_retries:
+                        # Retry with fresh session (rebuild pattern)
+                        logger.info(f"[PHASE 3b] Retrying week {week_number} with fresh session")
+                        session = context.session_manager.create_session(
+                            provider_name=context.provider.config.provider_name,
+                            context=context.previous_phase_data,
+                            system_prompt=system_prompt,
+                        )
+                        agent = AgentFactory.create_agent(
+                            provider=context.provider,
+                            session=session,
+                            allowed_tools=self.required_tools[1:2],
+                            force_tool_call=True,
+                            max_iterations=5,
+                        )
+
+                        # Build detailed retry message with previous tool call information
+                        user_message = (
+                            f"{context_text}\n\n"
+                            f"**Previous Attempt Failed for Week {week_number}:**\n\n"
+                            f"{error_details['full_error']}\n\n"
+                            f"Please retry with corrected parameters."
+                        )
+                        continue
+                    else:
+                        # Max retries exceeded
+                        return {
+                            "success": False,
+                            "tokens_used": session.get_total_tokens(),
+                            "errors": [error_details['error_summary']],
+                        }
+
+                # No errors but week not added - unexpected
+                return {
+                    "success": False,
+                    "tokens_used": session.get_total_tokens(),
+                    "errors": [f"Week {week_number} not added (no errors reported)"],
+                }
+
+            except Exception as e:
+                logger.error(f"[PHASE 3b] Week {week_number} attempt {attempt} exception: {e}")
+                if attempt >= max_retries:
+                    return {
+                        "success": False,
+                        "tokens_used": session.get_total_tokens(),
+                        "errors": [str(e)],
+                    }
+                # Retry
+
+        return {
+            "success": False,
+            "tokens_used": session.get_total_tokens(),
+            "errors": [f"Week {week_number} failed after {max_retries} attempts"],
+        }
+
+    def _extract_week_error_details(
+        self, session: ConversationSession
+    ) -> dict[str, str] | None:
+        """
+        Extract detailed error information from tool results in session.
+
+        Provides both a summary for logging and full error text for retry message.
+
+        Args:
+            session: Conversation session
+
+        Returns:
+            Dictionary with 'error_summary' and 'full_error' keys, or None if no errors
+        """
+        for message in session.messages:
+            if message.role == "tool" and message.tool_results:
+                for tool_result in message.tool_results:
+                    if not tool_result.get("success", True):
+                        # Failed tool call - extract error from content
+                        content = message.content
+                        if content:
+                            # Extract summary (first line or first 100 chars)
+                            lines = content.split('\n')
+                            summary = lines[0] if lines else content[:100]
+
+                            return {
+                                "error_summary": summary,
+                                "full_error": content,
+                            }
+        return None
 
     def _execute_phase_3c_finalize(self, context: PhaseContext) -> PhaseResult:
         """
