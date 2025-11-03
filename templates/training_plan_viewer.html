@@ -1145,10 +1145,16 @@
                     const text = await readFileAsText(file);
                     reportData = JSON.parse(text);
                 } else {
-                    // Load from default report_data.json
+                    // Try to load from default report_data.json in same directory
                     const response = await fetch('report_data.json');
                     if (!response.ok) {
-                        throw new Error('Failed to load report data');
+                        // If report_data.json doesn't exist, hide loading and show file selector
+                        if (response.status === 404) {
+                            document.getElementById('loading').style.display = 'none';
+                            console.log('No report_data.json found. Please select a file.');
+                            return;
+                        }
+                        throw new Error(`Failed to load report data: ${response.statusText}`);
                     }
                     reportData = await response.json();
                 }
@@ -1161,6 +1167,7 @@
                     showError('No athletes found in report data');
                 }
             } catch (error) {
+                document.getElementById('loading').style.display = 'none';
                 showError('Error loading report data: ' + error.message);
             }
         }
