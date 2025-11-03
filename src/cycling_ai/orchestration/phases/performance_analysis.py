@@ -378,14 +378,23 @@ Use concrete numbers and percentages in all descriptions. Be encouraging but hon
             # Try to parse LLM's JSON response
             parsed = json.loads(response.strip())
             logger.debug("[PHASE 2] Successfully parsed JSON from LLM response")
-            return {"performance_analysis_json": parsed}
+            # Return with both keys for backward compatibility
+            return {
+                "performance_analysis_json": parsed,
+                "performance_data": parsed,  # Phase 4 expects this key
+                "zones_data": parsed.get("time_in_zones", []),  # Phase 4 expects zones_data
+            }
         except json.JSONDecodeError as e:
             logger.warning(
                 f"[PHASE 2] Failed to parse LLM response as JSON: {e}. "
                 f"Falling back to prefetched data."
             )
-            # Fall back to prefetched data
-            return prefetched_data
+            # Fall back to prefetched data, add performance_data and zones_data keys
+            result = dict(prefetched_data)
+            if "performance_analysis_json" in result:
+                result["performance_data"] = result["performance_analysis_json"]
+                result["zones_data"] = result["performance_analysis_json"].get("time_in_zones", [])
+            return result
 
     def _should_analyze_cross_training(
         self,
