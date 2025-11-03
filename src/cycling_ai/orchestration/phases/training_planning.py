@@ -23,6 +23,36 @@ from cycling_ai.tools.wrappers.finalize_plan_tool import FinalizePlanTool
 logger = logging.getLogger(__name__)
 
 
+def _get_mandatory_rest_days_text(available_days: list[str]) -> str:
+    """
+    Generate text describing mandatory rest days (days not available for training).
+
+    Args:
+        available_days: List of weekdays available for training
+
+    Returns:
+        Empty string if all 7 days available, otherwise formatted text with mandatory rest days
+    """
+    all_weekdays = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"}
+    available_set = set(available_days)
+
+    # Calculate unavailable days (mandatory rest)
+    unavailable_days = all_weekdays - available_set
+
+    if not unavailable_days:
+        return ""  # All days available
+
+    # Sort for consistent output
+    weekday_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    sorted_unavailable = sorted(unavailable_days, key=lambda d: weekday_order.index(d))
+
+    if len(sorted_unavailable) == 1:
+        return f"\n   - MANDATORY REST DAY: {sorted_unavailable[0]} (not available for training)"
+    else:
+        days_str = ", ".join(sorted_unavailable)
+        return f"\n   - MANDATORY REST DAYS: {days_str} (not available for training)"
+
+
 class TrainingPlanningPhase(BasePhase):
     """
     Phase 3: Training Plan Generation.
@@ -245,6 +275,7 @@ class TrainingPlanningPhase(BasePhase):
             "athlete_profile_path": athlete_profile_path,
             "power_zones": zones_text,
             "available_days": available_days_str,
+            "mandatory_rest_days_text": _get_mandatory_rest_days_text(available_days),
             "weekly_time_budget_hours": str(weekly_time_budget_hours),
             "daily_time_caps_json": daily_time_caps_json,
             "num_available_days": str(len(available_days)),
@@ -382,6 +413,7 @@ class TrainingPlanningPhase(BasePhase):
             "athlete_profile_path": athlete_profile_path,
             "power_zones": zones_text,
             "available_days": available_days_str,
+            "mandatory_rest_days_text": _get_mandatory_rest_days_text(available_days),
             "weekly_time_budget_hours": str(weekly_time_budget_hours),
             "daily_time_caps_json": daily_time_caps_json,
             "num_available_days": str(len(available_days)),
