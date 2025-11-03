@@ -48,7 +48,7 @@ class PerformanceAnalysisPhase(BasePhase):
         super().__init__(
             phase_name="performance_analysis",
             required_tools=["analyze_performance"],
-            max_iterations=None,  # Use default from config
+            max_iterations=3,  # Reduced from default (10) to prevent loops: call tool, get result, synthesize
         )
 
     def _get_required_tools(self, context: PhaseContext) -> list[str]:
