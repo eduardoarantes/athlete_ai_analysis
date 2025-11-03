@@ -226,7 +226,8 @@ Assembles complete plan from overview + all week details, validates, and saves.
    - Maximum 2-3 hard days (threshold/vo2max/sweet_spot)
    - Space hard days with recovery/endurance days between
    - Prioritize weekends (Saturday/Sunday) for endurance rides when available
-   - Select from available days: {available_days}
+   - Athlete's available days for training: {available_days}{mandatory_rest_days_text}
+   
 
 ✅ **Workout scheduling**: ONLY create workouts for NON-REST days
    - Phase 2 must schedule workouts ONLY for days with workout_type != "rest"
