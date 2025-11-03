@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import logging
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 from cycling_ai.orchestration.agent import AgentFactory
@@ -405,6 +406,21 @@ class TrainingPlanningPhase(BasePhase):
                 f"- {zone_data['description']}\n"
             )
 
+        # Load weekly_overview from Phase 3a
+        temp_dir = Path("/tmp")
+        overview_file = temp_dir / f"{plan_id}_overview.json"
+
+        if not overview_file.exists():
+            raise ValueError(
+                f"[PHASE 3b] Overview file not found: {overview_file}. "
+                "Phase 3a must complete successfully first."
+            )
+
+        with open(overview_file) as f:
+            overview_data = json.load(f)
+
+        weekly_overview = overview_data.get("weekly_overview", [])
+
         # Format prompt parameters (constant for all weeks)
         available_days_str = ", ".join(available_days)
         daily_time_caps_json = json.dumps(daily_time_caps) if daily_time_caps else "None"
@@ -421,6 +437,7 @@ class TrainingPlanningPhase(BasePhase):
             "daily_time_caps_json": daily_time_caps_json,
             "num_available_days": str(len(available_days)),
             "num_rest_days": str(7 - len(available_days)),
+            "weekly_overview": weekly_overview,  # Pass the data structure for Jinja2
         }
 
         # Accumulate successful week completions
@@ -517,11 +534,16 @@ class TrainingPlanningPhase(BasePhase):
             **base_params
         )
 
-        # CRITICAL: Include plan_id in user message so LLM knows which plan to use
+        # Get user prompt from file with all the detailed instructions
+        user_prompt_template = context.prompts_manager.get_training_planning_weeks_user_prompt(
+            **base_params
+        )
+
+        # Build user message with context and detailed instructions
         user_message = (
             f"{context_text}\n\n"
             f"**Use plan_id: `{plan_id}`**\n\n"
-            f"Call `add_week_details` with plan_id=\"{plan_id}\" and week_number={week_number}."
+            f"{user_prompt_template}"
         )
 
         # Create FRESH session for this week
