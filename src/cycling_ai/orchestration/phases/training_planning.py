@@ -14,6 +14,7 @@ import logging
 from datetime import datetime
 from typing import Any
 
+from cycling_ai.orchestration.agent import AgentFactory
 from cycling_ai.orchestration.base import PhaseContext, PhaseResult, PhaseStatus
 from cycling_ai.orchestration.phases.base_phase import BasePhase
 from cycling_ai.orchestration.session import ConversationSession
@@ -274,8 +275,6 @@ class TrainingPlanningPhase(BasePhase):
         )
 
         # Create agent with AgentFactory
-        from cycling_ai.orchestration.agent import AgentFactory
-
         agent = AgentFactory.create_agent(
             provider=context.provider,
             session=session,
