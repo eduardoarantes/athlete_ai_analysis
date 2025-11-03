@@ -85,6 +85,10 @@ class BasePhase(ABC):
         This is the main entry point. Subclasses should NOT override this method.
         Instead, implement the abstract methods below.
 
+        Supports two execution modes:
+        1. Normal: Agent calls tools, results extracted from session
+        2. Prefetch: Tools pre-executed, results embedded in prompt (1 interaction)
+
         Args:
             context: Phase execution context with config and previous phase data
 
@@ -98,43 +102,24 @@ class BasePhase(ABC):
             context.progress_callback(self.phase_name, PhaseStatus.IN_PROGRESS)
 
         try:
-            # Step 1: Create session with system prompt
-            session = self._create_session(context)
+            # Check if phase wants to prefetch tool data
+            prefetched_data = self._prefetch_tool_data(context)
 
-            # Step 2: Create agent with filtered tools
-            agent = self._create_agent(context, session)
-
-            # Step 3: Execute agent with user message
-            user_message = self._get_user_message(
-                config=self._context_to_config_dict(context),
-                context=context,
-            )
-            response = agent.process_message(user_message)
-
-            # Step 4: Extract structured data from tool results
-            extracted_data = self._extract_data(session)
-
-            # Step 5: Build successful result
-            execution_time = (datetime.now() - phase_start).total_seconds()
-
-            result = PhaseResult(
-                phase_name=self.phase_name,
-                status=PhaseStatus.COMPLETED,
-                agent_response=response,
-                extracted_data=extracted_data,
-                errors=[],
-                execution_time_seconds=execution_time,
-                tokens_used=self._estimate_tokens(session),
-            )
+            if prefetched_data is not None:
+                # OPTIMIZED PATH: Prefetch mode (1 interaction)
+                logger.info(
+                    f"[{self.phase_name}] Using prefetch optimization - "
+                    f"tools pre-executed, synthesis-only mode"
+                )
+                result = self._execute_with_prefetch(context, prefetched_data, phase_start)
+            else:
+                # NORMAL PATH: Agent calls tools
+                logger.debug(f"[{self.phase_name}] Using normal tool-calling mode")
+                result = self._execute_normal(context, phase_start)
 
             # Notify completion
             if context.progress_callback:
                 context.progress_callback(self.phase_name, PhaseStatus.COMPLETED)
-
-            logger.info(
-                f"Phase {self.phase_name} completed successfully in "
-                f"{execution_time:.2f}s"
-            )
 
             return result
 
@@ -163,6 +148,127 @@ class BasePhase(ABC):
                 context.progress_callback(self.phase_name, PhaseStatus.FAILED)
 
             return result
+
+    def _execute_normal(
+        self,
+        context: PhaseContext,
+        phase_start: datetime,
+    ) -> PhaseResult:
+        """
+        Normal execution path: agent calls tools.
+
+        Args:
+            context: Phase execution context
+            phase_start: Start time for tracking
+
+        Returns:
+            PhaseResult with extracted data from tool results
+        """
+        # Step 1: Create session with system prompt
+        session = self._create_session(context)
+
+        # Step 2: Create agent with filtered tools
+        agent = self._create_agent(context, session)
+
+        # Step 3: Execute agent with user message
+        user_message = self._get_user_message(
+            config=self._context_to_config_dict(context),
+            context=context,
+        )
+        response = agent.process_message(user_message)
+
+        # Step 4: Extract structured data from tool results
+        extracted_data = self._extract_data(session)
+
+        # Step 5: Build successful result
+        execution_time = (datetime.now() - phase_start).total_seconds()
+
+        result = PhaseResult(
+            phase_name=self.phase_name,
+            status=PhaseStatus.COMPLETED,
+            agent_response=response,
+            extracted_data=extracted_data,
+            errors=[],
+            execution_time_seconds=execution_time,
+            tokens_used=self._estimate_tokens(session),
+        )
+
+        logger.info(
+            f"Phase {self.phase_name} completed successfully in "
+            f"{execution_time:.2f}s (normal mode)"
+        )
+
+        return result
+
+    def _execute_with_prefetch(
+        self,
+        context: PhaseContext,
+        prefetched_data: dict[str, Any],
+        phase_start: datetime,
+    ) -> PhaseResult:
+        """
+        Optimized execution path: tools pre-executed, synthesis-only.
+
+        This reduces LLM interactions from 2-3 to 1 by:
+        1. Pre-executing deterministic tool calls
+        2. Embedding results directly in prompt
+        3. Agent only synthesizes (no tool access)
+
+        Args:
+            context: Phase execution context
+            prefetched_data: Pre-executed tool results
+            phase_start: Start time for tracking
+
+        Returns:
+            PhaseResult with prefetched data as extracted_data
+        """
+        # Step 1: Create session with system prompt
+        session = self._create_session(context)
+
+        # Step 2: Create agent WITHOUT tools (synthesis only)
+        max_iterations = (
+            self.max_iterations
+            if self.max_iterations is not None
+            else 1  # Only 1 iteration needed for synthesis
+        )
+
+        agent = AgentFactory.create_agent(
+            provider=context.provider,
+            session=session,
+            allowed_tools=[],  # No tools - synthesis only!
+            max_iterations=max_iterations,
+        )
+
+        # Step 3: Execute agent with user message (includes prefetched data)
+        user_message = self._get_user_message_with_data(
+            config=self._context_to_config_dict(context),
+            context=context,
+            prefetched_data=prefetched_data,
+        )
+        response = agent.process_message(user_message)
+
+        # Step 4: Extract data from LLM response (not tool results!)
+        extracted_data = self._extract_data_from_response(response, prefetched_data)
+
+        # Step 5: Build successful result
+        execution_time = (datetime.now() - phase_start).total_seconds()
+
+        result = PhaseResult(
+            phase_name=self.phase_name,
+            status=PhaseStatus.COMPLETED,
+            agent_response=response,
+            extracted_data=extracted_data,
+            errors=[],
+            execution_time_seconds=execution_time,
+            tokens_used=self._estimate_tokens(session),
+        )
+
+        logger.info(
+            f"Phase {self.phase_name} completed successfully in "
+            f"{execution_time:.2f}s (prefetch mode - 1 interaction)"
+        )
+
+        return result
 
     def _create_session(self, context: PhaseContext) -> ConversationSession:
         """
@@ -272,6 +378,73 @@ class BasePhase(ABC):
 
         # Rough estimate: 1 token ≈ 4 chars
         return total_chars // 4
+
+    def _prefetch_tool_data(self, context: PhaseContext) -> dict[str, Any] | None:
+        """
+        Optional hook for phases to pre-execute deterministic tools.
+
+        If this returns data, the phase will use optimized prefetch mode:
+        - Tools are executed BEFORE agent creation
+        - Results are embedded directly in the user prompt
+        - Agent has NO tool access (synthesis only)
+        - Reduces from 2-3 LLM interactions to 1
+
+        Use this when:
+        1. Tool calls are 100% deterministic (no LLM decision needed)
+        2. Tools just fetch/process data (no reasoning required)
+        3. LLM's job is to synthesize results
+
+        Args:
+            context: Phase execution context
+
+        Returns:
+            Dictionary with prefetched tool results, or None for normal mode
+        """
+        return None
+
+    def _get_user_message_with_data(
+        self,
+        config: dict[str, Any],
+        context: PhaseContext,
+        prefetched_data: dict[str, Any],
+    ) -> str:
+        """
+        Build user message with prefetched data embedded.
+
+        Default implementation falls back to normal _get_user_message().
+        Subclasses using prefetch should override this to inject data.
+
+        Args:
+            config: Configuration dictionary
+            context: Phase execution context
+            prefetched_data: Pre-executed tool results
+
+        Returns:
+            User message with data embedded
+        """
+        # Default: fall back to normal message
+        return self._get_user_message(config, context)
+
+    def _extract_data_from_response(
+        self,
+        response: str,
+        prefetched_data: dict[str, Any],
+    ) -> dict[str, Any]:
+        """
+        Extract data from LLM response in prefetch mode.
+
+        Default implementation returns prefetched_data as-is.
+        Subclasses can override to parse structured output from LLM.
+
+        Args:
+            response: LLM's synthesis response
+            prefetched_data: Original prefetched tool results
+
+        Returns:
+            Extracted data (defaults to prefetched_data)
+        """
+        # Default: return prefetched data as-is
+        return prefetched_data
 
     @abstractmethod
     def _get_system_prompt(

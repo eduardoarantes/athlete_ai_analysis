@@ -48,8 +48,85 @@ class PerformanceAnalysisPhase(BasePhase):
         super().__init__(
             phase_name="performance_analysis",
             required_tools=["analyze_performance"],
-            max_iterations=3,  # Reduced from default (10) to prevent loops: call tool, get result, synthesize
+            max_iterations=1,  # Only 1 iteration needed with prefetch optimization
         )
+
+    def _prefetch_tool_data(self, context: PhaseContext) -> dict[str, Any] | None:
+        """
+        Pre-execute deterministic tool calls before agent creation.
+
+        Performance analysis tools are 100% deterministic:
+        - analyze_performance: Parameters known from config
+        - analyze_cross_training_impact: Optional, auto-detected
+
+        This reduces from 2-3 LLM interactions to 1.
+
+        Args:
+            context: Phase execution context
+
+        Returns:
+            Dictionary with tool results or None if execution fails
+        """
+        from cycling_ai.tools.registry import get_tool_registry
+
+        try:
+            # Get parameters from previous phase
+            cache_file_path = context.previous_phase_data.get("cache_file_path")
+            athlete_profile_path = context.previous_phase_data.get(
+                "athlete_profile_path", str(context.config.athlete_profile_path)
+            )
+
+            if not cache_file_path:
+                logger.warning("[PHASE 2] No cache_file_path - falling back to normal mode")
+                return None
+
+            logger.info("[PHASE 2] Pre-executing tools (prefetch optimization)")
+
+            registry = get_tool_registry()
+            results: dict[str, Any] = {}
+
+            # Execute analyze_performance
+            perf_tool = registry.get_tool("analyze_performance")
+            perf_result = perf_tool.execute(
+                csv_file_path=cache_file_path,
+                athlete_profile_json=athlete_profile_path,
+                period_months=context.config.period_months,
+            )
+
+            if not perf_result.success:
+                logger.error(f"[PHASE 2] analyze_performance failed: {perf_result.errors}")
+                return None
+
+            results["performance_analysis_json"] = json.loads(perf_result.data)
+            logger.info("[PHASE 2] analyze_performance executed successfully")
+
+            # Execute cross-training analysis if needed
+            should_analyze_ct = False
+            if context.config.analyze_cross_training is None:
+                should_analyze_ct = self._should_analyze_cross_training(cache_file_path)
+            else:
+                should_analyze_ct = context.config.analyze_cross_training
+
+            if should_analyze_ct:
+                ct_tool = registry.get_tool("analyze_cross_training_impact")
+                ct_result = ct_tool.execute(
+                    cache_file_path=cache_file_path,
+                    analysis_period_weeks=int(context.config.period_months * 4.33),
+                )
+
+                if ct_result.success:
+                    results["cross_training_analysis"] = json.loads(ct_result.data)
+                    logger.info("[PHASE 2] analyze_cross_training_impact executed successfully")
+                else:
+                    logger.warning(
+                        f"[PHASE 2] analyze_cross_training_impact failed: {ct_result.errors}"
+                    )
+
+            return results
+
+        except Exception as e:
+            logger.error(f"[PHASE 2] Prefetch failed: {e}, falling back to normal mode")
+            return None
 
     def _get_required_tools(self, context: PhaseContext) -> list[str]:
         """
@@ -207,6 +284,106 @@ class PerformanceAnalysisPhase(BasePhase):
                         continue
 
         return extracted
+
+    def _get_user_message_with_data(
+        self,
+        config: dict[str, Any],
+        context: PhaseContext,
+        prefetched_data: dict[str, Any],
+    ) -> str:
+        """
+        Build user message with prefetched data embedded (synthesis mode).
+
+        Instead of telling LLM to call tools, we provide the data directly
+        and ask for synthesis into the required JSON format.
+
+        Args:
+            config: Configuration dictionary
+            context: Phase execution context
+            prefetched_data: Pre-executed tool results
+
+        Returns:
+            User message with data embedded for synthesis
+        """
+        # Get performance data
+        perf_data = prefetched_data.get("performance_analysis_json", {})
+        ct_data = prefetched_data.get("cross_training_analysis")
+
+        # Build synthesis prompt
+        message = f"""Analyze the following cycling performance data and create a comprehensive JSON report.
+
+**Analysis Period:** {context.config.period_months} months
+
+**Performance Data:**
+```json
+{json.dumps(perf_data, indent=2)}
+```
+"""
+
+        if ct_data:
+            message += f"""
+**Cross-Training Analysis:**
+```json
+{json.dumps(ct_data, indent=2)}
+```
+"""
+
+        message += """
+**Your Task:**
+Synthesize this data into a comprehensive performance analysis report as valid JSON.
+
+**CRITICAL:** Return ONLY the JSON object - no markdown code blocks, no additional text, no explanations.
+
+The JSON must include:
+1. athlete_profile: Extract from the performance data
+2. performance_comparison: Key metrics comparing previous vs current period
+3. time_in_zones: Zone distribution (if available, otherwise empty array)
+4. key_trends: 3-5 significant trends with concrete numbers
+5. insights: 3-5 actionable insights
+6. recommendations: short_term, long_term, and recovery_nutrition advice
+7. analysis_period_months: {context.config.period_months}
+"""
+
+        if ct_data:
+            message += """8. cross_training: Activity distribution, load balance, interference events, recommendations
+"""
+
+        message += """
+Use concrete numbers and percentages in all descriptions. Be encouraging but honest about areas needing improvement.
+"""
+
+        return message
+
+    def _extract_data_from_response(
+        self,
+        response: str,
+        prefetched_data: dict[str, Any],
+    ) -> dict[str, Any]:
+        """
+        Extract data from LLM's JSON response (synthesis mode).
+
+        In prefetch mode, the LLM returns structured JSON directly,
+        so we just parse it.
+
+        Args:
+            response: LLM's JSON response
+            prefetched_data: Original tool results (fallback)
+
+        Returns:
+            Parsed JSON or fallback to prefetched_data
+        """
+        try:
+            # Try to parse LLM's JSON response
+            parsed = json.loads(response.strip())
+            logger.debug("[PHASE 2] Successfully parsed JSON from LLM response")
+            return {"performance_analysis_json": parsed}
+        except json.JSONDecodeError as e:
+            logger.warning(
+                f"[PHASE 2] Failed to parse LLM response as JSON: {e}. "
+                f"Falling back to prefetched data."
+            )
+            # Fall back to prefetched data
+            return prefetched_data
 
     def _should_analyze_cross_training(
         self,
