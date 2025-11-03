@@ -33,10 +33,16 @@ Call `create_plan_overview` with:
       "phase_rationale": "Establish aerobic base",
       "weekly_focus": "Endurance building",
       "weekly_watch_points": "Monitor fatigue and recovery",
+      "training_days": [
+        {{"weekday": "Monday", "workout_type": "rest"}},
+        {{"weekday": "Tuesday", "workout_type": "endurance"}},
+        {{"weekday": "Wednesday", "workout_type": "recovery"}},
+        {{"weekday": "Thursday", "workout_type": "rest"}},
+        {{"weekday": "Friday", "workout_type": "tempo"}},
+        {{"weekday": "Saturday", "workout_type": "endurance"}},
+        {{"weekday": "Sunday", "workout_type": "rest"}}
+      ],
       "target_tss": 280,
-      "hard_days": 1,
-      "easy_days": 2,
-      "rest_days": {num_rest_days},
       "total_hours": 6.8
     }},
     // ... weeks 2 through {training_plan_weeks}

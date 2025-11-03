@@ -16,10 +16,8 @@ Call the `create_plan_overview` tool with:
    - phase_rationale (why this phase - keep concise)
    - weekly_focus (key training focus - 2-5 words)
    - weekly_watch_points (what to monitor - 3-8 words)
+   - training_days (array of ALL 7 weekday objects with workout_type: rest, recovery, endurance, tempo, sweet_spot, threshold, vo2max, mixed)
    - target_tss (weekly TSS target)
-   - hard_days (count of hard workouts)
-   - easy_days (count of easy/recovery workouts)
-   - rest_days (count of rest days)
    - total_hours (target weekly training hours)
 
 3. **Coaching Notes**: 200-400 words explaining overall strategy and target FTP rationale
