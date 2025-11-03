@@ -58,7 +58,7 @@ Call `create_plan_overview` with:
     {{"weekday": "Thursday", "workout_type": "rest"}},
     {{"weekday": "Friday", "workout_type": "tempo"}},
     {{"weekday": "Saturday", "workout_type": "endurance"}},
-    {{"weekday": "Sunday", "workout_type": "rest"}}
+    {{"weekday": "Sunday", "workout_type": "endurance"}}
   ],
   "target_tss": 280,
   "total_hours": 6.8

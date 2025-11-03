@@ -86,20 +86,24 @@ You MUST provide ALL 7 weekdays in `training_days` array with specific workout t
 - Maximum 5 training days per week (minimum 2 rest days)
 - Maximum 2-3 hard days per week (threshold/vo2max/sweet_spot)
 - Space hard days with recovery/endurance days between
-- Prioritize weekends for long endurance rides (Saturday/Sunday)
+- **WEEKEND PRIORITY**: If Saturday AND Sunday are BOTH available, MUST use them for training
+  - Weekends allow longer rides (2-3 hours) without time constraints
+  - Saturday: Schedule long endurance ride OR key quality workout
+  - Sunday: Schedule long endurance ride OR active recovery (if Saturday was hard)
+  - Only make weekends rest days if they are NOT available for training
 - Use recovery day after hard session
 - Optional flag: Add "optional": true for flexible training days
 
 **Example Training Week Patterns:**
 
-4-day Foundation week:
-- Mon: rest, Tue: endurance, Wed: rest, Thu: recovery, Fri: rest, Sat: endurance, Sun: rest
+4-day Foundation week (Sat/Sun available):
+- Mon: rest, Tue: endurance, Wed: rest, Thu: recovery, Fri: rest, Sat: endurance, Sun: endurance
 
-5-day Build week:
-- Mon: recovery, Tue: threshold, Wed: rest, Thu: tempo, Fri: rest, Sat: endurance, Sun: rest
+5-day Build week (Sat/Sun available):
+- Mon: recovery, Tue: threshold, Wed: rest, Thu: tempo, Fri: rest, Sat: endurance, Sun: endurance
 
-5-day Peak week:
-- Mon: rest, Tue: threshold, Wed: recovery, Thu: rest, Fri: vo2max, Sat: endurance, Sun: rest
+5-day Peak week (Sat/Sun available):
+- Mon: rest, Tue: threshold, Wed: recovery, Thu: rest, Fri: vo2max, Sat: endurance, Sun: recovery
 
 **CRITICAL - Rest Days:**
 - Minimum 2 rest days per week (more for recovery weeks)
@@ -225,7 +229,11 @@ Assembles complete plan from overview + all week details, validates, and saves.
    - Maximum 5 non-rest days per week (minimum 2 rest days)
    - Maximum 2-3 hard days (threshold/vo2max/sweet_spot)
    - Space hard days with recovery/endurance days between
-   - Prioritize weekends (Saturday/Sunday) for endurance rides when available
+   - **WEEKEND PRIORITY**: If Saturday AND Sunday are both available for training, you MUST use them:
+     - Weekends are ideal for longer endurance rides (2-3 hours)
+     - Saturday: Long endurance ride or key quality session
+     - Sunday: Long endurance ride or active recovery (if Saturday was hard)
+     - DO NOT leave weekends as rest days if they are available
    - Athlete's available days for training: {available_days}{mandatory_rest_days_text}
    
 
