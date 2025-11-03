@@ -97,7 +97,8 @@ class PerformanceAnalysisPhase(BasePhase):
                 logger.error(f"[PHASE 2] analyze_performance failed: {perf_result.errors}")
                 return None
 
-            results["performance_analysis_json"] = json.loads(perf_result.data)
+            # Tool returns .data as already-parsed dict, not JSON string
+            results["performance_analysis_json"] = perf_result.data
             logger.info("[PHASE 2] analyze_performance executed successfully")
 
             # Execute cross-training analysis if needed
@@ -115,7 +116,8 @@ class PerformanceAnalysisPhase(BasePhase):
                 )
 
                 if ct_result.success:
-                    results["cross_training_analysis"] = json.loads(ct_result.data)
+                    # Tool returns .data as already-parsed dict, not JSON string
+                    results["cross_training_analysis"] = ct_result.data
                     logger.info("[PHASE 2] analyze_cross_training_impact executed successfully")
                 else:
                     logger.warning(
