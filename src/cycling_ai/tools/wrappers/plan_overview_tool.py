@@ -103,9 +103,8 @@ class PlanOverviewTool(BaseTool):
                         "Each week: week_number (1..total_weeks), phase (Foundation/Build/Recovery/Peak/Taper), "
                         "phase_rationale (why this phase), weekly_focus (key focus), "
                         "weekly_watch_points (monitoring points), "
-                        "training_days (array of weekday names for training, max 5 days), "
-                        "target_tss (weekly TSS), hard_days (count), easy_days (count), rest_days (count), "
-                        "total_hours (target weekly hours)"
+                        "training_days (array of 7 day objects with weekday and workout_type), "
+                        "target_tss (weekly TSS), total_hours (target weekly hours)"
                     ),
                     required=True,
                     items={
@@ -118,13 +117,31 @@ class PlanOverviewTool(BaseTool):
                             "weekly_watch_points": {"type": "string"},
                             "training_days": {
                                 "type": "array",
-                                "items": {"type": "string"},
-                                "description": "Weekday names for training (max 5 days)",
+                                "minItems": 7,
+                                "maxItems": 7,
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "weekday": {
+                                            "type": "string",
+                                            "enum": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+                                            "description": "Day of the week"
+                                        },
+                                        "workout_type": {
+                                            "type": "string",
+                                            "enum": ["rest", "recovery", "endurance", "tempo", "sweet_spot", "threshold", "vo2max", "mixed"],
+                                            "description": "Workout type from library (or rest)"
+                                        },
+                                        "optional": {
+                                            "type": "boolean",
+                                            "description": "Whether this training day is optional (default: false)"
+                                        }
+                                    },
+                                    "required": ["weekday", "workout_type"]
+                                },
+                                "description": "All 7 weekdays with prescribed workout types from library"
                             },
                             "target_tss": {"type": "number"},
-                            "hard_days": {"type": "integer"},
-                            "easy_days": {"type": "integer"},
-                            "rest_days": {"type": "integer"},
                             "total_hours": {"type": "number"},
                         },
                     },
@@ -204,6 +221,9 @@ class PlanOverviewTool(BaseTool):
 
             # Validate training_days in each week
             valid_weekdays = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"}
+            valid_workout_types = {"rest", "recovery", "endurance", "tempo", "sweet_spot", "threshold", "vo2max", "mixed"}
+            hard_workout_types = {"threshold", "vo2max", "sweet_spot"}
+
             for i, week in enumerate(weekly_overview):
                 week_num = week.get("week_number", i + 1)
                 training_days = week.get("training_days", [])
@@ -211,40 +231,100 @@ class PlanOverviewTool(BaseTool):
                 if not training_days:
                     raise ValueError(
                         f"Week {week_num} missing 'training_days' array. "
-                        f"You must specify which weekdays the athlete will train (max 5 days)."
+                        f"You must specify ALL 7 weekdays with workout types."
                     )
 
-                if len(training_days) > 5:
+                if len(training_days) != 7:
                     raise ValueError(
-                        f"Week {week_num} has {len(training_days)} training days. "
-                        f"Maximum is 5 days to ensure adequate rest and recovery."
+                        f"Week {week_num} has {len(training_days)} training day entries. "
+                        f"Must have exactly 7 entries (one for each weekday)."
                     )
 
-                # Validate weekday names
-                for day in training_days:
-                    if day not in valid_weekdays:
+                # Collect weekdays and workout types for validation
+                weekdays_seen = set()
+                non_rest_days = 0
+                hard_days_count = 0
+
+                for day_obj in training_days:
+                    # Validate structure
+                    if not isinstance(day_obj, dict):
                         raise ValueError(
-                            f"Week {week_num} has invalid training day '{day}'. "
+                            f"Week {week_num}: training_days entries must be objects with 'weekday' and 'workout_type'. "
+                            f"Got: {day_obj}"
+                        )
+
+                    weekday = day_obj.get("weekday")
+                    workout_type = day_obj.get("workout_type")
+
+                    if not weekday:
+                        raise ValueError(
+                            f"Week {week_num}: training day entry missing 'weekday' field: {day_obj}"
+                        )
+
+                    if not workout_type:
+                        raise ValueError(
+                            f"Week {week_num}: training day entry missing 'workout_type' field: {day_obj}"
+                        )
+
+                    # Validate weekday
+                    if weekday not in valid_weekdays:
+                        raise ValueError(
+                            f"Week {week_num} has invalid weekday '{weekday}'. "
                             f"Must be one of: {', '.join(sorted(valid_weekdays))}"
                         )
 
-                # Check for duplicates
-                if len(training_days) != len(set(training_days)):
+                    # Check for duplicate weekdays
+                    if weekday in weekdays_seen:
+                        raise ValueError(
+                            f"Week {week_num} has duplicate weekday: {weekday}"
+                        )
+                    weekdays_seen.add(weekday)
+
+                    # Validate workout_type
+                    if workout_type not in valid_workout_types:
+                        raise ValueError(
+                            f"Week {week_num}, {weekday} has invalid workout_type '{workout_type}'. "
+                            f"Must be one of: {', '.join(sorted(valid_workout_types))}"
+                        )
+
+                    # Count non-rest days and hard days
+                    if workout_type != "rest":
+                        non_rest_days += 1
+                        if workout_type in hard_workout_types:
+                            hard_days_count += 1
+
+                # Validate all weekdays present
+                if weekdays_seen != valid_weekdays:
+                    missing = valid_weekdays - weekdays_seen
                     raise ValueError(
-                        f"Week {week_num} has duplicate training days: {training_days}"
+                        f"Week {week_num} missing weekdays: {', '.join(sorted(missing))}. "
+                        f"Must include all 7 weekdays."
                     )
 
-                # Validate training_days count matches hard_days + easy_days
-                hard_days = week.get("hard_days", 0)
-                easy_days = week.get("easy_days", 0)
-                expected_training_days = hard_days + easy_days
-
-                if len(training_days) != expected_training_days:
+                # Validate training day count
+                if non_rest_days > 5:
                     raise ValueError(
-                        f"Week {week_num} training_days array has {len(training_days)} days, "
-                        f"but hard_days ({hard_days}) + easy_days ({easy_days}) = {expected_training_days}. "
-                        f"These must match."
+                        f"Week {week_num} has {non_rest_days} non-rest days. "
+                        f"Maximum is 5 training days to ensure adequate rest and recovery (minimum 2 rest days)."
                     )
+
+                if non_rest_days < 2:
+                    logger.warning(
+                        f"Week {week_num} has only {non_rest_days} training days. "
+                        f"Consider adding more training volume."
+                    )
+
+                # Validate hard day count
+                if hard_days_count > 3:
+                    raise ValueError(
+                        f"Week {week_num} has {hard_days_count} hard days (threshold/vo2max/sweet_spot). "
+                        f"Maximum is 3 hard days per week to ensure adequate recovery."
+                    )
+
+                logger.debug(
+                    f"Week {week_num} validation passed: "
+                    f"{non_rest_days} training days ({hard_days_count} hard, {non_rest_days - hard_days_count} easy/moderate)"
+                )
 
             # Generate unique plan ID
             plan_id = str(uuid.uuid4())

@@ -30,35 +30,81 @@ Design a complete, personalized {training_plan_weeks}-week training plan using a
     "phase_rationale": "Build aerobic base",
     "weekly_focus": "Endurance",
     "weekly_watch_points": "Monitor fatigue",
-    "training_days": ["Tuesday", "Thursday", "Saturday", "Sunday"],  // CRITICAL: Max 5 days
+    "training_days": [
+      {{"weekday": "Monday", "workout_type": "rest"}},
+      {{"weekday": "Tuesday", "workout_type": "endurance"}},
+      {{"weekday": "Wednesday", "workout_type": "recovery"}},
+      {{"weekday": "Thursday", "workout_type": "rest"}},
+      {{"weekday": "Friday", "workout_type": "tempo"}},
+      {{"weekday": "Saturday", "workout_type": "endurance"}},
+      {{"weekday": "Sunday", "workout_type": "rest"}}
+    ],
     "target_tss": 250,
-    "hard_days": 1,
-    "easy_days": 3,
-    "rest_days": 3,
     "total_hours": 6.5
   }},
   // ... weeks 2-{training_plan_weeks}
 ]
 ```
 
-**CRITICAL - Training Day Selection**:
-- You MUST select specific training days in `training_days` array (max 5 days)
-- training_days = the specific weekdays athlete will train (e.g., ["Tuesday", "Thursday", "Saturday", "Sunday"])
-- MAXIMUM 5 training days per week to ensure adequate rest and recovery
-- If weekends (Saturday/Sunday) are available, PRIORITIZE including them (allows longer sessions)
-- Spacing: Distribute training days throughout the week (avoid consecutive hard days)
-- Validation: len(training_days) MUST equal hard_days + easy_days
+**CRITICAL - Training Day Prescription**:
+You MUST provide ALL 7 weekdays in `training_days` array with specific workout types from the 222-workout library.
 
-**Example Training Day Patterns**:
-- 4-day week: ["Tuesday", "Thursday", "Saturday", "Sunday"] - hard on Tue/Sat, easy on Thu/Sun
-- 5-day week: ["Monday", "Wednesday", "Thursday", "Saturday", "Sunday"] - includes both weekends
-- 3-day week (recovery): ["Wednesday", "Saturday", "Sunday"] - minimal frequency
+**Workout Types Available (from workout_library.json):**
 
-**CRITICAL - Rest Days**:
-- Rest days = 7 - len(training_days)
+- **rest**: Complete rest day (no training)
+
+**Easy Intensity (Active Recovery & Aerobic Base):**
+- **recovery**: Active recovery spin (Z1, <55% FTP) - 11 workouts available
+  - Use: Day after hard session, between hard efforts
+  - Duration: 30-60 minutes, very easy pace
+- **endurance**: Long aerobic rides (Z2, 56-75% FTP) - 104 workouts available
+  - Use: Foundation building, long weekend rides
+  - Duration: 60-180 minutes, conversational pace
+
+**Moderate Intensity (Sub-Threshold Work):**
+- **tempo**: Sub-threshold efforts (Z3, 76-90% FTP) - 8 workouts available
+  - Use: Build phase, muscular endurance
+  - Duration: 60-90 minutes with sustained efforts
+- **sweet_spot**: Sweet spot training (88-93% FTP) - Only 2 workouts available
+  - Use: SPARINGLY in Build phase (limited variety)
+  - Duration: 60-75 minutes with intervals
+
+**Hard Intensity (High-Intensity Training):**
+- **threshold**: FTP/lactate threshold (90-105% FTP) - 81 workouts available
+  - Use: Build/Peak phases, FTP development
+  - Duration: 60-90 minutes with intervals
+- **vo2max**: VO2max intervals (>105% FTP) - Only 5 workouts available
+  - Use: Peak phase only, SPARINGLY (limited variety)
+  - Duration: 45-75 minutes with short hard intervals
+- **mixed**: Combined intensities - 11 workouts available
+  - Use: Variety, race simulation
+  - Duration: Varies
+
+**Training Day Guidelines:**
+- MUST include all 7 weekdays (Monday-Sunday)
+- Each day must have a "weekday" and "workout_type"
+- Maximum 5 training days per week (minimum 2 rest days)
+- Maximum 2-3 hard days per week (threshold/vo2max/sweet_spot)
+- Space hard days with recovery/endurance days between
+- Prioritize weekends for long endurance rides (Saturday/Sunday)
+- Use recovery day after hard session
+- Optional flag: Add "optional": true for flexible training days
+
+**Example Training Week Patterns:**
+
+4-day Foundation week:
+- Mon: rest, Tue: endurance, Wed: rest, Thu: recovery, Fri: rest, Sat: endurance, Sun: rest
+
+5-day Build week:
+- Mon: recovery, Tue: threshold, Wed: rest, Thu: tempo, Fri: rest, Sat: endurance, Sun: rest
+
+5-day Peak week:
+- Mon: rest, Tue: threshold, Wed: recovery, Thu: rest, Fri: vo2max, Sat: endurance, Sun: rest
+
+**CRITICAL - Rest Days:**
 - Minimum 2 rest days per week (more for recovery weeks)
-- Rest days are NOT listed in training_days array (simply omit them)
-- hard_days + easy_days + rest_days should equal 7 (total days in week)
+- Rest days are explicitly listed with "workout_type": "rest"
+- More rest days for recovery weeks (3-4 rest days)
 
 **CRITICAL - Recovery/Rest Weeks**:
 - For plans 8+ weeks, include Recovery weeks every 3-4 weeks (e.g., weeks 4, 8, 12)
@@ -172,16 +218,20 @@ Assembles complete plan from overview + all week details, validates, and saves.
 
 ✅ **weekly_overview array**: Must have exactly {training_plan_weeks} entries
 
-✅ **training_days array**: Each week must specify training_days
-   - Maximum 5 training days per week
+✅ **training_days array**: Each week must specify ALL 7 weekdays with workout types
+   - Must have exactly 7 entries (Monday through Sunday)
+   - Each entry must have "weekday" and "workout_type" fields
+   - workout_type must be one of: rest, recovery, endurance, tempo, sweet_spot, threshold, vo2max, mixed
+   - Maximum 5 non-rest days per week (minimum 2 rest days)
+   - Maximum 2-3 hard days (threshold/vo2max/sweet_spot)
+   - Space hard days with recovery/endurance days between
+   - Prioritize weekends (Saturday/Sunday) for endurance rides when available
    - Select from available days: {available_days}
-   - Prioritize weekends if available (allows longer sessions)
-   - len(training_days) must equal hard_days + easy_days
-   - Rest days = days NOT in training_days array
 
-✅ **Workout scheduling**: ONLY create workouts on designated training_days
-   - Phase 2 must schedule workouts ONLY on the training_days from weekly_overview
-   - Number of workouts must equal len(training_days)
+✅ **Workout scheduling**: ONLY create workouts for NON-REST days
+   - Phase 2 must schedule workouts ONLY for days with workout_type != "rest"
+   - Number of workouts must equal count of non-rest days in training_days
+   - Workout intensity must match the workout_type prescribed in weekly_overview
 
 ✅ **Weekly time budget**: ~{weekly_time_budget_hours} hours per week (±10%)
    - Calculate: sum of all segment durations
