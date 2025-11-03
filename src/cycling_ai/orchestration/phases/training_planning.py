@@ -268,7 +268,7 @@ class TrainingPlanningPhase(BasePhase):
 
         # Create session with isolation
         session = context.session_manager.create_session(
-            provider_name=context.provider.name,
+            provider_name=context.provider.config.provider_name,
             context=context.previous_phase_data,
             system_prompt=system_prompt,
         )
@@ -399,7 +399,7 @@ class TrainingPlanningPhase(BasePhase):
 
         # Create session with isolation
         session = context.session_manager.create_session(
-            provider_name=context.provider.name,
+            provider_name=context.provider.config.provider_name,
             context=context.previous_phase_data,
             system_prompt=system_prompt,
         )

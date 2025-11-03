@@ -180,7 +180,7 @@ class BasePhase(ABC):
         )
 
         session: ConversationSession = context.session_manager.create_session(
-            provider_name=context.provider.name,
+            provider_name=context.provider.config.provider_name,
             context=context.previous_phase_data,  # Pass previous phase data
             system_prompt=system_prompt,
         )
