@@ -194,9 +194,17 @@ class AddWeekDetailsTool(BaseTool):
                 logger.warning(f"No overview found for week {week_number}, skipping target validation")
                 week_overview = {}
 
-            # Get designated training days for this week
-            training_days = week_overview.get("training_days", [])
-            if not training_days:
+            # Get designated training days for this week (extract weekdays from objects, exclude rest days)
+            training_days_objects = week_overview.get("training_days", [])
+            if training_days_objects:
+                # Extract weekday strings for non-rest days only
+                training_days = [
+                    day_obj.get("weekday")
+                    for day_obj in training_days_objects
+                    if isinstance(day_obj, dict) and day_obj.get("workout_type") != "rest"
+                ]
+            else:
+                training_days = []
                 logger.warning(f"No training_days found in week {week_number} overview, skipping training day validation")
 
             # Validate workouts structure

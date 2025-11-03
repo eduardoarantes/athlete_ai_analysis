@@ -254,17 +254,20 @@ class PlanOverviewTool(BaseTool):
                         )
 
                     weekday = day_obj.get("weekday")
-                    workout_type = day_obj.get("workout_type")
+                    workout_type_raw = day_obj.get("workout_type")
 
                     if not weekday:
                         raise ValueError(
                             f"Week {week_num}: training day entry missing 'weekday' field: {day_obj}"
                         )
 
-                    if not workout_type:
+                    if not workout_type_raw:
                         raise ValueError(
                             f"Week {week_num}: training day entry missing 'workout_type' field: {day_obj}"
                         )
+
+                    # Normalize workout_type to lowercase (LLMs sometimes return "Endurance" instead of "endurance")
+                    workout_type = workout_type_raw.lower() if isinstance(workout_type_raw, str) else workout_type_raw
 
                     # Validate weekday
                     if weekday not in valid_weekdays:
@@ -283,9 +286,13 @@ class PlanOverviewTool(BaseTool):
                     # Validate workout_type
                     if workout_type not in valid_workout_types:
                         raise ValueError(
-                            f"Week {week_num}, {weekday} has invalid workout_type '{workout_type}'. "
-                            f"Must be one of: {', '.join(sorted(valid_workout_types))}"
+                            f"Week {week_num}, {weekday} has invalid workout_type '{workout_type_raw}' "
+                            f"(normalized to '{workout_type}'). "
+                            f"Must be one of (case-insensitive): {', '.join(sorted(valid_workout_types))}"
                         )
+
+                    # Update the day_obj with normalized value
+                    day_obj["workout_type"] = workout_type
 
                     # Count non-rest days and hard days
                     if workout_type != "rest":
