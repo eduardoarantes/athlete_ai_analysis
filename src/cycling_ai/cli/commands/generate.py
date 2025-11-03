@@ -18,12 +18,8 @@ from rich.table import Table
 
 from cycling_ai.cli.formatting import console
 from cycling_ai.config.loader import load_config
-from cycling_ai.orchestration.multi_agent import (
-    MultiAgentOrchestrator,
-    PhaseStatus,
-    WorkflowConfig,
-    WorkflowResult,
-)
+from cycling_ai.orchestration.base import PhaseStatus, WorkflowConfig, WorkflowResult
+from cycling_ai.orchestration.multi_agent import MultiAgentOrchestrator
 from cycling_ai.orchestration.prompts import AgentPromptsManager
 from cycling_ai.providers.base import BaseProvider, ProviderConfig
 from cycling_ai.providers.factory import ProviderFactory

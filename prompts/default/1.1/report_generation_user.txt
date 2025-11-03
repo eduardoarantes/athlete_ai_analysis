@@ -1,9 +1,0 @@
-Generate comprehensive HTML reports:
-
-1. index.html - Executive summary and navigation
-2. coaching_insights.html - Detailed analysis and recommendations
-3. performance_dashboard.html - Visual data dashboard
-
-Output directory: {output_dir}
-
-Combine all insights from previous phases into cohesive reports.

@@ -502,6 +502,13 @@ class TrainingPlanningPhase(BasePhase):
         Returns:
             Dictionary with success, tokens_used, errors
         """
+        # Extract plan_id from context (set in Phase 3a)
+        plan_id = base_params.get("plan_id")
+        if not plan_id:
+            raise ValueError(
+                f"[PHASE 3b] plan_id not found in base_params for week {week_number}"
+            )
+
         # Build context string showing successful weeks
         context_text = f"Successfully completed weeks: {successful_weeks if successful_weeks else 'None (first week)'}"
 
@@ -509,9 +516,12 @@ class TrainingPlanningPhase(BasePhase):
         system_prompt = context.prompts_manager.get_training_planning_weeks_prompt(
             **base_params
         )
+
+        # CRITICAL: Include plan_id in user message so LLM knows which plan to use
         user_message = (
             f"{context_text}\n\n"
-            f"Add detailed workouts for week {week_number}."
+            f"**Use plan_id: `{plan_id}`**\n\n"
+            f"Call `add_week_details` with plan_id=\"{plan_id}\" and week_number={week_number}."
         )
 
         # Create FRESH session for this week
@@ -571,9 +581,10 @@ class TrainingPlanningPhase(BasePhase):
                         # Build detailed retry message with previous tool call information
                         user_message = (
                             f"{context_text}\n\n"
+                            f"**Use plan_id: `{plan_id}`**\n\n"
                             f"**Previous Attempt Failed for Week {week_number}:**\n\n"
                             f"{error_details['full_error']}\n\n"
-                            f"Please retry with corrected parameters."
+                            f"Call `add_week_details` with plan_id=\"{plan_id}\" and week_number={week_number}, correcting the issues above."
                         )
                         continue
                     else:
