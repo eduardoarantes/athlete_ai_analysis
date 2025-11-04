@@ -17,7 +17,7 @@ from cycling_ai.tools.wrappers.add_week_tool import (
     _detect_optional_recovery_workout,
     _find_weekend_endurance_rides,
     _is_endurance_workout,
-    _validate_time_and_tss,
+    _validate_time_budget,
 )
 
 
@@ -213,16 +213,14 @@ class TestCalculateWeekMetrics:
 # ============================================================================
 
 
-class TestValidateTimeAndTSS:
-    """Tests for _validate_time_and_tss()"""
+class TestValidateTimeBudget:
+    """Tests for _validate_time_budget()"""
 
     def test_within_tolerance_no_errors(self):
         """Within tolerance → No errors"""
-        warnings, errors = _validate_time_and_tss(
+        warnings, errors = _validate_time_budget(
             total_hours=7.5,
-            actual_tss=450.0,
             target_hours=7.0,
-            target_tss=450.0,
             week_number=1,
             is_recovery_week=False,
         )
@@ -232,11 +230,9 @@ class TestValidateTimeAndTSS:
 
     def test_exceeds_tolerance_has_errors(self):
         """Exceeds tolerance → Has errors"""
-        warnings, errors = _validate_time_and_tss(
+        warnings, errors = _validate_time_budget(
             total_hours=10.0,  # 43% over target
-            actual_tss=450.0,
             target_hours=7.0,
-            target_tss=450.0,
             week_number=1,
             is_recovery_week=False,
         )
@@ -567,12 +563,12 @@ class TestIntegration:
         assert total_hours_no_rec == pytest.approx(6.0, abs=0.01)
 
         # Step 4: Validate both scenarios
-        warnings_full, errors_full = _validate_time_and_tss(
-            total_hours_full, tss_full, 6.5, 400.0, 1, False
+        warnings_full, errors_full = _validate_time_budget(
+            total_hours_full, 6.5, 1, False
         )
 
-        warnings_no_rec, errors_no_rec = _validate_time_and_tss(
-            total_hours_no_rec, tss_no_rec, 6.5, 400.0, 1, False
+        warnings_no_rec, errors_no_rec = _validate_time_budget(
+            total_hours_no_rec, 6.5, 1, False
         )
 
         # Both scenarios should pass (within tolerance)
