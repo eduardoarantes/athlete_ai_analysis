@@ -120,136 +120,16 @@ class LibraryBasedTrainingPlanningWeeks:
             if not training_days:
                 raise ValueError(f"Week {week_num} missing 'training_days' field")
 
-            # Filter out rest days
-            non_rest_days = [
-                day for day in training_days
-                if day.get("workout_type") != "rest"
-            ]
-
-            # Calculate target duration per day based on weekly hours and day type
-            weekday_training_days = [
-                d for d in non_rest_days
-                if d["weekday"] not in ["Saturday", "Sunday"]
-            ]
-            weekend_training_days = [
-                d for d in non_rest_days
-                if d["weekday"] in ["Saturday", "Sunday"]
-            ]
-
-            # Distribute hours: weekends get more time for long endurance
-            # Simple distribution: 40% to weekdays, 60% to weekends (if weekends exist)
-            num_weekdays = len(weekday_training_days)
-            num_weekends = len(weekend_training_days)
-
-            if num_weekends > 0:
-                weekday_hours = target_hours * 0.4
-                weekend_hours = target_hours * 0.6
-                avg_weekday_duration_min = (
-                    (weekday_hours * 60 / num_weekdays) if num_weekdays > 0 else 60
-                )
-                avg_weekend_duration_min = (
-                    (weekend_hours * 60 / num_weekends) if num_weekends > 0 else 120
-                )
-            else:
-                # All weekdays - distribute evenly
-                avg_weekday_duration_min = (
-                    (target_hours * 60 / num_weekdays) if num_weekdays > 0 else 60
-                )
-                avg_weekend_duration_min = 0
-
+            # Select and scale workouts to hit time budget
+            # This automatically handles:
+            # - Weekday workouts: fixed 45-75min
+            # - Weekend workouts: scale to fill time deficit
             logger.info(
                 f"[PHASE 3b-LIBRARY] Week {week_num}: "
-                f"Selecting {len(non_rest_days)} workouts (phase={phase}, "
-                f"target_hours={target_hours:.1f}h, "
-                f"avg_weekday_duration={avg_weekday_duration_min:.0f}min, "
-                f"avg_weekend_duration={avg_weekend_duration_min:.0f}min)"
+                f"Selecting workouts (phase={phase}, target_hours={target_hours:.1f}h)"
             )
 
-            # Select workout for each non-rest training day
-            selected_workouts: list[dict[str, Any]] = []
-            for day in non_rest_days:
-                is_weekend = day["weekday"] in ["Saturday", "Sunday"]
-
-                # Set duration constraints based on day type
-                if is_weekend:
-                    min_duration = 90  # Weekend minimum
-                    max_duration = 180  # Weekend maximum
-                    target_duration = avg_weekend_duration_min
-                else:
-                    min_duration = 45  # Weekday minimum
-                    max_duration = 90  # Weekday maximum
-                    target_duration = avg_weekday_duration_min
-
-                workout = self._select_workout_for_day(
-                    weekday=day["weekday"],
-                    workout_type=day["workout_type"],
-                    phase=phase,
-                    target_duration_min=target_duration,
-                    min_duration_min=min_duration,
-                    max_duration_min=max_duration,
-                )
-
-                if workout is None:
-                    raise RuntimeError(
-                        f"No matching workout found for week {week_num}, "
-                        f"day {day['weekday']}, type {day['workout_type']}, phase {phase}"
-                    )
-
-                # Convert to dict and add required fields for add_week_tool
-                workout_dict = workout.model_dump()
-                workout_dict["weekday"] = day["weekday"]
-                # add_week_tool expects 'description', use detailed_description or fallback to name
-                workout_dict["description"] = (
-                    workout.detailed_description or workout.name
-                )
-
-                # Ensure all segments have duration_min calculated (for interval sets)
-                for segment in workout_dict.get("segments", []):
-                    if segment.get("duration_min") is None:
-                        if segment.get("sets") and segment.get("work") and segment.get("recovery"):
-                            # Calculate duration for interval sets
-                            work_duration = segment["work"].get("duration_min", 0) or 0
-                            recovery_duration = segment["recovery"].get("duration_min", 0) or 0
-                            segment["duration_min"] = segment["sets"] * (
-                                work_duration + recovery_duration
-                            )
-                        else:
-                            # Fallback: set to 0 if we can't calculate
-                            segment["duration_min"] = 0
-
-                    # Copy power zones from work interval if missing (for interval segments)
-                    if segment.get("power_low_pct") is None and segment.get("work"):
-                        segment["power_low_pct"] = segment["work"].get("power_low_pct", 50)
-                        if segment.get("power_high_pct") is None:
-                            segment["power_high_pct"] = segment["work"].get(
-                                "power_high_pct", 60
-                            )
-
-                    # Ensure description exists
-                    if not segment.get("description"):
-                        segment["description"] = f"{segment['type'].title()} segment"
-
-                selected_workouts.append(workout_dict)
-
-                # Track variety
-                self.selector.variety_tracker.add_workout(workout.id)
-
-                logger.debug(
-                    f"[PHASE 3b-LIBRARY] Week {week_num}, {day['weekday']}: "
-                    f"Selected {workout.name} (duration={workout.base_duration_min:.0f}min)"
-                )
-
-            # 3. Validate total duration against target
-            total_duration_min = sum(
-                sum(seg.get("duration_min", 0) for seg in w.get("segments", []))
-                for w in selected_workouts
-            )
-            total_hours = total_duration_min / 60.0
-
-            logger.info(
-                f"[PHASE 3b-LIBRARY] Week {week_num}: "
-                f"Total duration {total_hours:.1f}h (target {target_hours:.1f}h)"
-            )
+            selected_workouts = self._select_and_scale_workouts(week_data)
 
             # 4. Call add_week_tool
             result = self.add_week_tool.execute(
@@ -349,3 +229,197 @@ class LibraryBasedTrainingPlanningWeeks:
 
         weekly_overview: list[dict[str, Any]] = data["weekly_overview"]
         return weekly_overview
+
+    def _find_main_segment(self, workout: dict[str, Any]) -> dict[str, Any]:
+        """
+        Find the main segment to extend (steady/endurance or longest).
+
+        Priority:
+        1. First 'steady' segment (Z2 endurance)
+        2. First 'tempo' segment
+        3. Longest segment
+
+        Args:
+            workout: Workout dictionary with segments
+
+        Returns:
+            The main segment dictionary (mutable reference)
+        """
+        segments: list[dict[str, Any]] = workout.get("segments", [])
+
+        # Try to find steady segment
+        for seg in segments:
+            if seg.get("type") == "steady":
+                return seg
+
+        # Try tempo
+        for seg in segments:
+            if seg.get("type") == "tempo":
+                return seg
+
+        # Fallback: longest segment
+        result: dict[str, Any] = max(segments, key=lambda s: s.get("duration_min", 0))
+        return result
+
+    def _scale_weekend_workouts(
+        self,
+        weekend_workouts: list[dict[str, Any]],
+        deficit_minutes: float,
+    ) -> list[dict[str, Any]]:
+        """
+        Scale weekend endurance rides to fill time deficit.
+
+        Args:
+            weekend_workouts: Weekend workout objects
+            deficit_minutes: Time needed (can be negative if surplus)
+
+        Returns:
+            Scaled workout objects (deep copies)
+        """
+        if not weekend_workouts or abs(deficit_minutes) < 1:
+            return weekend_workouts
+
+        # Distribute deficit equally
+        extension_per_workout = deficit_minutes / len(weekend_workouts)
+
+        scaled_workouts = []
+        for workout in weekend_workouts:
+            # Clone workout (don't modify library)
+            workout_copy = json.loads(json.dumps(workout))
+
+            # Find main segment
+            main_segment = self._find_main_segment(workout_copy)
+
+            # Extend/shrink
+            new_duration = main_segment["duration_min"] + extension_per_workout
+
+            # Clamp to reasonable bounds
+            new_duration = max(10, min(new_duration, 150))  # 10-150min for segment
+
+            main_segment["duration_min"] = int(new_duration)
+
+            scaled_workouts.append(workout_copy)
+
+        return scaled_workouts
+
+    def _select_and_scale_workouts(
+        self,
+        week: dict[str, Any]
+    ) -> list[dict[str, Any]]:
+        """
+        Select workouts and scale weekends to hit time target.
+
+        Strategy:
+        1. Select weekday workouts with fixed 45-75min constraint
+        2. Select weekend workouts with BASE duration (90min min)
+        3. Calculate deficit after weekday selection
+        4. Scale ONLY weekend workouts to fill deficit
+
+        Args:
+            week: Week data with training_days and total_hours
+
+        Returns:
+            List of workout objects ready for add_week_tool
+        """
+        target_hours = week["total_hours"]
+
+        weekday_workouts = []
+        weekend_workouts = []
+
+        # Select all workouts
+        for day in week["training_days"]:
+            if day["workout_type"] == "rest":
+                continue
+
+            is_weekend = day["weekday"] in ["Saturday", "Sunday"]
+
+            workout = self.selector.select_workout(
+                target_type=day["workout_type"],
+                target_phase=week["phase"],
+                target_weekday=day["weekday"],
+                target_duration_min=90 if is_weekend else 60,  # Base target
+                min_duration_min=90 if is_weekend else 45,
+                max_duration_min=100 if is_weekend else 75,  # Will scale UP after selection
+                temperature=self.temperature,
+            )
+
+            if workout is None:
+                raise RuntimeError(
+                    f"No matching workout found for week {week.get('week_number')}, "
+                    f"day {day['weekday']}, type {day['workout_type']}, phase {week['phase']}"
+                )
+
+            # Convert to dict
+            workout_dict = workout.model_dump()
+            workout_dict["weekday"] = day["weekday"]
+            workout_dict["description"] = workout.detailed_description or workout.name
+
+            # Ensure all segments have duration_min calculated (for interval sets)
+            for segment in workout_dict.get("segments", []):
+                if segment.get("duration_min") is None:
+                    if segment.get("sets") and segment.get("work") and segment.get("recovery"):
+                        # Calculate duration for interval sets
+                        work_duration = segment["work"].get("duration_min", 0) or 0
+                        recovery_duration = segment["recovery"].get("duration_min", 0) or 0
+                        segment["duration_min"] = segment["sets"] * (
+                            work_duration + recovery_duration
+                        )
+                    else:
+                        # Fallback: set to 0 if we can't calculate
+                        segment["duration_min"] = 0
+
+                # Copy power zones from work interval if missing (for interval segments)
+                if segment.get("power_low_pct") is None and segment.get("work"):
+                    segment["power_low_pct"] = segment["work"].get("power_low_pct", 50)
+                    if segment.get("power_high_pct") is None:
+                        segment["power_high_pct"] = segment["work"].get(
+                            "power_high_pct", 60
+                        )
+
+                # Ensure description exists
+                if not segment.get("description"):
+                    segment["description"] = f"{segment['type'].title()} segment"
+
+            if is_weekend:
+                weekend_workouts.append(workout_dict)
+            else:
+                weekday_workouts.append(workout_dict)
+
+        # Calculate current durations
+        weekday_minutes = sum(
+            sum(seg["duration_min"] for seg in w["segments"])
+            for w in weekday_workouts
+        )
+
+        weekend_minutes_before = sum(
+            sum(seg["duration_min"] for seg in w["segments"])
+            for w in weekend_workouts
+        )
+
+        # Calculate deficit (how much more time we need)
+        target_minutes = target_hours * 60
+        current_total = weekday_minutes + weekend_minutes_before
+        deficit_minutes = target_minutes - current_total
+
+        # Scale weekends to fill deficit
+        scaled_weekend = self._scale_weekend_workouts(weekend_workouts, deficit_minutes)
+
+        # Combine
+        all_workouts = weekday_workouts + scaled_weekend
+
+        # Log for debugging
+        actual_minutes = sum(
+            sum(seg["duration_min"] for seg in w["segments"])
+            for w in all_workouts
+        )
+        logger.info(
+            f"Week {week.get('week_number')}: "
+            f"Target {target_minutes/60:.1f}h, "
+            f"Weekdays {weekday_minutes/60:.1f}h, "
+            f"Weekends (before) {weekend_minutes_before/60:.1f}h, "
+            f"Deficit {deficit_minutes/60:.1f}h, "
+            f"Weekends (after) {(actual_minutes-weekday_minutes)/60:.1f}h, "
+            f"Total {actual_minutes/60:.1f}h"
+        )
+
+        return all_workouts
