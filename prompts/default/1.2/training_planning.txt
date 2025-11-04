@@ -15,9 +15,9 @@ Design a complete, personalized {training_plan_weeks}-week training plan using a
 **What to generate**:
 - Periodization strategy for all {training_plan_weeks} weeks
 - Weekly phase assignments (Foundation/Build/Recovery/Peak/Taper)
-- Weekly time budget and daily time ranges
+- Weekly time budget (total hours per week)
+- Daily duration ranges based on day type (weekdays: 45-90min, weekends: 90-180min)
 - Hard vs easy day distribution per week
-- Total hours per week
 - Coaching notes explaining overall strategy (200-400 words)
 - Monitoring guidance with KPIs and warning signs (150-300 words)
 
@@ -309,7 +309,7 @@ Assembles complete plan from overview + all week details, validates, and saves.
 
 1. Call create_plan_overview:
    - Generate periodization for all {training_plan_weeks} weeks
-   - Define phases, TSS targets, focus areas
+   - Define phases, weekly time budgets, focus areas
    - Returns plan_id
 
 2. Call add_week_details for week 1:
