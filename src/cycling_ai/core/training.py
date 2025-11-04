@@ -146,9 +146,9 @@ def validate_training_plan(
                         errors.append(
                             f"Week {week_num}, {day}, segment {seg_idx}: 'power_low_pct' must be a number"
                         )
-                    elif not (0 <= segment["power_low_pct"] <= 200):
+                    elif segment["power_low_pct"] < 0:
                         errors.append(
-                            f"Week {week_num}, {day}, segment {seg_idx}: 'power_low_pct' must be between 0 and 200 (got {segment['power_low_pct']})"
+                            f"Week {week_num}, {day}, segment {seg_idx}: 'power_low_pct' must be >= 0 (got {segment['power_low_pct']})"
                         )
 
                     # Validate power_high_pct >= power_low_pct if present
@@ -157,9 +157,9 @@ def validate_training_plan(
                             errors.append(
                                 f"Week {week_num}, {day}, segment {seg_idx}: 'power_high_pct' must be a number"
                             )
-                        elif not (0 <= segment["power_high_pct"] <= 200):
+                        elif segment["power_high_pct"] < 0:
                             errors.append(
-                                f"Week {week_num}, {day}, segment {seg_idx}: 'power_high_pct' must be between 0 and 200 (got {segment['power_high_pct']})"
+                                f"Week {week_num}, {day}, segment {seg_idx}: 'power_high_pct' must be >= 0 (got {segment['power_high_pct']})"
                             )
                         elif segment["power_high_pct"] < segment.get("power_low_pct", 0):
                             errors.append(
