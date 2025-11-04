@@ -15,7 +15,7 @@ Design a complete, personalized {training_plan_weeks}-week training plan using a
 **What to generate**:
 - Periodization strategy for all {training_plan_weeks} weeks
 - Weekly phase assignments (Foundation/Build/Recovery/Peak/Taper)
-- TSS targets per week
+- Weekly time budget and daily time ranges
 - Hard vs easy day distribution per week
 - Total hours per week
 - Coaching notes explaining overall strategy (200-400 words)
@@ -39,7 +39,6 @@ Design a complete, personalized {training_plan_weeks}-week training plan using a
       {{"weekday": "Saturday", "workout_type": "endurance"}},
       {{"weekday": "Sunday", "workout_type": "rest"}}
     ],
-    "target_tss": 250,
     "total_hours": 6.5
   }},
   // ... weeks 2-{training_plan_weeks}
@@ -113,8 +112,8 @@ You MUST provide ALL 7 weekdays in `training_days` array with specific workout t
 **CRITICAL - Recovery/Rest Weeks**:
 - For plans 8+ weeks, include Recovery weeks every 3-4 weeks (e.g., weeks 4, 8, 12)
 - Recovery weeks have REDUCED volume: 40-60% of normal weekly hours
-- Example: If normal week = 8h/300 TSS, recovery week = 4-5h/150-200 TSS
-- Set phase="Recovery" and adjust total_hours and target_tss accordingly
+- Example: If normal week = 8h, recovery week = 4-5h
+- Set phase="Recovery" and adjust total_hours accordingly
 - This allows supercompensation and prevents overtraining
 
 **Output**: Returns `plan_id` for next phase.
@@ -181,16 +180,21 @@ Call add_week_details with:
 **AUTOMATIC VALIDATION** (happens immediately after each week):
 After you call `add_week_details`, the tool automatically validates your week against the targets you set in `create_plan_overview`.
 
-**Your Goal**: Match target_tss and total_hours from weekly_overview as closely as possible.
+**Your Goal**: Match total_hours from weekly_overview as closely as possible while respecting daily duration constraints.
+
+**Duration Constraints**:
+- **Weekday workouts**: 45-90 minutes each (Mon-Fri)
+- **Weekend workouts**: 90-180 minutes (Sat-Sun) - ideal for longer endurance rides
+- **High-intensity workouts**: Typically 60-75 minutes (with warmup/cooldown)
 
 **If validation fails**, you'll receive an error message:
 ```
 Error: Week 3 validation failed. Please adjust workouts:
-Week 3 TSS target violation: Actual 410 TSS vs target 300 TSS (37% over target)
+Week 3 time budget violation: Actual 8.5h vs target 7.0h (21% over target)
 
 Suggestions:
-- To reduce TSS: Lower power targets or shorten high-intensity intervals
-- To increase TSS: Raise power targets or extend work intervals
+- To reduce time: Shorten workout segments or remove intervals
+- To increase time: Extend main work segments or add intervals
 ```
 
 **Action required**: Call `add_week_details` again for the same week_number with adjusted workouts. DO NOT proceed to the next week until validation passes.
@@ -198,7 +202,7 @@ Suggestions:
 **If validation succeeds**, you'll see:
 ```
 Week 3 details added. 3/12 weeks complete.
-✓ Time: 7.2h (target: 7.0h) | ✓ TSS: 312 (target: 300)
+✓ Time: 7.2h (target: 7.0h)
 ```
 
 Proceed to the next week!
@@ -340,7 +344,6 @@ Before calling each tool, verify:
 
 **create_plan_overview**:
 - All {training_plan_weeks} weeks in weekly_overview?
-- TSS targets realistic for each phase? (Foundation: 200-300, Build: 300-450, Recovery: 150-250)
 - Weekly hours match athlete's available time?
 - For 8+ week plans: Recovery weeks every 3-4 weeks with 40-60% volume?
 
@@ -348,17 +351,15 @@ Before calling each tool, verify:
 1. **Calculate total weekly hours**:
    - Sum ALL segment durations across ALL workouts
    - Example: 3 workouts × (15min warmup + 60min work + 10min cooldown) = 255min = 4.25h
-   - Check: Is this within ±20% of target_hours from overview?
+   - Check: Is this within ±10% of target_hours from overview?
 
-2. **Estimate weekly TSS**:
-   - Quick estimate: Z2 ride (70% FTP) for 1h ≈ 50 TSS
-   - Quick estimate: Threshold work (95% FTP) for 1h ≈ 90 TSS
-   - Quick estimate: VO2 intervals (110% FTP) for 1h ≈ 120 TSS
-   - Check: Is this within ±25% of target_tss from overview?
+2. **Check workout durations**:
+   - Weekday workouts: 45-90 min range
+   - Weekend workouts: 90-180 min for endurance
+   - High-intensity workouts: typically 60-75 min (with warmup/cooldown)
 
-3. **If estimates are outside tolerance**:
+3. **If outside tolerance**:
    - Adjust segment durations (±5-10 min per workout)
-   - Adjust power targets (±5-10% FTP)
    - Add/remove recovery segments
    - Then recalculate before calling tool
 

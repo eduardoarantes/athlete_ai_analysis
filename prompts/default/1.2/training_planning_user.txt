@@ -35,7 +35,6 @@ Call `create_plan_overview` with:
     // - weekly_focus (key training focus - 2-5 words)
     // - weekly_watch_points (what to monitor - 3-8 words)
     // - training_days (array of ALL 7 weekday objects with workout_type)
-    // - target_tss (weekly TSS target)
     // - total_hours (target weekly training hours)
   ],
   "coaching_notes": "<200-400 words explaining periodization strategy, target FTP rationale, progression logic>",
@@ -60,7 +59,6 @@ Call `create_plan_overview` with:
     {{"weekday": "Saturday", "workout_type": "endurance"}},
     {{"weekday": "Sunday", "workout_type": "endurance"}}
   ],
-  "target_tss": 280,
   "total_hours": 6.8
 }}
 ```
@@ -87,7 +85,7 @@ For EACH week from 1 to {training_plan_weeks}, call `add_week_details`:
 **Key Requirements**:
 - Use the available days: {available_days}
 - Target approximately {weekly_time_budget_hours} hours per week
-- Match the weekly_overview you created (phase, TSS, hard/easy distribution)
+- Match the weekly_overview you created (phase, hours, hard/easy distribution)
 - Include ALL available days (except rest days)
 - Each workout must have ≥1 segment
 - Calculate total week duration: {example_total_hours}h from {example_total_minutes} min

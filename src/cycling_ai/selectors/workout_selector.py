@@ -3,7 +3,7 @@ Workout Selector - Intelligent workout selection from library.
 
 Selects and adjusts workouts from the 222-workout library based on:
 - Training phase (Foundation, Build, Peak, Recovery, Taper)
-- Target TSS and duration
+- Target duration and duration constraints (weekday/weekend limits)
 - Available weekdays
 - Workout type and intensity requirements
 - Variable component adjustments (sets/duration)
@@ -28,10 +28,11 @@ class WorkoutRequirements:
     phase: str  # Foundation, Build, Peak, Recovery, Taper
     workout_type: str | None = None  # vo2max, threshold, sweet_spot, tempo, endurance, recovery
     intensity: str | None = None  # hard, easy
-    target_tss: float | None = None
-    target_duration_min: float | None = None
-    tss_tolerance_pct: float = 0.15  # 15% tolerance
-    duration_tolerance_pct: float = 0.20  # 20% tolerance
+    target_duration_min: float | None = None  # Target duration in minutes
+    duration_tolerance_pct: float = 0.20  # 20% tolerance for target duration
+    # Duration constraints (hard limits)
+    min_duration_min: float | None = None  # Minimum acceptable duration
+    max_duration_min: float | None = None  # Maximum acceptable duration
 
 
 @dataclass
@@ -46,7 +47,6 @@ class SelectedWorkout:
     weekday: str
     segments: list[dict[str, Any]]
     duration_min: float
-    tss: float
     adjusted: bool  # True if variable components were adjusted
     adjustment_details: dict[str, Any] | None = None
 
@@ -65,11 +65,12 @@ class WorkoutSelector:
         ...     phase="Build",
         ...     workout_type="vo2max",
         ...     intensity="hard",
-        ...     target_tss=85,
-        ...     target_duration_min=60
+        ...     target_duration_min=60,
+        ...     min_duration_min=45,
+        ...     max_duration_min=90
         ... )
         >>> workout = selector.select_workout(requirements)
-        >>> print(f"{workout.name}: {workout.tss} TSS, {workout.duration_min} min")
+        >>> print(f"{workout.name}: {workout.duration_min} min")
     """
 
     def __init__(self, library_path: Path | str | None = None):
@@ -82,7 +83,9 @@ class WorkoutSelector:
         """
         if library_path is None:
             # Default to data/workout_library.json in project root
-            library_path = Path(__file__).parent.parent.parent.parent / "data" / "workout_library.json"
+            library_path = (
+                Path(__file__).parent.parent.parent.parent / "data" / "workout_library.json"
+            )
 
         self.library_path = Path(library_path)
         self.workouts = self._load_library()
@@ -108,9 +111,9 @@ class WorkoutSelector:
 
         Selection process:
         1. Filter workouts by phase, type, intensity
-        2. Score candidates by weekday match, TSS/duration fit
+        2. Score candidates by weekday match, duration fit
         3. Select highest-scoring workout
-        4. Adjust variable components if needed to hit targets
+        4. Adjust variable components if needed to hit duration target
 
         Args:
             requirements: Workout selection requirements
@@ -176,7 +179,7 @@ class WorkoutSelector:
 
         Scoring factors (higher = better):
         - Weekday match: +100 if in suitable_weekdays, 0 otherwise
-        - TSS fit: -abs(target_tss - base_tss) if target specified
+        - Duration constraints: -1000 if outside min/max range (hard constraint)
         - Duration fit: -abs(target_duration - base_duration) if target specified
         - Adjustability: +10 if has variable_components
 
@@ -197,17 +200,18 @@ class WorkoutSelector:
             if requirements.weekday in suitable_weekdays:
                 score += 100
 
-            # TSS fit (if target specified)
-            if requirements.target_tss is not None:
-                tss_diff = abs(requirements.target_tss - workout.get("base_tss", 0))
-                # Penalize by TSS difference (less penalty = better fit)
-                score -= tss_diff
+            # Duration constraint enforcement (hard limits)
+            base_duration = workout.get("base_duration_min", 0)
+
+            # Hard constraint: min/max duration
+            if requirements.min_duration_min and base_duration < requirements.min_duration_min:
+                score -= 1000  # Heavily penalize workouts below minimum
+            if requirements.max_duration_min and base_duration > requirements.max_duration_min:
+                score -= 1000  # Heavily penalize workouts above maximum
 
             # Duration fit (if target specified)
             if requirements.target_duration_min is not None:
-                duration_diff = abs(
-                    requirements.target_duration_min - workout.get("base_duration_min", 0)
-                )
+                duration_diff = abs(requirements.target_duration_min - base_duration)
                 # Penalize by duration difference (less penalty = better fit)
                 score -= duration_diff
 
@@ -219,6 +223,9 @@ class WorkoutSelector:
 
         # Sort by score (descending) and return best
         scored_candidates.sort(key=lambda x: x[0], reverse=True)
+
+        if not scored_candidates:
+            raise ValueError("No candidates to select from")
 
         best_score, best_workout = scored_candidates[0]
 
@@ -232,7 +239,7 @@ class WorkoutSelector:
         self, workout: dict[str, Any], requirements: WorkoutRequirements
     ) -> SelectedWorkout:
         """
-        Adjust workout variable components to hit TSS/duration targets.
+        Adjust workout variable components to fit duration constraints.
 
         Variable components can be:
         - "sets": Number of interval repetitions
@@ -240,19 +247,36 @@ class WorkoutSelector:
 
         Args:
             workout: Base workout from library
-            requirements: Target requirements
+            requirements: Target requirements (duration-based)
 
         Returns:
             SelectedWorkout with adjustments applied
         """
-        base_tss = workout["base_tss"]
         base_duration = workout["base_duration_min"]
         variable_components = workout.get("variable_components")
 
-        # If no targets or no adjustability, return as-is
-        if not variable_components or (
-            requirements.target_tss is None and requirements.target_duration_min is None
-        ):
+        # Check if adjustment is needed
+        needs_adjustment = False
+        target_duration = None
+
+        # Determine target duration
+        if requirements.target_duration_min:
+            target_duration = requirements.target_duration_min
+        elif requirements.min_duration_min and base_duration < requirements.min_duration_min:
+            target_duration = requirements.min_duration_min
+            needs_adjustment = True
+        elif requirements.max_duration_min and base_duration > requirements.max_duration_min:
+            target_duration = requirements.max_duration_min
+            needs_adjustment = True
+
+        # Check if within tolerance
+        if target_duration and requirements.duration_tolerance_pct:
+            duration_diff_pct = abs(base_duration - target_duration) / target_duration
+            if duration_diff_pct > requirements.duration_tolerance_pct:
+                needs_adjustment = True
+
+        # If no targets or no adjustability or no adjustment needed, return as-is
+        if not variable_components or not needs_adjustment or not target_duration:
             return SelectedWorkout(
                 workout_id=workout["id"],
                 name=workout["name"],
@@ -262,7 +286,6 @@ class WorkoutSelector:
                 weekday=requirements.weekday,
                 segments=workout["segments"],
                 duration_min=base_duration,
-                tss=base_tss,
                 adjusted=False,
                 adjustment_details=None,
             )
@@ -271,112 +294,40 @@ class WorkoutSelector:
         adjustable_field = variable_components["adjustable_field"]
         min_value = variable_components["min_value"]
         max_value = variable_components["max_value"]
-        tss_per_unit = variable_components.get("tss_per_unit", 0)
         duration_per_unit = variable_components.get("duration_per_unit_min", 0)
 
-        # Determine target adjustment
-        # Prioritize TSS if both targets specified
-        if requirements.target_tss is not None:
-            tss_diff = requirements.target_tss - base_tss
+        if duration_per_unit == 0:
+            # Cannot adjust without duration_per_unit
+            return SelectedWorkout(
+                workout_id=workout["id"],
+                name=workout["name"],
+                detailed_description=workout.get("detailed_description", ""),
+                workout_type=workout["type"],
+                intensity=workout["intensity"],
+                weekday=requirements.weekday,
+                segments=workout["segments"],
+                duration_min=base_duration,
+                adjusted=False,
+                adjustment_details=None,
+            )
 
-            if abs(tss_diff) > (base_tss * requirements.tss_tolerance_pct):
-                # Need to adjust - calculate units to add/remove
-                if tss_per_unit > 0:
-                    units_adjustment = round(tss_diff / tss_per_unit)
-                    adjusted_value = self._calculate_base_value(
-                        workout, adjustable_field
-                    ) + units_adjustment
+        # Calculate units to adjust
+        duration_diff = target_duration - base_duration
+        units_adjustment = round(duration_diff / duration_per_unit)
+        adjusted_value = self._calculate_base_value(workout, adjustable_field) + units_adjustment
 
-                    # Clamp to min/max
-                    adjusted_value = max(min_value, min(max_value, adjusted_value))
+        # Clamp to min/max
+        adjusted_value = max(min_value, min(max_value, adjusted_value))
 
-                    # Calculate new TSS and duration
-                    units_delta = adjusted_value - self._calculate_base_value(
-                        workout, adjustable_field
-                    )
-                    new_tss = base_tss + (units_delta * tss_per_unit)
-                    new_duration = base_duration + (units_delta * duration_per_unit)
+        # Calculate new duration
+        units_delta = adjusted_value - self._calculate_base_value(workout, adjustable_field)
+        new_duration = base_duration + (units_delta * duration_per_unit)
 
-                    # Apply adjustment to segments
-                    adjusted_segments = self._apply_adjustment(
-                        workout["segments"], adjustable_field, adjusted_value
-                    )
+        # Apply adjustment to segments
+        adjusted_segments = self._apply_adjustment(
+            workout["segments"], adjustable_field, adjusted_value
+        )
 
-                    return SelectedWorkout(
-                        workout_id=workout["id"],
-                        name=workout["name"],
-                        detailed_description=workout.get("detailed_description", ""),
-                        workout_type=workout["type"],
-                        intensity=workout["intensity"],
-                        weekday=requirements.weekday,
-                        segments=adjusted_segments,
-                        duration_min=new_duration,
-                        tss=new_tss,
-                        adjusted=True,
-                        adjustment_details={
-                            "field": adjustable_field,
-                            "original_value": self._calculate_base_value(
-                                workout, adjustable_field
-                            ),
-                            "adjusted_value": adjusted_value,
-                            "original_tss": base_tss,
-                            "adjusted_tss": new_tss,
-                            "original_duration_min": base_duration,
-                            "adjusted_duration_min": new_duration,
-                        },
-                    )
-
-        elif requirements.target_duration_min is not None:
-            duration_diff = requirements.target_duration_min - base_duration
-
-            if abs(duration_diff) > (base_duration * requirements.duration_tolerance_pct):
-                # Need to adjust based on duration
-                if duration_per_unit > 0:
-                    units_adjustment = round(duration_diff / duration_per_unit)
-                    adjusted_value = self._calculate_base_value(
-                        workout, adjustable_field
-                    ) + units_adjustment
-
-                    # Clamp to min/max
-                    adjusted_value = max(min_value, min(max_value, adjusted_value))
-
-                    # Calculate new TSS and duration
-                    units_delta = adjusted_value - self._calculate_base_value(
-                        workout, adjustable_field
-                    )
-                    new_tss = base_tss + (units_delta * tss_per_unit)
-                    new_duration = base_duration + (units_delta * duration_per_unit)
-
-                    # Apply adjustment to segments
-                    adjusted_segments = self._apply_adjustment(
-                        workout["segments"], adjustable_field, adjusted_value
-                    )
-
-                    return SelectedWorkout(
-                        workout_id=workout["id"],
-                        name=workout["name"],
-                        detailed_description=workout.get("detailed_description", ""),
-                        workout_type=workout["type"],
-                        intensity=workout["intensity"],
-                        weekday=requirements.weekday,
-                        segments=adjusted_segments,
-                        duration_min=new_duration,
-                        tss=new_tss,
-                        adjusted=True,
-                        adjustment_details={
-                            "field": adjustable_field,
-                            "original_value": self._calculate_base_value(
-                                workout, adjustable_field
-                            ),
-                            "adjusted_value": adjusted_value,
-                            "original_tss": base_tss,
-                            "adjusted_tss": new_tss,
-                            "original_duration_min": base_duration,
-                            "adjusted_duration_min": new_duration,
-                        },
-                    )
-
-        # No adjustment needed or possible - return as-is
         return SelectedWorkout(
             workout_id=workout["id"],
             name=workout["name"],
@@ -384,11 +335,18 @@ class WorkoutSelector:
             workout_type=workout["type"],
             intensity=workout["intensity"],
             weekday=requirements.weekday,
-            segments=workout["segments"],
-            duration_min=base_duration,
-            tss=base_tss,
-            adjusted=False,
-            adjustment_details=None,
+            segments=adjusted_segments,
+            duration_min=new_duration,
+            adjusted=True,
+            adjustment_details={
+                "field": adjustable_field,
+                "original_value": self._calculate_base_value(
+                    workout, adjustable_field
+                ),
+                "adjusted_value": adjusted_value,
+                "original_duration_min": base_duration,
+                "adjusted_duration_min": new_duration,
+            },
         )
 
     def _calculate_base_value(self, workout: dict[str, Any], adjustable_field: str) -> int | float:
@@ -476,7 +434,8 @@ class WorkoutSelector:
                 if segment["type"] == "interval":
                     # Adjust work duration in interval
                     if "work" in segment:
-                        segment["work"]["duration_min"] = float(adjusted_value) / segment.get("sets", 1)
+                        sets = segment.get("sets", 1)
+                        segment["work"]["duration_min"] = float(adjusted_value) / sets
                 else:
                     # Adjust segment duration directly
                     segment["duration_min"] = float(adjusted_value)
