@@ -101,9 +101,9 @@ def _calculate_week_metrics(
     else:
         filtered_workouts = workouts
 
-    # Calculate total duration
+    # Calculate total duration (handle None values from library workouts)
     total_duration_min = sum(
-        sum(seg.get("duration_min", 0) for seg in workout.get("segments", []))
+        sum((seg.get("duration_min") or 0) for seg in workout.get("segments", []))
         for workout in filtered_workouts
     )
     total_hours = total_duration_min / 60.0
@@ -114,22 +114,20 @@ def _calculate_week_metrics(
     return (total_hours, actual_tss)
 
 
-def _validate_time_and_tss(
+def _validate_time_budget(
     total_hours: float,
-    actual_tss: float,
     target_hours: float | None,
-    target_tss: float | None,
     week_number: int,
     is_recovery_week: bool,
 ) -> tuple[list[str], list[str]]:
     """
-    Validate time and TSS against targets.
+    Validate weekly time budget against target.
+
+    NOTE: TSS is no longer validated - it's calculated for informational purposes only.
 
     Args:
         total_hours: Calculated total hours
-        actual_tss: Calculated TSS
         target_hours: Target hours (optional)
-        target_tss: Target TSS (optional)
         week_number: Week number for error messages
         is_recovery_week: If True, use stricter tolerances
 
@@ -141,17 +139,11 @@ def _validate_time_and_tss(
 
     # Phase-aware tolerance: stricter for Recovery/Taper weeks
     if is_recovery_week:
-        # Recovery weeks: tighter tolerances to ensure reduced volume
         time_warn_threshold = 8  # ±8% warning
         time_error_threshold = 15  # ±15% error (stricter than normal 20%)
-        tss_warn_threshold = 12  # ±12% warning
-        tss_error_threshold = 20  # ±20% error (stricter than normal 25%)
     else:
-        # Normal weeks: standard tolerances
         time_warn_threshold = 10
         time_error_threshold = 20
-        tss_warn_threshold = 15
-        tss_error_threshold = 25
 
     # Check weekly time budget with phase-aware tolerances
     if target_hours:
@@ -169,23 +161,6 @@ def _validate_time_and_tss(
                 f"Week {week_number} time budget warning: "
                 f"Planned {total_hours:.1f}h vs target {target_hours:.1f}h "
                 f"({time_diff_pct:.0f}% difference, recommend ±{time_warn_threshold}%)"
-            )
-
-    # Check weekly TSS target with phase-aware tolerances
-    if target_tss:
-        tss_diff_pct = abs(actual_tss - target_tss) / target_tss * 100
-        if tss_diff_pct > tss_error_threshold:
-            phase_note = " (Recovery week - stricter tolerance)" if is_recovery_week else ""
-            errors.append(
-                f"Week {week_number} TSS target violation: "
-                f"Actual {actual_tss:.0f} TSS vs target {target_tss:.0f} TSS "
-                f"({tss_diff_pct:.0f}% difference, max {tss_error_threshold}% allowed{phase_note})"
-            )
-        elif tss_diff_pct > tss_warn_threshold:
-            warnings.append(
-                f"Week {week_number} TSS target warning: "
-                f"Actual {actual_tss:.0f} TSS vs target {target_tss:.0f} TSS "
-                f"({tss_diff_pct:.0f}% difference, recommend ±{tss_warn_threshold}%)"
             )
 
     return (warnings, errors)
@@ -224,7 +199,7 @@ def _is_endurance_workout(workout: dict[str, Any]) -> bool:
     total_duration = 0
 
     for seg in segments:
-        duration = seg.get("duration_min", 0)
+        duration = seg.get("duration_min") or 0
         total_duration += duration
 
         # Check if segment is endurance type with low power
@@ -279,8 +254,8 @@ def _find_weekend_endurance_rides(workouts: list[dict[str, Any]]) -> list[dict[s
         if not _is_endurance_workout(workout):
             continue
 
-        # Calculate total duration
-        total_duration = sum(seg.get("duration_min", 0) for seg in workout.get("segments", []))
+        # Calculate total duration (handle None values)
+        total_duration = sum((seg.get("duration_min") or 0) for seg in workout.get("segments", []))
 
         weekend_endurance_rides.append(
             {
@@ -438,8 +413,8 @@ def _attempt_auto_fix(
 
         for idx, seg in enumerate(modified_segments):
             seg_type = seg.get("type", "").lower()
-            power_low = seg.get("power_low_pct", 100)
-            duration = seg.get("duration_min", 0)
+            power_low = seg.get("power_low_pct") or 100
+            duration = seg.get("duration_min") or 0
 
             # Endurance segment with low power
             if (
@@ -748,7 +723,6 @@ class AddWeekDetailsTool(BaseTool):
                     f"{', '.join(training_days)}"
                 )
 
-            target_tss = week_overview.get("target_tss")
             target_hours = week_overview.get("total_hours")
             current_ftp = overview_data.get("target_ftp", 250)  # Default FTP if not provided
             week_phase = week_overview.get("phase", "").lower()
@@ -775,16 +749,17 @@ class AddWeekDetailsTool(BaseTool):
                 workouts, current_ftp, exclude_workout_index=None
             )
             logger.info(
-                f"  - Calculated: {total_hours_full:.2f}h, {actual_tss_full:.0f} TSS"
+                f"  - Calculated: {total_hours_full:.2f}h, {actual_tss_full:.0f} TSS (info only)"
             )
-            logger.info(
-                f"  - Targets: {target_hours:.2f}h, {target_tss:.0f} TSS"
-            )
-            warnings_full, errors_full = _validate_time_and_tss(
+            if target_hours is not None:
+                logger.info(
+                    f"  - Target: {target_hours:.2f}h"
+                )
+            else:
+                logger.info("  - Target: Not specified in overview")
+            warnings_full, errors_full = _validate_time_budget(
                 total_hours_full,
-                actual_tss_full,
                 target_hours,
-                target_tss,
                 week_number,
                 is_recovery_week,
             )
@@ -815,13 +790,12 @@ class AddWeekDetailsTool(BaseTool):
                     workouts, current_ftp, exclude_workout_index=recovery_workout_idx
                 )
                 logger.info(
-                    f"  - Calculated: {total_hours_no_rec:.2f}h, {actual_tss_no_rec:.0f} TSS"
+                    f"  - Calculated: {total_hours_no_rec:.2f}h, "
+                    f"{actual_tss_no_rec:.0f} TSS (info only)"
                 )
-                warnings_no_rec, errors_no_rec = _validate_time_and_tss(
+                warnings_no_rec, errors_no_rec = _validate_time_budget(
                     total_hours_no_rec,
-                    actual_tss_no_rec,
                     target_hours,
-                    target_tss,
                     week_number,
                     is_recovery_week,
                 )
@@ -878,11 +852,9 @@ class AddWeekDetailsTool(BaseTool):
                         total_hours_fixed, actual_tss_fixed = _calculate_week_metrics(
                             modified_workouts, current_ftp
                         )
-                        warnings_fixed, errors_fixed = _validate_time_and_tss(
+                        warnings_fixed, errors_fixed = _validate_time_budget(
                             total_hours_fixed,
-                            actual_tss_fixed,
                             target_hours,
-                            target_tss,
                             week_number,
                             is_recovery_week,
                         )
@@ -1000,11 +972,10 @@ class AddWeekDetailsTool(BaseTool):
                 validation_summary.append(
                     f"{time_status} Time: {total_hours:.1f}h (target: {target_hours:.1f}h)"
                 )
-            if target_tss:
-                tss_status = "✓" if abs(actual_tss - target_tss) / target_tss * 100 <= 15 else "⚠"
-                validation_summary.append(
-                    f"{tss_status} TSS: {actual_tss:.0f} (target: {target_tss:.0f})"
-                )
+            # TSS is informational only (no validation)
+            validation_summary.append(
+                f"ℹ TSS: {actual_tss:.0f} (info only)"
+            )
 
             if validation_summary:
                 success_message += "\n" + " | ".join(validation_summary)
@@ -1029,8 +1000,7 @@ class AddWeekDetailsTool(BaseTool):
                         "fix_log": best_scenario.get("fix_log"),
                         "target_hours": target_hours,
                         "actual_hours": round(total_hours, 1),
-                        "target_tss": target_tss,
-                        "actual_tss": round(actual_tss, 1),
+                        "actual_tss": round(actual_tss, 1),  # Informational only
                         "warnings": validation_warnings,
                         "within_tolerance": len(validation_warnings) == 0,
                     },
