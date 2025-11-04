@@ -36,12 +36,12 @@ For EACH week from 1 to {training_plan_weeks}:
   - Number of workouts MUST equal len(training_days)
   - Rest days are days NOT in training_days (do not create workouts for rest days)
 - Target ~{weekly_time_budget_hours} hours per week (±10%)
-- Match the weekly overview from Phase 1 (phases, TSS, hard/easy distribution)
+- Match the weekly overview from Phase 1 (phases, time budgets, hard/easy distribution)
 - Each workout must have ≥1 segment
 - Progression ≤10% week-to-week
 - **CRITICAL - Daily Duration Limits**:
-  - **Weekday workouts** (Monday-Friday): Maximum 70 minutes total per day
-  - **Weekend workouts** (Saturday-Sunday): Can be longer (2-3 hours acceptable)
+  - **Weekday workouts** (Monday-Friday): 45-90 minutes total per day
+  - **Weekend workouts** (Saturday-Sunday): 90-360+ minutes (longer endurance rides)
 
 ## Segment Type Guidelines
 
@@ -56,20 +56,19 @@ For EACH week from 1 to {training_plan_weeks}:
 
 **After EVERY `add_week_details` call**, the tool validates your week against the targets from Phase 1.
 
-**Your Goal**: Match the target_tss and total_hours from weekly_overview as closely as possible.
+**Your Goal**: Match the total_hours from weekly_overview as closely as possible (within ±10% is ideal).
 
 **IF VALIDATION FAILS** (tool returns error):
 1. READ the error message - it tells you exactly what's wrong
 2. ADJUST the workouts for that SAME week_number:
    - If over time budget: Shorten segment durations or remove recovery segments
    - If under time budget: Extend segments or add recovery periods
-   - If over TSS target: Lower power targets or shorten high-intensity intervals
-   - If under TSS target: Raise power targets or extend work intervals
 3. Call `add_week_details` AGAIN with the SAME week_number and corrected workouts
 4. DO NOT proceed to next week until validation passes
 
 **IF VALIDATION SUCCEEDS**:
-- You'll see: "Week X details added. ✓ Time: Y.Yh (target: Z.Zh) | ✓ TSS: AAA (target: BBB)"
+- You'll see: "Week X details added. ✓ Time: Y.Yh (target: Z.Zh)"
+- You may also see warnings if time is 10-25% different from target (these are acceptable)
 - Proceed to next week
 
 ## Execution Plan
