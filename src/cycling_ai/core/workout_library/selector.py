@@ -73,8 +73,7 @@ class WorkoutSelector:
     - Type match: 40 points (exact match) or 20 points (compatible match)
     - Phase match: 25 points (if phase in suitable_phases)
     - Weekday match: 15 points (if weekday in suitable_weekdays)
-    - TSS match: 10 points (inverse of TSS difference %)
-    - Duration match: 5 points (bonus if duration reasonable)
+    - Duration match: 15 points (inverse of duration difference %)
     - Variety bonus: 5 points (if NOT in recent history)
 
     Uses temperature-based stochastic sampling:
@@ -147,7 +146,10 @@ class WorkoutSelector:
 
         # Duration match (15 points, inverse of percentage difference)
         if target_duration_min > 0:
-            duration_diff_pct = abs(workout.base_duration_min - target_duration_min) / target_duration_min
+            duration_diff_pct = (
+                abs(workout.base_duration_min - target_duration_min)
+                / target_duration_min
+            )
             # Score inversely proportional to difference (0% diff = 15 pts, 100% diff = 0 pts)
             duration_score = max(0, 15 * (1 - min(duration_diff_pct, 1.0)))
             score += duration_score

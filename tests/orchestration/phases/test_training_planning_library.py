@@ -65,20 +65,20 @@ def weekly_overview_data() -> dict:
                 "week": 1,
                 "phase": "Base",
                 "training_days": [
-                    {"weekday": "Monday", "type": "endurance", "target_tss": 65},
-                    {"weekday": "Wednesday", "type": "sweet_spot", "target_tss": 85},
-                    {"weekday": "Friday", "type": "endurance", "target_tss": 70},
-                    {"weekday": "Saturday", "type": "endurance", "target_tss": 90},
+                    {"weekday": "Monday", "workout_type": "endurance", "target_tss": 65},
+                    {"weekday": "Wednesday", "workout_type": "sweet_spot", "target_tss": 85},
+                    {"weekday": "Friday", "workout_type": "endurance", "target_tss": 70},
+                    {"weekday": "Saturday", "workout_type": "endurance", "target_tss": 90},
                 ],
             },
             {
                 "week": 2,
                 "phase": "Base",
                 "training_days": [
-                    {"weekday": "Monday", "type": "endurance", "target_tss": 70},
-                    {"weekday": "Wednesday", "type": "sweet_spot", "target_tss": 90},
-                    {"weekday": "Friday", "type": "endurance", "target_tss": 75},
-                    {"weekday": "Saturday", "type": "endurance", "target_tss": 95},
+                    {"weekday": "Monday", "workout_type": "endurance", "target_tss": 70},
+                    {"weekday": "Wednesday", "workout_type": "sweet_spot", "target_tss": 90},
+                    {"weekday": "Friday", "workout_type": "endurance", "target_tss": 75},
+                    {"weekday": "Saturday", "workout_type": "endurance", "target_tss": 95},
                 ],
             },
         ]

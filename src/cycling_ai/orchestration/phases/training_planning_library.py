@@ -144,11 +144,17 @@ class LibraryBasedTrainingPlanningWeeks:
             if num_weekends > 0:
                 weekday_hours = target_hours * 0.4
                 weekend_hours = target_hours * 0.6
-                avg_weekday_duration_min = (weekday_hours * 60 / num_weekdays) if num_weekdays > 0 else 60
-                avg_weekend_duration_min = (weekend_hours * 60 / num_weekends) if num_weekends > 0 else 120
+                avg_weekday_duration_min = (
+                    (weekday_hours * 60 / num_weekdays) if num_weekdays > 0 else 60
+                )
+                avg_weekend_duration_min = (
+                    (weekend_hours * 60 / num_weekends) if num_weekends > 0 else 120
+                )
             else:
                 # All weekdays - distribute evenly
-                avg_weekday_duration_min = (target_hours * 60 / num_weekdays) if num_weekdays > 0 else 60
+                avg_weekday_duration_min = (
+                    (target_hours * 60 / num_weekdays) if num_weekdays > 0 else 60
+                )
                 avg_weekend_duration_min = 0
 
             logger.info(

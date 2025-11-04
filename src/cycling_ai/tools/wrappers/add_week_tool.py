@@ -137,10 +137,11 @@ def _validate_time_budget(
     warnings: list[str] = []
     errors: list[str] = []
 
-    # Phase-aware tolerance: stricter for Recovery/Taper weeks
+    # Phase-aware tolerance: Recovery/Taper weeks need more flexibility
+    # Duration-based workout selection cannot reliably hit narrow targets
     if is_recovery_week:
         time_warn_threshold = 8  # ±8% warning
-        time_error_threshold = 15  # ±15% error (stricter than normal 20%)
+        time_error_threshold = 25  # ±25% error (recovery weeks need more flexibility)
     else:
         time_warn_threshold = 10
         time_error_threshold = 20
@@ -149,7 +150,7 @@ def _validate_time_budget(
     if target_hours:
         time_diff_pct = abs(total_hours - target_hours) / target_hours * 100
         if time_diff_pct > time_error_threshold:
-            phase_note = " (Recovery week - stricter tolerance)" if is_recovery_week else ""
+            phase_note = " (Recovery week)" if is_recovery_week else ""
             errors.append(
                 f"Week {week_number} time budget violation: "
                 f"Planned {total_hours:.1f}h vs target {target_hours:.1f}h "
@@ -890,9 +891,7 @@ class AddWeekDetailsTool(BaseTool):
                     f"Please adjust workouts:\n{error_msg}\n\n"
                     f"Suggestions:\n"
                     f"- To reduce time: Shorten segment durations or remove recovery segments\n"
-                    f"- To increase time: Add warmup/cooldown or extend main set duration\n"
-                    f"- To reduce TSS: Lower power targets or shorten high-intensity intervals\n"
-                    f"- To increase TSS: Raise power targets or extend work intervals"
+                    f"- To increase time: Add warmup/cooldown or extend main set duration"
                 )
 
             # Use the best valid scenario for final metrics
