@@ -29,15 +29,15 @@ class VarietyTracker:
     Tracks recently used workouts to prevent repetition.
 
     Maintains a rolling window of the last N workout IDs used.
-    Default window is 15 workouts (approximately 3 weeks at 5 workouts/week).
+    Default window is 20 workouts (approximately 4 weeks at 5 workouts/week).
     """
 
-    def __init__(self, window_size: int = 15) -> None:
+    def __init__(self, window_size: int = 20) -> None:
         """
         Initialize variety tracker.
 
         Args:
-            window_size: Number of recent workouts to track
+            window_size: Number of recent workouts to track (default 20 for 4-week coverage)
         """
         self.window_size = window_size
         self._recent_workouts: deque[str] = deque(maxlen=window_size)
@@ -357,6 +357,7 @@ class WorkoutSelector:
         max_duration_min: float | None = None,
         temperature: float = 0.5,
         seed: int | None = None,
+        exclude_ids: list[str] | None = None,
     ) -> Workout | None:
         """
         Select best-matching workout from library.
@@ -370,6 +371,7 @@ class WorkoutSelector:
             max_duration_min: Maximum acceptable duration (hard constraint)
             temperature: Sampling temperature (0=deterministic, 0.5=balanced)
             seed: Random seed for reproducibility
+            exclude_ids: List of workout IDs to exclude (hard constraint for same-week duplicates)
 
         Returns:
             Selected and adjusted workout, or None if no candidates found
@@ -380,6 +382,11 @@ class WorkoutSelector:
             for w in self.library.workouts
             if w.suitable_phases and target_phase in w.suitable_phases
         ]
+
+        # Filter out excluded workout IDs (hard constraint for same-week duplicates)
+        if exclude_ids:
+            candidates = [w for w in candidates if w.id not in exclude_ids]
+            logger.debug(f"Filtered out {len(exclude_ids)} excluded workout IDs")
 
         if not candidates:
             logger.warning(f"No workouts found for phase={target_phase}")

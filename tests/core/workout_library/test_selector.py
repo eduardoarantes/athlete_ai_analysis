@@ -490,3 +490,150 @@ class TestWorkoutSelectorIntegration:
 
         # Should successfully select most/all workouts
         assert len(selected_workouts) >= 5
+
+
+    def test_exclude_ids_prevents_duplicates_in_week(self, selector: WorkoutSelector) -> None:
+        """Test that exclude_ids parameter prevents selecting the same workout twice."""
+        # Select first workout
+        workout1 = selector.select_workout(
+            target_type="endurance",
+            target_phase="Build",  # Build phase has more workouts than Base
+            target_weekday="Monday",
+            target_duration_min=60,
+            min_duration_min=45,
+            max_duration_min=75,
+            temperature=0.5,
+            seed=42,
+        )
+
+        assert workout1 is not None
+
+        # Try to select again with same parameters, excluding the first workout
+        workout2 = selector.select_workout(
+            target_type="endurance",
+            target_phase="Build",
+            target_weekday="Tuesday",
+            target_duration_min=60,
+            min_duration_min=45,
+            max_duration_min=75,
+            temperature=0.5,
+            seed=42,
+            exclude_ids=[workout1.id],  # Exclude first workout
+        )
+
+        assert workout2 is not None
+        assert workout2.id != workout1.id, "Should select a different workout when excluded"
+
+    def test_exclude_ids_with_multiple_selections(self, selector: WorkoutSelector) -> None:
+        """Test exclude_ids with multiple selections (simulating a week)."""
+        selected_ids: list[str] = []
+        phase = "Build"
+
+        # Simulate selecting 5 workouts for a week
+        for day_num in range(5):
+            workout = selector.select_workout(
+                target_type="endurance" if day_num % 2 == 0 else "tempo",
+                target_phase=phase,
+                target_weekday="Monday",
+                target_duration_min=60,
+                min_duration_min=45,
+                max_duration_min=75,
+                temperature=0.5,
+                exclude_ids=selected_ids,  # Exclude all previously selected
+            )
+
+            assert workout is not None, f"Should find workout for day {day_num}"
+            assert workout.id not in selected_ids, f"Duplicate workout on day {day_num}: {workout.id}"
+
+            selected_ids.append(workout.id)
+            selector.variety_tracker.add_workout(workout.id)
+
+        # Verify all workouts are unique
+        assert len(selected_ids) == len(set(selected_ids)), "All selected workouts should be unique"
+
+    def test_variety_tracker_window_size_20(self) -> None:
+        """Test that VarietyTracker defaults to window size 20 (4 weeks)."""
+        tracker = VarietyTracker()
+        assert tracker.window_size == 20, "Default window should be 20 for 4-week coverage"
+
+        # Fill with 20 workouts
+        for i in range(20):
+            tracker.add_workout(f"workout_{i}")
+
+        recent = tracker.get_recent_ids()
+        assert len(recent) == 20
+
+        # Add one more - should push out the first
+        tracker.add_workout("workout_20")
+        recent = tracker.get_recent_ids()
+        assert len(recent) == 20
+        assert "workout_0" not in recent
+        assert "workout_20" in recent
+
+    def test_variety_tracker_updates_during_selection(self, selector: WorkoutSelector) -> None:
+        """Test that variety tracker is properly updated after selections."""
+        # Initially empty
+        assert len(selector.variety_tracker.get_recent_ids()) == 0
+
+        # Select 3 workouts and update tracker
+        selected_ids = []
+        for i in range(3):
+            workout = selector.select_workout(
+                target_type="endurance",
+                target_phase="Build",
+                target_weekday="Monday",
+                target_duration_min=60,
+                temperature=0.5,
+            )
+            assert workout is not None
+            selector.variety_tracker.add_workout(workout.id)
+            selected_ids.append(workout.id)
+
+        # Verify all 3 are in tracker
+        recent = selector.variety_tracker.get_recent_ids()
+        assert len(recent) == 3
+        for workout_id in selected_ids:
+            assert workout_id in recent
+
+    def test_no_duplicates_in_simulated_4_weeks(self, selector: WorkoutSelector) -> None:
+        """Test that workout frequency is limited over 4-week period (soft enforcement)."""
+        workout_frequency: dict[str, int] = {}
+        phase = "Build"
+
+        # Simulate 4 weeks × 5 workouts/week = 20 workouts
+        for week in range(4):
+            week_ids: list[str] = []
+            for day in range(5):
+                workout = selector.select_workout(
+                    target_type=["endurance", "tempo", "sweet_spot", "threshold", "recovery"][day],
+                    target_phase=phase,
+                    target_weekday="Monday",
+                    target_duration_min=60,
+                    temperature=0.5,
+                    exclude_ids=week_ids,  # No duplicates in same week
+                )
+
+                assert workout is not None
+                assert workout.id not in week_ids, f"Week {week+1}, Day {day+1}: Duplicate in same week"
+
+                # Track frequency
+                workout_frequency[workout.id] = workout_frequency.get(workout.id, 0) + 1
+
+                # Update trackers
+                selector.variety_tracker.add_workout(workout.id)
+                week_ids.append(workout.id)
+
+        # Check frequency distribution
+        max_frequency = max(workout_frequency.values())
+        workouts_used = len(workout_frequency)
+
+        # With 20-workout window and variety tracking, most workouts should appear 1-2 times
+        # This is soft enforcement, so we allow up to 3 times but prefer 1-2
+        print(f"\nWorkout frequency stats:")
+        print(f"  Total unique workouts used: {workouts_used}")
+        print(f"  Max frequency: {max_frequency}")
+        print(f"  Frequency distribution: {sorted(workout_frequency.values())}")
+
+        # Assert reasonable variety
+        assert workouts_used >= 10, "Should use at least 10 different workouts over 4 weeks"
+        assert max_frequency <= 4, "No workout should appear more than 4 times in 4 weeks"

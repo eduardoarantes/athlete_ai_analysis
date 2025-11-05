@@ -269,8 +269,10 @@ class LibraryBasedTrainingPlanningWeeks:
         """
         Scale weekend endurance rides to fill time deficit.
 
+        Rounds to nearest 10 minutes for practical scheduling.
+
         Args:
-            weekend_workouts: Weekend workout objects
+            weekend_workouts: Weekend endurance workout objects
             deficit_minutes: Time needed (can be negative if surplus)
 
         Returns:
@@ -287,7 +289,7 @@ class LibraryBasedTrainingPlanningWeeks:
             # Clone workout (don't modify library)
             workout_copy = json.loads(json.dumps(workout))
 
-            # Find main segment
+            # Find main segment (steady segment for endurance rides)
             main_segment = self._find_main_segment(workout_copy)
 
             # Extend/shrink
@@ -296,7 +298,8 @@ class LibraryBasedTrainingPlanningWeeks:
             # Clamp to reasonable bounds
             new_duration = max(10, min(new_duration, 150))  # 10-150min for segment
 
-            main_segment["duration_min"] = int(new_duration)
+            # Round to nearest 10 minutes for practical scheduling
+            main_segment["duration_min"] = round(new_duration / 10) * 10
 
             scaled_workouts.append(workout_copy)
 
@@ -313,7 +316,7 @@ class LibraryBasedTrainingPlanningWeeks:
         1. Select weekday workouts with fixed 45-75min constraint
         2. Select weekend workouts with BASE duration (90min min)
         3. Calculate deficit after weekday selection
-        4. Scale ONLY weekend workouts to fill deficit
+        4. Scale ONLY weekend ENDURANCE workouts to fill deficit
 
         Args:
             week: Week data with training_days and total_hours
@@ -325,6 +328,8 @@ class LibraryBasedTrainingPlanningWeeks:
 
         weekday_workouts = []
         weekend_workouts = []
+        weekend_endurance_workouts = []  # Track endurance rides separately for scaling
+        current_week_workout_ids: list[str] = []  # Track IDs used in this week (hard constraint)
 
         # Select all workouts
         for day in week["training_days"]:
@@ -341,6 +346,7 @@ class LibraryBasedTrainingPlanningWeeks:
                 min_duration_min=90 if is_weekend else 45,
                 max_duration_min=100 if is_weekend else 75,  # Will scale UP after selection
                 temperature=self.temperature,
+                exclude_ids=current_week_workout_ids,  # Prevent same workout in same week
             )
 
             if workout is None:
@@ -348,6 +354,10 @@ class LibraryBasedTrainingPlanningWeeks:
                     f"No matching workout found for week {week.get('week_number')}, "
                     f"day {day['weekday']}, type {day['workout_type']}, phase {week['phase']}"
                 )
+
+            # Update trackers immediately after selection
+            self.selector.variety_tracker.add_workout(workout.id)
+            current_week_workout_ids.append(workout.id)
 
             # Convert to dict
             workout_dict = workout.model_dump()
@@ -382,6 +392,9 @@ class LibraryBasedTrainingPlanningWeeks:
 
             if is_weekend:
                 weekend_workouts.append(workout_dict)
+                # Only scale endurance workouts
+                if day["workout_type"] == "endurance":
+                    weekend_endurance_workouts.append(workout_dict)
             else:
                 weekday_workouts.append(workout_dict)
 
@@ -401,11 +414,13 @@ class LibraryBasedTrainingPlanningWeeks:
         current_total = weekday_minutes + weekend_minutes_before
         deficit_minutes = target_minutes - current_total
 
-        # Scale weekends to fill deficit
-        scaled_weekend = self._scale_weekend_workouts(weekend_workouts, deficit_minutes)
+        # Scale ONLY weekend endurance workouts to fill deficit
+        scaled_endurance = self._scale_weekend_workouts(weekend_endurance_workouts, deficit_minutes)
 
-        # Combine
-        all_workouts = weekday_workouts + scaled_weekend
+        # Replace endurance workouts in weekend_workouts with scaled versions
+        # Build final list: weekday + non-endurance weekend + scaled endurance weekend
+        non_endurance_weekend = [w for w in weekend_workouts if w not in weekend_endurance_workouts]
+        all_workouts = weekday_workouts + non_endurance_weekend + scaled_endurance
 
         # Log for debugging
         actual_minutes = sum(
