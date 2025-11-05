@@ -1,0 +1,4135 @@
+================================================================================
+WORKOUT LIBRARY VALIDATION REPORT
+================================================================================
+
+Total workouts analyzed: 222
+Workouts with issues: 222
+Workouts passing validation: 0
+
+================================================================================
+ISSUE SUMMARY
+================================================================================
+  calculated_intensity_mismatch: 222 occurrences
+  type_intensity_mismatch: 193 occurrences
+  missing_field: 128 occurrences
+  inappropriate_phase_intensity: 94 occurrences
+  inappropriate_weekday: 62 occurrences
+  inappropriate_phase_type: 43 occurrences
+
+================================================================================
+DETAILED ISSUES BY WORKOUT
+================================================================================
+
+Workout: 10min Strength Efforts (ID: 10min_strength_efforts)
+  Type: recovery
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'recovery' typically has intensity ['recovery'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'recovery' is not typically appropriate for Tuesday. Expected types: ['vo2max', 'threshold', 'sweet_spot', 'anaerobic', 'sprint', 'tempo']
+    - Type 'recovery' is not typically appropriate for Wednesday. Expected types: ['tempo', 'sweet_spot', 'threshold', 'vo2max']
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'recovery' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'recovery' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: 10min Sweet Spot (ID: 10min_sweet_spot)
+  Type: sweet_spot
+  Intensity: moderate
+  Issues found:
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'moderate' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 120/60s (ID: 12060s)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: 120min Tempo (ID: 120min_tempo)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 1.5hr Base Fitness (ID: 15hr_base_fitness)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'endurance' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'endurance' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: 1.5hr Base Fitness @ 60-65% Threshold (ID: 15hr_base_fitness_60_65_threshold)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: 1.5hr Endurance Ride (ID: 15hr_endurance_ride)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 15min Sweet Spot (ID: 15min_sweet_spot)
+  Type: sweet_spot
+  Intensity: moderate
+  Issues found:
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'moderate' but calculated intensity is 'tempo' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 15min Tempo (ID: 15min_tempo)
+  Type: tempo
+  Intensity: moderate
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'tempo' typically has intensity ['tempo', 'endurance'], but workout has 'moderate'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'moderate' but calculated intensity is 'tempo' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 1.6hr Endurance Ride (ID: 16hr_endurance_ride)
+  Type: threshold
+  Intensity: moderate
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'moderate'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'moderate' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 1.7hr Endurance Ride (ID: 17hr_endurance_ride)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 1.9hr Endurance Ride (ID: 19hr_endurance_ride)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 1hr Base Fitness @ 60-65% Threshold (ID: 1hr_base_fitness_60_65_threshold)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: 2.0hr Endurance Ride (ID: 20hr_endurance_ride)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2.0hr Endurance Ride (ID: 20hr_endurance_ride_2)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2.0hr Endurance Ride (ID: 20hr_endurance_ride_3)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 20min Sweet Spot (ID: 20min_sweet_spot)
+  Type: sweet_spot
+  Intensity: moderate
+  Issues found:
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'moderate' but calculated intensity is 'tempo' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 20min Sweet Spot (ID: 20min_sweet_spot_2)
+  Type: sweet_spot
+  Intensity: moderate
+  Issues found:
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'moderate' but calculated intensity is 'tempo' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 20min Tempo (ID: 20min_tempo)
+  Type: tempo
+  Intensity: moderate
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'tempo' typically has intensity ['tempo', 'endurance'], but workout has 'moderate'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'moderate' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 20min Tempo (ID: 20min_tempo_2)
+  Type: tempo
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'tempo' typically has intensity ['tempo', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2.1hr Endurance Ride (ID: 21hr_endurance_ride)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2.2hr Endurance Ride (ID: 22hr_endurance_ride)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2.2hr Endurance Ride (ID: 22hr_endurance_ride_2)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2.3hr Endurance Ride (ID: 23hr_endurance_ride)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2.4hr Endurance Ride (ID: 24hr_endurance_ride)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2.4hr Endurance Ride (ID: 24hr_endurance_ride_2)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2.4hr Endurance Ride (ID: 24hr_endurance_ride_3)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2.4hr Endurance Ride (ID: 24hr_endurance_ride_4)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2.5hr Endurance Ride (ID: 25hr_endurance_ride)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2.5hr Endurance Ride (ID: 25hr_endurance_ride_2)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2.5hr Endurance Ride (ID: 25hr_endurance_ride_3)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 25min Sweet Spot (ID: 25min_sweet_spot)
+  Type: sweet_spot
+  Intensity: moderate
+  Issues found:
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'moderate' but calculated intensity is 'tempo' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 25min Tempo (ID: 25min_tempo)
+  Type: tempo
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'tempo' typically has intensity ['tempo', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2.6hr Endurance Ride (ID: 26hr_endurance_ride)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2.6hr Endurance Ride (ID: 26hr_endurance_ride_2)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2.7hr Endurance Ride (ID: 27hr_endurance_ride)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2.8hr Endurance Ride (ID: 28hr_endurance_ride)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2.8hr Endurance Ride (ID: 28hr_endurance_ride_2)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2x10min Sweet Spot (ID: 2x10min_sweet_spot)
+  Type: sweet_spot
+  Intensity: moderate
+  Issues found:
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'moderate' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2x10min Sweet Spot (ID: 2x10min_sweet_spot_2)
+  Type: sweet_spot
+  Intensity: moderate
+  Issues found:
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'moderate' but calculated intensity is 'tempo' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2x10min VO2 Max Intervals (ID: 2x10min_vo2_max_intervals)
+  Type: vo2max
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'vo2max' typically has intensity ['vo2max', 'threshold'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2x12min Sweet Spot (ID: 2x12min_sweet_spot)
+  Type: sweet_spot
+  Intensity: moderate
+  Issues found:
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'moderate' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2x12min Sweet Spot (ID: 2x12min_sweet_spot_2)
+  Type: sweet_spot
+  Intensity: moderate
+  Issues found:
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'moderate' but calculated intensity is 'sweet_spot' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2x12min Sweet Spot (ID: 2x12min_sweet_spot_3)
+  Type: sweet_spot
+  Intensity: moderate
+  Issues found:
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'moderate' but calculated intensity is 'tempo' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2x14min Sweet Spot (ID: 2x14min_sweet_spot)
+  Type: sweet_spot
+  Intensity: moderate
+  Issues found:
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'moderate' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2x15min Sweet Spot (ID: 2x15min_sweet_spot)
+  Type: sweet_spot
+  Intensity: moderate
+  Issues found:
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'moderate' but calculated intensity is 'tempo' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2x15min Sweet Spot (ID: 2x15min_sweet_spot_2)
+  Type: sweet_spot
+  Intensity: moderate
+  Issues found:
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'moderate' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2x15min VO2 Max Intervals (ID: 2x15min_vo2_max_intervals)
+  Type: vo2max
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'vo2max' typically has intensity ['vo2max', 'threshold'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2x15min VO2 Max Intervals (ID: 2x15min_vo2_max_intervals_2)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2x18min Sweet Spot (ID: 2x18min_sweet_spot)
+  Type: sweet_spot
+  Intensity: moderate
+  Issues found:
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'moderate' but calculated intensity is 'tempo' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2x1min Sweet Spot (ID: 2x1min_sweet_spot)
+  Type: sweet_spot
+  Intensity: moderate
+  Issues found:
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'moderate' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2x20' Tempo (ID: 2x20_tempo)
+  Type: tempo
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'tempo' typically has intensity ['tempo', 'endurance'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+
+--------------------------------------------------------------------------------
+
+Workout: 2x20min Sweet Spot (ID: 2x20min_sweet_spot)
+  Type: sweet_spot
+  Intensity: moderate
+  Issues found:
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'moderate' but calculated intensity is 'tempo' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2x20min Sweet Spot (ID: 2x20min_sweet_spot_2)
+  Type: sweet_spot
+  Intensity: moderate
+  Issues found:
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'moderate' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2x20min Sweet Spot (ID: 2x20min_sweet_spot_3)
+  Type: sweet_spot
+  Intensity: moderate
+  Issues found:
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'moderate' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2x3min VO2 Max Intervals (ID: 2x3min_vo2_max_intervals)
+  Type: vo2max
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'vo2max' typically has intensity ['vo2max', 'threshold'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2x3min VO2 Max Intervals (ID: 2x3min_vo2_max_intervals_2)
+  Type: vo2max
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'vo2max' typically has intensity ['vo2max', 'threshold'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2x3min VO2 Max Intervals (ID: 2x3min_vo2_max_intervals_3)
+  Type: vo2max
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'vo2max' typically has intensity ['vo2max', 'threshold'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2x4min VO2 Max Intervals (ID: 2x4min_vo2_max_intervals)
+  Type: vo2max
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'vo2max' typically has intensity ['vo2max', 'threshold'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2x4min VO2 Max Intervals (ID: 2x4min_vo2_max_intervals_2)
+  Type: vo2max
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'vo2max' typically has intensity ['vo2max', 'threshold'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2x5min VO2 Max Intervals (ID: 2x5min_vo2_max_intervals)
+  Type: vo2max
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'vo2max' typically has intensity ['vo2max', 'threshold'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 2x8min Sweet Spot (ID: 2x8min_sweet_spot)
+  Type: sweet_spot
+  Intensity: moderate
+  Issues found:
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'moderate' but calculated intensity is 'tempo' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 30/30s (3x10') (ID: 3030s_3x10)
+  Type: vo2max
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'vo2max' typically has intensity ['vo2max', 'threshold'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'vo2max' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: 30 s x 4m interval repeats (ID: 30_s_x_4m_interval_repeats)
+  Type: mixed
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'mixed' typically has intensity ['mixed', 'endurance', 'tempo', 'sweet_spot', 'threshold', 'vo2max'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'mixed' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'mixed' is not typically appropriate for Monday. Expected types: ['recovery', 'endurance']
+    - Type 'mixed' is not typically appropriate for Tuesday. Expected types: ['vo2max', 'threshold', 'sweet_spot', 'anaerobic', 'sprint', 'tempo']
+    - Type 'mixed' is not typically appropriate for Wednesday. Expected types: ['tempo', 'sweet_spot', 'threshold', 'vo2max']
+    - Type 'mixed' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'mixed' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'mixed' is not typically appropriate for Recovery phase. Expected types: ['recovery', 'endurance']
+    - Type 'mixed' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: 3.0hr Endurance Ride (ID: 30hr_endurance_ride)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 3.0hr Endurance Ride (ID: 30hr_endurance_ride_2)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 3.0hr Endurance Ride (ID: 30hr_endurance_ride_3)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 3.0hr Endurance Ride (ID: 30hr_endurance_ride_4)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 30min Sweet Spot (ID: 30min_sweet_spot)
+  Type: sweet_spot
+  Intensity: moderate
+  Issues found:
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'moderate' but calculated intensity is 'tempo' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 30min Sweet Spot (ID: 30min_sweet_spot_2)
+  Type: sweet_spot
+  Intensity: moderate
+  Issues found:
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'moderate' but calculated intensity is 'tempo' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 30min Sweet Spot (ID: 30min_sweet_spot_3)
+  Type: sweet_spot
+  Intensity: moderate
+  Issues found:
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'moderate' but calculated intensity is 'tempo' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 30min Tempo (ID: 30min_tempo)
+  Type: tempo
+  Intensity: moderate
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'tempo' typically has intensity ['tempo', 'endurance'], but workout has 'moderate'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'moderate' but calculated intensity is 'tempo' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 3.1hr Endurance Ride (ID: 31hr_endurance_ride)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 3.2hr Endurance Ride (ID: 32hr_endurance_ride)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 3.2hr Endurance Ride (ID: 32hr_endurance_ride_2)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 3.3hr Endurance Ride (ID: 33hr_endurance_ride)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 3.3hr Endurance Ride (ID: 33hr_endurance_ride_2)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 3.5hr Base Fitness (ID: 35hr_base_fitness)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'endurance' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'endurance' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: 3.5hr Endurance Ride (ID: 35hr_endurance_ride)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 3.5hr Endurance Ride (ID: 35hr_endurance_ride_2)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 3.7hr Endurance Ride (ID: 37hr_endurance_ride)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 3x10min VO2 Max Intervals (ID: 3x10min_vo2_max_intervals)
+  Type: vo2max
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'vo2max' typically has intensity ['vo2max', 'threshold'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 3x12' Tempo (ID: 3x12_tempo)
+  Type: tempo
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'tempo' typically has intensity ['tempo', 'endurance'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+
+--------------------------------------------------------------------------------
+
+Workout: 3x12min Sweet Spot (ID: 3x12min_sweet_spot)
+  Type: sweet_spot
+  Intensity: moderate
+  Issues found:
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'moderate' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 3x12min VO2 Max Intervals (ID: 3x12min_vo2_max_intervals)
+  Type: vo2max
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'vo2max' typically has intensity ['vo2max', 'threshold'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 3x12min VO2 Max Intervals (ID: 3x12min_vo2_max_intervals_2)
+  Type: vo2max
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'vo2max' typically has intensity ['vo2max', 'threshold'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 3x12min VO2 Max Intervals (ID: 3x12min_vo2_max_intervals_3)
+  Type: vo2max
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'vo2max' typically has intensity ['vo2max', 'threshold'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 3x15' Tempo (ID: 3x15_tempo)
+  Type: tempo
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'tempo' typically has intensity ['tempo', 'endurance'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+
+--------------------------------------------------------------------------------
+
+Workout: 3x15min Sweet Spot (ID: 3x15min_sweet_spot)
+  Type: sweet_spot
+  Intensity: moderate
+  Issues found:
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'moderate' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 3x15min Sweet Spot (ID: 3x15min_sweet_spot_2)
+  Type: sweet_spot
+  Intensity: moderate
+  Issues found:
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'moderate' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 3x15min VO2 Max Intervals (ID: 3x15min_vo2_max_intervals)
+  Type: vo2max
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'vo2max' typically has intensity ['vo2max', 'threshold'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 3x2min VO2 Max Intervals (ID: 3x2min_vo2_max_intervals)
+  Type: vo2max
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'vo2max' typically has intensity ['vo2max', 'threshold'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 3x3min VO2 Max Intervals (ID: 3x3min_vo2_max_intervals)
+  Type: vo2max
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'vo2max' typically has intensity ['vo2max', 'threshold'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 3x6min Threshold Intervals (ID: 3x6min_threshold_intervals)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 3x6min VO2 Max Intervals (ID: 3x6min_vo2_max_intervals)
+  Type: vo2max
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'vo2max' typically has intensity ['vo2max', 'threshold'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 40/20s (5min) (ID: 4020s_5min)
+  Type: vo2max
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'vo2max' typically has intensity ['vo2max', 'threshold'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'vo2max' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: 40/20s (5min) (ID: 4020s_5min_2)
+  Type: vo2max
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'vo2max' typically has intensity ['vo2max', 'threshold'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'vo2max' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: 4.0hr Endurance Ride (ID: 40hr_endurance_ride)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 40min Base Ride (ID: 40min_base_ride)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 40min Sweet Spot (ID: 40min_sweet_spot)
+  Type: sweet_spot
+  Intensity: moderate
+  Issues found:
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'moderate' but calculated intensity is 'tempo' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 40min Sweet Spot (ID: 40min_sweet_spot_2)
+  Type: sweet_spot
+  Intensity: moderate
+  Issues found:
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'moderate' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 45min Base Ride (ID: 45min_base_ride)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 4hr Base Fitness (ID: 4hr_base_fitness)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'endurance' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'endurance' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: 4x5min VO2 Max Intervals (ID: 4x5min_vo2_max_intervals)
+  Type: vo2max
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'vo2max' typically has intensity ['vo2max', 'threshold'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 50min Base Ride (ID: 50min_base_ride)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 50min Base Ride (ID: 50min_base_ride_2)
+  Type: vo2max
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'vo2max' typically has intensity ['vo2max', 'threshold'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'threshold' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 50min Base Ride (ID: 50min_base_ride_3)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 50min Base Ride (ID: 50min_base_ride_4)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 50min Sweet Spot (ID: 50min_sweet_spot)
+  Type: sweet_spot
+  Intensity: moderate
+  Issues found:
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'moderate' but calculated intensity is 'sweet_spot' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 55min Base Ride (ID: 55min_base_ride)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 55min Base Ride (ID: 55min_base_ride_2)
+  Type: vo2max
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'vo2max' typically has intensity ['vo2max', 'threshold'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 55min Base Ride (ID: 55min_base_ride_3)
+  Type: vo2max
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'vo2max' typically has intensity ['vo2max', 'threshold'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'threshold' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 5min Strength Efforts (ID: 5min_strength_efforts)
+  Type: recovery
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'recovery' typically has intensity ['recovery'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'recovery' is not typically appropriate for Tuesday. Expected types: ['vo2max', 'threshold', 'sweet_spot', 'anaerobic', 'sprint', 'tempo']
+    - Type 'recovery' is not typically appropriate for Wednesday. Expected types: ['tempo', 'sweet_spot', 'threshold', 'vo2max']
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'recovery' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'recovery' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: 5min Strength Efforts (Zone 3) (ID: 5min_strength_efforts_zone_3)
+  Type: recovery
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'recovery' typically has intensity ['recovery'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'recovery' is not typically appropriate for Tuesday. Expected types: ['vo2max', 'threshold', 'sweet_spot', 'anaerobic', 'sprint', 'tempo']
+    - Type 'recovery' is not typically appropriate for Wednesday. Expected types: ['tempo', 'sweet_spot', 'threshold', 'vo2max']
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'recovery' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'recovery' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: 5min Strength Efforts (Zone 3) (ID: 5min_strength_efforts_zone_3_2)
+  Type: recovery
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'recovery' typically has intensity ['recovery'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'recovery' is not typically appropriate for Tuesday. Expected types: ['vo2max', 'threshold', 'sweet_spot', 'anaerobic', 'sprint', 'tempo']
+    - Type 'recovery' is not typically appropriate for Wednesday. Expected types: ['tempo', 'sweet_spot', 'threshold', 'vo2max']
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'recovery' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'recovery' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: 5x4min VO2 Max Intervals (ID: 5x4min_vo2_max_intervals)
+  Type: vo2max
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'vo2max' typically has intensity ['vo2max', 'threshold'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 5x4min VO2 Max Intervals (ID: 5x4min_vo2_max_intervals_2)
+  Type: vo2max
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'vo2max' typically has intensity ['vo2max', 'threshold'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 5x5min VO2 Max Intervals (ID: 5x5min_vo2_max_intervals)
+  Type: vo2max
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'vo2max' typically has intensity ['vo2max', 'threshold'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 60min Base Ride (ID: 60min_base_ride)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 60min Base Ride (ID: 60min_base_ride_2)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 60min Base Ride (ID: 60min_base_ride_3)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 60min Base Ride (ID: 60min_base_ride_4)
+  Type: vo2max
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'vo2max' typically has intensity ['vo2max', 'threshold'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'threshold' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 60min Base Ride (ID: 60min_base_ride_5)
+  Type: vo2max
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'vo2max' typically has intensity ['vo2max', 'threshold'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 60min Mixed Workout (ID: 60min_mixed_workout)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'recovery' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 60min Mixed Workout (ID: 60min_mixed_workout_2)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'recovery' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 60min Mixed Workout (ID: 60min_mixed_workout_3)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'recovery' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 60min Mixed Workout (ID: 60min_mixed_workout_4)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'recovery' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 60min Mixed Workout (ID: 60min_mixed_workout_5)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'recovery' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 65min Base Ride (ID: 65min_base_ride)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 65min Base Ride (ID: 65min_base_ride_2)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 65min Base Ride (ID: 65min_base_ride_3)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'mixed' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 70min Base Ride (ID: 70min_base_ride)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 70min Base Ride (ID: 70min_base_ride_2)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 70min Base Ride (ID: 70min_base_ride_3)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 70min Base Ride (ID: 70min_base_ride_4)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 70min Base Ride (ID: 70min_base_ride_5)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 75min Base Ride (ID: 75min_base_ride)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 75min Base Ride (ID: 75min_base_ride_2)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 75min Base Ride (ID: 75min_base_ride_3)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 80min Base Ride (ID: 80min_base_ride)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 80min Base Ride (ID: 80min_base_ride_2)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 80min Base Ride (ID: 80min_base_ride_3)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 85min Base Ride (ID: 85min_base_ride)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 90min Mixed Workout (ID: 90min_mixed_workout)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'recovery' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: 90min Tempo (ID: 90min_tempo)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [MISSING FIELD]
+    - Missing 'suitable_weekdays'
+    - Missing 'suitable_phases'
+
+--------------------------------------------------------------------------------
+
+Workout: Above and Below Threshold (ID: above_and_below_threshold)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Above and Below Threshold (ID: above_and_below_threshold_2)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Above and Below Threshold (ID: above_and_below_threshold_3)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Above and Below Threshold (ID: above_and_below_threshold_4)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Above and Below Threshold (ID: above_and_below_threshold_5)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Activations (ID: activations)
+  Type: mixed
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'mixed' typically has intensity ['mixed', 'endurance', 'tempo', 'sweet_spot', 'threshold', 'vo2max'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'mixed' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'mixed' is not typically appropriate for Monday. Expected types: ['recovery', 'endurance']
+    - Type 'mixed' is not typically appropriate for Tuesday. Expected types: ['vo2max', 'threshold', 'sweet_spot', 'anaerobic', 'sprint', 'tempo']
+    - Type 'mixed' is not typically appropriate for Wednesday. Expected types: ['tempo', 'sweet_spot', 'threshold', 'vo2max']
+    - Type 'mixed' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'mixed' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'mixed' is not typically appropriate for Recovery phase. Expected types: ['recovery', 'endurance']
+    - Type 'mixed' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: Active Recovery (ID: active_recovery)
+  Type: recovery
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'recovery' typically has intensity ['recovery'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'recovery' is not typically appropriate for Tuesday. Expected types: ['vo2max', 'threshold', 'sweet_spot', 'anaerobic', 'sprint', 'tempo']
+    - Type 'recovery' is not typically appropriate for Wednesday. Expected types: ['tempo', 'sweet_spot', 'threshold', 'vo2max']
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'recovery' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'recovery' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: Base Fitness @ 60-65% Threshold (ID: base_fitness_60_65_threshold)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Base Fitness @ 60-65% Threshold (ID: base_fitness_60_65_threshold_2)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Base Fitness Training (Zone Two) (ID: base_fitness_training_zone_two)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'endurance' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'endurance' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: Base Fitness Training (Zone Two) (ID: base_fitness_training_zone_two_2)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'endurance' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'endurance' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: Base Fitness Training (Zone Two) (ID: base_fitness_training_zone_two_3)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'endurance' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'endurance' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: Cardio Drift Test (ID: cardio_drift_test)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Fitness Test: FTP and Threshold HR (50 mins) (ID: fitness_test_ftp_and_threshold_hr_50_mins)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'vo2max' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: FTP Over Unders: 3 sets 8x1 (ID: ftp_over_unders_3_sets_8x1)
+  Type: mixed
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'mixed' typically has intensity ['mixed', 'endurance', 'tempo', 'sweet_spot', 'threshold', 'vo2max'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'mixed' is not typically appropriate for Monday. Expected types: ['recovery', 'endurance']
+    - Type 'mixed' is not typically appropriate for Tuesday. Expected types: ['vo2max', 'threshold', 'sweet_spot', 'anaerobic', 'sprint', 'tempo']
+    - Type 'mixed' is not typically appropriate for Wednesday. Expected types: ['tempo', 'sweet_spot', 'threshold', 'vo2max']
+    - Type 'mixed' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'mixed' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'mixed' is not typically appropriate for Recovery phase. Expected types: ['recovery', 'endurance']
+    - Type 'mixed' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: FTP Progression 2 5x7 (ID: ftp_progression_2_5x7)
+  Type: mixed
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'mixed' typically has intensity ['mixed', 'endurance', 'tempo', 'sweet_spot', 'threshold', 'vo2max'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'mixed' is not typically appropriate for Monday. Expected types: ['recovery', 'endurance']
+    - Type 'mixed' is not typically appropriate for Tuesday. Expected types: ['vo2max', 'threshold', 'sweet_spot', 'anaerobic', 'sprint', 'tempo']
+    - Type 'mixed' is not typically appropriate for Wednesday. Expected types: ['tempo', 'sweet_spot', 'threshold', 'vo2max']
+    - Type 'mixed' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'mixed' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'mixed' is not typically appropriate for Recovery phase. Expected types: ['recovery', 'endurance']
+    - Type 'mixed' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: General Endurance (ID: general_endurance)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'endurance' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'endurance' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: M.A.P Efforts (ID: map_efforts)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'endurance' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'endurance' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: M.A.P Efforts (ID: map_efforts_2)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'endurance' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'endurance' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: M.A.P Efforts (ID: map_efforts_3)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'endurance' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'endurance' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: M.A.P Efforts (ID: map_efforts_4)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'endurance' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'endurance' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: M.A.P Efforts (ID: map_efforts_5)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'endurance' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'endurance' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: M.A.P Efforts (ID: map_efforts_6)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'endurance' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'endurance' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: M.A.P Efforts (ID: map_efforts_7)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'endurance' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'endurance' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: M.A.P Efforts (ID: map_efforts_8)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'endurance' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'endurance' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: OPTIONAL: Aerobic Endurance Bike (ID: optional_aerobic_endurance_bike)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'endurance' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'endurance' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: OPTIONAL: Aerobic Endurance Bike (ID: optional_aerobic_endurance_bike_2)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'endurance' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'endurance' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: OPTIONAL: Aerobic Endurance Bike (ID: optional_aerobic_endurance_bike_3)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'endurance' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'endurance' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: OPTIONAL: Aerobic Endurance Bike (ID: optional_aerobic_endurance_bike_4)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'endurance' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'endurance' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: OPTIONAL: Aerobic Endurance Bike (ID: optional_aerobic_endurance_bike_5)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'endurance' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'endurance' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: OPTIONAL: Aerobic Endurance Ride (ID: optional_aerobic_endurance_ride)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'endurance' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'endurance' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: OPTIONAL: Aerobic Endurance Ride (ID: optional_aerobic_endurance_ride_2)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'endurance' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'endurance' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: OPTIONAL: Aerobic Endurance Ride (ID: optional_aerobic_endurance_ride_3)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'endurance' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'endurance' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: OPTIONAL: Aerobic Endurance Ride (ID: optional_aerobic_endurance_ride_4)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'endurance' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'endurance' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: OPTIONAL: Aerobic Endurance Ride (ID: optional_aerobic_endurance_ride_5)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'endurance' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'endurance' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: OPTIONAL: Aerobic Endurance Ride (ID: optional_aerobic_endurance_ride_6)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'endurance' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'endurance' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: Sub Threshold Effort (ID: sub_threshold_effort)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'tempo' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Sub Threshold Effort (ID: sub_threshold_effort_2)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'tempo' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Sub Threshold Efforts (ID: sub_threshold_efforts)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Sub Threshold Efforts (ID: sub_threshold_efforts_10)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Sub Threshold Efforts (ID: sub_threshold_efforts_11)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Sub Threshold Efforts (ID: sub_threshold_efforts_12)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Sub Threshold Efforts (ID: sub_threshold_efforts_13)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Sub Threshold Efforts (ID: sub_threshold_efforts_14)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Sub Threshold Efforts (ID: sub_threshold_efforts_2)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Sub Threshold Efforts (ID: sub_threshold_efforts_3)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Sub Threshold Efforts (ID: sub_threshold_efforts_4)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Sub Threshold Efforts (ID: sub_threshold_efforts_5)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Sub Threshold Efforts (ID: sub_threshold_efforts_6)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Sub Threshold Efforts (ID: sub_threshold_efforts_7)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'sweet_spot' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Sub Threshold Efforts (ID: sub_threshold_efforts_8)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Sub Threshold Efforts (ID: sub_threshold_efforts_9)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Sub Threshold, Low Cadence Efforts. (ID: sub_threshold_low_cadence_efforts)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Sweet Spot Repeats (ID: sweet_spot_repeats)
+  Type: sweet_spot
+  Intensity: hard
+  Issues found:
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'sweet spot' is not typically appropriate for Tuesday. Expected types: ['vo2max', 'threshold', 'sweet_spot', 'anaerobic', 'sprint', 'tempo']
+    - Type 'sweet spot' is not typically appropriate for Wednesday. Expected types: ['tempo', 'sweet_spot', 'threshold', 'vo2max']
+    - Type 'sweet spot' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'sweet spot' is not typically appropriate for Base phase. Expected types: ['endurance', 'tempo', 'recovery']
+    - Type 'sweet spot' is not typically appropriate for Build phase. Expected types: ['sweet_spot', 'threshold', 'tempo', 'vo2max']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Base phase. Expected intensities: ['recovery', 'endurance', 'tempo']
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+
+--------------------------------------------------------------------------------
+
+Workout: Tempo Repeats (ID: tempo_repeats)
+  Type: tempo
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'tempo' typically has intensity ['tempo', 'endurance'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+
+--------------------------------------------------------------------------------
+
+Workout: Tempo Repeats (ID: tempo_repeats_2)
+  Type: tempo
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'tempo' typically has intensity ['tempo', 'endurance'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+
+--------------------------------------------------------------------------------
+
+Workout: Tempo with spikes (ID: tempo_with_spikes)
+  Type: tempo
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'tempo' typically has intensity ['tempo', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'tempo' is not typically appropriate for Monday. Expected types: ['recovery', 'endurance']
+    - Type 'tempo' is not typically appropriate for Friday. Expected types: ['recovery', 'endurance', 'mixed']
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'tempo' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'tempo' is not typically appropriate for Recovery phase. Expected types: ['recovery', 'endurance']
+    - Type 'tempo' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: Tempo with spikes (ID: tempo_with_spikes_2)
+  Type: tempo
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'tempo' typically has intensity ['tempo', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'tempo' is not typically appropriate for Monday. Expected types: ['recovery', 'endurance']
+    - Type 'tempo' is not typically appropriate for Friday. Expected types: ['recovery', 'endurance', 'mixed']
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'tempo' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'tempo' is not typically appropriate for Recovery phase. Expected types: ['recovery', 'endurance']
+    - Type 'tempo' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: Tempo with spikes (ID: tempo_with_spikes_3)
+  Type: tempo
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'tempo' typically has intensity ['tempo', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'tempo' is not typically appropriate for Monday. Expected types: ['recovery', 'endurance']
+    - Type 'tempo' is not typically appropriate for Friday. Expected types: ['recovery', 'endurance', 'mixed']
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'tempo' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'tempo' is not typically appropriate for Recovery phase. Expected types: ['recovery', 'endurance']
+    - Type 'tempo' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: The Benchmark Test! (ID: the_benchmark_test)
+  Type: mixed
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'mixed' typically has intensity ['mixed', 'endurance', 'tempo', 'sweet_spot', 'threshold', 'vo2max'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'mixed' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'mixed' is not typically appropriate for Tuesday. Expected types: ['vo2max', 'threshold', 'sweet_spot', 'anaerobic', 'sprint', 'tempo']
+    - Type 'mixed' is not typically appropriate for Wednesday. Expected types: ['tempo', 'sweet_spot', 'threshold', 'vo2max']
+    - Type 'mixed' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'mixed' is not typically appropriate for Build phase. Expected types: ['sweet_spot', 'threshold', 'tempo', 'vo2max']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+
+--------------------------------------------------------------------------------
+
+Workout: The Benchmark Test! (ID: the_benchmark_test_2)
+  Type: mixed
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'mixed' typically has intensity ['mixed', 'endurance', 'tempo', 'sweet_spot', 'threshold', 'vo2max'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'mixed' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'mixed' is not typically appropriate for Tuesday. Expected types: ['vo2max', 'threshold', 'sweet_spot', 'anaerobic', 'sprint', 'tempo']
+    - Type 'mixed' is not typically appropriate for Wednesday. Expected types: ['tempo', 'sweet_spot', 'threshold', 'vo2max']
+    - Type 'mixed' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'mixed' is not typically appropriate for Build phase. Expected types: ['sweet_spot', 'threshold', 'tempo', 'vo2max']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+
+--------------------------------------------------------------------------------
+
+Workout: Threshold (ID: threshold)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Threshold (ID: threshold_2)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Threshold Efforts (ID: threshold_efforts)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Threshold Efforts (ID: threshold_efforts_10)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Threshold Efforts (ID: threshold_efforts_2)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Threshold Efforts (ID: threshold_efforts_3)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Threshold Efforts (ID: threshold_efforts_4)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Threshold Efforts (ID: threshold_efforts_5)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Threshold Efforts (ID: threshold_efforts_6)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Threshold Efforts (ID: threshold_efforts_7)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Threshold Efforts (ID: threshold_efforts_8)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Threshold Efforts (ID: threshold_efforts_9)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Threshold Test (5' + 20') (ID: threshold_test_5_20)
+  Type: threshold
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'threshold' typically has intensity ['threshold', 'sweet_spot'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'mixed' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'threshold' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: VO2 Repeats 5x3' (ID: vo2_repeats_5x3)
+  Type: vo2max
+  Intensity: hard
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'vo2max' typically has intensity ['vo2max', 'threshold'], but workout has 'hard'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'hard' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'vo2max' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'hard' is not typically appropriate for Build phase. Expected intensities: ['tempo', 'sweet_spot', 'threshold']
+    - Intensity 'hard' is not typically appropriate for Peak phase. Expected intensities: ['threshold', 'vo2max', 'anaerobic', 'sprint']
+
+--------------------------------------------------------------------------------
+
+Workout: Zone 2 with Cadence Variation (ID: zone_2_with_cadence_variation)
+  Type: endurance
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'endurance' typically has intensity ['recovery', 'endurance'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'recovery' based on segments
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'endurance' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'endurance' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+
+Workout: Zwift - New Workout in Watopia (ID: zwift_new_workout_in_watopia)
+  Type: mixed
+  Intensity: easy
+  Issues found:
+
+  [TYPE INTENSITY MISMATCH]
+    - Type 'mixed' typically has intensity ['mixed', 'endurance', 'tempo', 'sweet_spot', 'threshold', 'vo2max'], but workout has 'easy'
+
+  [CALCULATED INTENSITY MISMATCH]
+    - Stated intensity 'easy' but calculated intensity is 'endurance' based on segments
+
+  [INAPPROPRIATE WEEKDAY]
+    - Type 'mixed' is not typically appropriate for Monday. Expected types: ['recovery', 'endurance']
+    - Type 'mixed' is not typically appropriate for Tuesday. Expected types: ['vo2max', 'threshold', 'sweet_spot', 'anaerobic', 'sprint', 'tempo']
+    - Type 'mixed' is not typically appropriate for Wednesday. Expected types: ['tempo', 'sweet_spot', 'threshold', 'vo2max']
+    - Type 'mixed' is not typically appropriate for Thursday. Expected types: ['recovery', 'endurance', 'tempo']
+
+  [INAPPROPRIATE PHASE TYPE]
+    - Type 'mixed' is not typically appropriate for Foundation phase. Expected types: []
+    - Type 'mixed' is not typically appropriate for Recovery phase. Expected types: ['recovery', 'endurance']
+    - Type 'mixed' is not typically appropriate for Taper phase. Expected types: []
+
+  [INAPPROPRIATE PHASE INTENSITY]
+    - Intensity 'easy' is not typically appropriate for Foundation phase. Expected intensities: []
+    - Intensity 'easy' is not typically appropriate for Recovery phase. Expected intensities: ['recovery', 'endurance']
+    - Intensity 'easy' is not typically appropriate for Taper phase. Expected intensities: []
+
+--------------------------------------------------------------------------------
+

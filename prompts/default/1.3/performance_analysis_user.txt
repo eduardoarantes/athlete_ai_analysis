@@ -1,0 +1,19 @@
+Analyze cycling performance for the last {period_months} months:
+
+1. Compare recent period vs previous equivalent period
+2. Calculate time-in-zones distribution
+3. Identify trends and patterns
+4. Generate insights and observations
+
+**Data from Phase 1:**
+- Parquet cache file: `{cache_file_path}`
+- Athlete profile: `{athlete_profile_path}`
+
+**Instructions:**
+- Use analyze_performance() tool with csv_file_path=cache_file_path from above
+- Pass athlete_profile_json parameter with the athlete profile path from above
+- Tool reads from Parquet cache (NO access to FIT files needed)
+- Cache includes zone enrichment and cross-training categorization
+- NOTE: analyze_time_in_zones() requires FIT directory which is not available in Phase 2
+
+{cross_training_instructions}

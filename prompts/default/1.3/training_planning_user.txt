@@ -1,0 +1,132 @@
+Design a personalized {training_plan_weeks}-week training plan for this athlete.
+
+**Athlete Profile:** {athlete_profile_path}
+
+**Performance Data** (use this to inform your plan):
+{performance_summary}
+
+**Training Constraints**:
+- Available training days: {available_days} ({num_available_days} days/week)
+- Weekly time budget: {weekly_time_budget_hours} hours
+- Daily time caps: {daily_time_caps_json}
+
+**Power Zones** (for workout intensities):
+{power_zones}
+
+---
+
+## THREE-PHASE EXECUTION
+
+### PHASE 1: Create Plan Overview (1 tool call)
+
+Call `create_plan_overview` with:
+
+```json
+{{
+  "athlete_profile_json": "{athlete_profile_path}",
+  "total_weeks": {training_plan_weeks},
+  "target_ftp": <your calculated target FTP in watts>,
+  "weekly_overview": [
+    // Array of {training_plan_weeks} week objects
+    // Each week must include:
+    // - week_number (1 to {training_plan_weeks})
+    // - phase (Foundation/Build/Recovery/Peak/Taper)
+    // - phase_rationale (why this phase for this week - keep concise)
+    // - weekly_focus (key training focus - 2-5 words)
+    // - weekly_watch_points (what to monitor - 3-8 words)
+    // - training_days (array of ALL 7 weekday objects with workout_type)
+    // - total_hours (target weekly training hours)
+  ],
+  "coaching_notes": "<200-400 words explaining periodization strategy, target FTP rationale, progression logic>",
+  "monitoring_guidance": "<150-300 words on KPIs to track, warning signs, when to adjust>"
+}}
+```
+
+**Example week structure for your weekly_overview**:
+```json
+{{
+  "week_number": 1,
+  "phase": "Foundation",
+  "phase_rationale": "Establish aerobic base",
+  "weekly_focus": "Endurance building",
+  "weekly_watch_points": "Monitor fatigue and recovery",
+  "training_days": [
+    {{"weekday": "Monday", "workout_type": "rest"}},
+    {{"weekday": "Tuesday", "workout_type": "endurance"}},
+    {{"weekday": "Wednesday", "workout_type": "recovery"}},
+    {{"weekday": "Thursday", "workout_type": "rest"}},
+    {{"weekday": "Friday", "workout_type": "tempo"}},
+    {{"weekday": "Saturday", "workout_type": "endurance"}},
+    {{"weekday": "Sunday", "workout_type": "endurance"}}
+  ],
+  "total_hours": 6.8
+}}
+```
+
+This returns a `plan_id` - save it for the next phase.
+
+---
+
+### PHASE 2: Add Weekly Details ({training_plan_weeks} tool calls)
+
+For EACH week from 1 to {training_plan_weeks}, call `add_week_details`:
+
+**Week 1 Example**:
+```json
+{{
+  "plan_id": "<plan_id from phase 1>",
+  "week_number": 1,
+  "workouts": [
+{example_workouts}
+  ]
+}}
+```
+
+**Key Requirements**:
+- Use the available days: {available_days}
+- Target approximately {weekly_time_budget_hours} hours per week
+- Match the weekly_overview you created (phase, hours, hard/easy distribution)
+- Include ALL available days (except rest days)
+- Each workout must have ≥1 segment
+- Calculate total week duration: {example_total_hours}h from {example_total_minutes} min
+
+**CRITICAL**: Call this tool {training_plan_weeks} times (once for each week).
+
+Example progression:
+- Week 1: Foundation phase - mostly Z2 endurance
+- Week 2: Foundation phase - continue base building
+- Week 3: Foundation phase - longer Z2 rides
+- Week 4: Recovery week - reduce volume 30-40%
+- Week 5: Build phase - introduce Sweet Spot/Threshold
+... continue through week {training_plan_weeks}
+
+---
+
+### PHASE 3: Finalize Plan (1 tool call)
+
+After adding all {training_plan_weeks} weeks, call `finalize_plan`:
+
+```json
+{{
+  "plan_id": "<plan_id from phase 1>"
+}}
+```
+
+This assembles the complete plan, validates it, and saves the final training plan.
+
+---
+
+## Validation Checklist
+
+Before executing, verify:
+- ✅ You will make exactly {total_tool_calls} tool calls total
+- ✅ weekly_overview has {training_plan_weeks} entries
+- ✅ Each week will use available days: {available_days}
+- ✅ Each week targets ~{weekly_time_budget_hours}h (±10%)
+- ✅ Progression is ≤10% week-to-week
+- ✅ All power percentages are 0-200% FTP
+- ✅ Recovery weeks included at appropriate intervals
+
+---
+
+**Now begin PHASE 1: Call create_plan_overview**

@@ -9,7 +9,7 @@ Loads prompts from external files organized by model and version:
 Supports both plain text (.txt) and Jinja2 templates (.jinja2) for prompts.
 
 Note: Phase 1 (data preparation) no longer uses LLM prompts.
-Defaults to 'default' model and '1.2' version if not specified.
+Defaults to 'default' model. Version should be specified from .cycling-ai.yaml config.
 """
 from __future__ import annotations
 
@@ -44,7 +44,7 @@ class PromptLoader:
         self,
         prompts_base_dir: Path | str | None = None,
         model: str = "default",
-        version: str = "1.2",
+        version: str | None = None,
     ):
         """
         Initialize prompt loader.
@@ -53,11 +53,17 @@ class PromptLoader:
             prompts_base_dir: Base directory containing prompts.
                              Defaults to ./prompts relative to project root
             model: Model name (e.g., "default", "gemini", "gpt4")
-            version: Version string (e.g., "1.2", "1.1")
+            version: Version string (e.g., "1.3", "1.2", "1.1")
         """
         if prompts_base_dir is None:
             # Default to prompts/ in project root
             prompts_base_dir = Path(__file__).parents[3] / "prompts"
+
+        if version is None:
+            raise ValueError(
+                "Prompt version must be specified. "
+                "This should come from the .cycling-ai.yaml config file."
+            )
 
         self.prompts_base_dir = Path(prompts_base_dir)
         self.model = model
@@ -479,14 +485,23 @@ def get_prompt_loader(
 
     Args:
         model: Model name (defaults to "default")
-        version: Version string (defaults to "1.2")
+        version: Version string (should be provided from .cycling-ai.yaml config)
         prompts_dir: Base directory (defaults to ./prompts)
 
     Returns:
         Configured PromptLoader
+
+    Raises:
+        ValueError: If version is not provided
     """
+    if version is None:
+        raise ValueError(
+            "Prompt version must be specified. "
+            "This should come from the .cycling-ai.yaml config file."
+        )
+
     return PromptLoader(
         prompts_base_dir=prompts_dir,
         model=model or "default",
-        version=version or "1.2",
+        version=version,
     )

@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cycling Workout Library</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #2d3748;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .stat-box .label {
+            font-size: 0.85em;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .stat-box .value {
+            font-size: 1.8em;
+        }
+
+        .filters {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .filters h2 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-group label {
+            color: #4a5568;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border-color 0.2s;
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        #searchInput {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1em;
+            margin-top: 10px;
+        }
+
+        #searchInput:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .workouts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .workout-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+
+        .workout-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+
+        .workout-header {
+            margin-bottom: 15px;
+        }
+
+        .workout-name {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .workout-badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-easy { background: #c6f6d5; color: #22543d; }
+        .badge-moderate { background: #feebc8; color: #7c2d12; }
+        .badge-hard { background: #fed7d7; color: #742a2a; }
+        .badge-very-hard { background: #e9d5ff; color: #5b21b6; }
+
+        .workout-meta {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .meta-label {
+            font-size: 0.75em;
+            color: #718096;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 3px;
+        }
+
+        .meta-value {
+            font-size: 1.1em;
+            color: #2d3748;
+            font-weight: 700;
+        }
+
+        .workout-description {
+            color: #4a5568;
+            font-size: 0.95em;
+            line-height: 1.5;
+            margin-bottom: 15px;
+            max-height: 4.5em;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+        }
+
+        .segments-timeline {
+            margin-top: 15px;
+        }
+
+        .segments-title {
+            font-size: 0.85em;
+            color: #718096;
+            font-weight: 600;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .segment-bar {
+            display: flex;
+            height: 60px;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            border: 2px solid #e2e8f0;
+        }
+
+        .segment-bar svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .segment {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75em;
+            font-weight: 600;
+            color: white;
+            transition: all 0.2s;
+        }
+
+        .segment:hover {
+            opacity: 0.8;
+            z-index: 10;
+        }
+
+        .segment-warmup { background: #4299e1; }
+        .segment-steady { background: #48bb78; }
+        .segment-interval { background: #ed8936; }
+        .segment-recovery { background: #9f7aea; }
+        .segment-cooldown { background: #38b2ac; }
+        .segment-default { background: #718096; }
+
+        .segment-legend {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.8em;
+            color: #4a5568;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+        }
+
+        .phases-weekdays {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            font-size: 0.85em;
+            color: #4a5568;
+        }
+
+        .phases-weekdays strong {
+            color: #2d3748;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 12px;
+            color: #718096;
+        }
+
+        .no-results h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            color: #4a5568;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 3% auto;
+            padding: 0;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            padding: 30px;
+            border-bottom: 2px solid #e2e8f0;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .close {
+            color: #718096;
+            float: right;
+            font-size: 32px;
+            font-weight: bold;
+            line-height: 1;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close:hover {
+            color: #2d3748;
+        }
+
+        .detail-description {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            white-space: pre-line;
+            line-height: 1.7;
+            color: #2d3748;
+        }
+
+        .segment-details {
+            margin-top: 20px;
+        }
+
+        .segment-detail {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid;
+        }
+
+        .segment-detail.warmup { border-left-color: #4299e1; }
+        .segment-detail.steady { border-left-color: #48bb78; }
+        .segment-detail.interval { border-left-color: #ed8936; }
+        .segment-detail.recovery { border-left-color: #9f7aea; }
+        .segment-detail.cooldown { border-left-color: #38b2ac; }
+
+        .workout-visualization-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            margin-bottom: 2rem;
+        }
+
+        .workout-visualization-section h4 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .workout-visualization-section h4::before {
+            content: "📊";
+            font-size: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .workouts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Cycling Workout Library</h1>
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="label">Total Workouts</div>
+                    <div class="value" id="totalWorkouts">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">Showing</div>
+                    <div class="value" id="visibleWorkouts">0</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="filters">
+            <h2>Filter Workouts</h2>
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label for="intensityFilter">Intensity</label>
+                    <select id="intensityFilter">
+                        <option value="">All Intensities</option>
+                        <option value="easy">Easy</option>
+                        <option value="moderate">Moderate</option>
+                        <option value="hard">Hard</option>
+                        <option value="very hard">Very Hard</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="phaseFilter">Training Phase</label>
+                    <select id="phaseFilter">
+                        <option value="">All Phases</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="weekdayFilter">Weekday</label>
+                    <select id="weekdayFilter">
+                        <option value="">All Weekdays</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="minDuration">Min Duration (min)</label>
+                    <input type="number" id="minDuration" placeholder="0">
+                </div>
+                <div class="filter-group">
+                    <label for="maxDuration">Max Duration (min)</label>
+                    <input type="number" id="maxDuration" placeholder="300">
+                </div>
+                <div class="filter-group">
+                    <label for="minTSS">Min TSS</label>
+                    <input type="number" id="minTSS" placeholder="0">
+                </div>
+                <div class="filter-group">
+                    <label for="maxTSS">Max TSS</label>
+                    <input type="number" id="maxTSS" placeholder="300">
+                </div>
+            </div>
+            <input type="text" id="searchInput" placeholder="Search by name or description...">
+        </div>
+
+        <div id="workoutsContainer" class="workouts-grid"></div>
+    </div>
+
+    <!-- Modal for workout details -->
+    <div id="workoutModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close">&times;</span>
+                <h2 id="modalWorkoutName"></h2>
+                <div id="modalWorkoutBadges" class="workout-badges"></div>
+            </div>
+            <div class="modal-body">
+                <div id="modalWorkoutMeta" class="workout-meta"></div>
+                <div class="detail-description" id="modalWorkoutDescription"></div>
+
+                <!-- Power Profile Visualization -->
+                <div class="workout-visualization-section">
+                    <h4>Power Profile</h4>
+                    <div id="modalSegmentBar"></div>
+                </div>
+
+                <!-- Segment Details -->
+                <div class="segments-timeline">
+                    <div class="segments-title">Workout Structure Details</div>
+                    <div id="modalSegmentDetails" class="segment-details"></div>
+                </div>
+                <div id="modalPhasesDays" class="phases-weekdays"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let workoutsData = [];
+        let filteredWorkouts = [];
+        const DEFAULT_FTP = 250; // Default FTP for visualization
+
+        // Format duration to human-readable string
+        function formatDuration(durationMin) {
+            if (durationMin >= 60) {
+                const hours = Math.floor(durationMin / 60);
+                const mins = Math.round(durationMin % 60);
+                return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+            } else if (durationMin >= 1) {
+                const mins = Math.floor(durationMin);
+                const secs = Math.round((durationMin % 1) * 60);
+                return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`;
+            } else {
+                // Less than 1 minute - show seconds
+                const secs = Math.round(durationMin * 60);
+                return `${secs}s`;
+            }
+        }
+
+        // Expand interval segments with sets into individual work/recovery segments
+        function expandIntervalSegments(segments) {
+            if (!segments || segments.length === 0) return [];
+
+            const expanded = [];
+
+            segments.forEach(segment => {
+                // Check if this is an interval segment with sets
+                if (segment.type === 'interval' && segment.sets && segment.work && segment.recovery) {
+                    // Expand into repeated work/recovery segments
+                    for (let i = 0; i < segment.sets; i++) {
+                        // Add work segment
+                        expanded.push({
+                            type: 'interval',
+                            duration_min: segment.work.duration_min,
+                            power_low_pct: segment.work.power_low_pct,
+                            power_high_pct: segment.work.power_high_pct,
+                            description: segment.work.description || `Set ${i + 1} - Work`,
+                            _is_work: true,
+                            _set_number: i + 1
+                        });
+
+                        // Add recovery segment (except after last set if specified)
+                        if (i < segment.sets - 1 || segment.recovery) {
+                            expanded.push({
+                                type: 'recovery',
+                                duration_min: segment.recovery.duration_min,
+                                power_low_pct: segment.recovery.power_low_pct,
+                                power_high_pct: segment.recovery.power_high_pct,
+                                description: segment.recovery.description || `Set ${i + 1} - Recovery`,
+                                _is_recovery: true,
+                                _set_number: i + 1
+                            });
+                        }
+                    }
+                } else {
+                    // Regular segment - add as-is
+                    expanded.push(segment);
+                }
+            });
+
+            return expanded;
+        }
+
+        // Generate mini SVG for workout cards
+        function generateMiniWorkoutSVG(segments) {
+            if (!segments || segments.length === 0) return '';
+
+            // Expand intervals before processing
+            const expandedSegments = expandIntervalSegments(segments);
+
+            const width = 100;
+            const height = 40;
+
+            // Power zone colors
+            const getSegmentColor = (type) => {
+                const colors = {
+                    'warmup': '#4299e1',      // Blue
+                    'cooldown': '#38b2ac',    // Teal
+                    'recovery': '#9f7aea',    // Purple
+                    'interval': '#ed8936',    // Orange
+                    'steady': '#48bb78',      // Green
+                    'tempo': '#F59E0B',       // Amber
+                    'threshold': '#EF4444',   // Red
+                    'vo2max': '#8B5CF6'       // Violet
+                };
+                return colors[type?.toLowerCase()] || '#718096'; // Gray default
+            };
+
+            // Calculate bar heights based on FTP percentage
+            const getBarHeight = (powerLowPct, powerHighPct) => {
+                const low = parseFloat(powerLowPct) || 0;
+                const high = parseFloat(powerHighPct) || 0;
+                const avgPercent = (low + high) / 2;
+                const heightPercent = Math.min(100, Math.max(20, avgPercent));
+                return (heightPercent / 100) * (height * 0.8);
+            };
+
+            // Filter and validate segments
+            const validSegments = expandedSegments.filter(seg =>
+                seg && seg.duration_min > 0 && !isNaN(seg.duration_min)
+            );
+
+            if (validSegments.length === 0) return '';
+
+            // Calculate total duration
+            const totalDuration = validSegments.reduce((sum, seg) => sum + seg.duration_min, 0);
+            if (totalDuration === 0 || isNaN(totalDuration)) return '';
+
+            // Generate SVG
+            let svg = `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" style="display: block;" xmlns="http://www.w3.org/2000/svg">`;
+
+            let xOffset = 0;
+            validSegments.forEach(segment => {
+                const segmentWidth = (segment.duration_min / totalDuration) * width;
+                const barHeight = getBarHeight(segment.power_low_pct, segment.power_high_pct);
+                const y = height - barHeight;
+                const color = getSegmentColor(segment.type);
+
+                if (!isNaN(segmentWidth) && !isNaN(barHeight) && !isNaN(y) && segmentWidth > 0 && barHeight > 0) {
+                    svg += `<rect x="${xOffset}" y="${y}" width="${segmentWidth}" height="${barHeight}" fill="${color}" rx="1"/>`;
+                    xOffset += segmentWidth;
+                }
+            });
+
+            svg += '</svg>';
+            return svg;
+        }
+
+        // Generate detailed SVG for modal
+        function generateDetailedWorkoutSVG(segments) {
+            if (!segments || segments.length === 0) return '';
+
+            // Expand intervals before processing
+            const expandedSegments = expandIntervalSegments(segments);
+
+            // Filter and validate segments
+            const validSegments = expandedSegments.filter(seg =>
+                seg && seg.duration_min > 0 && !isNaN(seg.duration_min)
+            );
+
+            if (validSegments.length === 0) return '';
+
+            const totalDuration = validSegments.reduce((sum, seg) => sum + seg.duration_min, 0);
+            if (totalDuration === 0 || isNaN(totalDuration)) return '';
+
+            const width = Math.max(800, totalDuration * 12);
+            const chartHeight = 280;
+            const graphHeight = 200;
+            const topMargin = 30;
+            const bottomMargin = 50;
+
+            // Power zone colors
+            const getSegmentColor = (type) => {
+                const colors = {
+                    'warmup': '#4299e1',
+                    'cooldown': '#38b2ac',
+                    'recovery': '#9f7aea',
+                    'interval': '#ed8936',
+                    'steady': '#48bb78',
+                    'tempo': '#F59E0B',
+                    'threshold': '#EF4444',
+                    'vo2max': '#8B5CF6'
+                };
+                return colors[type?.toLowerCase()] || '#718096';
+            };
+
+            const getBarHeight = (powerLowPct, powerHighPct) => {
+                const avgPercent = (powerLowPct + powerHighPct) / 2;
+                const heightPercent = Math.min(200, Math.max(20, avgPercent));
+                return (heightPercent / 200) * graphHeight;
+            };
+
+            const getPowerZone = (powerPct) => {
+                if (powerPct < 56) return 'Z1';
+                if (powerPct < 76) return 'Z2';
+                if (powerPct < 90) return 'Z3';
+                if (powerPct < 105) return 'Z4';
+                if (powerPct < 120) return 'Z5';
+                return 'Z6';
+            };
+
+            let svg = `<svg viewBox="0 0 ${width} ${chartHeight}" preserveAspectRatio="xMidYMid meet" style="width: 100%; height: auto;" xmlns="http://www.w3.org/2000/svg">`;
+
+            // Grid lines
+            const gridY1 = topMargin + graphHeight * 0.25;
+            const gridY2 = topMargin + graphHeight * 0.5;
+            const gridY3 = topMargin + graphHeight * 0.75;
+
+            svg += `<line x1="0" y1="${gridY1}" x2="${width}" y2="${gridY1}" stroke="#e4e6e8" stroke-width="1" stroke-dasharray="4 4"/>`;
+            svg += `<line x1="0" y1="${gridY2}" x2="${width}" y2="${gridY2}" stroke="#e4e6e8" stroke-width="1" stroke-dasharray="4 4"/>`;
+            svg += `<line x1="0" y1="${gridY3}" x2="${width}" y2="${gridY3}" stroke="#e4e6e8" stroke-width="1" stroke-dasharray="4 4"/>`;
+
+            // FTP line
+            const ftpY = topMargin + graphHeight * 0.5;
+            svg += `<line x1="0" y1="${ftpY}" x2="${width}" y2="${ftpY}" stroke="#667eea" stroke-width="3" stroke-dasharray="8 6"/>`;
+            svg += `<text x="10" y="${ftpY - 8}" font-size="16" font-weight="bold" fill="#667eea">100% FTP</text>`;
+
+            // Segments
+            let xOffset = 0;
+            validSegments.forEach((segment, index) => {
+                const segmentWidth = (segment.duration_min / totalDuration) * width;
+                const powerLow = parseFloat(segment.power_low_pct) || 0;
+                const powerHigh = parseFloat(segment.power_high_pct) || 0;
+                const avgPowerPct = (powerLow + powerHigh) / 2;
+                const barHeight = getBarHeight(powerLow, powerHigh);
+                const y = topMargin + graphHeight - barHeight;
+                const color = getSegmentColor(segment.type);
+
+                if (!isNaN(segmentWidth) && !isNaN(barHeight) && !isNaN(y) && segmentWidth > 0 && barHeight > 0) {
+                    svg += `<rect x="${xOffset}" y="${y}" width="${segmentWidth}" height="${barHeight}" fill="${color}" stroke="#fff" stroke-width="2" rx="2"/>`;
+
+                    // Zone label
+                    const zone = getPowerZone(avgPowerPct);
+                    if (barHeight > 30 && segmentWidth > 40) {
+                        const textX = xOffset + segmentWidth / 2;
+                        const textY = y + barHeight / 2 + 6;
+                        svg += `<text x="${textX}" y="${textY}" font-size="18" font-weight="bold" fill="#fff" text-anchor="middle">${zone}</text>`;
+                    }
+
+                    // Segment type label (if space allows)
+                    if (barHeight > 50 && segmentWidth > 60) {
+                        const textX = xOffset + segmentWidth / 2;
+                        const textY = y + barHeight / 2 - 10;
+                        const typeLabel = segment.type ? (segment.type.charAt(0).toUpperCase() + segment.type.slice(1)) : '';
+                        svg += `<text x="${textX}" y="${textY}" font-size="11" font-weight="600" fill="#fff" text-anchor="middle" opacity="0.9">${typeLabel}</text>`;
+                    }
+
+                    // Power % label (duration removed to avoid confusion)
+                    if (segmentWidth > 45 && powerLow > 0) {
+                        const labelX = xOffset + segmentWidth / 2;
+                        const powerText = powerLow === powerHigh
+                            ? `${powerLow}%`
+                            : `${powerLow}-${powerHigh}%`;
+                        const powerY = topMargin + graphHeight + 25;
+                        svg += `<text x="${labelX}" y="${powerY}" font-size="14" font-weight="600" fill="#2d3748" text-anchor="middle">${powerText}</text>`;
+                    }
+
+                    xOffset += segmentWidth;
+                }
+            });
+
+            svg += '</svg>';
+            return svg;
+        }
+
+        // Load workout data
+        async function loadWorkoutData() {
+            try {
+                const response = await fetch('workout_library.json');
+                const data = await response.json();
+                workoutsData = data.workouts;
+                filteredWorkouts = workoutsData;
+
+                populateFilterOptions();
+                displayWorkouts(filteredWorkouts);
+                updateStats();
+            } catch (error) {
+                console.error('Error loading workout data:', error);
+                document.getElementById('workoutsContainer').innerHTML =
+                    '<div class="no-results"><h3>Error loading workout data</h3><p>Please ensure workout_library.json is in the same directory</p></div>';
+            }
+        }
+
+        function populateFilterOptions() {
+            const phases = new Set();
+            const weekdays = new Set();
+
+            workoutsData.forEach(workout => {
+                workout.suitable_phases?.forEach(phase => phases.add(phase));
+                workout.suitable_weekdays?.forEach(day => weekdays.add(day));
+            });
+
+            const phaseFilter = document.getElementById('phaseFilter');
+            Array.from(phases).sort().forEach(phase => {
+                const option = document.createElement('option');
+                option.value = phase;
+                option.textContent = phase;
+                phaseFilter.appendChild(option);
+            });
+
+            const weekdayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            const weekdayFilter = document.getElementById('weekdayFilter');
+            weekdayOrder.filter(day => weekdays.has(day)).forEach(day => {
+                const option = document.createElement('option');
+                option.value = day;
+                option.textContent = day;
+                weekdayFilter.appendChild(option);
+            });
+        }
+
+        function getIntensityClass(intensity) {
+            const intensityMap = {
+                'easy': 'badge-easy',
+                'moderate': 'badge-moderate',
+                'hard': 'badge-hard',
+                'very hard': 'badge-very-hard'
+            };
+            return intensityMap[intensity?.toLowerCase()] || 'badge-moderate';
+        }
+
+        function getSegmentClass(segmentType) {
+            const typeMap = {
+                'warmup': 'segment-warmup',
+                'steady': 'segment-steady',
+                'interval': 'segment-interval',
+                'recovery': 'segment-recovery',
+                'cooldown': 'segment-cooldown'
+            };
+            return typeMap[segmentType?.toLowerCase()] || 'segment-default';
+        }
+
+        function createSegmentTimeline(segments, totalDuration) {
+            if (!segments || segments.length === 0) return '<div>No segments</div>';
+
+            // Use the new SVG generation
+            const svg = generateMiniWorkoutSVG(segments);
+            return `<div class="segment-bar">${svg}</div>`;
+        }
+
+        function displayWorkouts(workouts) {
+            const container = document.getElementById('workoutsContainer');
+
+            if (workouts.length === 0) {
+                container.innerHTML = '<div class="no-results"><h3>No workouts found</h3><p>Try adjusting your filters</p></div>';
+                return;
+            }
+
+            container.innerHTML = workouts.map(workout => `
+                <div class="workout-card" onclick="showWorkoutDetail('${workout.id}')">
+                    <div class="workout-header">
+                        <div class="workout-name">${workout.name}</div>
+                        <div class="workout-badges">
+                            <span class="badge ${getIntensityClass(workout.intensity)}">${workout.intensity || 'N/A'}</span>
+                            <span class="badge" style="background: #bee3f8; color: #2c5282;">${workout.type || 'N/A'}</span>
+                        </div>
+                    </div>
+
+                    <div class="workout-meta">
+                        <div class="meta-item">
+                            <div class="meta-label">Duration</div>
+                            <div class="meta-value">${formatDuration(workout.base_duration_min)}</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">TSS</div>
+                            <div class="meta-value">${workout.base_tss?.toFixed(1) || 'N/A'}</div>
+                        </div>
+                    </div>
+
+                    <div class="workout-description">
+                        ${workout.detailed_description || 'No description available'}
+                    </div>
+
+                    ${createSegmentTimeline(workout.segments, workout.base_duration_min)}
+                </div>
+            `).join('');
+        }
+
+        function showWorkoutDetail(workoutId) {
+            const workout = workoutsData.find(w => w.id === workoutId);
+            if (!workout) return;
+
+            document.getElementById('modalWorkoutName').textContent = workout.name;
+            document.getElementById('modalWorkoutBadges').innerHTML = `
+                <span class="badge ${getIntensityClass(workout.intensity)}">${workout.intensity || 'N/A'}</span>
+                <span class="badge" style="background: #bee3f8; color: #2c5282;">${workout.type || 'N/A'}</span>
+            `;
+
+            document.getElementById('modalWorkoutMeta').innerHTML = `
+                <div class="meta-item">
+                    <div class="meta-label">Duration</div>
+                    <div class="meta-value">${formatDuration(workout.base_duration_min)}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">TSS</div>
+                    <div class="meta-value">${workout.base_tss?.toFixed(1) || 'N/A'}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Duration Range</div>
+                    <div class="meta-value">${workout.variable_components?.min_value || 'N/A'} - ${workout.variable_components?.max_value || 'N/A'} min</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">ID</div>
+                    <div class="meta-value">${workout.id}</div>
+                </div>
+            `;
+
+            document.getElementById('modalWorkoutDescription').textContent = workout.detailed_description || 'No description available';
+
+            // Use the detailed SVG visualization for modal
+            const detailedSvg = generateDetailedWorkoutSVG(workout.segments);
+            document.getElementById('modalSegmentBar').innerHTML = detailedSvg;
+
+            // Build segment details with grouping for intervals with sets
+            const segmentDetailsContainer = document.getElementById('modalSegmentDetails');
+            segmentDetailsContainer.innerHTML = '';
+
+            (workout.segments || []).forEach(segment => {
+                if (segment.type === 'interval' && segment.sets && segment.work && segment.recovery) {
+                    // Create a grouped display for interval sets
+                    const groupDiv = document.createElement('div');
+                    groupDiv.className = 'interval-set-group';
+                    groupDiv.style.cssText = 'background: #f7fafc; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #ed8936;';
+
+                    groupDiv.innerHTML = `
+                        <div style="font-weight: 700; color: #2d3748; margin-bottom: 10px; font-size: 1.05em;">
+                            <span style="background: #ed8936; color: white; padding: 3px 10px; border-radius: 12px; margin-right: 8px; font-size: 0.85em;">${segment.sets}x</span>
+                            ${segment.sets} Sets of Intervals
+                        </div>
+                        <div style="margin-left: 20px;">
+                            <div style="margin-bottom: 8px;">
+                                <strong style="color: #ed8936;">WORK:</strong> ${formatDuration(segment.work.duration_min)} @ ${segment.work.power_low_pct}%-${segment.work.power_high_pct}% FTP
+                                ${segment.work.description ? `<br><span style="color: #4a5568; font-size: 0.9em;">${segment.work.description}</span>` : ''}
+                            </div>
+                            <div>
+                                <strong style="color: #9f7aea;">RECOVERY:</strong> ${formatDuration(segment.recovery.duration_min)} @ ${segment.recovery.power_low_pct}%-${segment.recovery.power_high_pct}% FTP
+                                ${segment.recovery.description ? `<br><span style="color: #4a5568; font-size: 0.9em;">${segment.recovery.description}</span>` : ''}
+                            </div>
+                        </div>
+                    `;
+
+                    segmentDetailsContainer.appendChild(groupDiv);
+                } else {
+                    // Regular segment
+                    const segmentDiv = document.createElement('div');
+                    segmentDiv.className = `segment-detail ${segment.type.toLowerCase()}`;
+                    segmentDiv.innerHTML = `
+                        <strong>${segment.type.toUpperCase()}</strong> - ${formatDuration(segment.duration_min)}<br>
+                        Power: ${segment.power_low_pct}% - ${segment.power_high_pct}% FTP<br>
+                        ${segment.description || ''}
+                    `;
+                    segmentDetailsContainer.appendChild(segmentDiv);
+                }
+            });
+
+            document.getElementById('modalPhasesDays').innerHTML = `
+                <div><strong>Suitable Phases:</strong> ${(workout.suitable_phases || []).join(', ') || 'N/A'}</div>
+                <div><strong>Suitable Weekdays:</strong> ${(workout.suitable_weekdays || []).join(', ') || 'N/A'}</div>
+            `;
+
+            document.getElementById('workoutModal').style.display = 'block';
+        }
+
+        function filterWorkouts() {
+            const intensity = document.getElementById('intensityFilter').value.toLowerCase();
+            const phase = document.getElementById('phaseFilter').value;
+            const weekday = document.getElementById('weekdayFilter').value;
+            const minDuration = parseFloat(document.getElementById('minDuration').value) || 0;
+            const maxDuration = parseFloat(document.getElementById('maxDuration').value) || Infinity;
+            const minTSS = parseFloat(document.getElementById('minTSS').value) || 0;
+            const maxTSS = parseFloat(document.getElementById('maxTSS').value) || Infinity;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+            filteredWorkouts = workoutsData.filter(workout => {
+                const matchIntensity = !intensity || workout.intensity?.toLowerCase() === intensity;
+                const matchPhase = !phase || workout.suitable_phases?.includes(phase);
+                const matchWeekday = !weekday || workout.suitable_weekdays?.includes(weekday);
+                const matchDuration = workout.base_duration_min >= minDuration && workout.base_duration_min <= maxDuration;
+                const matchTSS = workout.base_tss >= minTSS && workout.base_tss <= maxTSS;
+                const matchSearch = !searchTerm ||
+                    workout.name.toLowerCase().includes(searchTerm) ||
+                    workout.detailed_description?.toLowerCase().includes(searchTerm);
+
+                return matchIntensity && matchPhase && matchWeekday && matchDuration && matchTSS && matchSearch;
+            });
+
+            displayWorkouts(filteredWorkouts);
+            updateStats();
+        }
+
+        function updateStats() {
+            document.getElementById('totalWorkouts').textContent = workoutsData.length;
+            document.getElementById('visibleWorkouts').textContent = filteredWorkouts.length;
+        }
+
+        // Event listeners
+        document.getElementById('intensityFilter').addEventListener('change', filterWorkouts);
+        document.getElementById('phaseFilter').addEventListener('change', filterWorkouts);
+        document.getElementById('weekdayFilter').addEventListener('change', filterWorkouts);
+        document.getElementById('minDuration').addEventListener('input', filterWorkouts);
+        document.getElementById('maxDuration').addEventListener('input', filterWorkouts);
+        document.getElementById('minTSS').addEventListener('input', filterWorkouts);
+        document.getElementById('maxTSS').addEventListener('input', filterWorkouts);
+        document.getElementById('searchInput').addEventListener('input', filterWorkouts);
+
+        // Modal close
+        document.querySelector('.close').onclick = function() {
+            document.getElementById('workoutModal').style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('workoutModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Load data on page load
+        loadWorkoutData();
+    </script>
+</body>
+</html>

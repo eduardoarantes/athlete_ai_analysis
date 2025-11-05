@@ -196,6 +196,15 @@ class ReportPreparationPhase(BasePhase):
             f"[PHASE 4] Athlete: {athlete_name} (ID: {athlete_id}), FTP: {profile.get('ftp', 'N/A')}"
         )
 
+        # Create a session for traceability
+        report_session = context.session_manager.create_session(
+            provider_name="report_preparation",
+            context=context.previous_phase_data,
+        )
+        session_id = report_session.session_id
+
+        logger.info(f"[PHASE 4] Created report session: {session_id}")
+
         # Consolidate all data using the extractor utility
         logger.info("[PHASE 4] Consolidating athlete data")
         athlete_data = consolidate_athlete_data(
@@ -217,7 +226,7 @@ class ReportPreparationPhase(BasePhase):
         }
 
         logger.info("[PHASE 4] Creating report_data structure")
-        report_data = create_report_data([athlete_data], generator_info)
+        report_data = create_report_data([athlete_data], generator_info, session_id)
         logger.info(f"[PHASE 4] report_data created with keys: {list(report_data.keys())}")
 
         # Save report data to output directory
@@ -257,6 +266,7 @@ class ReportPreparationPhase(BasePhase):
                 "athlete_name": athlete_name,
                 "report_data": report_data,  # Make available for HTML generation
                 "has_performance_analysis": performance_data is not None,
+                "session_id": session_id,  # Include session_id for traceability
             },
             execution_time_seconds=execution_time,
             tokens_used=0,  # No LLM used

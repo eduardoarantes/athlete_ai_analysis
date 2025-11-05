@@ -1,0 +1,41 @@
+================================================================================
+WORKOUT EXTRACTION REPORT
+================================================================================
+
+Extraction Date: 2025-11-03
+Source Directory: logs/llm_interactions/
+Output File: /Users/eduardo/Documents/projects/cycling-ai-analysis/data/workout_library_extracted.json
+
+STATISTICS:
+--------------------------------------------------------------------------------
+Log files processed: 12
+Total workouts found: 264
+Duplicates removed: 260
+Final unique workouts: 4
+
+WORKOUTS BY SOURCE FILE:
+--------------------------------------------------------------------------------
+  session_20251103_172047.jsonl: 90 workouts
+  session_20251103_192428.jsonl: 90 workouts
+  session_20251103_110955.jsonl: 15 workouts
+  session_20251102_065048.jsonl: 15 workouts
+  session_20251103_120858.jsonl: 7 workouts
+  session_20251103_142137.jsonl: 7 workouts
+  session_20251101_210905.jsonl: 7 workouts
+  session_20251103_112951.jsonl: 7 workouts
+  session_20251103_141236.jsonl: 7 workouts
+  session_20251103_140312.jsonl: 7 workouts
+  session_20251101_212202.jsonl: 6 workouts
+  session_20251101_210155.jsonl: 6 workouts
+
+WORKOUT TYPES:
+--------------------------------------------------------------------------------
+  endurance: 4
+
+INTENSITY DISTRIBUTION:
+--------------------------------------------------------------------------------
+  easy: 4
+
+================================================================================
+END OF REPORT
+================================================================================

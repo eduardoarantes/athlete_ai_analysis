@@ -1,0 +1,162 @@
+{
+  "version": "1.0.0",
+  "description": "Workouts extracted from LLM interaction logs",
+  "extraction_date": "2025-11-03",
+  "source": "logs/llm_interactions/*.jsonl",
+  "workouts": [
+    {
+      "weekday": "Tuesday",
+      "description": "Z2 endurance ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 90,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 aerobic base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "name": "90min Tempo",
+      "id": "90min_tempo",
+      "source_file": "session_20251101_212202.jsonl",
+      "extracted_from_logs": true,
+      "base_duration_min": 110,
+      "base_tss": 61.6,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Tuesday",
+      "description": "Z2 endurance ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 50,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 aerobic base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "name": "50min Tempo",
+      "id": "50min_tempo",
+      "source_file": "session_20251103_172047.jsonl",
+      "extracted_from_logs": true,
+      "base_duration_min": 70,
+      "base_tss": 39.2,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Thursday",
+      "description": "Sweet spot intervals",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "interval",
+          "duration_min": 15,
+          "power_low_pct": 88,
+          "power_high_pct": 93,
+          "description": "Sweet spot"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy recovery"
+        },
+        {
+          "type": "interval",
+          "duration_min": 15,
+          "power_low_pct": 88,
+          "power_high_pct": 93,
+          "description": "Sweet spot"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "name": "2x15min VO2 Max Intervals",
+      "id": "2x15min_vo2_max_intervals",
+      "source_file": "session_20251103_172047.jsonl",
+      "extracted_from_logs": true,
+      "base_duration_min": 55,
+      "base_tss": 30.8,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Saturday",
+      "description": "Long endurance ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 120,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 aerobic base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "name": "120min Tempo",
+      "id": "120min_tempo",
+      "source_file": "session_20251103_172047.jsonl",
+      "extracted_from_logs": true,
+      "base_duration_min": 150,
+      "base_tss": 84.0,
+      "type": "endurance",
+      "intensity": "easy"
+    }
+  ]
+}

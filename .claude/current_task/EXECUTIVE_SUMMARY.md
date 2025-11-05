@@ -51,7 +51,7 @@ A **three-phase intelligent duration adjustment algorithm** that:
 ### New Components
 
 1. **DurationDistributor** (`duration_distributor.py`)
-   - Workout-type-aware duration profiles (recovery 45-60min, endurance 90-240min, etc.)
+   - Workout-type-aware duration profiles (recovery 45-60min, endurance 90-360+ min, etc.)
    - Intelligent scaling algorithm with min/max bounds
    - Iterative convergence to weekly target
 

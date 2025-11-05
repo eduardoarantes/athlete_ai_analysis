@@ -1,0 +1,5590 @@
+{
+  "version": "1.0.0",
+  "description": "Workouts extracted from report_data.json files",
+  "extraction_date": "2025-11-03",
+  "source": "/tmp/cycling_*/report_data.json",
+  "workouts": [
+    {
+      "weekday": "Tuesday",
+      "description": "Sweet spot intervals",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "interval",
+          "duration_min": 15,
+          "power_low_pct": 88,
+          "power_high_pct": 93,
+          "description": "Sweet spot effort"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy recovery"
+        },
+        {
+          "type": "interval",
+          "duration_min": 15,
+          "power_low_pct": 88,
+          "power_high_pct": 93,
+          "description": "Sweet spot effort"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy recovery"
+        },
+        {
+          "type": "interval",
+          "duration_min": 10,
+          "power_low_pct": 88,
+          "power_high_pct": 93,
+          "description": "Sweet spot effort"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 70.2,
+      "name": "3x15min Sweet Spot",
+      "id": "3x15min_sweet_spot",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 1,
+      "source_day": "Tuesday",
+      "base_duration_min": 70,
+      "base_tss": 70.2,
+      "type": "sweet_spot",
+      "intensity": "moderate"
+    },
+    {
+      "weekday": "Wednesday",
+      "description": "Z2 endurance ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 50,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 aerobic base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 46.3,
+      "name": "70min Base Ride",
+      "id": "70min_base_ride",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 1,
+      "source_day": "Wednesday",
+      "base_duration_min": 70,
+      "base_tss": 46.3,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Saturday",
+      "description": "Long endurance ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 135,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 aerobic base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 109.8,
+      "name": "2.7hr Endurance Ride",
+      "id": "27hr_endurance_ride",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 1,
+      "source_day": "Saturday",
+      "base_duration_min": 160,
+      "base_tss": 109.8,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Tempo intervals",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "interval",
+          "duration_min": 20,
+          "power_low_pct": 76,
+          "power_high_pct": 90,
+          "description": "Tempo pace"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy recovery"
+        },
+        {
+          "type": "interval",
+          "duration_min": 20,
+          "power_low_pct": 76,
+          "power_high_pct": 90,
+          "description": "Tempo pace"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 64.7,
+      "name": "2x20min Sweet Spot",
+      "id": "2x20min_sweet_spot",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 1,
+      "source_day": "Sunday",
+      "base_duration_min": 75,
+      "base_tss": 64.7,
+      "type": "sweet_spot",
+      "intensity": "moderate"
+    },
+    {
+      "weekday": "Tuesday",
+      "description": "VO2 max intervals",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "interval",
+          "duration_min": 4,
+          "power_low_pct": 106,
+          "power_high_pct": 120,
+          "description": "VO2 max effort"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 4,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy recovery"
+        },
+        {
+          "type": "interval",
+          "duration_min": 4,
+          "power_low_pct": 106,
+          "power_high_pct": 120,
+          "description": "VO2 max effort"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 4,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy recovery"
+        },
+        {
+          "type": "interval",
+          "duration_min": 4,
+          "power_low_pct": 106,
+          "power_high_pct": 120,
+          "description": "VO2 max effort"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 4,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy recovery"
+        },
+        {
+          "type": "interval",
+          "duration_min": 4,
+          "power_low_pct": 106,
+          "power_high_pct": 120,
+          "description": "VO2 max effort"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 4,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy recovery"
+        },
+        {
+          "type": "interval",
+          "duration_min": 4,
+          "power_low_pct": 106,
+          "power_high_pct": 120,
+          "description": "VO2 max effort"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 13,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 65.4,
+      "name": "5x4min VO2 Max Intervals",
+      "id": "5x4min_vo2_max_intervals",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 2,
+      "source_day": "Tuesday",
+      "base_duration_min": 64,
+      "base_tss": 65.4,
+      "type": "vo2max",
+      "intensity": "hard"
+    },
+    {
+      "weekday": "Saturday",
+      "description": "Long endurance ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 145,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 aerobic base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 117.0,
+      "name": "2.8hr Endurance Ride",
+      "id": "28hr_endurance_ride",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 2,
+      "source_day": "Saturday",
+      "base_duration_min": 170,
+      "base_tss": 117.0,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Sweet spot intervals",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "interval",
+          "duration_min": 20,
+          "power_low_pct": 88,
+          "power_high_pct": 93,
+          "description": "Sweet spot effort"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy recovery"
+        },
+        {
+          "type": "interval",
+          "duration_min": 20,
+          "power_low_pct": 88,
+          "power_high_pct": 93,
+          "description": "Sweet spot effort"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 70.4,
+      "name": "2x20min Sweet Spot",
+      "id": "2x20min_sweet_spot_2",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 2,
+      "source_day": "Sunday",
+      "base_duration_min": 70,
+      "base_tss": 70.4,
+      "type": "sweet_spot",
+      "intensity": "moderate"
+    },
+    {
+      "weekday": "Tuesday",
+      "description": "Threshold intervals",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "interval",
+          "duration_min": 12,
+          "power_low_pct": 91,
+          "power_high_pct": 105,
+          "description": "Threshold effort"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy recovery"
+        },
+        {
+          "type": "interval",
+          "duration_min": 12,
+          "power_low_pct": 91,
+          "power_high_pct": 105,
+          "description": "Threshold effort"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy recovery"
+        },
+        {
+          "type": "interval",
+          "duration_min": 10,
+          "power_low_pct": 91,
+          "power_high_pct": 105,
+          "description": "Threshold effort"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 11,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 73.3,
+      "name": "3x12min VO2 Max Intervals",
+      "id": "3x12min_vo2_max_intervals",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 3,
+      "source_day": "Tuesday",
+      "base_duration_min": 70,
+      "base_tss": 73.3,
+      "type": "vo2max",
+      "intensity": "hard"
+    },
+    {
+      "weekday": "Saturday",
+      "description": "Long endurance ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 155,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 aerobic base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 124.1,
+      "name": "3.0hr Endurance Ride",
+      "id": "30hr_endurance_ride",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 3,
+      "source_day": "Saturday",
+      "base_duration_min": 180,
+      "base_tss": 124.1,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Tempo ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "tempo",
+          "duration_min": 50,
+          "power_low_pct": 76,
+          "power_high_pct": 90,
+          "description": "Tempo pace"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 70.7,
+      "name": "50min Sweet Spot",
+      "id": "50min_sweet_spot",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 3,
+      "source_day": "Sunday",
+      "base_duration_min": 75,
+      "base_tss": 70.7,
+      "type": "sweet_spot",
+      "intensity": "moderate"
+    },
+    {
+      "weekday": "Tuesday",
+      "description": "Recovery Z2 ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 40,
+          "power_low_pct": 56,
+          "power_high_pct": 70,
+          "description": "Easy Z2"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 37.0,
+      "name": "60min Base Ride",
+      "id": "60min_base_ride",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 4,
+      "source_day": "Tuesday",
+      "base_duration_min": 60,
+      "base_tss": 37.0,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Wednesday",
+      "description": "Light tempo",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "tempo",
+          "duration_min": 30,
+          "power_low_pct": 76,
+          "power_high_pct": 85,
+          "description": "Light tempo"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 43.0,
+      "name": "30min Tempo",
+      "id": "30min_tempo",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 4,
+      "source_day": "Wednesday",
+      "base_duration_min": 50,
+      "base_tss": 43.0,
+      "type": "tempo",
+      "intensity": "moderate"
+    },
+    {
+      "weekday": "Saturday",
+      "description": "Moderate endurance ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 105,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 aerobic base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 88.4,
+      "name": "2.2hr Endurance Ride",
+      "id": "22hr_endurance_ride",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 4,
+      "source_day": "Saturday",
+      "base_duration_min": 130,
+      "base_tss": 88.4,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Easy recovery ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 50,
+          "power_low_pct": 56,
+          "power_high_pct": 70,
+          "description": "Easy Z2"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 43.6,
+      "name": "70min Base Ride",
+      "id": "70min_base_ride_2",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 4,
+      "source_day": "Sunday",
+      "base_duration_min": 70,
+      "base_tss": 43.6,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Monday",
+      "description": "Z2 endurance ride with warm-up and cooldown",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 50,
+          "power_low_pct": 56,
+          "power_high_pct": 70,
+          "description": "Z2 aerobic base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 43.2,
+      "name": "70min Base Ride",
+      "id": "70min_base_ride_3",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 1,
+      "source_day": "Monday",
+      "base_duration_min": 70,
+      "base_tss": 43.2,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Wednesday",
+      "description": "Sweet Spot intervals",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "interval",
+          "duration_min": 10,
+          "power_low_pct": 88,
+          "power_high_pct": 93,
+          "description": "Sweet Spot"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "interval",
+          "duration_min": 10,
+          "power_low_pct": 88,
+          "power_high_pct": 93,
+          "description": "Sweet Spot"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 40.6,
+      "name": "2x10min Sweet Spot",
+      "id": "2x10min_sweet_spot",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 1,
+      "source_day": "Wednesday",
+      "base_duration_min": 45,
+      "base_tss": 40.6,
+      "type": "sweet_spot",
+      "intensity": "moderate"
+    },
+    {
+      "weekday": "Friday",
+      "description": "Z2 aerobic ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 50,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 aerobic base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 45.8,
+      "name": "70min Base Ride",
+      "id": "70min_base_ride_4",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 1,
+      "source_day": "Friday",
+      "base_duration_min": 70,
+      "base_tss": 45.8,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Saturday",
+      "description": "Long endurance ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 105,
+          "power_low_pct": 56,
+          "power_high_pct": 70,
+          "description": "Z2 aerobic base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 85.3,
+      "name": "2.2hr Endurance Ride",
+      "id": "22hr_endurance_ride_2",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 1,
+      "source_day": "Saturday",
+      "base_duration_min": 135,
+      "base_tss": 85.3,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Recovery ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 45,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Active recovery"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 32.4,
+      "name": "60min Base Ride",
+      "id": "60min_base_ride_2",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 1,
+      "source_day": "Sunday",
+      "base_duration_min": 60,
+      "base_tss": 32.4,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Monday",
+      "description": "Z2 endurance ride with warm-up and cooldown",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 55,
+          "power_low_pct": 56,
+          "power_high_pct": 70,
+          "description": "Z2 aerobic base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 46.5,
+      "name": "75min Base Ride",
+      "id": "75min_base_ride",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 2,
+      "source_day": "Monday",
+      "base_duration_min": 75,
+      "base_tss": 46.5,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Wednesday",
+      "description": "Sweet Spot intervals progression",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "interval",
+          "duration_min": 12,
+          "power_low_pct": 88,
+          "power_high_pct": 93,
+          "description": "Sweet Spot"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "interval",
+          "duration_min": 12,
+          "power_low_pct": 88,
+          "power_high_pct": 93,
+          "description": "Sweet Spot"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 46.1,
+      "name": "2x12min Sweet Spot",
+      "id": "2x12min_sweet_spot",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 2,
+      "source_day": "Wednesday",
+      "base_duration_min": 49,
+      "base_tss": 46.1,
+      "type": "sweet_spot",
+      "intensity": "moderate"
+    },
+    {
+      "weekday": "Friday",
+      "description": "Z2 aerobic ride progression",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 55,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 aerobic base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 49.4,
+      "name": "75min Base Ride",
+      "id": "75min_base_ride_2",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 2,
+      "source_day": "Friday",
+      "base_duration_min": 75,
+      "base_tss": 49.4,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Saturday",
+      "description": "Long endurance ride progression",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 115,
+          "power_low_pct": 56,
+          "power_high_pct": 70,
+          "description": "Z2 aerobic base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 91.9,
+      "name": "2.4hr Endurance Ride",
+      "id": "24hr_endurance_ride",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 2,
+      "source_day": "Saturday",
+      "base_duration_min": 145,
+      "base_tss": 91.9,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Recovery ride progression",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 50,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Active recovery"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 35.1,
+      "name": "65min Base Ride",
+      "id": "65min_base_ride",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 2,
+      "source_day": "Sunday",
+      "base_duration_min": 65,
+      "base_tss": 35.1,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Monday",
+      "description": "Z2 endurance ride with warm-up and cooldown",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 60,
+          "power_low_pct": 56,
+          "power_high_pct": 70,
+          "description": "Z2 aerobic base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 49.8,
+      "name": "80min Base Ride",
+      "id": "80min_base_ride",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 3,
+      "source_day": "Monday",
+      "base_duration_min": 80,
+      "base_tss": 49.8,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Wednesday",
+      "description": "Sweet Spot intervals progression",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "interval",
+          "duration_min": 14,
+          "power_low_pct": 88,
+          "power_high_pct": 93,
+          "description": "Sweet Spot"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "interval",
+          "duration_min": 14,
+          "power_low_pct": 88,
+          "power_high_pct": 93,
+          "description": "Sweet Spot"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 51.5,
+      "name": "2x14min Sweet Spot",
+      "id": "2x14min_sweet_spot",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 3,
+      "source_day": "Wednesday",
+      "base_duration_min": 53,
+      "base_tss": 51.5,
+      "type": "sweet_spot",
+      "intensity": "moderate"
+    },
+    {
+      "weekday": "Friday",
+      "description": "Z2 aerobic ride progression",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 60,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 aerobic base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 53.0,
+      "name": "80min Base Ride",
+      "id": "80min_base_ride_2",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 3,
+      "source_day": "Friday",
+      "base_duration_min": 80,
+      "base_tss": 53.0,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Saturday",
+      "description": "Long endurance ride progression",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 125,
+          "power_low_pct": 56,
+          "power_high_pct": 70,
+          "description": "Z2 aerobic base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 98.5,
+      "name": "2.6hr Endurance Ride",
+      "id": "26hr_endurance_ride",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 3,
+      "source_day": "Saturday",
+      "base_duration_min": 155,
+      "base_tss": 98.5,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Recovery ride progression",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 55,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Active recovery"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 37.9,
+      "name": "70min Base Ride",
+      "id": "70min_base_ride_5",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 3,
+      "source_day": "Sunday",
+      "base_duration_min": 70,
+      "base_tss": 37.9,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Saturday",
+      "description": "Long endurance ride progression",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 110,
+          "power_low_pct": 56,
+          "power_high_pct": 70,
+          "description": "Z2 aerobic base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 88.6,
+      "name": "2.3hr Endurance Ride",
+      "id": "23hr_endurance_ride",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 4,
+      "source_day": "Saturday",
+      "base_duration_min": 140,
+      "base_tss": 88.6,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Wednesday",
+      "description": "Easy recovery ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 35,
+          "power_low_pct": 56,
+          "power_high_pct": 70,
+          "description": "Easy Z2"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 33.2,
+      "name": "55min Base Ride",
+      "id": "55min_base_ride",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 1,
+      "source_day": "Wednesday",
+      "base_duration_min": 55,
+      "base_tss": 33.2,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Saturday",
+      "description": "Long endurance ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 120,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 aerobic base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 99.1,
+      "name": "2.4hr Endurance Ride",
+      "id": "24hr_endurance_ride_2",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 1,
+      "source_day": "Saturday",
+      "base_duration_min": 145,
+      "base_tss": 99.1,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Moderate endurance ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 70,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 aerobic base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 60.6,
+      "name": "1.5hr Endurance Ride",
+      "id": "15hr_endurance_ride",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 1,
+      "source_day": "Sunday",
+      "base_duration_min": 90,
+      "base_tss": 60.6,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Tuesday",
+      "description": "Base endurance with tempo",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 30,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 base"
+        },
+        {
+          "type": "tempo",
+          "duration_min": 15,
+          "power_low_pct": 76,
+          "power_high_pct": 90,
+          "description": "Z3 tempo pace"
+        },
+        {
+          "type": "steady",
+          "duration_min": 10,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 53.9,
+      "name": "15min Sweet Spot",
+      "id": "15min_sweet_spot",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 2,
+      "source_day": "Tuesday",
+      "base_duration_min": 70,
+      "base_tss": 53.9,
+      "type": "sweet_spot",
+      "intensity": "moderate"
+    },
+    {
+      "weekday": "Wednesday",
+      "description": "Easy recovery ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 40,
+          "power_low_pct": 56,
+          "power_high_pct": 70,
+          "description": "Easy Z2"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 36.5,
+      "name": "60min Base Ride",
+      "id": "60min_base_ride_3",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 2,
+      "source_day": "Wednesday",
+      "base_duration_min": 60,
+      "base_tss": 36.5,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Saturday",
+      "description": "Long endurance ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 130,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 aerobic base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 106.3,
+      "name": "2.6hr Endurance Ride",
+      "id": "26hr_endurance_ride_2",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 2,
+      "source_day": "Saturday",
+      "base_duration_min": 155,
+      "base_tss": 106.3,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Endurance with tempo",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 45,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 base"
+        },
+        {
+          "type": "tempo",
+          "duration_min": 20,
+          "power_low_pct": 76,
+          "power_high_pct": 90,
+          "description": "Z3 tempo pace"
+        },
+        {
+          "type": "steady",
+          "duration_min": 10,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 75.6,
+      "name": "20min Sweet Spot",
+      "id": "20min_sweet_spot",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 2,
+      "source_day": "Sunday",
+      "base_duration_min": 100,
+      "base_tss": 75.6,
+      "type": "sweet_spot",
+      "intensity": "moderate"
+    },
+    {
+      "weekday": "Tuesday",
+      "description": "Sweet spot intervals",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "interval",
+          "duration_min": 12,
+          "power_low_pct": 88,
+          "power_high_pct": 93,
+          "description": "Sweet spot"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "interval",
+          "duration_min": 12,
+          "power_low_pct": 88,
+          "power_high_pct": 93,
+          "description": "Sweet spot"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "interval",
+          "duration_min": 12,
+          "power_low_pct": 88,
+          "power_high_pct": 93,
+          "description": "Sweet spot"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 9,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 67.5,
+      "name": "3x12min Sweet Spot",
+      "id": "3x12min_sweet_spot",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 3,
+      "source_day": "Tuesday",
+      "base_duration_min": 70,
+      "base_tss": 67.5,
+      "type": "sweet_spot",
+      "intensity": "moderate"
+    },
+    {
+      "weekday": "Wednesday",
+      "description": "Easy recovery ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 45,
+          "power_low_pct": 56,
+          "power_high_pct": 70,
+          "description": "Easy Z2"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 39.9,
+      "name": "65min Base Ride",
+      "id": "65min_base_ride_2",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 3,
+      "source_day": "Wednesday",
+      "base_duration_min": 65,
+      "base_tss": 39.9,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Saturday",
+      "description": "Long endurance ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 140,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 aerobic base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 113.4,
+      "name": "2.8hr Endurance Ride",
+      "id": "28hr_endurance_ride_2",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 3,
+      "source_day": "Saturday",
+      "base_duration_min": 165,
+      "base_tss": 113.4,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Endurance with tempo",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 40,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 base"
+        },
+        {
+          "type": "tempo",
+          "duration_min": 25,
+          "power_low_pct": 76,
+          "power_high_pct": 90,
+          "description": "Z3 tempo pace"
+        },
+        {
+          "type": "steady",
+          "duration_min": 10,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 77.8,
+      "name": "25min Sweet Spot",
+      "id": "25min_sweet_spot",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 3,
+      "source_day": "Sunday",
+      "base_duration_min": 100,
+      "base_tss": 77.8,
+      "type": "sweet_spot",
+      "intensity": "moderate"
+    },
+    {
+      "weekday": "Saturday",
+      "description": "Moderate endurance ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 90,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 aerobic base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 77.7,
+      "name": "1.9hr Endurance Ride",
+      "id": "19hr_endurance_ride",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 4,
+      "source_day": "Saturday",
+      "base_duration_min": 115,
+      "base_tss": 77.7,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Easy endurance ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 60,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 aerobic base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 53.5,
+      "name": "80min Base Ride",
+      "id": "80min_base_ride_3",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 4,
+      "source_day": "Sunday",
+      "base_duration_min": 80,
+      "base_tss": 53.5,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Tuesday",
+      "description": "Sweet spot intervals",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "interval",
+          "duration_min": 15,
+          "power_low_pct": 88,
+          "power_high_pct": 93,
+          "description": "Sweet spot"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "interval",
+          "duration_min": 15,
+          "power_low_pct": 88,
+          "power_high_pct": 93,
+          "description": "Sweet spot"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "interval",
+          "duration_min": 10,
+          "power_low_pct": 88,
+          "power_high_pct": 93,
+          "description": "Sweet spot"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 70.9,
+      "name": "3x15min Sweet Spot",
+      "id": "3x15min_sweet_spot_2",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 5,
+      "source_day": "Tuesday",
+      "base_duration_min": 70,
+      "base_tss": 70.9,
+      "type": "sweet_spot",
+      "intensity": "moderate"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Tempo intervals",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 20,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 base"
+        },
+        {
+          "type": "tempo",
+          "duration_min": 15,
+          "power_low_pct": 76,
+          "power_high_pct": 90,
+          "description": "Z3 tempo"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 56,
+          "power_high_pct": 70,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "tempo",
+          "duration_min": 15,
+          "power_low_pct": 76,
+          "power_high_pct": 90,
+          "description": "Z3 tempo"
+        },
+        {
+          "type": "steady",
+          "duration_min": 15,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 76.1,
+      "name": "30min Sweet Spot",
+      "id": "30min_sweet_spot",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 5,
+      "source_day": "Sunday",
+      "base_duration_min": 95,
+      "base_tss": 76.1,
+      "type": "sweet_spot",
+      "intensity": "moderate"
+    },
+    {
+      "weekday": "Tuesday",
+      "description": "Threshold intervals",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "interval",
+          "duration_min": 10,
+          "power_low_pct": 91,
+          "power_high_pct": 105,
+          "description": "Threshold effort"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "interval",
+          "duration_min": 10,
+          "power_low_pct": 91,
+          "power_high_pct": 105,
+          "description": "Threshold effort"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "interval",
+          "duration_min": 10,
+          "power_low_pct": 91,
+          "power_high_pct": 105,
+          "description": "Threshold effort"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 66.8,
+      "name": "3x10min VO2 Max Intervals",
+      "id": "3x10min_vo2_max_intervals",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 6,
+      "source_day": "Tuesday",
+      "base_duration_min": 65,
+      "base_tss": 66.8,
+      "type": "vo2max",
+      "intensity": "hard"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Tempo intervals",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 20,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 base"
+        },
+        {
+          "type": "tempo",
+          "duration_min": 20,
+          "power_low_pct": 76,
+          "power_high_pct": 90,
+          "description": "Z3 tempo"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 56,
+          "power_high_pct": 70,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "tempo",
+          "duration_min": 20,
+          "power_low_pct": 76,
+          "power_high_pct": 90,
+          "description": "Z3 tempo"
+        },
+        {
+          "type": "steady",
+          "duration_min": 10,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 84.0,
+      "name": "40min Sweet Spot",
+      "id": "40min_sweet_spot",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 6,
+      "source_day": "Sunday",
+      "base_duration_min": 100,
+      "base_tss": 84.0,
+      "type": "sweet_spot",
+      "intensity": "moderate"
+    },
+    {
+      "weekday": "Tuesday",
+      "description": "VO2 max intervals",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "interval",
+          "duration_min": 4,
+          "power_low_pct": 106,
+          "power_high_pct": 120,
+          "description": "VO2 max"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 4,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "interval",
+          "duration_min": 4,
+          "power_low_pct": 106,
+          "power_high_pct": 120,
+          "description": "VO2 max"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 4,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "interval",
+          "duration_min": 4,
+          "power_low_pct": 106,
+          "power_high_pct": 120,
+          "description": "VO2 max"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 4,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "interval",
+          "duration_min": 4,
+          "power_low_pct": 106,
+          "power_high_pct": 120,
+          "description": "VO2 max"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 4,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "interval",
+          "duration_min": 4,
+          "power_low_pct": 106,
+          "power_high_pct": 120,
+          "description": "VO2 max"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 13,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 66.2,
+      "name": "5x4min VO2 Max Intervals",
+      "id": "5x4min_vo2_max_intervals_2",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 7,
+      "source_day": "Tuesday",
+      "base_duration_min": 64,
+      "base_tss": 66.2,
+      "type": "vo2max",
+      "intensity": "hard"
+    },
+    {
+      "weekday": "Saturday",
+      "description": "Long endurance ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 160,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 aerobic base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 127.7,
+      "name": "3.1hr Endurance Ride",
+      "id": "31hr_endurance_ride",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 7,
+      "source_day": "Saturday",
+      "base_duration_min": 185,
+      "base_tss": 127.7,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Sweet spot intervals",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 20,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 base"
+        },
+        {
+          "type": "interval",
+          "duration_min": 15,
+          "power_low_pct": 88,
+          "power_high_pct": 93,
+          "description": "Sweet spot"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 56,
+          "power_high_pct": 70,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "interval",
+          "duration_min": 15,
+          "power_low_pct": 88,
+          "power_high_pct": 93,
+          "description": "Sweet spot"
+        },
+        {
+          "type": "steady",
+          "duration_min": 15,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 82.6,
+      "name": "2x15min Sweet Spot",
+      "id": "2x15min_sweet_spot",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 7,
+      "source_day": "Sunday",
+      "base_duration_min": 95,
+      "base_tss": 82.6,
+      "type": "sweet_spot",
+      "intensity": "moderate"
+    },
+    {
+      "weekday": "Saturday",
+      "description": "Moderate endurance ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 100,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 aerobic base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 84.8,
+      "name": "2.1hr Endurance Ride",
+      "id": "21hr_endurance_ride",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 8,
+      "source_day": "Saturday",
+      "base_duration_min": 125,
+      "base_tss": 84.8,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Easy endurance ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 65,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 aerobic base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 57.0,
+      "name": "85min Base Ride",
+      "id": "85min_base_ride",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 8,
+      "source_day": "Sunday",
+      "base_duration_min": 85,
+      "base_tss": 57.0,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Tuesday",
+      "description": "VO2 max intervals",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "interval",
+          "duration_min": 5,
+          "power_low_pct": 106,
+          "power_high_pct": 120,
+          "description": "VO2 max"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "interval",
+          "duration_min": 5,
+          "power_low_pct": 106,
+          "power_high_pct": 120,
+          "description": "VO2 max"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "interval",
+          "duration_min": 5,
+          "power_low_pct": 106,
+          "power_high_pct": 120,
+          "description": "VO2 max"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "interval",
+          "duration_min": 5,
+          "power_low_pct": 106,
+          "power_high_pct": 120,
+          "description": "VO2 max"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 64.1,
+      "name": "4x5min VO2 Max Intervals",
+      "id": "4x5min_vo2_max_intervals",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 9,
+      "source_day": "Tuesday",
+      "base_duration_min": 60,
+      "base_tss": 64.1,
+      "type": "vo2max",
+      "intensity": "hard"
+    },
+    {
+      "weekday": "Saturday",
+      "description": "Long endurance ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 165,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 aerobic base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 131.3,
+      "name": "3.2hr Endurance Ride",
+      "id": "32hr_endurance_ride",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 9,
+      "source_day": "Saturday",
+      "base_duration_min": 190,
+      "base_tss": 131.3,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Threshold intervals",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 15,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 base"
+        },
+        {
+          "type": "interval",
+          "duration_min": 12,
+          "power_low_pct": 91,
+          "power_high_pct": 105,
+          "description": "Threshold effort"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 56,
+          "power_high_pct": 70,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "interval",
+          "duration_min": 12,
+          "power_low_pct": 91,
+          "power_high_pct": 105,
+          "description": "Threshold effort"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 56,
+          "power_high_pct": 70,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "interval",
+          "duration_min": 12,
+          "power_low_pct": 91,
+          "power_high_pct": 105,
+          "description": "Threshold effort"
+        },
+        {
+          "type": "steady",
+          "duration_min": 10,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 9,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 94.9,
+      "name": "3x12min VO2 Max Intervals",
+      "id": "3x12min_vo2_max_intervals_2",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 9,
+      "source_day": "Sunday",
+      "base_duration_min": 95,
+      "base_tss": 94.9,
+      "type": "vo2max",
+      "intensity": "hard"
+    },
+    {
+      "weekday": "Tuesday",
+      "description": "Threshold intervals",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "interval",
+          "duration_min": 12,
+          "power_low_pct": 91,
+          "power_high_pct": 105,
+          "description": "Threshold effort"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "interval",
+          "duration_min": 12,
+          "power_low_pct": 91,
+          "power_high_pct": 105,
+          "description": "Threshold effort"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "interval",
+          "duration_min": 12,
+          "power_low_pct": 91,
+          "power_high_pct": 105,
+          "description": "Threshold effort"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 9,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 75.9,
+      "name": "3x12min VO2 Max Intervals",
+      "id": "3x12min_vo2_max_intervals_3",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 10,
+      "source_day": "Tuesday",
+      "base_duration_min": 70,
+      "base_tss": 75.9,
+      "type": "vo2max",
+      "intensity": "hard"
+    },
+    {
+      "weekday": "Saturday",
+      "description": "Long endurance ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 170,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 aerobic base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 134.9,
+      "name": "3.2hr Endurance Ride",
+      "id": "32hr_endurance_ride_2",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 10,
+      "source_day": "Saturday",
+      "base_duration_min": 195,
+      "base_tss": 134.9,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Sweet spot intervals",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 15,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 base"
+        },
+        {
+          "type": "interval",
+          "duration_min": 18,
+          "power_low_pct": 88,
+          "power_high_pct": 93,
+          "description": "Sweet spot"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 56,
+          "power_high_pct": 70,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "interval",
+          "duration_min": 18,
+          "power_low_pct": 88,
+          "power_high_pct": 93,
+          "description": "Sweet spot"
+        },
+        {
+          "type": "steady",
+          "duration_min": 15,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 9,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 86.7,
+      "name": "2x18min Sweet Spot",
+      "id": "2x18min_sweet_spot",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 10,
+      "source_day": "Sunday",
+      "base_duration_min": 95,
+      "base_tss": 86.7,
+      "type": "sweet_spot",
+      "intensity": "moderate"
+    },
+    {
+      "weekday": "Tuesday",
+      "description": "VO2 max intervals",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "interval",
+          "duration_min": 5,
+          "power_low_pct": 106,
+          "power_high_pct": 120,
+          "description": "VO2 max"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "interval",
+          "duration_min": 5,
+          "power_low_pct": 106,
+          "power_high_pct": 120,
+          "description": "VO2 max"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "interval",
+          "duration_min": 5,
+          "power_low_pct": 106,
+          "power_high_pct": 120,
+          "description": "VO2 max"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "interval",
+          "duration_min": 5,
+          "power_low_pct": 106,
+          "power_high_pct": 120,
+          "description": "VO2 max"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "interval",
+          "duration_min": 5,
+          "power_low_pct": 106,
+          "power_high_pct": 120,
+          "description": "VO2 max"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 77.5,
+      "name": "5x5min VO2 Max Intervals",
+      "id": "5x5min_vo2_max_intervals",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 11,
+      "source_day": "Tuesday",
+      "base_duration_min": 70,
+      "base_tss": 77.5,
+      "type": "vo2max",
+      "intensity": "hard"
+    },
+    {
+      "weekday": "Saturday",
+      "description": "Long endurance ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 175,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 aerobic base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 138.4,
+      "name": "3.3hr Endurance Ride",
+      "id": "33hr_endurance_ride",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 11,
+      "source_day": "Saturday",
+      "base_duration_min": 200,
+      "base_tss": 138.4,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Threshold intervals",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 15,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 base"
+        },
+        {
+          "type": "interval",
+          "duration_min": 15,
+          "power_low_pct": 91,
+          "power_high_pct": 105,
+          "description": "Threshold effort"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 56,
+          "power_high_pct": 70,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "interval",
+          "duration_min": 15,
+          "power_low_pct": 91,
+          "power_high_pct": 105,
+          "description": "Threshold effort"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 56,
+          "power_high_pct": 70,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "interval",
+          "duration_min": 15,
+          "power_low_pct": 91,
+          "power_high_pct": 105,
+          "description": "Threshold effort"
+        },
+        {
+          "type": "steady",
+          "duration_min": 10,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 109.8,
+      "name": "3x15min VO2 Max Intervals",
+      "id": "3x15min_vo2_max_intervals",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 11,
+      "source_day": "Sunday",
+      "base_duration_min": 105,
+      "base_tss": 109.8,
+      "type": "vo2max",
+      "intensity": "hard"
+    },
+    {
+      "weekday": "Tuesday",
+      "description": "Easy taper ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 30,
+          "power_low_pct": 56,
+          "power_high_pct": 70,
+          "description": "Easy Z2"
+        },
+        {
+          "type": "interval",
+          "duration_min": 3,
+          "power_low_pct": 91,
+          "power_high_pct": 105,
+          "description": "Opener"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 3,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "interval",
+          "duration_min": 3,
+          "power_low_pct": 91,
+          "power_high_pct": 105,
+          "description": "Opener"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 6,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 39.2,
+      "name": "2x3min VO2 Max Intervals",
+      "id": "2x3min_vo2_max_intervals",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 12,
+      "source_day": "Tuesday",
+      "base_duration_min": 55,
+      "base_tss": 39.2,
+      "type": "vo2max",
+      "intensity": "hard"
+    },
+    {
+      "weekday": "Wednesday",
+      "description": "Easy recovery ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 30,
+          "power_low_pct": 56,
+          "power_high_pct": 70,
+          "description": "Easy Z2"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 29.9,
+      "name": "50min Base Ride",
+      "id": "50min_base_ride",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 12,
+      "source_day": "Wednesday",
+      "base_duration_min": 50,
+      "base_tss": 29.9,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Saturday",
+      "description": "Pre-event ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 50,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 aerobic base"
+        },
+        {
+          "type": "interval",
+          "duration_min": 3,
+          "power_low_pct": 91,
+          "power_high_pct": 105,
+          "description": "Opener"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 3,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "interval",
+          "duration_min": 3,
+          "power_low_pct": 91,
+          "power_high_pct": 105,
+          "description": "Opener"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 3,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "interval",
+          "duration_min": 3,
+          "power_low_pct": 91,
+          "power_high_pct": 105,
+          "description": "Opener"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 66.8,
+      "name": "3x3min VO2 Max Intervals",
+      "id": "3x3min_vo2_max_intervals",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 12,
+      "source_day": "Saturday",
+      "base_duration_min": 90,
+      "base_tss": 66.8,
+      "type": "vo2max",
+      "intensity": "hard"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Easy pre-event spin",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 25,
+          "power_low_pct": 56,
+          "power_high_pct": 70,
+          "description": "Easy Z2"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 26.6,
+      "name": "45min Base Ride",
+      "id": "45min_base_ride",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 12,
+      "source_day": "Sunday",
+      "base_duration_min": 45,
+      "base_tss": 26.6,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Long endurance ride",
+      "segments": [
+        {
+          "type": "steady",
+          "duration_min": 150,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 endurance"
+        }
+      ],
+      "name": "2.5hr Endurance Ride",
+      "id": "25hr_endurance_ride",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 1,
+      "source_day": "Sunday",
+      "base_duration_min": 150,
+      "base_tss": 84.0,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Saturday",
+      "description": "Moderate endurance ride",
+      "segments": [
+        {
+          "type": "steady",
+          "duration_min": 100,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 extended"
+        }
+      ],
+      "name": "1.7hr Endurance Ride",
+      "id": "17hr_endurance_ride",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 1,
+      "source_day": "Saturday",
+      "base_duration_min": 100,
+      "base_tss": 56.0,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Tuesday",
+      "description": "Tempo intervals",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Gradual warmup"
+        },
+        {
+          "type": "interval",
+          "duration_min": 10,
+          "power_low_pct": 76,
+          "power_high_pct": 90,
+          "description": "Tempo effort"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 55,
+          "description": "Recovery spin",
+          "power_high_pct": 55
+        },
+        {
+          "type": "interval",
+          "duration_min": 10,
+          "power_low_pct": 76,
+          "power_high_pct": 90,
+          "description": "Tempo effort"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "name": "2x10min Sweet Spot",
+      "id": "2x10min_sweet_spot_2",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 1,
+      "source_day": "Tuesday",
+      "base_duration_min": 50,
+      "base_tss": 28.0,
+      "type": "sweet_spot",
+      "intensity": "moderate"
+    },
+    {
+      "weekday": "Wednesday",
+      "description": "Sweet spot intervals",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Gradual warmup"
+        },
+        {
+          "type": "interval",
+          "duration_min": 12,
+          "power_low_pct": 88,
+          "power_high_pct": 93,
+          "description": "Sweet spot work"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 3,
+          "power_low_pct": 55,
+          "description": "Recovery spin",
+          "power_high_pct": 55
+        },
+        {
+          "type": "interval",
+          "duration_min": 12,
+          "power_low_pct": 88,
+          "power_high_pct": 93,
+          "description": "Sweet spot work"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "name": "2x12min Sweet Spot",
+      "id": "2x12min_sweet_spot_2",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 1,
+      "source_day": "Wednesday",
+      "base_duration_min": 52,
+      "base_tss": 29.1,
+      "type": "sweet_spot",
+      "intensity": "moderate"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Mixed endurance and tempo",
+      "segments": [
+        {
+          "type": "steady",
+          "duration_min": 90,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Endurance base"
+        },
+        {
+          "type": "tempo",
+          "duration_min": 30,
+          "power_low_pct": 76,
+          "power_high_pct": 90,
+          "description": "Increased effort"
+        }
+      ],
+      "name": "30min Sweet Spot",
+      "id": "30min_sweet_spot_2",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 2,
+      "source_day": "Sunday",
+      "base_duration_min": 120,
+      "base_tss": 67.2,
+      "type": "sweet_spot",
+      "intensity": "moderate"
+    },
+    {
+      "weekday": "Tuesday",
+      "description": "VO2 Max intervals",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Gradual warmup"
+        },
+        {
+          "type": "interval",
+          "duration_min": 4,
+          "power_low_pct": 106,
+          "power_high_pct": 120,
+          "description": "High intensity"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 4,
+          "power_low_pct": 55,
+          "description": "Recovery spin",
+          "power_high_pct": 55
+        },
+        {
+          "type": "interval",
+          "duration_min": 4,
+          "power_low_pct": 106,
+          "power_high_pct": 120,
+          "description": "High intensity"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "name": "2x4min VO2 Max Intervals",
+      "id": "2x4min_vo2_max_intervals",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 2,
+      "source_day": "Tuesday",
+      "base_duration_min": 37,
+      "base_tss": 20.7,
+      "type": "vo2max",
+      "intensity": "hard"
+    },
+    {
+      "weekday": "Wednesday",
+      "description": "Threshold efforts",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Gradual warmup"
+        },
+        {
+          "type": "interval",
+          "duration_min": 20,
+          "power_low_pct": 91,
+          "power_high_pct": 105,
+          "description": "Threshold interval"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 10,
+          "power_low_pct": 55,
+          "description": "Recovery spin",
+          "power_high_pct": 55
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "name": "55min Base Ride",
+      "id": "55min_base_ride_2",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 2,
+      "source_day": "Wednesday",
+      "base_duration_min": 55,
+      "base_tss": 30.8,
+      "type": "vo2max",
+      "intensity": "hard"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Long mixed ride",
+      "segments": [
+        {
+          "type": "steady",
+          "duration_min": 120,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 base"
+        },
+        {
+          "type": "tempo",
+          "duration_min": 30,
+          "power_low_pct": 76,
+          "power_high_pct": 90,
+          "description": "Tempo effort"
+        }
+      ],
+      "name": "30min Sweet Spot",
+      "id": "30min_sweet_spot_3",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 3,
+      "source_day": "Sunday",
+      "base_duration_min": 150,
+      "base_tss": 84.0,
+      "type": "sweet_spot",
+      "intensity": "moderate"
+    },
+    {
+      "weekday": "Saturday",
+      "description": "Endurance with tempo bursts",
+      "segments": [
+        {
+          "type": "steady",
+          "duration_min": 120,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 with bursts"
+        },
+        {
+          "type": "tempo",
+          "duration_min": 5,
+          "power_low_pct": 76,
+          "power_high_pct": 90,
+          "description": "Short hard effort"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 55,
+          "description": "Recovery spin",
+          "power_high_pct": 55
+        },
+        {
+          "type": "tempo",
+          "duration_min": 5,
+          "power_low_pct": 76,
+          "power_high_pct": 90,
+          "description": "Short hard effort"
+        }
+      ],
+      "name": "10min Sweet Spot",
+      "id": "10min_sweet_spot",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 3,
+      "source_day": "Saturday",
+      "base_duration_min": 135,
+      "base_tss": 75.6,
+      "type": "sweet_spot",
+      "intensity": "moderate"
+    },
+    {
+      "weekday": "Tuesday",
+      "description": "Sweet spot progression",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Gradual warmup"
+        },
+        {
+          "type": "interval",
+          "duration_min": 15,
+          "power_low_pct": 88,
+          "power_high_pct": 93,
+          "description": "Longer sweet spot"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 55,
+          "description": "Easy spin",
+          "power_high_pct": 55
+        },
+        {
+          "type": "interval",
+          "duration_min": 15,
+          "power_low_pct": 88,
+          "power_high_pct": 93,
+          "description": "Longer sweet spot"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "name": "2x15min Sweet Spot",
+      "id": "2x15min_sweet_spot_2",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 3,
+      "source_day": "Tuesday",
+      "base_duration_min": 60,
+      "base_tss": 33.6,
+      "type": "sweet_spot",
+      "intensity": "moderate"
+    },
+    {
+      "weekday": "Wednesday",
+      "description": "VO2 Max sharpening",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Gradual warmup"
+        },
+        {
+          "type": "interval",
+          "duration_min": 3,
+          "power_low_pct": 106,
+          "power_high_pct": 120,
+          "description": "Short intense bursts"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 3,
+          "power_low_pct": 55,
+          "description": "Recovery spin",
+          "power_high_pct": 55
+        },
+        {
+          "type": "interval",
+          "duration_min": 3,
+          "power_low_pct": 106,
+          "power_high_pct": 120,
+          "description": "Short intense bursts"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "name": "2x3min VO2 Max Intervals",
+      "id": "2x3min_vo2_max_intervals_2",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 3,
+      "source_day": "Wednesday",
+      "base_duration_min": 34,
+      "base_tss": 19.0,
+      "type": "vo2max",
+      "intensity": "hard"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Easy recovery ride",
+      "segments": [
+        {
+          "type": "steady",
+          "duration_min": 90,
+          "power_low_pct": 50,
+          "power_high_pct": 55,
+          "description": "Very easy spin"
+        }
+      ],
+      "name": "90min Mixed Workout",
+      "id": "90min_mixed_workout",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 4,
+      "source_day": "Sunday",
+      "base_duration_min": 90,
+      "base_tss": 50.4,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Saturday",
+      "description": "Light mixed efforts",
+      "segments": [
+        {
+          "type": "steady",
+          "duration_min": 60,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Light endurance"
+        },
+        {
+          "type": "tempo",
+          "duration_min": 20,
+          "power_low_pct": 76,
+          "power_high_pct": 90,
+          "description": "Light tempo efforts"
+        }
+      ],
+      "name": "20min Sweet Spot",
+      "id": "20min_sweet_spot_2",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 4,
+      "source_day": "Saturday",
+      "base_duration_min": 80,
+      "base_tss": 44.8,
+      "type": "sweet_spot",
+      "intensity": "moderate"
+    },
+    {
+      "weekday": "Tuesday",
+      "description": "Active recovery",
+      "segments": [
+        {
+          "type": "steady",
+          "duration_min": 60,
+          "power_low_pct": 50,
+          "power_high_pct": 55,
+          "description": "Very easy day"
+        }
+      ],
+      "name": "60min Mixed Workout",
+      "id": "60min_mixed_workout",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 4,
+      "source_day": "Tuesday",
+      "base_duration_min": 60,
+      "base_tss": 33.6,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Wednesday",
+      "description": "Technique and recovery",
+      "segments": [
+        {
+          "type": "steady",
+          "duration_min": 60,
+          "power_low_pct": 50,
+          "power_high_pct": 55,
+          "description": "Focus on pedaling technique"
+        }
+      ],
+      "name": "60min Mixed Workout",
+      "id": "60min_mixed_workout_2",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 4,
+      "source_day": "Wednesday",
+      "base_duration_min": 60,
+      "base_tss": 33.6,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Long endurance ride",
+      "segments": [
+        {
+          "type": "steady",
+          "duration_min": 180,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 endurance pace"
+        }
+      ],
+      "tss": 128.7,
+      "name": "3.0hr Endurance Ride",
+      "id": "30hr_endurance_ride_2",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 1,
+      "source_day": "Sunday",
+      "base_duration_min": 180,
+      "base_tss": 128.7,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Tuesday",
+      "description": "Tempo intervals",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin to prepare"
+        },
+        {
+          "type": "interval",
+          "duration_min": 12,
+          "power_low_pct": 76,
+          "power_high_pct": 90,
+          "description": "Z3 tempo effort"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 6,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "interval",
+          "duration_min": 12,
+          "power_low_pct": 76,
+          "power_high_pct": 90,
+          "description": "Z3 tempo effort"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy spin down"
+        }
+      ],
+      "tss": 46.7,
+      "name": "2x12min Sweet Spot",
+      "id": "2x12min_sweet_spot_3",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 1,
+      "source_day": "Tuesday",
+      "base_duration_min": 60,
+      "base_tss": 46.7,
+      "type": "sweet_spot",
+      "intensity": "moderate"
+    },
+    {
+      "weekday": "Wednesday",
+      "description": "Recovery ride",
+      "segments": [
+        {
+          "type": "steady",
+          "duration_min": 60,
+          "power_low_pct": 50,
+          "power_high_pct": 55,
+          "description": "Z1 active recovery"
+        }
+      ],
+      "tss": 27.6,
+      "name": "60min Mixed Workout",
+      "id": "60min_mixed_workout_3",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 1,
+      "source_day": "Wednesday",
+      "base_duration_min": 60,
+      "base_tss": 27.6,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Progressive long ride",
+      "segments": [
+        {
+          "type": "steady",
+          "duration_min": 200,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Z2 increasing to upper end"
+        }
+      ],
+      "tss": 143.0,
+      "name": "3.3hr Endurance Ride",
+      "id": "33hr_endurance_ride_2",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 2,
+      "source_day": "Sunday",
+      "base_duration_min": 200,
+      "base_tss": 143.0,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Tuesday",
+      "description": "Sweet spot intervals",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin to prepare"
+        },
+        {
+          "type": "interval",
+          "duration_min": 20,
+          "power_low_pct": 88,
+          "power_high_pct": 93,
+          "description": "Sweet spot effort"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "interval",
+          "duration_min": 20,
+          "power_low_pct": 88,
+          "power_high_pct": 93,
+          "description": "Sweet spot effort"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy spin down"
+        }
+      ],
+      "tss": 75.9,
+      "name": "2x20min Sweet Spot",
+      "id": "2x20min_sweet_spot_3",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 2,
+      "source_day": "Tuesday",
+      "base_duration_min": 80,
+      "base_tss": 75.9,
+      "type": "sweet_spot",
+      "intensity": "moderate"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Long steady ride",
+      "segments": [
+        {
+          "type": "steady",
+          "duration_min": 220,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Long Z2 ride"
+        }
+      ],
+      "tss": 157.3,
+      "name": "3.7hr Endurance Ride",
+      "id": "37hr_endurance_ride",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 3,
+      "source_day": "Sunday",
+      "base_duration_min": 220,
+      "base_tss": 157.3,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Tuesday",
+      "description": "VO2 Max intervals",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin to prepare"
+        },
+        {
+          "type": "interval",
+          "duration_min": 5,
+          "power_low_pct": 106,
+          "power_high_pct": 120,
+          "description": "High-intensity bursts"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Recovery spin"
+        },
+        {
+          "type": "interval",
+          "duration_min": 5,
+          "power_low_pct": 106,
+          "power_high_pct": 120,
+          "description": "High-intensity bursts"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy spin down"
+        }
+      ],
+      "tss": 39.9,
+      "name": "2x5min VO2 Max Intervals",
+      "id": "2x5min_vo2_max_intervals",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 3,
+      "source_day": "Tuesday",
+      "base_duration_min": 45,
+      "base_tss": 39.9,
+      "type": "vo2max",
+      "intensity": "hard"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Easy endurance ride",
+      "segments": [
+        {
+          "type": "steady",
+          "duration_min": 120,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Lower end of Z2"
+        }
+      ],
+      "tss": 85.8,
+      "name": "2.0hr Endurance Ride",
+      "id": "20hr_endurance_ride",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 4,
+      "source_day": "Sunday",
+      "base_duration_min": 120,
+      "base_tss": 85.8,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Tuesday",
+      "description": "Active recovery",
+      "segments": [
+        {
+          "type": "steady",
+          "duration_min": 60,
+          "power_low_pct": 50,
+          "power_high_pct": 55,
+          "description": "Very light recovery ride"
+        }
+      ],
+      "tss": 27.6,
+      "name": "60min Mixed Workout",
+      "id": "60min_mixed_workout_4",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 4,
+      "source_day": "Tuesday",
+      "base_duration_min": 60,
+      "base_tss": 27.6,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Long mixed intensity ride",
+      "segments": [
+        {
+          "type": "steady",
+          "duration_min": 180,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Mix of Z2 and tempo"
+        }
+      ],
+      "tss": 128.7,
+      "name": "3.0hr Endurance Ride",
+      "id": "30hr_endurance_ride_3",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 5,
+      "source_day": "Sunday",
+      "base_duration_min": 180,
+      "base_tss": 128.7,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Tuesday",
+      "description": "Threshold intervals",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin to prepare"
+        },
+        {
+          "type": "interval",
+          "duration_min": 15,
+          "power_low_pct": 91,
+          "power_high_pct": 105,
+          "description": "Threshold effort"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Recovery spin"
+        },
+        {
+          "type": "interval",
+          "duration_min": 15,
+          "power_low_pct": 91,
+          "power_high_pct": 105,
+          "description": "Threshold effort"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy spin down"
+        }
+      ],
+      "tss": 69.4,
+      "name": "2x15min VO2 Max Intervals",
+      "id": "2x15min_vo2_max_intervals",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 5,
+      "source_day": "Tuesday",
+      "base_duration_min": 70,
+      "base_tss": 69.4,
+      "type": "vo2max",
+      "intensity": "hard"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Extended mixed sessions",
+      "segments": [
+        {
+          "type": "steady",
+          "duration_min": 210,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Long ride with intervals"
+        }
+      ],
+      "tss": 150.2,
+      "name": "3.5hr Endurance Ride",
+      "id": "35hr_endurance_ride",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 6,
+      "source_day": "Sunday",
+      "base_duration_min": 210,
+      "base_tss": 150.2,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Tuesday",
+      "description": "Mixed intervals",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin to prepare"
+        },
+        {
+          "type": "interval",
+          "duration_min": 10,
+          "power_low_pct": 106,
+          "power_high_pct": 120,
+          "description": "VO2 Max bursts"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Recovery spin"
+        },
+        {
+          "type": "interval",
+          "duration_min": 15,
+          "power_low_pct": 91,
+          "power_high_pct": 105,
+          "description": "Threshold efforts"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy spin down"
+        }
+      ],
+      "tss": 63.9,
+      "name": "2x10min VO2 Max Intervals",
+      "id": "2x10min_vo2_max_intervals",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 6,
+      "source_day": "Tuesday",
+      "base_duration_min": 60,
+      "base_tss": 63.9,
+      "type": "vo2max",
+      "intensity": "hard"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Long ride with power bursts",
+      "segments": [
+        {
+          "type": "steady",
+          "duration_min": 240,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Include short high-intensity bursts"
+        }
+      ],
+      "tss": 171.6,
+      "name": "4.0hr Endurance Ride",
+      "id": "40hr_endurance_ride",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 7,
+      "source_day": "Sunday",
+      "base_duration_min": 240,
+      "base_tss": 171.6,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Tuesday",
+      "description": "High-intensity intervals",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin to prepare"
+        },
+        {
+          "type": "interval",
+          "duration_min": 4,
+          "power_low_pct": 106,
+          "power_high_pct": 120,
+          "description": "Max effort"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 4,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Recovery spin"
+        },
+        {
+          "type": "interval",
+          "duration_min": 4,
+          "power_low_pct": 106,
+          "power_high_pct": 120,
+          "description": "Max effort"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy spin down"
+        }
+      ],
+      "tss": 35.1,
+      "name": "2x4min VO2 Max Intervals",
+      "id": "2x4min_vo2_max_intervals_2",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 7,
+      "source_day": "Tuesday",
+      "base_duration_min": 42,
+      "base_tss": 35.1,
+      "type": "vo2max",
+      "intensity": "hard"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Moderate long ride",
+      "segments": [
+        {
+          "type": "steady",
+          "duration_min": 150,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Sustained Z2 effort"
+        }
+      ],
+      "tss": 107.3,
+      "name": "2.5hr Endurance Ride",
+      "id": "25hr_endurance_ride_2",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 8,
+      "source_day": "Sunday",
+      "base_duration_min": 150,
+      "base_tss": 107.3,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Long ride with race pace efforts",
+      "segments": [
+        {
+          "type": "steady",
+          "duration_min": 180,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Include race pace efforts"
+        }
+      ],
+      "tss": 128.7,
+      "name": "3.0hr Endurance Ride",
+      "id": "30hr_endurance_ride_4",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 9,
+      "source_day": "Sunday",
+      "base_duration_min": 180,
+      "base_tss": 128.7,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Tuesday",
+      "description": "Race simulation",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin to prepare"
+        },
+        {
+          "type": "interval",
+          "duration_min": 30,
+          "power_low_pct": 91,
+          "power_high_pct": 105,
+          "description": "Simulate race effort"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy spin down"
+        }
+      ],
+      "tss": 63.8,
+      "name": "60min Base Ride",
+      "id": "60min_base_ride_4",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 9,
+      "source_day": "Tuesday",
+      "base_duration_min": 60,
+      "base_tss": 63.8,
+      "type": "vo2max",
+      "intensity": "hard"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Long intense efforts",
+      "segments": [
+        {
+          "type": "steady",
+          "duration_min": 210,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Include intense sustained efforts"
+        }
+      ],
+      "tss": 150.2,
+      "name": "3.5hr Endurance Ride",
+      "id": "35hr_endurance_ride_2",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 10,
+      "source_day": "Sunday",
+      "base_duration_min": 210,
+      "base_tss": 150.2,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Tuesday",
+      "description": "Threshold refinement",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin to prepare"
+        },
+        {
+          "type": "interval",
+          "duration_min": 25,
+          "power_low_pct": 91,
+          "power_high_pct": 105,
+          "description": "Sustained threshold work"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy spin down"
+        }
+      ],
+      "tss": 55.8,
+      "name": "55min Base Ride",
+      "id": "55min_base_ride_3",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 10,
+      "source_day": "Tuesday",
+      "base_duration_min": 55,
+      "base_tss": 55.8,
+      "type": "vo2max",
+      "intensity": "hard"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Shorter intense ride",
+      "segments": [
+        {
+          "type": "steady",
+          "duration_min": 120,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Intense bursts within ride"
+        }
+      ],
+      "tss": 85.8,
+      "name": "2.0hr Endurance Ride",
+      "id": "20hr_endurance_ride_2",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 11,
+      "source_day": "Sunday",
+      "base_duration_min": 120,
+      "base_tss": 85.8,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Tuesday",
+      "description": "Pre-race tune-up",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin to prepare"
+        },
+        {
+          "type": "interval",
+          "duration_min": 20,
+          "power_low_pct": 91,
+          "power_high_pct": 105,
+          "description": "Race pace effort"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy spin down"
+        }
+      ],
+      "tss": 47.8,
+      "name": "50min Base Ride",
+      "id": "50min_base_ride_2",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 11,
+      "source_day": "Tuesday",
+      "base_duration_min": 50,
+      "base_tss": 47.8,
+      "type": "vo2max",
+      "intensity": "hard"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Race pace simulation",
+      "segments": [
+        {
+          "type": "steady",
+          "duration_min": 150,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Final race pace efforts"
+        }
+      ],
+      "tss": 107.3,
+      "name": "2.5hr Endurance Ride",
+      "id": "25hr_endurance_ride_3",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 12,
+      "source_day": "Sunday",
+      "base_duration_min": 150,
+      "base_tss": 107.3,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Tuesday",
+      "description": "Light pre-race activities",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spinning"
+        },
+        {
+          "type": "steady",
+          "duration_min": 45,
+          "power_low_pct": 56,
+          "power_high_pct": 75,
+          "description": "Maintain light race pace"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 48.0,
+      "name": "75min Base Ride",
+      "id": "75min_base_ride_3",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 12,
+      "source_day": "Tuesday",
+      "base_duration_min": 75,
+      "base_tss": 48.0,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Wednesday",
+      "description": "Rest day prep",
+      "segments": [
+        {
+          "type": "steady",
+          "duration_min": 60,
+          "power_low_pct": 50,
+          "power_high_pct": 55,
+          "description": "Very light spinning to stay loose"
+        }
+      ],
+      "tss": 27.6,
+      "name": "60min Mixed Workout",
+      "id": "60min_mixed_workout_5",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 12,
+      "source_day": "Wednesday",
+      "base_duration_min": 60,
+      "base_tss": 27.6,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Tuesday",
+      "description": "Sweet spot intervals for base building",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 20,
+          "power_low_pct": 88,
+          "power_high_pct": 92,
+          "description": "Sweet spot effort"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Recovery spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 20,
+          "power_low_pct": 88,
+          "power_high_pct": 92,
+          "description": "Sweet spot effort"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 67.3,
+      "name": "40min Sweet Spot",
+      "id": "40min_sweet_spot_2",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 1,
+      "source_day": "Tuesday",
+      "base_duration_min": 65,
+      "base_tss": 67.3,
+      "type": "sweet_spot",
+      "intensity": "moderate"
+    },
+    {
+      "weekday": "Wednesday",
+      "description": "Recovery ride - easy spin",
+      "segments": [
+        {
+          "type": "steady",
+          "duration_min": 40,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Recovery spin"
+        }
+      ],
+      "tss": 20.2,
+      "name": "40min Base Ride",
+      "id": "40min_base_ride",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 1,
+      "source_day": "Wednesday",
+      "base_duration_min": 40,
+      "base_tss": 20.2,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Thursday",
+      "description": "Cadence drills and endurance ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "interval",
+          "duration_min": 5,
+          "power_low_pct": 90,
+          "power_high_pct": 100,
+          "description": "High cadence drill"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "description": "Easy spin",
+          "power_high_pct": 50
+        },
+        {
+          "type": "steady",
+          "duration_min": 35,
+          "power_low_pct": 65,
+          "power_high_pct": 75,
+          "description": "Aerobic endurance"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 48.7,
+      "name": "65min Base Ride",
+      "id": "65min_base_ride_3",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 1,
+      "source_day": "Thursday",
+      "base_duration_min": 65,
+      "base_tss": 48.7,
+      "type": "threshold",
+      "intensity": "hard"
+    },
+    {
+      "weekday": "Saturday",
+      "description": "Endurance ride with tempo bursts",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 30,
+          "power_low_pct": 65,
+          "power_high_pct": 75,
+          "description": "Aerobic endurance"
+        },
+        {
+          "type": "interval",
+          "duration_min": 6,
+          "power_low_pct": 85,
+          "power_high_pct": 95,
+          "description": "Tempo burst"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 4,
+          "power_low_pct": 50,
+          "description": "Easy spin",
+          "power_high_pct": 50
+        },
+        {
+          "type": "steady",
+          "duration_min": 30,
+          "power_low_pct": 65,
+          "power_high_pct": 75,
+          "description": "Aerobic endurance"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 72.1,
+      "name": "1.6hr Endurance Ride",
+      "id": "16hr_endurance_ride",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 1,
+      "source_day": "Saturday",
+      "base_duration_min": 95,
+      "base_tss": 72.1,
+      "type": "threshold",
+      "intensity": "moderate"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Long endurance ride for base building",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 90,
+          "power_low_pct": 65,
+          "power_high_pct": 75,
+          "description": "Aerobic base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 89.3,
+      "name": "2.0hr Endurance Ride",
+      "id": "20hr_endurance_ride_3",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 1,
+      "source_day": "Sunday",
+      "base_duration_min": 120,
+      "base_tss": 89.3,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Tuesday",
+      "description": "Threshold intervals for sustained power",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "interval",
+          "duration_min": 6,
+          "power_low_pct": 95,
+          "power_high_pct": 100,
+          "description": "Threshold effort"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 4,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "interval",
+          "duration_min": 6,
+          "power_low_pct": 95,
+          "power_high_pct": 100,
+          "description": "Threshold effort"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 4,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "interval",
+          "duration_min": 6,
+          "power_low_pct": 95,
+          "power_high_pct": 100,
+          "description": "Threshold effort"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 43.5,
+      "name": "3x6min Threshold Intervals",
+      "id": "3x6min_threshold_intervals",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 2,
+      "source_day": "Tuesday",
+      "base_duration_min": 46,
+      "base_tss": 43.5,
+      "type": "threshold",
+      "intensity": "hard"
+    },
+    {
+      "weekday": "Wednesday",
+      "description": "Active recovery spin",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy spin"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 40,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Active recovery"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 5,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 25.2,
+      "name": "50min Base Ride",
+      "id": "50min_base_ride_3",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 2,
+      "source_day": "Wednesday",
+      "base_duration_min": 50,
+      "base_tss": 25.2,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Thursday",
+      "description": "Sweet spot over-unders",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 12,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "interval",
+          "duration_min": 8,
+          "power_low_pct": 85,
+          "power_high_pct": 90,
+          "description": "Sweet spot"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 4,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "interval",
+          "duration_min": 8,
+          "power_low_pct": 85,
+          "power_high_pct": 90,
+          "description": "Sweet spot"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 34.3,
+      "name": "2x8min Sweet Spot",
+      "id": "2x8min_sweet_spot",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 2,
+      "source_day": "Thursday",
+      "base_duration_min": 42,
+      "base_tss": 34.3,
+      "type": "sweet_spot",
+      "intensity": "moderate"
+    },
+    {
+      "weekday": "Saturday",
+      "description": "Endurance ride with tempo finish",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 80,
+          "power_low_pct": 60,
+          "power_high_pct": 70,
+          "description": "Aerobic base"
+        },
+        {
+          "type": "tempo",
+          "duration_min": 20,
+          "power_low_pct": 76,
+          "power_high_pct": 85,
+          "description": "Tempo pace"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 91.2,
+      "name": "20min Tempo",
+      "id": "20min_tempo",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 2,
+      "source_day": "Saturday",
+      "base_duration_min": 125,
+      "base_tss": 91.2,
+      "type": "tempo",
+      "intensity": "moderate"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Long endurance ride for aerobic base",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 120,
+          "power_low_pct": 60,
+          "power_high_pct": 70,
+          "description": "Aerobic base"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 97.8,
+      "name": "2.4hr Endurance Ride",
+      "id": "24hr_endurance_ride_3",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 2,
+      "source_day": "Sunday",
+      "base_duration_min": 145,
+      "base_tss": 97.8,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Tuesday",
+      "description": "Threshold Interval Development",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 65,
+          "description": "Easy spin"
+        },
+        {
+          "type": "interval",
+          "duration_min": 6,
+          "power_low_pct": 95,
+          "power_high_pct": 105,
+          "description": "Threshold effort"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 4,
+          "power_low_pct": 50,
+          "description": "Recovery spin",
+          "power_high_pct": 50
+        },
+        {
+          "type": "interval",
+          "duration_min": 6,
+          "power_low_pct": 95,
+          "power_high_pct": 105,
+          "description": "Threshold effort"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 4,
+          "power_low_pct": 50,
+          "description": "Recovery spin",
+          "power_high_pct": 50
+        },
+        {
+          "type": "interval",
+          "duration_min": 6,
+          "power_low_pct": 95,
+          "power_high_pct": 105,
+          "description": "Threshold effort"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "description": "Cool down",
+          "power_high_pct": 50
+        }
+      ],
+      "tss": 45.8,
+      "name": "3x6min VO2 Max Intervals",
+      "id": "3x6min_vo2_max_intervals",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 3,
+      "source_day": "Tuesday",
+      "base_duration_min": 51,
+      "base_tss": 45.8,
+      "type": "vo2max",
+      "intensity": "hard"
+    },
+    {
+      "weekday": "Wednesday",
+      "description": "Recovery Ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 30,
+          "power_low_pct": 56,
+          "power_high_pct": 65,
+          "description": "Recovery pace"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "description": "Cool down",
+          "power_high_pct": 50
+        }
+      ],
+      "tss": 27.5,
+      "name": "50min Base Ride",
+      "id": "50min_base_ride_4",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 3,
+      "source_day": "Wednesday",
+      "base_duration_min": 50,
+      "base_tss": 27.5,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Thursday",
+      "description": "VO2 Max Short Intervals",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "description": "Easy spin",
+          "power_high_pct": 50
+        },
+        {
+          "type": "interval",
+          "duration_min": 2,
+          "power_low_pct": 115,
+          "power_high_pct": 125,
+          "description": "Hard effort"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 3,
+          "power_low_pct": 50,
+          "description": "Recovery spin",
+          "power_high_pct": 50
+        },
+        {
+          "type": "interval",
+          "duration_min": 2,
+          "power_low_pct": 115,
+          "power_high_pct": 125,
+          "description": "Hard effort"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 3,
+          "power_low_pct": 50,
+          "description": "Recovery spin",
+          "power_high_pct": 50
+        },
+        {
+          "type": "interval",
+          "duration_min": 2,
+          "power_low_pct": 115,
+          "power_high_pct": 125,
+          "description": "Hard effort"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 3,
+          "power_low_pct": 50,
+          "description": "Recovery spin",
+          "power_high_pct": 50
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "description": "Cool down",
+          "power_high_pct": 50
+        }
+      ],
+      "tss": 28.6,
+      "name": "3x2min VO2 Max Intervals",
+      "id": "3x2min_vo2_max_intervals",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 3,
+      "source_day": "Thursday",
+      "base_duration_min": 40,
+      "base_tss": 28.6,
+      "type": "vo2max",
+      "intensity": "hard"
+    },
+    {
+      "weekday": "Saturday",
+      "description": "Endurance Ride with Tempo Finish",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "description": "Easy spin",
+          "power_high_pct": 50
+        },
+        {
+          "type": "steady",
+          "duration_min": 90,
+          "power_low_pct": 65,
+          "power_high_pct": 75,
+          "description": "Aerobic base"
+        },
+        {
+          "type": "tempo",
+          "duration_min": 15,
+          "power_low_pct": 80,
+          "power_high_pct": 85,
+          "description": "Tempo effort"
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "description": "Cool down",
+          "power_high_pct": 50
+        }
+      ],
+      "tss": 100.9,
+      "name": "15min Tempo",
+      "id": "15min_tempo",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 3,
+      "source_day": "Saturday",
+      "base_duration_min": 130,
+      "base_tss": 100.9,
+      "type": "tempo",
+      "intensity": "moderate"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Long Aerobic Ride",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "description": "Easy spin",
+          "power_high_pct": 50
+        },
+        {
+          "type": "steady",
+          "duration_min": 120,
+          "power_low_pct": 65,
+          "description": "Aerobic base",
+          "power_high_pct": 65
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "description": "Cool down",
+          "power_high_pct": 50
+        }
+      ],
+      "tss": 94.9,
+      "name": "2.4hr Endurance Ride",
+      "id": "24hr_endurance_ride_4",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 3,
+      "source_day": "Sunday",
+      "base_duration_min": 145,
+      "base_tss": 94.9,
+      "type": "endurance",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Tuesday",
+      "description": "Progressive tempo with endurance finish",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy spin"
+        },
+        {
+          "type": "tempo",
+          "duration_min": 25,
+          "power_low_pct": 75,
+          "power_high_pct": 80,
+          "description": "Sustained tempo effort"
+        },
+        {
+          "type": "steady",
+          "duration_min": 10,
+          "power_low_pct": 65,
+          "description": "Endurance pace",
+          "power_high_pct": 65
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 55,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 41.7,
+      "name": "25min Tempo",
+      "id": "25min_tempo",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 4,
+      "source_day": "Tuesday",
+      "base_duration_min": 55,
+      "base_tss": 41.7,
+      "type": "tempo",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Wednesday",
+      "description": "VO2 max intervals",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy spin"
+        },
+        {
+          "type": "interval",
+          "duration_min": 3,
+          "power_low_pct": 110,
+          "power_high_pct": 115,
+          "description": "Hard effort"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 3,
+          "power_low_pct": 50,
+          "description": "Recovery spin",
+          "power_high_pct": 50
+        },
+        {
+          "type": "interval",
+          "duration_min": 3,
+          "power_low_pct": 110,
+          "power_high_pct": 115,
+          "description": "Hard effort"
+        },
+        {
+          "type": "recovery",
+          "duration_min": 3,
+          "power_low_pct": 50,
+          "description": "Recovery spin",
+          "power_high_pct": 50
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 55,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 27.3,
+      "name": "2x3min VO2 Max Intervals",
+      "id": "2x3min_vo2_max_intervals_3",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 4,
+      "source_day": "Wednesday",
+      "base_duration_min": 37,
+      "base_tss": 27.3,
+      "type": "vo2max",
+      "intensity": "hard"
+    },
+    {
+      "weekday": "Friday",
+      "description": "Endurance ride with cadence drills",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 35,
+          "power_low_pct": 65,
+          "power_high_pct": 70,
+          "description": "Endurance effort"
+        },
+        {
+          "type": "interval",
+          "duration_min": 1,
+          "power_low_pct": 90,
+          "description": "Cadence drill",
+          "power_high_pct": 90
+        },
+        {
+          "type": "recovery",
+          "duration_min": 4,
+          "power_low_pct": 50,
+          "description": "Recovery spin",
+          "power_high_pct": 50
+        },
+        {
+          "type": "interval",
+          "duration_min": 1,
+          "power_low_pct": 90,
+          "description": "Cadence drill",
+          "power_high_pct": 90
+        },
+        {
+          "type": "recovery",
+          "duration_min": 4,
+          "power_low_pct": 50,
+          "description": "Recovery spin",
+          "power_high_pct": 50
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 55,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 42.2,
+      "name": "2x1min Sweet Spot",
+      "id": "2x1min_sweet_spot",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 4,
+      "source_day": "Friday",
+      "base_duration_min": 65,
+      "base_tss": 42.2,
+      "type": "sweet_spot",
+      "intensity": "moderate"
+    },
+    {
+      "weekday": "Saturday",
+      "description": "Endurance ride with short tempo",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 15,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 50,
+          "power_low_pct": 65,
+          "power_high_pct": 70,
+          "description": "Endurance effort"
+        },
+        {
+          "type": "tempo",
+          "duration_min": 20,
+          "power_low_pct": 75,
+          "power_high_pct": 80,
+          "description": "Moderate tempo"
+        },
+        {
+          "type": "steady",
+          "duration_min": 20,
+          "power_low_pct": 65,
+          "description": "Return to endurance",
+          "power_high_pct": 65
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "description": "Cool down",
+          "power_high_pct": 50
+        }
+      ],
+      "tss": 83.8,
+      "name": "20min Tempo",
+      "id": "20min_tempo_2",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 4,
+      "source_day": "Saturday",
+      "base_duration_min": 115,
+      "base_tss": 83.8,
+      "type": "tempo",
+      "intensity": "easy"
+    },
+    {
+      "weekday": "Sunday",
+      "description": "Recovery ride with short bursts",
+      "segments": [
+        {
+          "type": "warmup",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 60,
+          "description": "Easy spin"
+        },
+        {
+          "type": "steady",
+          "duration_min": 35,
+          "power_low_pct": 60,
+          "power_high_pct": 65,
+          "description": "Recovery pace"
+        },
+        {
+          "type": "interval",
+          "duration_min": 1,
+          "power_low_pct": 120,
+          "description": "Short burst",
+          "power_high_pct": 120
+        },
+        {
+          "type": "recovery",
+          "duration_min": 4,
+          "power_low_pct": 50,
+          "description": "Recovery spin",
+          "power_high_pct": 50
+        },
+        {
+          "type": "cooldown",
+          "duration_min": 10,
+          "power_low_pct": 50,
+          "power_high_pct": 55,
+          "description": "Cool down"
+        }
+      ],
+      "tss": 36.5,
+      "name": "60min Base Ride",
+      "id": "60min_base_ride_5",
+      "source_file": "report_data.json",
+      "extracted_from_report": true,
+      "source_week": 4,
+      "source_day": "Sunday",
+      "base_duration_min": 60,
+      "base_tss": 36.5,
+      "type": "vo2max",
+      "intensity": "hard"
+    }
+  ]
+}

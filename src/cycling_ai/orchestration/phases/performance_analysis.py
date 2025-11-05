@@ -378,6 +378,10 @@ Use concrete numbers and percentages in all descriptions. Be encouraging but hon
             # Try to parse LLM's JSON response
             parsed = json.loads(response.strip())
             logger.debug("[PHASE 2] Successfully parsed JSON from LLM response")
+
+            # Fix cross-training schema if present
+            parsed = self._fix_cross_training_schema(parsed)
+
             # Return with both keys for backward compatibility
             return {
                 "performance_analysis_json": parsed,
@@ -395,6 +399,87 @@ Use concrete numbers and percentages in all descriptions. Be encouraging but hon
                 result["performance_data"] = result["performance_analysis_json"]
                 result["zones_data"] = result["performance_analysis_json"].get("time_in_zones", [])
             return result
+
+    def _fix_cross_training_schema(self, data: dict[str, Any]) -> dict[str, Any]:
+        """
+        Fix cross-training data structure to match PerformanceAnalysis model.
+
+        The core cross_training.py module returns a nested structure with
+        data under "averages", but the Pydantic model expects a flat structure.
+        This method transforms the data to match the expected schema.
+
+        Args:
+            data: Performance analysis data (may contain cross_training field)
+
+        Returns:
+            Data with corrected cross-training schema
+        """
+        if "cross_training" not in data or data["cross_training"] is None:
+            return data
+
+        ct = data["cross_training"]
+
+        # Fix load_balance if present and has nested "averages"
+        if "load_balance" in ct and ct["load_balance"] is not None:
+            lb = ct["load_balance"]
+
+            # If load_balance has "averages" nested structure, flatten it
+            if "averages" in lb and isinstance(lb["averages"], dict):
+                averages = lb["averages"]
+
+                # Create new flattened structure
+                ct["load_balance"] = {
+                    "cycling_percent": float(averages.get("cycling_percent", 0)),
+                    "strength_percent": float(averages.get("strength_percent", 0)),
+                    "cardio_percent": float(averages.get("cardio_percent", 0)),
+                    "assessment": lb.get("recommendation"),  # Map "recommendation" to "assessment"
+                    "is_optimal": lb.get("is_optimal", False),
+                    "recommendation": lb.get("recommendation"),
+                }
+
+                logger.debug("[PHASE 2] Fixed load_balance schema (flattened averages)")
+
+        # Fix interference_events - ensure it's always a list
+        if "interference_events" not in ct:
+            # Check if data is in interference_analysis structure (from tool output)
+            if "interference_analysis" in ct:
+                ia = ct["interference_analysis"]
+
+                # Combine all interference events from different severity levels
+                events = []
+
+                # Add high interference events
+                if "high_interference" in ia and isinstance(ia["high_interference"], list):
+                    events.extend(ia["high_interference"])
+
+                # Add medium interference if it's actual events (not just count)
+                if "medium_interference" in ia and isinstance(ia["medium_interference"], list):
+                    for item in ia["medium_interference"]:
+                        if isinstance(item, dict) and "date" in item:
+                            events.append(item)
+
+                # Add low interference if it's actual events (not just count)
+                if "low_interference" in ia and isinstance(ia["low_interference"], list):
+                    for item in ia["low_interference"]:
+                        if isinstance(item, dict) and "date" in item:
+                            events.append(item)
+
+                ct["interference_events"] = events
+                logger.debug(f"[PHASE 2] Fixed interference_events schema (extracted {len(events)} events)")
+            else:
+                # Default to empty list
+                ct["interference_events"] = []
+                logger.debug("[PHASE 2] Set interference_events to empty list")
+
+        # Ensure interference_events is a list (not dict, string, etc.)
+        if not isinstance(ct.get("interference_events"), list):
+            logger.warning(
+                f"[PHASE 2] interference_events is {type(ct['interference_events'])}, converting to empty list"
+            )
+            ct["interference_events"] = []
+
+        data["cross_training"] = ct
+        return data
 
     def _should_analyze_cross_training(
         self,

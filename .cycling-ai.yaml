@@ -1,5 +1,5 @@
 # Cycling AI Configuration
-version: "1.2"
+version: "1.3"
 
 # Default provider to use
 default_provider: "anthropic"

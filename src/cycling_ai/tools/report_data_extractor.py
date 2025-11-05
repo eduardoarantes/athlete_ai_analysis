@@ -367,7 +367,8 @@ def consolidate_athlete_data(
 
 def create_report_data(
     athletes: List[Dict[str, Any]],
-    generator_info: Dict[str, str]
+    generator_info: Dict[str, str],
+    session_id: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Create final report_data.json structure.
@@ -375,6 +376,7 @@ def create_report_data(
     Args:
         athletes: List of athlete objects
         generator_info: Info about the tool that generated this
+        session_id: Optional session ID for traceability
 
     Returns:
         Complete report data structure
@@ -400,6 +402,10 @@ def create_report_data(
         'generator': generator_info,
         'athletes': athletes
     }
+
+    # Add session_id if provided
+    if session_id:
+        report_data['session_id'] = session_id
 
     logger.info("[CREATE_REPORT] report_data structure created successfully")
     return report_data

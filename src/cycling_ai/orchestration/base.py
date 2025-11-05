@@ -103,6 +103,7 @@ class WorkflowConfig:
         training_plan_weeks: Number of weeks for training plan
         fit_only_mode: If True, build activities DataFrame from FIT files
         analyze_cross_training: Whether to analyze cross-training impact
+        workout_source: Source for training plan workouts ("library" or "llm")
         provider: LLM provider instance
         max_iterations_per_phase: Maximum tool execution loops per phase
         prompts_dir: Optional directory with custom prompt files
@@ -127,6 +128,9 @@ class WorkflowConfig:
 
     # Cross-training analysis
     analyze_cross_training: bool | None = None
+
+    # Training plan workout source
+    workout_source: str = "library"  # "library" (fast, deterministic) or "llm" (flexible)
 
     # Provider configuration
     provider: Any = None  # BaseProvider, but avoid circular import

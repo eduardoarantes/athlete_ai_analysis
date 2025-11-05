@@ -1336,9 +1336,49 @@
             renderCalendar(trainingPlanData);
         }
 
+        // Helper function to expand segments with nested work/recovery into flat array
+        function expandSegmentsForVisualization(segments) {
+            if (!segments || segments.length === 0) return [];
+
+            const expanded = [];
+
+            segments.forEach(segment => {
+                // Check if this segment has nested work/recovery structure with sets
+                if (segment.sets != null && segment.work && segment.recovery) {
+                    // Expand into individual work/recovery segments
+                    for (let i = 0; i < segment.sets; i++) {
+                        // Add work segment
+                        expanded.push({
+                            type: segment.work.type || 'work',
+                            duration_min: segment.work.duration_min,
+                            power_low_pct: segment.work.power_low_pct,
+                            power_high_pct: segment.work.power_high_pct,
+                            description: segment.work.description
+                        });
+                        // Add recovery segment
+                        expanded.push({
+                            type: segment.recovery.type || 'recovery',
+                            duration_min: segment.recovery.duration_min,
+                            power_low_pct: segment.recovery.power_low_pct,
+                            power_high_pct: segment.recovery.power_high_pct,
+                            description: segment.recovery.description
+                        });
+                    }
+                } else {
+                    // Regular segment, add as-is
+                    expanded.push(segment);
+                }
+            });
+
+            return expanded;
+        }
+
         // Generate mini SVG for calendar cells
         function generateMiniWorkoutSVG(segments, ftp) {
             if (!segments || segments.length === 0) return '';
+
+            // Expand segments with nested work/recovery structures
+            const expandedSegments = expandSegmentsForVisualization(segments);
 
             const width = 100;
             const height = 40;
@@ -1350,6 +1390,7 @@
                     'cooldown': '#94A3B8',    // Gray
                     'recovery': '#10B981',    // Green
                     'interval': '#EF4444',    // Red
+                    'work': '#EF4444',        // Red (same as interval)
                     'steady': '#10B981',      // Green
                     'tempo': '#F59E0B',       // Orange
                     'threshold': '#EF4444',   // Red
@@ -1366,14 +1407,14 @@
             };
 
             // Calculate total duration for proportional widths
-            const totalDuration = segments.reduce((sum, seg) => sum + seg.duration_min, 0);
+            const totalDuration = expandedSegments.reduce((sum, seg) => sum + seg.duration_min, 0);
 
             // Generate SVG
             let svg = `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">`;
 
             // Add segments as rectangles
             let xOffset = 0;
-            segments.forEach(segment => {
+            expandedSegments.forEach(segment => {
                 const segmentWidth = (segment.duration_min / totalDuration) * width;
                 const barHeight = getBarHeight(segment.power_low_pct, segment.power_high_pct);
                 const y = height - barHeight;
@@ -1402,13 +1443,16 @@
         function generateWorkoutSVG(segments, ftp) {
             if (!segments || segments.length === 0) return '';
 
+            // Expand segments with nested work/recovery structures
+            const expandedSegments = expandSegmentsForVisualization(segments);
+
             // Calculate total duration
-            const totalDuration = segments.reduce((sum, seg) => sum + seg.duration_min, 0);
+            const totalDuration = expandedSegments.reduce((sum, seg) => sum + seg.duration_min, 0);
             const width = Math.max(600, totalDuration * 10); // 10px per minute, minimum 600px
-            const chartHeight = 200; // Increased height for labels
+            const chartHeight = 170; // Height for chart
             const graphHeight = 140; // Height for the graph area
             const topMargin = 20;
-            const bottomMargin = 40; // Space for duration labels
+            const bottomMargin = 10; // Minimal bottom margin
 
             // Power zone colors (matching existing color scheme)
             const getSegmentColor = (type) => {
@@ -1417,6 +1461,7 @@
                     'cooldown': '#94A3B8',    // Gray
                     'recovery': '#10B981',    // Green
                     'interval': '#EF4444',    // Red
+                    'work': '#EF4444',        // Red (same as interval)
                     'steady': '#10B981',      // Green
                     'tempo': '#F59E0B',       // Orange
                     'threshold': '#EF4444',   // Red
@@ -1452,7 +1497,7 @@
 
             // Add segments as rectangles with labels
             let xOffset = 0;
-            segments.forEach((segment, index) => {
+            expandedSegments.forEach((segment, index) => {
                 const segmentWidth = (segment.duration_min / totalDuration) * width;
                 const avgPowerPct = (segment.power_low_pct + segment.power_high_pct) / 2;
                 const barHeight = getBarHeight(segment.power_low_pct, segment.power_high_pct);
@@ -1470,19 +1515,24 @@
                     svg += `<text x="${textX}" y="${textY}" font-size="14" font-weight="bold" fill="#fff" text-anchor="middle">${zone}</text>\n`;
                 }
 
-                // Add duration label below the box
-                const durationX = xOffset + segmentWidth / 2;
-                const durationY = topMargin + graphHeight + 20;
-                const durationText = segment.duration_min >= 60
-                    ? `${Math.floor(segment.duration_min / 60)}h${segment.duration_min % 60 > 0 ? (segment.duration_min % 60) + 'm' : ''}`
-                    : `${segment.duration_min}m`;
-                svg += `<text x="${durationX}" y="${durationY}" font-size="11" fill="#5a6c7d" text-anchor="middle">${durationText}</text>\n`;
-
                 xOffset += segmentWidth;
             });
 
             svg += '</svg>';
             return svg;
+        }
+
+        // Helper function to format duration for display
+        function formatDuration(durationMin) {
+            if (durationMin >= 60) {
+                const hours = Math.floor(durationMin / 60);
+                const mins = durationMin % 60;
+                return `${hours}h${mins > 0 ? mins + 'm' : ''}`;
+            } else if (durationMin < 1) {
+                return `${Math.round(durationMin * 60)}s`;
+            } else {
+                return `${durationMin} min`;
+            }
         }
 
         // Detect and group repeated segment patterns (e.g., interval sets)
@@ -1494,6 +1544,36 @@
 
             while (i < segments.length) {
                 const segment = segments[i];
+
+                // First, check if this segment has nested work/recovery structure with sets
+                if (segment.sets != null && segment.work && segment.recovery) {
+                    // Create a repeat structure from the nested work/recovery objects
+                    const workSegment = {
+                        type: segment.work.type || 'work',
+                        duration_min: segment.work.duration_min,
+                        power_low_pct: segment.work.power_low_pct,
+                        power_high_pct: segment.work.power_high_pct,
+                        description: segment.work.description
+                    };
+
+                    const recoverySegment = {
+                        type: segment.recovery.type || 'recovery',
+                        duration_min: segment.recovery.duration_min,
+                        power_low_pct: segment.recovery.power_low_pct,
+                        power_high_pct: segment.recovery.power_high_pct,
+                        description: segment.recovery.description
+                    };
+
+                    // Always create a group structure to show work/recovery are connected
+                    // But only show repeat badge if sets > 1
+                    grouped.push({
+                        type: 'repeat',
+                        repeat_count: segment.sets,
+                        segments: [workSegment, recoverySegment]
+                    });
+                    i++;
+                    continue;
+                }
 
                 // Check if this is part of a repeating pattern
                 if (segment.type === 'interval' || segment.type === 'work') {
@@ -1718,14 +1798,16 @@
                         const repeatDiv = document.createElement('div');
                         repeatDiv.className = 'repeat-set';
 
-                        // Repeat header
-                        const headerDiv = document.createElement('div');
-                        headerDiv.className = 'repeat-header';
-                        headerDiv.innerHTML = `
-                            <span class="repeat-badge">${item.repeat_count}x</span>
-                            <span class="repeat-label">Repeat the following set ${item.repeat_count} times:</span>
-                        `;
-                        repeatDiv.appendChild(headerDiv);
+                        // Repeat header (only show if repeat_count > 1)
+                        if (item.repeat_count > 1) {
+                            const headerDiv = document.createElement('div');
+                            headerDiv.className = 'repeat-header';
+                            headerDiv.innerHTML = `
+                                <span class="repeat-badge">${item.repeat_count}x</span>
+                                <span class="repeat-label">Repeat the following set ${item.repeat_count} times:</span>
+                            `;
+                            repeatDiv.appendChild(headerDiv);
+                        }
 
                         // Repeat segments container
                         const repeatSegmentsDiv = document.createElement('div');
@@ -1748,7 +1830,7 @@
                                 : `${powerLowWatts}-${powerHighWatts}W (${segment.power_low_pct}-${segment.power_high_pct}%)`;
 
                             segmentDiv.innerHTML = `
-                                <div class="segment-duration">${segment.duration_min} min</div>
+                                <div class="segment-duration">${formatDuration(segment.duration_min)}</div>
                                 <div class="segment-power">${powerRange}</div>
                                 <div class="segment-desc">${segment.description}</div>
                             `;
@@ -1776,7 +1858,7 @@
                             : `${powerLowWatts}-${powerHighWatts}W (${item.power_low_pct}-${item.power_high_pct}%)`;
 
                         segmentDiv.innerHTML = `
-                            <div class="segment-duration">${item.duration_min} min</div>
+                            <div class="segment-duration">${formatDuration(item.duration_min)}</div>
                             <div class="segment-power">${powerRange}</div>
                             <div class="segment-desc">${item.description}</div>
                         `;

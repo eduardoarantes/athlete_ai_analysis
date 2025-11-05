@@ -723,56 +723,17 @@ mypy src/cycling_ai --strict
 ruff check src/cycling_ai
 ```
 
-### File Locations
 
-- **Source code:** `src/cycling_ai/`
-- **Tests:** `tests/`
-- **Documentation:** `docs/`, `plans/`
-- **User data:** `~/.cycling-ai/`
-- **Logs:** `~/.cycling-ai/logs/cycling-ai.log`
-- **Sessions:** `~/.cycling-ai/workflow_sessions/`
+## check last session's log
 
-### Key Files to Know
+python3 scripts/analyze_llm_logs.py  "$(ls -t logs/llm_interactions | head -n 1 | xargs -I {} realpath logs/llm_interactions/{})" --interaction {interaction_id}
 
-- `src/cycling_ai/orchestration/multi_agent.py` - Multi-agent orchestrator
-- `src/cycling_ai/orchestration/agent.py` - LLM agent with tool calling
-- `src/cycling_ai/orchestration/prompts.py` - Specialized agent prompts
-- `src/cycling_ai/tools/registry.py` - Tool auto-discovery
-- `src/cycling_ai/providers/base.py` - Provider interface
-- `src/cycling_ai/cli/commands/generate.py` - Generate command
 
----
+application log location: app/app.log
+logs are correlated to the sessions 
+example
+[{session_id}] - 2025-11-05 14:30:52 - cycling_ai.agent - INFO - Processing user message
 
-## Documentation Index
-
-### User Documentation
-- **[User Guide: Generate Command](docs/USER_GUIDE_GENERATE.md)** - Complete guide for report generation
-- **[Deployment Checklist](docs/DEPLOYMENT_CHECKLIST.md)** - Production deployment guide
-- **[Troubleshooting Guide](docs/TROUBLESHOOTING.md)** - Common issues and solutions
-
-### Technical Documentation
-- **[Multi-Agent Architecture](plans/MULTI_AGENT_ORCHESTRATOR_ARCHITECTURE.md)** - Full architecture specification
-- **[Phase 4 Completion](plans/PHASE4_COMPLETION.md)** - Production readiness validation
-- **[Performance Benchmarks](.claude/current_task/PLAN/phase4c_performance_report.md)** - Testing results with different models
-
-### Development Guides
-- **[Phase 3 Implementation](plans/PHASE3_IMPLEMENTATION_COMPLETE.md)** - CLI & tools development
-- **[Phase 2 Architecture](plans/PHASE2_ARCHITECTURE.md)** - Provider adapters design
-- **[Phase 1 Completion](plans/PHASE1_COMPLETION.md)** - Core foundation
-
----
-
-## Project Status
-
-✅ **Phase 1:** Core Foundation (COMPLETE)
-✅ **Phase 2:** Provider Adapters (COMPLETE)
-✅ **Phase 3:** Tool Wrappers & CLI (COMPLETE)
-✅ **Phase 4:** Production Readiness (COMPLETE)
-🔮 **Phase 5:** Advanced Features (Future)
-
-**Current Status:** Production Ready - 253/253 tests passing
-
----
 
 ## Final Notes for Claude Code
 
@@ -788,9 +749,3 @@ When working on this project:
 8. **Optimize for tokens** - Session isolation and efficient prompts reduce costs
 
 **Most Important:** This is a production system with real users. Code quality, test coverage, and clear documentation are non-negotiable.
-
----
-
-**Last Updated:** 2025-10-31
-**Maintainer:** Eduardo
-**License:** TBD

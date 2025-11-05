@@ -125,12 +125,18 @@ class BasePhase(ABC):
 
         except Exception as e:
             # Handle any errors
+            import traceback
+
             execution_time = (datetime.now() - phase_start).total_seconds()
             error_msg = f"{type(e).__name__}: {str(e)}"
 
+            # Get full traceback for debugging
+            tb_lines = traceback.format_exception(type(e), e, e.__traceback__)
+            full_traceback = "".join(tb_lines)
+
             logger.error(
                 f"Phase {self.phase_name} failed after {execution_time:.2f}s: "
-                f"{error_msg}"
+                f"{error_msg}\n{full_traceback}"
             )
 
             result = PhaseResult(

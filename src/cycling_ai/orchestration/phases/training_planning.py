@@ -127,9 +127,17 @@ class TrainingPlanningPhase(BasePhase):
                 progress_callback=context.progress_callback,
             )
 
-            # Phase 3b: Add weekly details
-            logger.info("[PHASE 3b] Starting weekly details generation")
-            weeks_result = self._execute_phase_3b_weeks(context_3b)
+            # Phase 3b: Add weekly details (library-based or LLM-based)
+            workout_source = context.config.workout_source
+            logger.info(
+                f"[PHASE 3b] Starting weekly details generation "
+                f"(source={workout_source})"
+            )
+
+            if workout_source == "library":
+                weeks_result = self._execute_phase_3b_library(context_3b)
+            else:
+                weeks_result = self._execute_phase_3b_weeks(context_3b)
 
             if not weeks_result.success:
                 weeks_result.execution_time_seconds = (
@@ -270,6 +278,10 @@ class TrainingPlanningPhase(BasePhase):
         available_days_str = ", ".join(available_days)
         daily_time_caps_json = json.dumps(daily_time_caps) if daily_time_caps else "None"
 
+        # Extract optional athlete profile fields
+        goals = getattr(athlete_profile, "goals", None) or "Not specified"
+        current_training_status = getattr(athlete_profile, "current_training_status", None) or "Not specified"
+
         # Prepare prompt parameters
         prompt_params = {
             "training_plan_weeks": str(context.config.training_plan_weeks),
@@ -283,6 +295,8 @@ class TrainingPlanningPhase(BasePhase):
             "num_rest_days": str(7 - len(available_days)),
             "total_tool_calls": str(1 + context.config.training_plan_weeks + 1),
             "training_plan_weeks_plus_1": str(context.config.training_plan_weeks + 1),
+            "goals": goals,
+            "current_training_status": current_training_status,
         }
 
         # Generate performance summary from Phase 2 data
@@ -475,7 +489,9 @@ class TrainingPlanningPhase(BasePhase):
                     )
 
             except Exception as e:
-                logger.error(f"[PHASE 3b] Week {week_num} exception: {e}")
+                import traceback
+                tb_str = "".join(traceback.format_exception(type(e), e, e.__traceback__))
+                logger.error(f"[PHASE 3b] Week {week_num} exception: {e}\n{tb_str}")
                 return PhaseResult(
                     phase_name="training_planning_weeks",
                     status=PhaseStatus.FAILED,
@@ -496,6 +512,85 @@ class TrainingPlanningPhase(BasePhase):
             execution_time_seconds=execution_time,
             tokens_used=total_tokens,
         )
+
+    def _execute_phase_3b_library(self, context: PhaseContext) -> PhaseResult:
+        """
+        Execute Phase 3b using library-based workout selection (no LLM).
+
+        This is a fast, deterministic alternative to LLM-based workout generation.
+        Selects workouts from curated library based on weekly overview from Phase 3a.
+
+        Args:
+            context: Phase context with plan_id from Phase 3a
+
+        Returns:
+            PhaseResult with all weeks added
+
+        Raises:
+            RuntimeError: If library selection or week addition fails
+        """
+        from cycling_ai.orchestration.phases.training_planning_library import (
+            LibraryBasedTrainingPlanningWeeks,
+        )
+
+        phase_start = datetime.now()
+
+        # Extract plan_id from Phase 3a
+        plan_id = context.previous_phase_data.get("plan_id")
+        if not plan_id:
+            raise ValueError(
+                "[PHASE 3b-LIBRARY] Cannot proceed: No plan_id found in Phase 3a results. "
+                "Phase 3a must complete successfully first."
+            )
+
+        logger.info(
+            f"[PHASE 3b-LIBRARY] Using library-based workout selection "
+            f"for plan {plan_id}"
+        )
+
+        try:
+            # Initialize library-based phase with temperature for variety
+            temperature = 0.5  # Balanced randomness
+            library_phase = LibraryBasedTrainingPlanningWeeks(temperature=temperature)
+
+            # Execute library selection (fast, no LLM calls)
+            result = library_phase.execute(plan_id=plan_id)
+
+            execution_time = (datetime.now() - phase_start).total_seconds()
+            weeks_added = result.get("weeks_added", 0)
+
+            logger.info(
+                f"[PHASE 3b-LIBRARY] Completed in {execution_time:.2f}s "
+                f"({weeks_added} weeks, 0 tokens)"
+            )
+
+            return PhaseResult(
+                phase_name="training_planning_weeks",
+                status=PhaseStatus.COMPLETED,
+                agent_response=(
+                    f"Library-based: {weeks_added} weeks generated in "
+                    f"{execution_time:.2f}s"
+                ),
+                extracted_data={"weeks_added": list(range(1, weeks_added + 1))},
+                execution_time_seconds=execution_time,
+                tokens_used=0,  # No LLM usage
+            )
+
+        except Exception as e:
+            import traceback
+            tb_str = "".join(traceback.format_exception(type(e), e, e.__traceback__))
+            execution_time = (datetime.now() - phase_start).total_seconds()
+            error_msg = f"Library-based workout selection failed: {str(e)}"
+            logger.error(f"[PHASE 3b-LIBRARY] {error_msg}\n{tb_str}")
+
+            return PhaseResult(
+                phase_name="training_planning_weeks",
+                status=PhaseStatus.FAILED,
+                agent_response=error_msg,
+                errors=[str(e)],
+                execution_time_seconds=execution_time,
+                tokens_used=0,
+            )
 
     def _execute_single_week(
         self,

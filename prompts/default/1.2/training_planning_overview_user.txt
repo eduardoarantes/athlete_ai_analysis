@@ -5,6 +5,8 @@ Design a high-level {training_plan_weeks}-week training plan overview for this a
 **Performance Data** (use this to inform your plan):
 {performance_summary}
 
+**Goal:** {goal_event_type}
+**Athlete Level:** {athlete_level}  
 **Training Constraints**:
 - Available training days: {available_days} ({num_available_days} days/week)
 - Weekly time budget: {weekly_time_budget_hours} hours

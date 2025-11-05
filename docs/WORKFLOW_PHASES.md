@@ -231,19 +231,8 @@ Phase 3 consists of **3 sequential sub-phases**:
 
 ### New Training Days Structure
 
-**Phase 3 uses explicit 7-day workout prescription** (introduced in commit 54b747b):
+**Phase 3 uses explicit 7-day workout prescription** :
 
-**Old Format (deprecated):**
-```json
-{
-  "target_tss": 280,
-  "hard_days": 1,
-  "easy_days": 2,
-  "rest_days": 4
-}
-```
-
-**New Format (current):**
 ```json
 {
   "training_days": [
