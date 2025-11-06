@@ -84,13 +84,22 @@ You MUST provide ALL 7 weekdays in `training_days` array with specific workout t
 - Each day must have a "weekday" and "workout_type"
 - Maximum 5 training days per week (minimum 2 rest days)
 - Maximum 2-3 hard days per week (threshold/vo2max/sweet_spot)
-- Space hard days with recovery/endurance days between
+- **CRITICAL - High-Intensity Workout Spacing**:
+  - NEVER schedule high-intensity workouts (threshold/vo2max/sweet_spot) on consecutive days
+  - ALWAYS - do this instead- separate high-intensity sessions with AT LEAST ONE of the following:
+    * recovery day (active recovery ride)
+    * endurance day (easy Z2 aerobic ride)
+    * rest day (complete rest)
+  - Example CORRECT: Tuesday (threshold) → Wednesday (recovery) → Thursday (sweet_spot)
+  - Example WRONG: Tuesday (threshold) → Wednesday (vo2max) [consecutive hard days]
+  - This spacing allows proper recovery and adaptation between hard efforts
 - **WEEKEND PRIORITY**: If Saturday AND Sunday are BOTH available, MUST use them for training
   - Weekends allow longer rides (2-3 hours) without time constraints
   - Saturday: Schedule long endurance ride OR key quality workout
   - Sunday: Schedule long endurance ride OR active recovery (if Saturday was hard)
+  - If both weekend days are hard sessions, separate them (e.g., Saturday threshold + Sunday endurance)
   - Only make weekends rest days if they are NOT available for training
-- Use recovery day after hard session
+- Use recovery or easy endurance day after every hard session
 - Optional flag: Add "optional": true for flexible training days
 
 **Example Training Week Patterns:**
@@ -98,11 +107,18 @@ You MUST provide ALL 7 weekdays in `training_days` array with specific workout t
 4-day Foundation week (Sat/Sun available):
 - Mon: rest, Tue: endurance, Wed: rest, Thu: recovery, Fri: rest, Sat: endurance, Sun: endurance
 
-5-day Build week (Sat/Sun available):
-- Mon: recovery, Tue: threshold, Wed: rest, Thu: tempo, Fri: rest, Sat: endurance, Sun: endurance
+5-day Build week (Sat/Sun available) - CORRECT spacing:
+- Mon: rest, Tue: threshold, Wed: recovery, Thu: rest, Fri: endurance, Sat: endurance, Sun: recovery
+  ✓ Threshold (Tue) separated by recovery (Wed) before next potential hard day
 
-5-day Peak week (Sat/Sun available):
-- Mon: rest, Tue: threshold, Wed: recovery, Thu: rest, Fri: vo2max, Sat: endurance, Sun: recovery
+5-day Peak week (Sat/Sun available) - CORRECT spacing:
+- Mon: rest, Tue: vo2max, Wed: recovery, Thu: rest, Fri: threshold, Sat: endurance, Sun: recovery
+  ✓ VO2max (Tue) → recovery (Wed) → rest (Thu) → threshold (Fri) - proper separation
+
+WRONG Example (DO NOT USE):
+- Mon: rest, Tue: threshold, Wed: sweet_spot, Thu: rest, Fri: recovery, Sat: vo2max, Sun: endurance
+  ✗ Threshold + sweet_spot on consecutive days (Tue/Wed)
+  ✗ Recovery + VO2max with no separation before weekend (Fri/Sat)
 
 **CRITICAL - Rest Days:**
 - Minimum 2 rest days per week (more for recovery weeks)
@@ -232,7 +248,9 @@ Assembles complete plan from overview + all week details, validates, and saves.
    - workout_type must be one of: rest, recovery, endurance, tempo, sweet_spot, threshold, vo2max, mixed
    - Maximum 5 non-rest days per week (minimum 2 rest days)
    - Maximum 2-3 hard days (threshold/vo2max/sweet_spot)
-   - Space hard days with recovery/endurance days between
+   - **CRITICAL**: 
+          - NEVER schedule high-intensity workouts (threshold/vo2max/sweet_spot) on consecutive days
+          - ALWAYS - do this instead-  separate high-intensity sessions with recovery, endurance, or rest day
    - **WEEKEND PRIORITY**: If Saturday AND Sunday are both available for training, you MUST use them:
      - Weekends are ideal for longer endurance rides (2-3 hours)
      - Saturday: Long endurance ride or key quality session
