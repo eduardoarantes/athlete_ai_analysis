@@ -91,7 +91,7 @@ class WorkoutSelector:
             library: Loaded workout library
         """
         self.library = library
-        self.variety_tracker = VarietyTracker(window_size=15)
+        self.variety_tracker = VarietyTracker()  # Uses default window_size=20 (4 weeks)
 
         logger.info(f"Initialized WorkoutSelector with {len(library.workouts)} workouts")
 
