@@ -39,6 +39,12 @@ dependencies = [
     "jinja2>=3.1.0",
     # Utilities
     "python-dateutil>=2.8.0",
+    # RAG dependencies (Phase 1)
+    "langchain>=0.1.0",
+    "langchain-community>=0.0.10",
+    "langchain-openai>=0.0.5",
+    "chromadb>=0.4.22",
+    "sentence-transformers>=2.2.2",
 ]
 
 [project.scripts]
@@ -122,6 +128,31 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "openai.*"
+ignore_missing_imports = true
+
+# RAG dependencies - ignore missing type stubs
+[[tool.mypy.overrides]]
+module = "langchain.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "langchain_core.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "langchain_community.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "langchain_openai.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "chromadb.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "sentence_transformers.*"
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
