@@ -280,16 +280,24 @@ class BasePhase(ABC):
         """
         Create fresh session for this phase (session isolation).
 
+        If RAG is enabled, augments system prompt with retrieved context BEFORE
+        session creation. This maintains session isolation while enriching the
+        prompt with relevant domain knowledge.
+
         Args:
             context: Phase execution context
 
         Returns:
-            New ConversationSession with system prompt and previous phase data
+            New ConversationSession with system prompt (potentially RAG-augmented)
         """
-        system_prompt = self._get_system_prompt(
+        # Get base system prompt
+        base_prompt = self._get_system_prompt(
             config=self._context_to_config_dict(context),
             context=context,
         )
+
+        # RAG augmentation (if enabled)
+        system_prompt = self._augment_prompt_with_rag(base_prompt, context)
 
         session: ConversationSession = context.session_manager.create_session(
             provider_name=context.provider.config.provider_name,
@@ -503,3 +511,127 @@ class BasePhase(ABC):
             Dictionary with extracted data
         """
         pass
+
+    def _augment_prompt_with_rag(
+        self, base_prompt: str, context: PhaseContext
+    ) -> str:
+        """
+        Augment system prompt with RAG-retrieved context (if enabled).
+
+        This is the core RAG integration point. If RAG is enabled:
+        1. Builds retrieval query for this phase
+        2. Retrieves relevant documents from appropriate collection
+        3. Formats retrieved context with PromptAugmenter
+        4. Returns augmented prompt
+
+        If RAG is disabled or unavailable, returns base_prompt unchanged.
+
+        Args:
+            base_prompt: Original system prompt
+            context: Phase execution context
+
+        Returns:
+            Augmented prompt (or base_prompt if RAG disabled)
+        """
+        # Check if RAG is enabled
+        if not context.config.rag_config.enabled:
+            return base_prompt
+
+        # Check if RAG manager is available
+        if context.rag_manager is None:
+            logger.warning(
+                f"[{self.phase_name}] RAG enabled but no RAG manager available"
+            )
+            return base_prompt
+
+        try:
+            # Import here to avoid circular dependency
+            from cycling_ai.orchestration.rag_integration import PromptAugmenter
+
+            # Get retrieval query and collection for this phase
+            retrieval_query = self._get_retrieval_query(context)
+            collection = self._get_retrieval_collection()
+
+            logger.info(
+                f"[{self.phase_name}] RAG retrieval: query='{retrieval_query[:50]}...', "
+                f"collection='{collection}'"
+            )
+
+            # Retrieve relevant documents
+            retrieval_result = context.rag_manager.retrieve(
+                query=retrieval_query,
+                collection=collection,
+                top_k=context.config.rag_config.top_k,
+                min_score=context.config.rag_config.min_score,
+            )
+
+            logger.info(
+                f"[{self.phase_name}] Retrieved {len(retrieval_result.documents)} documents"
+            )
+
+            # Augment prompt with retrieved context
+            augmenter = PromptAugmenter(max_context_tokens=2000)
+            augmented_prompt = augmenter.augment_system_prompt(
+                base_prompt, retrieval_result
+            )
+
+            return augmented_prompt
+
+        except Exception as e:
+            logger.error(
+                f"[{self.phase_name}] RAG augmentation failed: {e}. "
+                f"Using base prompt."
+            )
+            return base_prompt
+
+    def _get_retrieval_query(self, context: PhaseContext) -> str:
+        """
+        Build retrieval query for this phase.
+
+        Default implementation uses phase name and basic context.
+        Subclasses can override for phase-specific queries.
+
+        Args:
+            context: Phase execution context
+
+        Returns:
+            Query string for retrieval
+
+        Examples:
+            >>> # Default query
+            >>> query = self._get_retrieval_query(context)
+            >>> # Returns: "data_preparation cycling analysis"
+            >>>
+            >>> # Phase-specific override
+            >>> class MyPhase(BasePhase):
+            ...     def _get_retrieval_query(self, context):
+            ...         ftp = context.previous_phase_data.get("ftp", 250)
+            ...         return f"training plan {ftp}W {context.config.training_plan_weeks} weeks"
+        """
+        return f"{self.phase_name} cycling analysis"
+
+    def _get_retrieval_collection(self) -> str:
+        """
+        Get collection name for retrieval.
+
+        Default implementation returns "domain_knowledge".
+        Subclasses should override to specify the appropriate collection:
+        - "domain_knowledge": Cycling science, methodologies
+        - "training_templates": Training plan structures
+        - "athlete_history": Athlete's past analyses (not yet implemented)
+
+        Returns:
+            Collection name string
+
+        Examples:
+            >>> # Most phases use domain knowledge
+            >>> class PerformancePhase(BasePhase):
+            ...     def _get_retrieval_collection(self):
+            ...         return "domain_knowledge"
+            >>>
+            >>> # Training phase uses templates
+            >>> class TrainingPhase(BasePhase):
+            ...     def _get_retrieval_collection(self):
+            ...         return "training_templates"
+        """
+        return "domain_knowledge"

@@ -19,6 +19,7 @@ __all__ = [
     "WorkflowConfig",
     "WorkflowResult",
     "PhaseContext",
+    "RAGConfig",
 ]
 
 
@@ -87,6 +88,42 @@ class PhaseResult:
 
 
 @dataclass
+class RAGConfig:
+    """
+    Configuration for RAG (Retrieval-Augmented Generation) enhancement.
+
+    Controls retrieval behavior across all workflow phases.
+
+    Attributes:
+        enabled: Whether RAG enhancement is enabled (default: False)
+        top_k: Number of documents to retrieve per phase (default: 3)
+        min_score: Minimum similarity score for retrieval (0-1, default: 0.5)
+        embedding_provider: Embedding provider ("local" or "openai", default: "local")
+        embedding_model: Optional embedding model name (uses provider defaults if None)
+        project_vectorstore_path: Path to project vectorstore (shared knowledge)
+        user_vectorstore_path: Path to user vectorstore (athlete history, optional)
+
+    Examples:
+        >>> # Disabled by default (backward compatible)
+        >>> config = RAGConfig()
+        >>> assert config.enabled is False
+        >>>
+        >>> # Enable with custom settings
+        >>> config = RAGConfig(enabled=True, top_k=5, min_score=0.7)
+    """
+
+    enabled: bool = False
+    top_k: int = 3
+    min_score: float = 0.5
+    embedding_provider: str = "local"
+    embedding_model: str | None = None
+
+    # Vectorstore paths (defaults set by workflow initialization)
+    project_vectorstore_path: Path | None = None
+    user_vectorstore_path: Path | None = None
+
+
+@dataclass
 class WorkflowConfig:
     """
     Configuration for multi-agent workflow.
@@ -107,6 +144,7 @@ class WorkflowConfig:
         provider: LLM provider instance
         max_iterations_per_phase: Maximum tool execution loops per phase
         prompts_dir: Optional directory with custom prompt files
+        rag_config: RAG configuration (default: disabled)
     """
 
     # Input paths (required fields first)
@@ -138,6 +176,9 @@ class WorkflowConfig:
 
     # Prompts configuration
     prompts_dir: Path | None = None
+
+    # RAG configuration
+    rag_config: RAGConfig = field(default_factory=RAGConfig)
 
     def validate(self) -> None:
         """
@@ -270,6 +311,7 @@ class PhaseContext:
         provider: LLM provider
         prompts_manager: Agent prompts manager
         progress_callback: Optional callback for progress updates
+        rag_manager: Optional RAG manager for retrieval-augmented generation
     """
 
     config: WorkflowConfig
@@ -278,3 +320,4 @@ class PhaseContext:
     provider: Any  # BaseProvider (avoid circular import)
     prompts_manager: Any  # AgentPromptsManager (avoid circular import)
     progress_callback: Callable[[str, PhaseStatus], None] | None = None
+    rag_manager: Any | None = None  # RAGManager (avoid circular import)

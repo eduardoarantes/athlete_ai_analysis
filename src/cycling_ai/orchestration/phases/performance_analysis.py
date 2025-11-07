@@ -563,3 +563,45 @@ Use concrete numbers and percentages in all descriptions. Be encouraging but hon
         except Exception as e:
             logger.error(f"Error during cross-training auto-detection: {str(e)}")
             return False
+
+    def _get_retrieval_query(self, context: PhaseContext) -> str:
+        """
+        Build retrieval query for performance analysis context.
+
+        Phase 2 analyzes performance, so retrieve guidance on:
+        - Training zones and power-based analysis
+        - FTP testing and comparison methodologies
+        - Period-specific analysis
+        - Cross-training impact (if applicable)
+
+        Args:
+            context: Phase execution context
+
+        Returns:
+            Query string for domain knowledge retrieval with context
+        """
+        period_months = context.config.period_months
+
+        # Check if cross-training analysis will be done
+        cache_info = context.previous_phase_data.get("cache_info", {})
+        cross_training = cache_info.get("has_cross_training_activities", False)
+
+        # Build context-aware query
+        query = (
+            f"performance analysis training zones FTP power-based metrics "
+            f"{period_months} months comparison period testing protocols"
+        )
+
+        if cross_training:
+            query += " cross-training impact complementary training"
+
+        return query
+
+    def _get_retrieval_collection(self) -> str:
+        """
+        Get collection name for performance analysis retrieval.
+
+        Returns:
+            "domain_knowledge" - Use cycling science knowledge
+        """
+        return "domain_knowledge"

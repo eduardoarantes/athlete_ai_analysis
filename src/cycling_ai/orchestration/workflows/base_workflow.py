@@ -160,7 +160,7 @@ class BaseWorkflow(ABC):
         Create phase execution context.
 
         Helper method to build PhaseContext with config and accumulated data
-        from previous phases.
+        from previous phases. If RAG is enabled, initializes RAGManager.
 
         Args:
             config: Workflow configuration
@@ -173,6 +173,11 @@ class BaseWorkflow(ABC):
             >>> context = self._create_phase_context(config, {})
             >>> result = phase.execute(context)
         """
+        # Initialize RAG manager if enabled
+        rag_manager = None
+        if config.rag_config.enabled:
+            rag_manager = self._initialize_rag_manager(config.rag_config)
+
         return PhaseContext(
             config=config,
             previous_phase_data=previous_phase_data,
@@ -180,7 +185,69 @@ class BaseWorkflow(ABC):
             provider=self.provider,
             prompts_manager=self.prompts_manager,
             progress_callback=self.progress_callback,
+            rag_manager=rag_manager,
         )
+
+    def _initialize_rag_manager(self, rag_config: Any) -> Any:
+        """
+        Initialize RAG manager with config.
+
+        Creates RAGManager if vectorstore exists, otherwise logs warning
+        and returns None for graceful degradation.
+
+        Args:
+            rag_config: RAG configuration
+
+        Returns:
+            RAGManager instance or None if initialization fails
+
+        Example:
+            >>> rag_manager = self._initialize_rag_manager(config.rag_config)
+            >>> if rag_manager:
+            ...     # RAG available
+        """
+        import logging
+
+        logger = logging.getLogger(__name__)
+
+        # Check if project vectorstore path is configured
+        if rag_config.project_vectorstore_path is None:
+            logger.warning(
+                "RAG enabled but no project vectorstore path configured. "
+                "RAG will be disabled."
+            )
+            return None
+
+        # Check if project vectorstore exists
+        if not rag_config.project_vectorstore_path.exists():
+            logger.warning(
+                f"RAG enabled but project vectorstore not found at: "
+                f"{rag_config.project_vectorstore_path}. "
+                f"Run 'cycling-ai index domain-knowledge' to populate vectorstore. "
+                f"RAG will be disabled for this run."
+            )
+            return None
+
+        try:
+            from cycling_ai.rag.manager import RAGManager
+
+            logger.info(
+                f"Initializing RAG with vectorstore: {rag_config.project_vectorstore_path}"
+            )
+            rag_manager = RAGManager(
+                project_vectorstore_path=rag_config.project_vectorstore_path,
+                user_vectorstore_path=rag_config.user_vectorstore_path,
+                embedding_provider=rag_config.embedding_provider,
+                embedding_model=rag_config.embedding_model,
+            )
+            logger.info("RAG manager initialized successfully")
+            return rag_manager
+        except Exception as e:
+            logger.error(
+                f"Failed to initialize RAG manager: {e}. "
+                f"RAG will be disabled for this run."
+            )
+            return None
 
     def _create_failed_workflow_result(
         self,
