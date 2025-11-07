@@ -387,17 +387,21 @@ def _build_cross_training(ct) -> str:
         html += '  <tbody>\n'
 
         for event in ct.interference_events:
+            # Handle optional score field
+            score = event.score if event.score is not None else 5  # Default to medium risk if missing
             risk_class = (
-                "risk-high" if event.score >= 7
-                else "risk-medium" if event.score >= 4
+                "risk-high" if score >= 7
+                else "risk-medium" if score >= 4
                 else "risk-low"
             )
+            score_display = f"{score}/10" if event.score is not None else "N/A"
+
             html += f'    <tr class="{risk_class}">\n'
             html += f'      <td>{event.date}</td>\n'
             html += f'      <td>{event.activity1}</td>\n'
             html += f'      <td>{event.activity2}</td>\n'
             html += f'      <td>{event.hours_between:.1f}h</td>\n'
-            html += f'      <td><span class="risk-score">{event.score}/10</span></td>\n'
+            html += f'      <td><span class="risk-score">{score_display}</span></td>\n'
             html += f'      <td>{event.explanation}</td>\n'
             html += f'    </tr>\n'
 

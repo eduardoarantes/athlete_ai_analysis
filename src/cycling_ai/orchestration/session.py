@@ -173,6 +173,20 @@ class ConversationSession:
             model=data.get("model"),
         )
 
+    def get_total_tokens(self) -> int:
+        """
+        Get total tokens used in this session.
+
+        Note: This is a rough estimate based on message count.
+        For accurate token counting, providers should track this explicitly.
+
+        Returns:
+            Estimated token count (returns 0 for now)
+        """
+        # TODO: Implement proper token counting from provider responses
+        # For now, return 0 as token tracking is not critical for functionality
+        return 0
+
 
 class SessionManager:
     """

@@ -16,6 +16,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from cycling_ai.logging_config import session_id_context
 from cycling_ai.providers.base import CompletionResponse, ProviderMessage
 from cycling_ai.tools.base import ToolDefinition
 
@@ -56,6 +57,9 @@ class InteractionLogger:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         self.session_file = self.log_dir / f"session_{timestamp}.jsonl"
         self.interaction_count = 0
+
+        # Set session ID in logging context for traceability
+        session_id_context.set(timestamp)
 
         logger.info(f"LLM interaction logging enabled. Log file: {self.session_file}")
 

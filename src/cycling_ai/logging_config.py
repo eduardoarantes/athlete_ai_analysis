@@ -4,10 +4,32 @@ Logging configuration for cycling-ai.
 Provides centralized logging setup with configurable levels, formatters,
 and output destinations (console and optional file logging).
 """
+import contextvars
 import logging
 import sys
 from pathlib import Path
 from typing import Optional
+
+# Context variable to track current session ID across the call stack
+# Default is "in-progress" for logs outside of a session context
+session_id_context: contextvars.ContextVar[str] = contextvars.ContextVar(
+    'session_id', default='in-progress'
+)
+
+
+class SessionLogFilter(logging.Filter):
+    """
+    Inject session_id from context into every log record.
+
+    This filter automatically adds the session_id from the context variable
+    to each log record, enabling correlation between application logs and
+    LLM interaction logs stored in logs/llm_interactions/session_*.jsonl files.
+    """
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        """Add session_id attribute to log record from context."""
+        record.session_id = session_id_context.get()
+        return True
 
 
 def configure_logging(
@@ -28,19 +50,23 @@ def configure_logging(
         >>> import logging
         >>> configure_logging(level=logging.DEBUG, log_file=Path("logs/debug.log"))
     """
-    # Create formatters
+    # Create formatters with session_id as FIRST field
     detailed_formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        '[%(session_id)s] - %(asctime)s - %(name)s - %(levelname)s - %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
 
     simple_formatter = logging.Formatter(
-        '%(levelname)s - %(message)s'
+        '[%(session_id)s] - %(levelname)s - %(message)s'
     )
+
+    # Create session filter
+    session_filter = SessionLogFilter()
 
     # Console handler
     console_handler = logging.StreamHandler(sys.stderr)
     console_handler.setLevel(level)
+    console_handler.addFilter(session_filter)
 
     # Use detailed formatter for DEBUG level or if verbose is True
     if level <= logging.DEBUG or verbose:
@@ -59,6 +85,7 @@ def configure_logging(
         file_handler = logging.FileHandler(log_file)
         file_handler.setLevel(logging.DEBUG)  # Always DEBUG to file
         file_handler.setFormatter(detailed_formatter)
+        file_handler.addFilter(session_filter)
         handlers.append(file_handler)
 
     # Configure root logger

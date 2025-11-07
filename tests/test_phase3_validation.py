@@ -7,7 +7,8 @@ instead of silently using defaults.
 import pytest
 from pathlib import Path
 from unittest.mock import Mock, patch
-from cycling_ai.orchestration.multi_agent import MultiAgentOrchestrator, WorkflowConfig, PhaseResult
+from cycling_ai.orchestration.base import PhaseResult, WorkflowConfig
+from cycling_ai.orchestration.multi_agent import MultiAgentOrchestrator
 
 
 class TestPhase3Validation:

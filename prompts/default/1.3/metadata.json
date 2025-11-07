@@ -1,0 +1,30 @@
+{
+  "model": "default",
+  "version": "1.3",
+  "description": "Enhanced three-phase training plan generation (v1.3)",
+  "created": "2025-11-05",
+  "changes": [
+    "Enhanced training planning overview prompt with advanced periodization principles",
+    "Improved coaching philosophy with concurrent training integration",
+    "Advanced recovery logic using LTL/STL/Freshness metrics",
+    "More precise output requirements and validation criteria",
+    "Streamlined user prompts with better parameterization"
+  ],
+  "agents": {
+    "performance_analysis": {
+      "file": "performance_analysis.txt",
+      "user_file": "performance_analysis_user.txt",
+      "description": "Cycling performance analysis expert"
+    },
+    "training_planning": {
+      "file": "training_planning.txt",
+      "user_file": "training_planning_user.txt",
+      "description": "Training plan design specialist (enhanced 3-phase approach)"
+    },
+    "report_generation": {
+      "file": "report_generation.txt",
+      "user_file": "report_generation_user.txt",
+      "description": "Report generation specialist"
+    }
+  }
+}

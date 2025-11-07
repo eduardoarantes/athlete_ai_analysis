@@ -6,14 +6,18 @@ Loads prompts from external files organized by model and version:
     prompts/{model}/{version}/training_planning.txt
     prompts/{model}/{version}/report_generation.txt
 
+Supports both plain text (.txt) and Jinja2 templates (.jinja2) for prompts.
+
 Note: Phase 1 (data preparation) no longer uses LLM prompts.
-Defaults to 'default' model and '1.2' version if not specified.
+Defaults to 'default' model. Version should be specified from .cycling-ai.yaml config.
 """
 from __future__ import annotations
 
 import json
 from pathlib import Path
 from typing import Any
+
+from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 
 
 class PromptLoader:
@@ -40,7 +44,7 @@ class PromptLoader:
         self,
         prompts_base_dir: Path | str | None = None,
         model: str = "default",
-        version: str = "1.2",
+        version: str | None = None,
     ):
         """
         Initialize prompt loader.
@@ -49,11 +53,17 @@ class PromptLoader:
             prompts_base_dir: Base directory containing prompts.
                              Defaults to ./prompts relative to project root
             model: Model name (e.g., "default", "gemini", "gpt4")
-            version: Version string (e.g., "1.2", "1.1")
+            version: Version string (e.g., "1.3", "1.2", "1.1")
         """
         if prompts_base_dir is None:
             # Default to prompts/ in project root
             prompts_base_dir = Path(__file__).parents[3] / "prompts"
+
+        if version is None:
+            raise ValueError(
+                "Prompt version must be specified. "
+                "This should come from the .cycling-ai.yaml config file."
+            )
 
         self.prompts_base_dir = Path(prompts_base_dir)
         self.model = model
@@ -62,6 +72,14 @@ class PromptLoader:
 
         self._prompts_cache: dict[str, str] = {}
         self._metadata: dict[str, Any] | None = None
+
+        # Initialize Jinja2 environment
+        self._jinja_env = Environment(
+            loader=FileSystemLoader(str(self.prompts_dir)),
+            autoescape=False,  # Prompts are plain text, not HTML
+            trim_blocks=True,
+            lstrip_blocks=True,
+        )
 
     def get_prompts_dir(self) -> Path:
         """Get the full path to the prompts directory."""
@@ -129,6 +147,45 @@ class PromptLoader:
         self._prompts_cache[agent_name] = prompt_text
         return prompt_text
 
+    def render_prompt(self, agent_name: str, **template_vars: Any) -> str:
+        """
+        Load and render a prompt template with Jinja2 variables.
+
+        Supports both plain .txt files (uses format()) and .jinja2 templates.
+
+        Args:
+            agent_name: Name of the agent/prompt
+            **template_vars: Variables to pass to the template
+
+        Returns:
+            Rendered prompt text
+
+        Raises:
+            FileNotFoundError: If neither .jinja2 nor .txt file exists
+        """
+        # Try .jinja2 first
+        jinja_file = f"{agent_name}.jinja2"
+        txt_file = f"{agent_name}.txt"
+
+        try:
+            # Try loading as Jinja2 template
+            template = self._jinja_env.get_template(jinja_file)
+            return template.render(**template_vars)
+        except TemplateNotFound:
+            # Fall back to .txt with string formatting
+            txt_path = self.prompts_dir / txt_file
+            if not txt_path.exists():
+                raise FileNotFoundError(
+                    f"Prompt file not found: neither {jinja_file} nor {txt_file} exists\n"
+                    f"Model: {self.model}, Version: {self.version}, Agent: {agent_name}"
+                )
+
+            with open(txt_path, "r", encoding="utf-8") as f:
+                prompt_text = f.read().strip()
+
+            # Use Python string formatting for .txt files
+            return prompt_text.format(**template_vars)
+
     def load_all_prompts(self) -> dict[str, str]:
         """
         Load all prompts for the current model/version.
@@ -184,6 +241,8 @@ class PromptLoader:
         """
         Load and format a user prompt with template variables.
 
+        Supports both .txt (Python format strings) and .jinja2 (Jinja2 templates).
+
         Args:
             agent_name: Name of the agent (e.g., "data_preparation")
             **kwargs: Template variables to format into the prompt
@@ -194,28 +253,8 @@ class PromptLoader:
         Raises:
             FileNotFoundError: If user prompt file doesn't exist
         """
-        # Check cache first
-        cache_key = f"{agent_name}_user"
-        if cache_key in self._prompts_cache:
-            template = self._prompts_cache[cache_key]
-        else:
-            # Determine filename
-            prompt_file = self.prompts_dir / f"{agent_name}_user.txt"
-
-            if not prompt_file.exists():
-                raise FileNotFoundError(
-                    f"User prompt file not found: {prompt_file}\n"
-                    f"Model: {self.model}, Version: {self.version}, Agent: {agent_name}"
-                )
-
-            # Load and cache
-            with open(prompt_file, "r", encoding="utf-8") as f:
-                template = f.read().strip()
-
-            self._prompts_cache[cache_key] = template
-
-        # Format with provided variables
-        return template.format(**kwargs)
+        # Use the new render_prompt method which supports both .txt and .jinja2
+        return self.render_prompt(f"{agent_name}_user", **kwargs)
 
     def get_performance_analysis_user_prompt(self, **kwargs: Any) -> str:
         """Get performance analysis user prompt with formatting."""
@@ -446,14 +485,23 @@ def get_prompt_loader(
 
     Args:
         model: Model name (defaults to "default")
-        version: Version string (defaults to "1.2")
+        version: Version string (should be provided from .cycling-ai.yaml config)
         prompts_dir: Base directory (defaults to ./prompts)
 
     Returns:
         Configured PromptLoader
+
+    Raises:
+        ValueError: If version is not provided
     """
+    if version is None:
+        raise ValueError(
+            "Prompt version must be specified. "
+            "This should come from the .cycling-ai.yaml config file."
+        )
+
     return PromptLoader(
         prompts_base_dir=prompts_dir,
         model=model or "default",
-        version=version or "1.2",
+        version=version,
     )

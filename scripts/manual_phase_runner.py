@@ -21,11 +21,8 @@ logging.basicConfig(
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from cycling_ai.orchestration.multi_agent import (
-    MultiAgentOrchestrator,
-    PhaseStatus,
-    WorkflowConfig,
-)
+from cycling_ai.orchestration.base import PhaseStatus, WorkflowConfig
+from cycling_ai.orchestration.multi_agent import MultiAgentOrchestrator
 from cycling_ai.orchestration.prompts import AgentPromptsManager
 from cycling_ai.providers.base import ProviderConfig
 from cycling_ai.providers.factory import ProviderFactory
@@ -185,7 +182,7 @@ def main():
         print("\n⊘ Using existing cache - Phase 1 skipped")
 
         # Create skipped phase result with cache info
-        from cycling_ai.orchestration.multi_agent import PhaseResult
+        from cycling_ai.orchestration.base import PhaseResult
         cache_file_path = str(config.output_dir / "cache" / "activities_processed.parquet")
         phase1_result = PhaseResult(
             phase_name="data_preparation",

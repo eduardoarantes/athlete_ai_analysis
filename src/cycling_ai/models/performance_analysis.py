@@ -84,7 +84,9 @@ class LoadBalance(BaseModel):
     cycling_percent: float = Field(..., ge=0, le=100, description="Percentage of load from cycling")
     strength_percent: float = Field(..., ge=0, le=100, description="Percentage of load from strength training")
     cardio_percent: float = Field(..., ge=0, le=100, description="Percentage of load from cardio activities")
-    assessment: str = Field(..., description="Assessment of load balance appropriateness")
+    assessment: str | None = Field(None, description="Assessment of load balance appropriateness")
+    is_optimal: bool | None = Field(None, description="Whether load balance is optimal")
+    recommendation: str | None = Field(None, description="Recommendation for load balance adjustment")
 
 
 class InterferenceEvent(BaseModel):
@@ -94,14 +96,14 @@ class InterferenceEvent(BaseModel):
     activity1: str = Field(..., description="First activity name")
     activity2: str = Field(..., description="Second activity name")
     hours_between: float = Field(..., ge=0, description="Hours between activities")
-    score: int = Field(..., ge=0, le=10, description="Interference severity score (0-10)")
+    score: int | None = Field(None, ge=0, le=10, description="Interference severity score (0-10, optional)")
     explanation: str = Field(..., description="Explanation of why this is an interference")
 
 
 class CrossTrainingAnalysis(BaseModel):
     """Cross-training impact analysis data."""
 
-    analyzed: bool = Field(..., description="Whether cross-training analysis was performed")
+    analyzed: bool = Field(default=True, description="Whether cross-training analysis was performed")
     activity_distribution: list[ActivityDistribution] = Field(
         default_factory=list, description="Distribution of activities by category"
     )

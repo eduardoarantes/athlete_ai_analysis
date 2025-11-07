@@ -16,10 +16,7 @@ Call the `create_plan_overview` tool with:
    - phase_rationale (why this phase - keep concise)
    - weekly_focus (key training focus - 2-5 words)
    - weekly_watch_points (what to monitor - 3-8 words)
-   - target_tss (weekly TSS target)
-   - hard_days (count of hard workouts)
-   - easy_days (count of easy/recovery workouts)
-   - rest_days (count of rest days)
+   - training_days (array of ALL 7 weekday objects with workout_type: rest, recovery, endurance, tempo, sweet_spot, threshold, vo2max, mixed)
    - total_hours (target weekly training hours)
 
 3. **Coaching Notes**: 200-400 words explaining overall strategy and target FTP rationale
@@ -33,7 +30,10 @@ Call the `create_plan_overview` tool with:
 - Use available training days: {available_days}
 - Target weekly time budget: ~{weekly_time_budget_hours} hours per week (±10%)
 - Progression should be ≤10% week-to-week
-- **Daily duration limits**: Weekday workouts max 70 minutes, weekend workouts can be longer
+- **Daily duration limits**: Weekday workouts 45-90 minutes, weekend workouts 90-180 minutes (longer endurance)
+- **WEEKEND PRIORITY**: If Saturday AND Sunday are BOTH available, you MUST use them for training
+  - Weekends allow longer endurance rides (2-3 hours)
+  - DO NOT schedule rest days on weekends if they are available
 
 ## Tool Call
 

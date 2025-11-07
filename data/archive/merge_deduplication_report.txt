@@ -1,0 +1,166 @@
+================================================================================
+MERGE & DEDUPLICATION REPORT
+================================================================================
+
+Date: 2025-11-03
+Input: workout_library_merged_temp.json
+Output: workout_library_master.json
+
+SOURCES MERGED:
+--------------------------------------------------------------------------------
+1. workout_library_deduplicated.json (177 workouts - original cleaned)
+2. workout_library_from_reports.json (125 workouts - extracted from reports)
+3. workout_library_extracted.json (4 workouts - extracted from logs)
+
+DEDUPLICATION STATISTICS:
+--------------------------------------------------------------------------------
+Total workouts in merged library: 306
+Segment duplicates removed: 84
+Unique workouts after deduplication: 222
+Reduction: 27.5%
+
+DUPLICATE GROUPS REMOVED:
+--------------------------------------------------------------------------------
+Total duplicate groups: 41
+
+Group 1 (9 duplicates removed):
+  • 1hr_base_fitness_60_65_threshold: 1hr Base Fitness @ 60-65% Threshold
+  • 1hr_base_fitness_60_65_threshold: 1hr Base Fitness @ 60-65% Threshold
+  • 1hr_base_fitness_60_65_threshold: 1hr Base Fitness @ 60-65% Threshold
+  • 1hr_base_fitness_60_65_threshold: 1hr Base Fitness @ 60-65% Threshold
+  • 1hr_base_fitness_60_65_threshold: 1hr Base Fitness @ 60-65% Threshold
+  ... and 4 more
+
+Group 2 (2 duplicates removed):
+  • base_fitness_60_65_threshold: Base Fitness @ 60-65% Threshold
+  • base_fitness_60_65_threshold: Base Fitness @ 60-65% Threshold
+
+Group 3 (6 duplicates removed):
+  • active_recovery: Active Recovery
+  • active_recovery: Active Recovery
+  • active_recovery: Active Recovery
+  • active_recovery: Active Recovery
+  • active_recovery: Active Recovery
+  ... and 1 more
+
+Group 4 (1 duplicates removed):
+  • cardio_drift_test: Cardio Drift Test
+
+Group 5 (2 duplicates removed):
+  • 15hr_base_fitness: 1.5hr Base Fitness
+  • 15hr_base_fitness: 1.5hr Base Fitness
+
+Group 6 (9 duplicates removed):
+  • base_fitness_training_zone_two: Base Fitness Training (Zone Two)
+  • base_fitness_training_zone_two: Base Fitness Training (Zone Two)
+  • base_fitness_training_zone_two: Base Fitness Training (Zone Two)
+  • base_fitness_training_zone_two: Base Fitness Training (Zone Two)
+  • base_fitness_training_zone_two: Base Fitness Training (Zone Two)
+  ... and 4 more
+
+Group 7 (6 duplicates removed):
+  • base_fitness_training_zone_two: Base Fitness Training (Zone Two)
+  • base_fitness_training_zone_two: Base Fitness Training (Zone Two)
+  • base_fitness_training_zone_two: Base Fitness Training (Zone Two)
+  • base_fitness_training_zone_two: Base Fitness Training (Zone Two)
+  • base_fitness_training_zone_two: Base Fitness Training (Zone Two)
+  ... and 1 more
+
+Group 8 (2 duplicates removed):
+  • 15hr_base_fitness_60_65_threshold: 1.5hr Base Fitness @ 60-65% Threshold
+  • 15hr_base_fitness_60_65_threshold: 1.5hr Base Fitness @ 60-65% Threshold
+
+Group 9 (1 duplicates removed):
+  • sweet_spot_repeats: Sweet Spot Repeats
+
+Group 10 (1 duplicates removed):
+  • threshold: Threshold
+
+Group 11 (1 duplicates removed):
+  • 4020s_5min: 40/20s (5min)
+
+Group 12 (1 duplicates removed):
+  • activations: Activations
+
+Group 13 (1 duplicates removed):
+  • threshold_test_5_20: Threshold Test (5' + 20')
+
+Group 14 (3 duplicates removed):
+  • sub_threshold_efforts: Sub Threshold Efforts
+  • sub_threshold_efforts: Sub Threshold Efforts
+  • sub_threshold_efforts: Sub Threshold Efforts
+
+Group 15 (1 duplicates removed):
+  • map_efforts: M.A.P Efforts
+
+Group 16 (1 duplicates removed):
+  • sub_threshold_low_cadence_efforts: Sub Threshold, Low Cadence Efforts.
+
+Group 17 (1 duplicates removed):
+  • optional_aerobic_endurance_bike: OPTIONAL: Aerobic Endurance Bike
+
+Group 18 (5 duplicates removed):
+  • fitness_test_ftp_and_threshold_hr_50_mins: Fitness Test: FTP and Threshold HR (50 mins)
+  • fitness_test_ftp_and_threshold_hr_50_mins: Fitness Test: FTP and Threshold HR (50 mins)
+  • fitness_test_ftp_and_threshold_hr_50_mins: Fitness Test: FTP and Threshold HR (50 mins)
+  • fitness_test_ftp_and_threshold_hr_50_mins: Fitness Test: FTP and Threshold HR (50 mins)
+  • fitness_test_ftp_and_threshold_hr_50_mins: Fitness Test: FTP and Threshold HR (50 mins)
+
+Group 19 (1 duplicates removed):
+  • map_efforts: M.A.P Efforts
+
+Group 20 (1 duplicates removed):
+  • threshold_efforts: Threshold Efforts
+
+... and 21 more duplicate groups
+
+ID UNIQUENESS:
+--------------------------------------------------------------------------------
+Base IDs with duplicates: 16
+IDs modified with counters: 54
+
+IDs that needed counters:
+  sub_threshold_efforts: 14 occurrences
+  threshold_efforts: 10 occurrences
+  map_efforts: 8 occurrences
+  optional_aerobic_endurance_ride: 6 occurrences
+  optional_aerobic_endurance_bike: 5 occurrences
+  above_and_below_threshold: 5 occurrences
+  base_fitness_training_zone_two: 3 occurrences
+  tempo_with_spikes: 3 occurrences
+  base_fitness_60_65_threshold: 2 occurrences
+  tempo_repeats: 2 occurrences
+  the_benchmark_test: 2 occurrences
+  5min_strength_efforts_zone_3: 2 occurrences
+  4020s_5min: 2 occurrences
+  threshold: 2 occurrences
+  sub_threshold_effort: 2 occurrences
+  2x15min_vo2_max_intervals: 2 occurrences
+
+FINAL WORKOUT DISTRIBUTION:
+--------------------------------------------------------------------------------
+By Type:
+  endurance: 94 (42.3%)
+  threshold: 45 (20.3%)
+  sweet_spot: 29 (13.1%)
+  vo2max: 29 (13.1%)
+  tempo: 13 (5.9%)
+  mixed: 7 (3.2%)
+  recovery: 5 (2.3%)
+
+By Intensity:
+  easy: 109 (49.1%)
+  hard: 81 (36.5%)
+  moderate: 32 (14.4%)
+
+================================================================================
+SUMMARY
+================================================================================
+Original merged: 306 workouts
+Duplicates removed: 84
+Final unique: 222
+All IDs unique: YES
+
+================================================================================
+END OF REPORT
+================================================================================

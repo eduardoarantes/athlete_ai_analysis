@@ -47,7 +47,7 @@ class OutputSettings(BaseModel):
 class CyclingAIConfig(BaseModel):
     """Complete configuration for cycling AI analysis."""
 
-    version: str = "1.0"
+    version: str = "1.3"
     default_provider: str = "anthropic"
     providers: dict[str, ProviderSettings]
     analysis: AnalysisSettings = Field(default_factory=AnalysisSettings)

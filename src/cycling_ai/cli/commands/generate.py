@@ -18,12 +18,8 @@ from rich.table import Table
 
 from cycling_ai.cli.formatting import console
 from cycling_ai.config.loader import load_config
-from cycling_ai.orchestration.multi_agent import (
-    MultiAgentOrchestrator,
-    PhaseStatus,
-    WorkflowConfig,
-    WorkflowResult,
-)
+from cycling_ai.orchestration.base import PhaseStatus, WorkflowConfig, WorkflowResult
+from cycling_ai.orchestration.multi_agent import MultiAgentOrchestrator
 from cycling_ai.orchestration.prompts import AgentPromptsManager
 from cycling_ai.providers.base import BaseProvider, ProviderConfig
 from cycling_ai.providers.factory import ProviderFactory
@@ -190,8 +186,17 @@ class PhaseProgressTracker:
 )
 @click.option(
     "--prompt-version",
-    default="1.2",
-    help="Prompt version to use (e.g., '1.0', '1.1', '1.2')",
+    default=None,
+    help="Prompt version to use (e.g., '1.0', '1.1', '1.3'). Defaults to version from .cycling-ai.yaml",
+)
+@click.option(
+    "--workout-source",
+    type=click.Choice(["library", "llm"]),
+    default="library",
+    help=(
+        "Source for training plan workouts: 'library' (fast, deterministic) "
+        "or 'llm' (flexible, uses tokens)"
+    ),
 )
 def generate(
     csv_file: Path | None,
@@ -206,7 +211,8 @@ def generate(
     model: str | None,
     prompts_dir: Path | None,
     prompt_model: str,
-    prompt_version: str,
+    prompt_version: str | None,
+    workout_source: str,
 ) -> None:
     """
     Generate comprehensive cycling analysis reports.
@@ -286,11 +292,22 @@ def generate(
         # Display header
         console.print()
         fit_only_mode = csv_file is None
+
+        # Build workout source description
+        if not skip_training_plan:
+            if workout_source == "library":
+                workout_mode = "[dim]Training Plan: Library-based workouts (fast, 0 tokens)[/dim]"
+            else:
+                workout_mode = "[dim]Training Plan: LLM-generated workouts (flexible)[/dim]"
+        else:
+            workout_mode = "[dim]Training Plan: Skipped[/dim]"
+
         if fit_only_mode:
             console.print(
                 Panel.fit(
                     "[bold cyan]Multi-Agent Report Generator (FIT-only mode)[/bold cyan]\n"
-                    "[dim]Building activity data from FIT files[/dim]",
+                    "[dim]Building activity data from FIT files[/dim]\n"
+                    f"{workout_mode}",
                     border_style="cyan",
                 )
             )
@@ -298,7 +315,8 @@ def generate(
             console.print(
                 Panel.fit(
                     "[bold cyan]Multi-Agent Report Generator[/bold cyan]\n"
-                    "[dim]Orchestrating specialized agents for comprehensive analysis[/dim]",
+                    "[dim]Orchestrating specialized agents for comprehensive analysis[/dim]\n"
+                    f"{workout_mode}",
                     border_style="cyan",
                 )
             )
@@ -330,6 +348,11 @@ def generate(
             raise click.Abort() from e
         console.print()
 
+        # Get prompt version from config if not specified via CLI
+        if prompt_version is None:
+            prompt_version = config.version if config else "1.3"
+            console.print(f"[dim]Using prompt version from config: {prompt_version}[/dim]")
+
         # Initialize prompts manager
         prompts_manager = AgentPromptsManager(
             prompts_dir=prompts_dir,
@@ -358,6 +381,7 @@ def generate(
             fit_only_mode=fit_only_mode,
             skip_data_prep=skip_data_prep,
             analyze_cross_training=cross_training,
+            workout_source=workout_source,
         )
 
         # Validate configuration

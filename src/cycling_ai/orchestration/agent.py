@@ -92,6 +92,8 @@ class LLMAgent:
             tools = all_tools
 
         iteration = 0
+        called_tools_with_args: dict[str, list[str]] = {}  # Track tool calls to prevent duplicates
+
         while iteration < self.max_iterations:
             iteration += 1
 
@@ -100,6 +102,7 @@ class LLMAgent:
             logger = logging.getLogger(__name__)
             logger.info(f"[AGENT LOOP] Iteration {iteration}/{self.max_iterations}")
             logger.info(f"[AGENT LOOP] Current session messages: {len(self.session.messages)}")
+            logger.info(f"[AGENT LOOP] Previously called tools: {list(called_tools_with_args.keys())}")
 
             # Get messages formatted for LLM and convert to ProviderMessage
             messages_data = self.session.get_messages_for_llm()
@@ -131,11 +134,51 @@ class LLMAgent:
             # Check if LLM wants to call tools
             if response.tool_calls:
                 logger.info(f"[AGENT LOOP] Tool calls detected: {len(response.tool_calls)}")
+
+                # Check for duplicate tool calls with same arguments
+                duplicate_detected = False
                 for tc in response.tool_calls:
                     tool_name = tc.get('name', 'unknown')
                     tool_args = tc.get('arguments', {})
                     logger.info(f"[AGENT LOOP]   - Tool: {tool_name}")
                     logger.debug(f"[AGENT LOOP]     Arguments: {tool_args}")
+
+                    # Create a hash of the tool call (name + sorted args JSON)
+                    import json
+                    args_hash = json.dumps(tool_args, sort_keys=True)
+
+                    # Check if this exact tool call was made before
+                    if tool_name in called_tools_with_args:
+                        if args_hash in called_tools_with_args[tool_name]:
+                            logger.warning(
+                                f"[AGENT LOOP] DUPLICATE TOOL CALL DETECTED: {tool_name} "
+                                f"with same arguments was already called in iteration "
+                                f"{called_tools_with_args[tool_name].index(args_hash) + 1}"
+                            )
+                            logger.warning(
+                                f"[AGENT LOOP] LLM is stuck in a loop. Forcing response generation."
+                            )
+                            duplicate_detected = True
+                            break
+
+                # If duplicate detected, skip tool execution and force final response
+                if duplicate_detected:
+                    logger.warning(
+                        f"[AGENT LOOP] Stopping tool execution due to duplicate call. "
+                        f"Requesting final response from LLM."
+                    )
+                    # Add a message telling LLM to provide final response
+                    self.session.add_message(
+                        ConversationMessage(
+                            role="user",
+                            content=(
+                                "You have already called this tool with these exact arguments. "
+                                "Please provide your final analysis based on the previous tool results "
+                                "instead of calling the tool again."
+                            ),
+                        )
+                    )
+                    continue  # Go to next iteration to get final response
 
                 # Execute tools and add results to session
                 logger.debug(f"[AGENT LOOP] Calling _execute_tool_calls()...")
@@ -167,6 +210,16 @@ class LLMAgent:
                         tool_call, result
                     )
                     self.session.add_message(tool_result_msg)
+
+                    # Track this tool call to prevent duplicates
+                    tool_name = tool_call.get('name', 'unknown')
+                    tool_args = tool_call.get('arguments', {})
+                    args_hash = json.dumps(tool_args, sort_keys=True)
+
+                    if tool_name not in called_tools_with_args:
+                        called_tools_with_args[tool_name] = []
+                    called_tools_with_args[tool_name].append(args_hash)
+                    logger.debug(f"[AGENT LOOP] Tracked tool call: {tool_name} (call #{len(called_tools_with_args[tool_name])})")
 
                 # Check for phase-completion tools (single-call phases should exit immediately)
                 phase_completion_tools = {
