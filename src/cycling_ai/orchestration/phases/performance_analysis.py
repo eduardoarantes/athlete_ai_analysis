@@ -507,7 +507,7 @@ Use concrete numbers and percentages in all descriptions. Be encouraging but hon
         - At least threshold_pct of activities are non-cycling
         """
         try:
-            import pandas as pd  # type: ignore[import-untyped]
+            import pandas as pd
 
             # Load cache
             cache_path = Path(cache_file_path)
