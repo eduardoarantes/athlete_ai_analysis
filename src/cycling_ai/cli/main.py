@@ -12,7 +12,7 @@ import click
 
 from cycling_ai.logging_config import configure_logging
 
-from .commands import analyze, chat, config as config_cmd, generate, plan, providers, report
+from .commands import analyze, chat, config as config_cmd, generate, index, plan, providers, report
 from .commands.prepare_report_cmd import prepare_report_cmd
 from .formatting import console
 
@@ -75,6 +75,7 @@ def cli(ctx: click.Context, config: str | None, debug: bool, log_file: str | Non
 cli.add_command(analyze.analyze)
 cli.add_command(chat.chat)
 cli.add_command(generate.generate)
+cli.add_command(index.index)
 cli.add_command(plan.plan)
 cli.add_command(report.report)
 cli.add_command(prepare_report_cmd)

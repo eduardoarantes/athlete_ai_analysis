@@ -1,0 +1,371 @@
+{
+  "templates": [
+    {
+      "id": "12_week_base_building",
+      "name": "12-Week Base Building Plan",
+      "description": "Aerobic foundation plan for riders with 200-300W FTP targeting endurance development",
+      "goal": "base_building",
+      "duration_weeks": 12,
+      "ftp_range": [200, 300],
+      "weekly_hours_range": [6, 10],
+      "experience_level": "intermediate",
+      "structure": {
+        "phase_1": {
+          "weeks": [1, 2, 3, 4],
+          "focus": "Aerobic Foundation",
+          "volume_hours": [6, 7, 8, 6],
+          "intensity_distribution": {"z1_z2": 85, "z3": 10, "z4_plus": 5},
+          "key_workouts": ["3hr Zone 2 endurance", "2x15min tempo @ 85% FTP"]
+        },
+        "phase_2": {
+          "weeks": [5, 6, 7, 8],
+          "focus": "Strength Endurance",
+          "volume_hours": [8, 9, 10, 7],
+          "intensity_distribution": {"z1_z2": 80, "z3": 15, "z4_plus": 5},
+          "key_workouts": ["4hr Zone 2 endurance", "3x15min sweet spot @ 90% FTP"]
+        },
+        "phase_3": {
+          "weeks": [9, 10, 11, 12],
+          "focus": "Threshold Introduction",
+          "volume_hours": [9, 10, 11, 7],
+          "intensity_distribution": {"z1_z2": 75, "z3": 15, "z4_plus": 10},
+          "key_workouts": ["4.5hr Zone 2 endurance", "2x20min threshold @ 95% FTP"]
+        }
+      },
+      "notes": "Suitable for time-crunched athletes building winter base. Focus on consistency over intensity."
+    },
+    {
+      "id": "8_week_vo2max_builder",
+      "name": "8-Week VO2max Development",
+      "description": "High-intensity focus for experienced riders with solid aerobic base",
+      "goal": "vo2max_improvement",
+      "duration_weeks": 8,
+      "ftp_range": [250, 350],
+      "weekly_hours_range": [8, 12],
+      "experience_level": "advanced",
+      "structure": {
+        "phase_1": {
+          "weeks": [1, 2, 3, 4],
+          "focus": "VO2max Foundation",
+          "volume_hours": [9, 10, 11, 7],
+          "intensity_distribution": {"z1_z2": 70, "z3": 10, "z4": 10, "z5": 10},
+          "key_workouts": ["4x5min @ 110% FTP", "2x20min threshold @ 98% FTP"]
+        },
+        "phase_2": {
+          "weeks": [5, 6, 7, 8],
+          "focus": "VO2max Maximization",
+          "volume_hours": [10, 11, 12, 8],
+          "intensity_distribution": {"z1_z2": 65, "z3": 10, "z4": 10, "z5": 15},
+          "key_workouts": ["5x5min @ 115% FTP", "6x3min @ 120% FTP"]
+        }
+      },
+      "notes": "Requires solid aerobic base. Not suitable for novice riders. High recovery needs."
+    },
+    {
+      "id": "16_week_century_prep",
+      "name": "16-Week Century Ride Preparation",
+      "description": "Complete plan for 100-mile event targeting sustained endurance",
+      "goal": "century_ride",
+      "duration_weeks": 16,
+      "ftp_range": [150, 250],
+      "weekly_hours_range": [7, 14],
+      "experience_level": "beginner",
+      "structure": {
+        "phase_1": {
+          "weeks": [1, 2, 3, 4],
+          "focus": "Initial Base",
+          "volume_hours": [7, 8, 9, 6],
+          "intensity_distribution": {"z1_z2": 90, "z3": 10, "z4_plus": 0},
+          "key_workouts": ["2.5hr endurance", "3hr endurance"]
+        },
+        "phase_2": {
+          "weeks": [5, 6, 7, 8],
+          "focus": "Volume Build",
+          "volume_hours": [9, 10, 11, 7],
+          "intensity_distribution": {"z1_z2": 85, "z3": 15, "z4_plus": 0},
+          "key_workouts": ["3hr endurance", "3.5hr endurance with tempo blocks"]
+        },
+        "phase_3": {
+          "weeks": [9, 10, 11, 12],
+          "focus": "Long Ride Peak",
+          "volume_hours": [11, 12, 13, 8],
+          "intensity_distribution": {"z1_z2": 85, "z3": 10, "z4_plus": 5},
+          "key_workouts": ["4hr endurance", "5hr endurance"]
+        },
+        "phase_4": {
+          "weeks": [13, 14, 15, 16],
+          "focus": "Event Taper",
+          "volume_hours": [10, 8, 6, 4],
+          "intensity_distribution": {"z1_z2": 90, "z3": 10, "z4_plus": 0},
+          "key_workouts": ["3hr endurance", "2hr easy spin", "Event day"]
+        }
+      },
+      "notes": "Progressive volume build. Final week includes century event. Practice nutrition in long rides."
+    },
+    {
+      "id": "6_week_threshold_boost",
+      "name": "6-Week FTP Booster",
+      "description": "Intensive threshold-focused block to increase FTP 5-10%",
+      "goal": "ftp_improvement",
+      "duration_weeks": 6,
+      "ftp_range": [220, 320],
+      "weekly_hours_range": [7, 10],
+      "experience_level": "intermediate",
+      "structure": {
+        "phase_1": {
+          "weeks": [1, 2, 3],
+          "focus": "Threshold Development",
+          "volume_hours": [8, 9, 9],
+          "intensity_distribution": {"z1_z2": 70, "z3": 10, "z4": 20},
+          "key_workouts": ["3x15min @ 95% FTP", "2x20min @ 98% FTP"]
+        },
+        "phase_2": {
+          "weeks": [4, 5, 6],
+          "focus": "Threshold Maximization",
+          "volume_hours": [9, 10, 6],
+          "intensity_distribution": {"z1_z2": 65, "z3": 10, "z4": 25},
+          "key_workouts": ["2x20min @ 100% FTP", "2x25min @ 98% FTP", "FTP test"]
+        }
+      },
+      "notes": "High-intensity block. Requires 8+ weeks base training first. Week 6 includes FTP retest."
+    },
+    {
+      "id": "10_week_crit_prep",
+      "name": "10-Week Criterium Preparation",
+      "description": "Race-specific plan for criterium racing emphasizing anaerobic capacity and repeatability",
+      "goal": "criterium_racing",
+      "duration_weeks": 10,
+      "ftp_range": [270, 370],
+      "weekly_hours_range": [9, 12],
+      "experience_level": "advanced",
+      "structure": {
+        "phase_1": {
+          "weeks": [1, 2, 3, 4],
+          "focus": "Anaerobic Base",
+          "volume_hours": [9, 10, 11, 7],
+          "intensity_distribution": {"z1_z2": 70, "z3": 5, "z4": 15, "z5": 5, "z6": 5},
+          "key_workouts": ["4x8min over-unders", "8x1min @ 130% FTP"]
+        },
+        "phase_2": {
+          "weeks": [5, 6, 7, 8],
+          "focus": "Race Simulation",
+          "volume_hours": [10, 11, 12, 8],
+          "intensity_distribution": {"z1_z2": 65, "z3": 5, "z4": 15, "z5": 10, "z6": 5},
+          "key_workouts": ["Crit simulation (1hr with 20x30sec surges)", "10x2min @ 125% FTP"]
+        },
+        "phase_3": {
+          "weeks": [9, 10],
+          "focus": "Race Taper",
+          "volume_hours": [8, 6],
+          "intensity_distribution": {"z1_z2": 75, "z3": 5, "z4": 10, "z5": 5, "z6": 5},
+          "key_workouts": ["Openers: 5x1min @ 120% FTP", "Race weekend"]
+        }
+      },
+      "notes": "Requires strong sprint and anaerobic capacity. Include group rides for race practice."
+    },
+    {
+      "id": "14_week_gran_fondo",
+      "name": "14-Week Gran Fondo Training",
+      "description": "Long-distance event preparation with climbing focus for 80-120 mile events",
+      "goal": "gran_fondo",
+      "duration_weeks": 14,
+      "ftp_range": [200, 320],
+      "weekly_hours_range": [8, 15],
+      "experience_level": "intermediate",
+      "structure": {
+        "phase_1": {
+          "weeks": [1, 2, 3, 4],
+          "focus": "Endurance Base",
+          "volume_hours": [8, 9, 10, 7],
+          "intensity_distribution": {"z1_z2": 80, "z3": 15, "z4_plus": 5},
+          "key_workouts": ["3hr endurance", "4hr endurance with hills"]
+        },
+        "phase_2": {
+          "weeks": [5, 6, 7, 8],
+          "focus": "Climbing Strength",
+          "volume_hours": [10, 11, 12, 8],
+          "intensity_distribution": {"z1_z2": 75, "z3": 15, "z4": 10},
+          "key_workouts": ["4hr hilly endurance", "3x15min sweet spot climbs @ 88% FTP"]
+        },
+        "phase_3": {
+          "weeks": [9, 10, 11, 12],
+          "focus": "Event Simulation",
+          "volume_hours": [12, 13, 14, 9],
+          "intensity_distribution": {"z1_z2": 75, "z3": 15, "z4": 10},
+          "key_workouts": ["5hr event simulation", "6hr endurance with climbing"]
+        },
+        "phase_4": {
+          "weeks": [13, 14],
+          "focus": "Taper",
+          "volume_hours": [8, 5],
+          "intensity_distribution": {"z1_z2": 85, "z3": 10, "z4_plus": 5},
+          "key_workouts": ["3hr easy", "Event day"]
+        }
+      },
+      "notes": "Seek hilly routes for long rides. Practice event-day nutrition and pacing strategies."
+    },
+    {
+      "id": "8_week_time_trial",
+      "name": "8-Week Time Trial Specialization",
+      "description": "TT-specific training for 20-40km events emphasizing threshold power and aerodynamics",
+      "goal": "time_trial",
+      "duration_weeks": 8,
+      "ftp_range": [260, 360],
+      "weekly_hours_range": [8, 11],
+      "experience_level": "advanced",
+      "structure": {
+        "phase_1": {
+          "weeks": [1, 2, 3, 4],
+          "focus": "Threshold Power",
+          "volume_hours": [9, 10, 10, 7],
+          "intensity_distribution": {"z1_z2": 70, "z3": 5, "z4": 25},
+          "key_workouts": ["2x20min @ 100% FTP", "3x15min @ 102% FTP"]
+        },
+        "phase_2": {
+          "weeks": [5, 6, 7, 8],
+          "focus": "TT Simulation",
+          "volume_hours": [10, 11, 9, 6],
+          "intensity_distribution": {"z1_z2": 70, "z3": 5, "z4": 25},
+          "key_workouts": ["40min TT simulation @ 100% FTP", "2x15min @ 105% FTP"]
+        }
+      },
+      "notes": "Include position work on TT bike. Practice race pacing. Test aerodynamic equipment."
+    },
+    {
+      "id": "20_week_multi_day_tour",
+      "name": "20-Week Multi-Day Tour Preparation",
+      "description": "Ultra-endurance training for multi-day cycling tours with progressive volume",
+      "goal": "multi_day_tour",
+      "duration_weeks": 20,
+      "ftp_range": [180, 280],
+      "weekly_hours_range": [8, 18],
+      "experience_level": "intermediate",
+      "structure": {
+        "phase_1": {
+          "weeks": [1, 2, 3, 4, 5],
+          "focus": "Base Endurance",
+          "volume_hours": [8, 9, 10, 11, 8],
+          "intensity_distribution": {"z1_z2": 90, "z3": 10, "z4_plus": 0},
+          "key_workouts": ["3hr endurance", "4hr endurance"]
+        },
+        "phase_2": {
+          "weeks": [6, 7, 8, 9, 10],
+          "focus": "Volume Peak",
+          "volume_hours": [12, 13, 14, 15, 10],
+          "intensity_distribution": {"z1_z2": 85, "z3": 15, "z4_plus": 0},
+          "key_workouts": ["5hr endurance", "6hr endurance"]
+        },
+        "phase_3": {
+          "weeks": [11, 12, 13, 14, 15],
+          "focus": "Back-to-Back Loading",
+          "volume_hours": [14, 15, 16, 17, 11],
+          "intensity_distribution": {"z1_z2": 85, "z3": 10, "z4_plus": 5},
+          "key_workouts": ["Saturday: 6hr + Sunday: 5hr back-to-back"]
+        },
+        "phase_4": {
+          "weeks": [16, 17, 18, 19, 20],
+          "focus": "Taper and Event",
+          "volume_hours": [12, 10, 8, 6, 0],
+          "intensity_distribution": {"z1_z2": 90, "z3": 10, "z4_plus": 0},
+          "key_workouts": ["4hr easy", "3hr easy", "Tour begins"]
+        }
+      },
+      "notes": "Practice consecutive day riding. Emphasize recovery nutrition. Test all touring equipment."
+    },
+    {
+      "id": "12_week_polarized_model",
+      "name": "12-Week Polarized Training Block",
+      "description": "Evidence-based 80/20 intensity distribution for all-around fitness",
+      "goal": "general_fitness",
+      "duration_weeks": 12,
+      "ftp_range": [200, 350],
+      "weekly_hours_range": [8, 12],
+      "experience_level": "intermediate",
+      "structure": {
+        "phase_1": {
+          "weeks": [1, 2, 3, 4],
+          "focus": "Polarization Foundation",
+          "volume_hours": [8, 9, 10, 7],
+          "intensity_distribution": {"z1_z2": 85, "z3": 5, "z4_z5": 10},
+          "key_workouts": ["4hr Zone 2", "5x5min @ 110% FTP"]
+        },
+        "phase_2": {
+          "weeks": [5, 6, 7, 8],
+          "focus": "Intensity Development",
+          "volume_hours": [9, 10, 11, 7],
+          "intensity_distribution": {"z1_z2": 80, "z3": 5, "z4": 10, "z5": 5},
+          "key_workouts": ["4.5hr Zone 2", "2x20min threshold", "4x5min VO2max"]
+        },
+        "phase_3": {
+          "weeks": [9, 10, 11, 12],
+          "focus": "Peak Polarization",
+          "volume_hours": [10, 11, 12, 8],
+          "intensity_distribution": {"z1_z2": 80, "z3": 5, "z4": 10, "z5": 5},
+          "key_workouts": ["5hr Zone 2", "2x20min @ 100% FTP", "6x4min @ 115% FTP"]
+        }
+      },
+      "notes": "Strict adherence to Zone 2 caps on easy days. Minimize time in Zone 3 (grey zone)."
+    },
+    {
+      "id": "10_week_climbing_specialist",
+      "name": "10-Week Climbing Optimization",
+      "description": "Training plan for mountain climbing events focusing on power-to-weight and sustained efforts",
+      "goal": "climbing",
+      "duration_weeks": 10,
+      "ftp_range": [240, 340],
+      "weekly_hours_range": [9, 13],
+      "experience_level": "advanced",
+      "structure": {
+        "phase_1": {
+          "weeks": [1, 2, 3, 4],
+          "focus": "Climbing Base",
+          "volume_hours": [9, 10, 11, 8],
+          "intensity_distribution": {"z1_z2": 75, "z3": 10, "z4": 15},
+          "key_workouts": ["3hr hilly endurance", "4x12min sweet spot climbs @ 90% FTP"]
+        },
+        "phase_2": {
+          "weeks": [5, 6, 7, 8],
+          "focus": "Long Climb Power",
+          "volume_hours": [10, 11, 12, 8],
+          "intensity_distribution": {"z1_z2": 70, "z3": 10, "z4": 15, "z5": 5},
+          "key_workouts": ["4hr climbing ride", "2x25min threshold climbs @ 98% FTP"]
+        },
+        "phase_3": {
+          "weeks": [9, 10],
+          "focus": "Event Taper",
+          "volume_hours": [9, 6],
+          "intensity_distribution": {"z1_z2": 80, "z3": 10, "z4": 10},
+          "key_workouts": ["3hr hilly easy", "Event day"]
+        }
+      },
+      "notes": "Seek long climbs (15-45min) for key workouts. Monitor power-to-weight ratio. Consider weight management."
+    },
+    {
+      "id": "4_week_recovery_rebuild",
+      "name": "4-Week Post-Season Recovery",
+      "description": "Active recovery and rebuilding after race season or intense training block",
+      "goal": "recovery",
+      "duration_weeks": 4,
+      "ftp_range": [0, 500],
+      "weekly_hours_range": [3, 6],
+      "experience_level": "all",
+      "structure": {
+        "phase_1": {
+          "weeks": [1, 2],
+          "focus": "Active Recovery",
+          "volume_hours": [3, 4],
+          "intensity_distribution": {"z1_z2": 100, "z3": 0, "z4_plus": 0},
+          "key_workouts": ["Easy 90min spin", "Easy 2hr spin"]
+        },
+        "phase_2": {
+          "weeks": [3, 4],
+          "focus": "Gentle Rebuild",
+          "volume_hours": [5, 6],
+          "intensity_distribution": {"z1_z2": 95, "z3": 5, "z4_plus": 0},
+          "key_workouts": ["2.5hr endurance", "3hr endurance with light tempo"]
+        }
+      },
+      "notes": "Focus on fun and recovery. Include cross-training. Monitor fatigue markers. Return to training gradually."
+    }
+  ]
+}
