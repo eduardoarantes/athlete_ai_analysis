@@ -17,6 +17,7 @@ from rich.table import Table
 from cycling_ai.cli.formatting import console
 from cycling_ai.config.loader import load_config
 from cycling_ai.orchestration.agent import AgentFactory, LLMAgent
+from cycling_ai.orchestration.profile_onboarding import ProfileOnboardingManager
 from cycling_ai.orchestration.session import (
     ConversationSession,
     SessionManager,
@@ -24,6 +25,248 @@ from cycling_ai.orchestration.session import (
 )
 from cycling_ai.providers.base import BaseProvider
 from cycling_ai.providers.factory import ProviderFactory
+
+
+def _detect_existing_profile(profile_path: Path | None) -> Path | None:
+    """
+    Detect existing athlete profile for chat session.
+
+    Priority logic:
+    1. If profile_path provided via CLI --profile flag, use that (takes priority)
+    2. Otherwise, search for profiles in data/*/athlete_profile.json
+    3. If multiple profiles found, use most recently modified
+    4. If no profiles found, return None (triggers onboarding)
+
+    Args:
+        profile_path: Explicit profile path from --profile CLI flag (optional)
+
+    Returns:
+        Path to detected profile, or None if no profile exists
+
+    Raises:
+        FileNotFoundError: If explicit profile_path provided but doesn't exist
+
+    Examples:
+        >>> # Explicit path takes priority
+        >>> _detect_existing_profile(Path("athlete.json"))
+        Path("athlete.json")
+
+        >>> # Auto-detect from data/ directory
+        >>> _detect_existing_profile(None)
+        Path("data/Eduardo/athlete_profile.json")
+
+        >>> # No profiles found
+        >>> _detect_existing_profile(None)
+        None
+    """
+    # Priority 1: Use explicit path if provided
+    if profile_path is not None:
+        if not profile_path.exists():
+            raise FileNotFoundError(
+                f"Profile not found at specified path: {profile_path}"
+            )
+        return profile_path
+
+    # Priority 2: Search for profiles in data/ directory
+    current_dir = Path.cwd()
+    data_dir = current_dir / "data"
+
+    # Check if data directory exists
+    if not data_dir.exists() or not data_dir.is_dir():
+        return None
+
+    # Search for athlete_profile.json files in data/*/
+    found_profiles: list[Path] = []
+
+    try:
+        # Iterate through athlete directories
+        for athlete_dir in data_dir.iterdir():
+            if not athlete_dir.is_dir():
+                continue
+
+            profile_file = athlete_dir / "athlete_profile.json"
+            if profile_file.exists() and profile_file.is_file():
+                found_profiles.append(profile_file)
+    except (OSError, PermissionError):
+        # Handle permission errors gracefully
+        return None
+
+    # No profiles found
+    if not found_profiles:
+        return None
+
+    # Single profile found - use it
+    if len(found_profiles) == 1:
+        return found_profiles[0]
+
+    # Multiple profiles found - use most recently modified
+    most_recent = max(found_profiles, key=lambda p: p.stat().st_mtime)
+    return most_recent
+
+
+def _initialize_onboarding_mode(session: ConversationSession) -> None:
+    """
+    Initialize session for profile onboarding mode.
+
+    Sets up session context with:
+    - mode: "onboarding"
+    - onboarding_manager: ProfileOnboardingManager instance
+
+    Args:
+        session: Conversation session to initialize
+
+    Examples:
+        >>> session = ConversationSession(...)
+        >>> _initialize_onboarding_mode(session)
+        >>> session.context["mode"]
+        'onboarding'
+        >>> isinstance(session.context["onboarding_manager"], ProfileOnboardingManager)
+        True
+    """
+    session.context["mode"] = "onboarding"
+    session.context["onboarding_manager"] = ProfileOnboardingManager()
+
+
+def _get_onboarding_system_prompt() -> str:
+    """
+    Get system prompt for profile onboarding mode.
+
+    Returns specialized prompt that guides the LLM to:
+    - Collect athlete profile information conversationally
+    - Use profile creation tools (update_profile_field, finalize_profile)
+    - Be friendly and encouraging
+    - Explain what information is needed and why
+
+    Returns:
+        System prompt string for onboarding mode
+
+    Examples:
+        >>> prompt = _get_onboarding_system_prompt()
+        >>> "profile" in prompt.lower()
+        True
+    """
+    return """You are a friendly cycling coach helping an athlete create their profile.
+
+Your role is to collect the following information through natural conversation:
+
+**Required Core Fields (9):**
+1. name - Their name for personalization
+2. age - Age in years (18-100)
+3. gender - Male, Female, or Other
+4. weight_kg - Body weight in kilograms (40-200 kg)
+5. ftp - Functional Threshold Power in watts (50-600 watts)
+6. max_hr - Maximum heart rate in bpm (100-220 bpm)
+7. training_experience - beginner, intermediate, or advanced
+8. training_availability_hours_per_week - Hours available for training (1-40)
+9. goals - At least one training goal (e.g., "Improve FTP", "Complete century ride")
+
+**Optional Enrichment Fields (3):**
+10. target_event - Upcoming event details (name, date, distance)
+11. previous_cycling_history - Background and experience
+12. limitations - Injuries or constraints to consider
+
+**Available Tools:**
+- update_profile_field(field_name, value) - Update a single field with validation
+- estimate_ftp(method, ...) - Estimate FTP using various methods
+- estimate_max_hr(age) - Estimate max HR from age
+- finalize_profile() - Save complete profile to disk
+
+**Your approach:**
+1. Be conversational and friendly - you're having a chat, not conducting an interview
+2. Ask for information ONE field at a time - don't overwhelm them
+3. Explain WHY you need each piece of information
+4. Use update_profile_field() after receiving each answer
+5. If they don't know FTP or max HR, offer to estimate
+6. After collecting all core fields, offer to collect optional enrichment
+7. When complete, call finalize_profile() to save their profile
+
+**Important:**
+- Don't ask for all fields at once - it's overwhelming
+- Be encouraging and explain the value of each metric
+- If they're unsure about a value, help them estimate
+- Validate inputs before calling tools
+- When finalize_profile() succeeds, congratulate them and transition to normal chat
+
+Start by warmly greeting them and asking for their name!"""
+
+
+def _check_onboarding_completion(session: ConversationSession) -> bool:
+    """
+    Check if profile onboarding is complete.
+
+    Completion criteria:
+    1. Session mode must be "onboarding"
+    2. profile_path must exist in context
+    3. Profile file must exist at that path
+
+    Args:
+        session: Conversation session to check
+
+    Returns:
+        True if onboarding is complete, False otherwise
+
+    Examples:
+        >>> session = ConversationSession(...)
+        >>> session.context = {"mode": "onboarding"}
+        >>> _check_onboarding_completion(session)
+        False
+
+        >>> session.context["profile_path"] = "/path/to/profile.json"
+        >>> # Assuming file exists
+        >>> _check_onboarding_completion(session)
+        True
+    """
+    # Must be in onboarding mode
+    if session.context.get("mode") != "onboarding":
+        return False
+
+    # Must have profile_path in context
+    profile_path_str = session.context.get("profile_path")
+    if not profile_path_str:
+        return False
+
+    # Profile file must exist
+    profile_path = Path(profile_path_str)
+    if not profile_path.exists() or not profile_path.is_file():
+        return False
+
+    return True
+
+
+def _transition_to_normal_mode(session: ConversationSession) -> None:
+    """
+    Transition session from onboarding to normal chat mode.
+
+    Changes:
+    - mode: "onboarding" → "normal"
+    - Removes onboarding_manager from context
+    - Sets athlete_profile to profile_path (if exists)
+    - Preserves profile_path and other context fields
+
+    Args:
+        session: Conversation session to transition
+
+    Examples:
+        >>> session = ConversationSession(...)
+        >>> session.context = {
+        ...     "mode": "onboarding",
+        ...     "profile_path": "/path/to/profile.json"
+        ... }
+        >>> _transition_to_normal_mode(session)
+        >>> session.context["mode"]
+        'normal'
+        >>> session.context.get("athlete_profile")
+        '/path/to/profile.json'
+    """
+    # Change mode to normal
+    session.context["mode"] = "normal"
+
+    # Remove onboarding manager if exists
+    session.context.pop("onboarding_manager", None)
+
+    # Set athlete_profile to profile_path if available
+    if "profile_path" in session.context:
+        session.context["athlete_profile"] = session.context["profile_path"]
 
 
 @click.command()
@@ -121,18 +364,42 @@ def chat(
                 console.print(f"[red]Session '{session_id}' not found[/red]")
                 raise click.Abort() from e
         else:
-            # Create new session
-            context = _build_session_context(profile, data_dir)
-            system_prompt = AgentFactory.get_default_system_prompt()
+            # NEW: Detect existing profile
+            detected_profile_path = _detect_existing_profile(profile)
 
-            session = session_manager.create_session(
-                provider_name=provider,
-                context=context,
-                model=model,
-                system_prompt=system_prompt,
-            )
+            # Determine if we need onboarding
+            needs_onboarding = detected_profile_path is None
 
-            console.print(f"[green]✓ New session created: {session.session_id}[/green]")
+            # Create new session with appropriate mode
+            if needs_onboarding:
+                # NEW: Onboarding mode
+                context: dict[str, Any] = {}
+                system_prompt = _get_onboarding_system_prompt()
+
+                session = session_manager.create_session(
+                    provider_name=provider,
+                    context=context,
+                    model=model,
+                    system_prompt=system_prompt,
+                )
+
+                # Initialize onboarding after session creation
+                _initialize_onboarding_mode(session)
+
+                console.print(f"[green]✓ New session created: {session.session_id}[/green]")
+            else:
+                # Existing: Normal mode
+                context = _build_session_context(detected_profile_path, data_dir)
+                system_prompt = AgentFactory.get_default_system_prompt()
+
+                session = session_manager.create_session(
+                    provider_name=provider,
+                    context=context,
+                    model=model,
+                    system_prompt=system_prompt,
+                )
+
+                console.print(f"[green]✓ New session created: {session.session_id}[/green]")
 
         # Initialize provider
         provider_instance = _initialize_provider(
@@ -287,18 +554,39 @@ def _display_welcome(session: ConversationSession, provider: str) -> None:
         session: Current conversation session
         provider: Provider name
     """
-    welcome = Panel.fit(
-        f"""[bold cyan]Welcome to Cycling AI Chat![/bold cyan]
+    # Check if we're in onboarding mode
+    if session.context.get("mode") == "onboarding":
+        # Onboarding welcome message
+        welcome = Panel.fit(
+            """[bold cyan]🚴 Welcome to Cycling AI![/bold cyan]
+
+[yellow]Let's set up your athlete profile to get started.[/yellow]
+
+[white]I'll help you create your personalized profile through a friendly conversation.[/white]
+[white]We'll collect information like your FTP, training experience, and goals.[/white]
+
+[dim]Use /help for commands or /quit to exit.[/dim]
+""",
+            border_style="cyan",
+        )
+    else:
+        # Normal chat welcome message
+        profile_info = ""
+        if "athlete_profile" in session.context:
+            profile_info = f"\n[white]Profile:[/white] [dim]{session.context['athlete_profile']}[/dim]"
+
+        welcome = Panel.fit(
+            f"""[bold cyan]Welcome to Cycling AI Chat![/bold cyan]
 
 [white]Provider:[/white] [green]{provider}[/green]
 [white]Model:[/white] [green]{session.model or 'default'}[/green]
-[white]Session:[/white] [dim]{session.session_id}[/dim]
+[white]Session:[/white] [dim]{session.session_id}[/dim]{profile_info}
 
 [yellow]Type your questions about cycling performance, training, or analysis.[/yellow]
 [dim]Use /help for available commands or /quit to exit.[/dim]
 """,
-        border_style="cyan",
-    )
+            border_style="cyan",
+        )
     console.print(welcome)
     console.print()
 
@@ -353,6 +641,21 @@ def _interactive_loop(
 
             # Save session
             session_manager.update_session(session)
+
+            # NEW: Check if onboarding just completed
+            if _check_onboarding_completion(session):
+                profile_path = session.context.get("profile_path")
+                _transition_to_normal_mode(session)
+
+                console.print("\n[green]✅ Profile setup complete![/green]")
+                console.print(f"[dim]Profile saved to: {profile_path}[/dim]\n")
+                console.print("You can now ask me questions about your training!\n")
+
+                # Save session with updated mode
+                session_manager.update_session(session)
+
+                # Continue loop in normal mode
+                continue
 
         except KeyboardInterrupt:
             console.print("\n[yellow]Use /quit to exit[/yellow]")

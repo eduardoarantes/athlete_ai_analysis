@@ -450,8 +450,8 @@ class AgentFactory:
                     ConversationMessage(role="system", content=system_prompt)
                 )
 
-        # Create executor with tool filtering
-        executor = ToolExecutor(allowed_tools=allowed_tools)
+        # Create executor with session and tool filtering
+        executor = ToolExecutor(session=session, allowed_tools=allowed_tools)
 
         # Create agent
         return LLMAgent(
