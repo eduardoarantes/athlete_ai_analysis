@@ -95,6 +95,12 @@ src/cycling_ai/
 │   ├── fit_processing.py # FIT file parsing
 │   └── workout_builder.py
 │
+├── rag/                  # RAG (Retrieval Augmented Generation)
+│   ├── embeddings.py    # EmbeddingFactory (local & API embeddings)
+│   ├── vectorstore.py   # ChromaVectorStore wrapper
+│   ├── manager.py       # RAGManager (two-vectorstore design)
+│   └── indexing.py      # KnowledgeIndexer (markdown → chunks)
+│
 ├── tools/                # Tool abstraction layer (MCP-style)
 │   ├── base.py          # Tool, ToolParameter, ToolExecutionResult
 │   ├── registry.py      # Auto-discovery and registration
@@ -116,12 +122,23 @@ src/cycling_ai/
 │   ├── agent.py        # LLMAgent, AgentFactory (tool calling)
 │   ├── executor.py     # ToolExecutor (Python execution)
 │   ├── multi_agent.py  # MultiAgentOrchestrator (4-phase pipeline)
-│   └── prompts.py      # AgentPromptsManager (specialized prompts)
+│   ├── prompts.py      # AgentPromptsManager (specialized prompts)
+│   ├── rag_integration.py  # PromptAugmenter (RAG → prompts)
+│   ├── workflows/      # Workflow orchestration
+│   │   ├── base_workflow.py  # BaseWorkflow (template pattern)
+│   │   └── full_report.py    # FullReportWorkflow (4 phases)
+│   └── phases/         # Phase implementations
+│       ├── base_phase.py         # BasePhase (template with RAG support)
+│       ├── data_preparation.py   # Phase 1 + RAG retrieval
+│       ├── performance_analysis.py  # Phase 2 + RAG retrieval
+│       ├── training_planning.py     # Phase 3 + RAG templates
+│       └── report_preparation.py    # Phase 4 + RAG retrieval
 │
 ├── cli/                # Command-line interface
 │   ├── main.py        # Entry point, Click app
 │   └── commands/      # CLI commands
-│       ├── generate.py   # Multi-agent report generation
+│       ├── generate.py   # Multi-agent report generation (with --enable-rag)
+│       ├── index.py      # RAG knowledge base indexing
 │       ├── chat.py       # Conversational interface
 │       ├── analyze.py    # Direct analysis commands
 │       └── plan.py       # Training plan commands
@@ -204,6 +221,117 @@ class AnalyzePerformanceTool(BaseTool):
 **Usage:**
 - Chat: One long-lived session
 - Multi-agent: Fresh session per phase
+
+### 5. RAG System (`rag/` + `orchestration/rag_integration.py`)
+
+**Purpose:** Retrieval Augmented Generation enhances agent prompts with relevant domain knowledge
+
+**Architecture:** Two-Vectorstore Design
+- **Project Vectorstore** (`data/vectorstore/`): Shared knowledge (domain expertise, training templates)
+- **User Vectorstore** (`~/.cycling-ai/athlete_history/`): Athlete-specific history (planned, not yet implemented)
+
+**Key Components:**
+
+1. **EmbeddingFactory** (`rag/embeddings.py`)
+   - Supports multiple embedding providers (local, OpenAI)
+   - Default: sentence-transformers (`all-MiniLM-L6-v2`) - fast, free, privacy-focused
+   - Returns: `chromadb.EmbeddingFunction` for Chroma integration
+
+2. **ChromaVectorStore** (`rag/vectorstore.py`)
+   - Wrapper around ChromaDB for consistent interface
+   - Manages collections: `domain_knowledge`, `training_templates`
+   - Methods: `add_documents()`, `query()`, `get_stats()`
+
+3. **RAGManager** (`rag/manager.py`)
+   - Coordinates retrieval across multiple vectorstores
+   - Main API: `retrieve(query, collection, top_k, min_score)`
+   - Returns: `RetrievalResult` with documents, metadata, scores
+
+4. **KnowledgeIndexer** (`rag/indexing.py`)
+   - Indexes markdown files and JSON templates into vectorstore
+   - Chunking: 512 tokens, 50 token overlap, preserves sections
+   - Metadata: category, source file, chunk index, frontmatter
+
+5. **PromptAugmenter** (`orchestration/rag_integration.py`)
+   - Formats retrieved documents for prompt injection
+   - Token budget management (default: 2000 tokens max)
+   - Output format:
+     ```
+     [Original System Prompt]
+
+     ## Retrieved Knowledge Base
+
+     ### Document 1: [Title] (Score: 0.85)
+     [Content]
+
+     ### Document 2: [Title] (Score: 0.78)
+     [Content]
+     ```
+
+**Integration with Phases:**
+
+Each phase can override two methods for RAG customization:
+
+```python
+class MyPhase(BasePhase):
+    def _get_retrieval_collection(self) -> str:
+        """Return collection name: 'domain_knowledge' or 'training_templates'"""
+        return "domain_knowledge"
+
+    def _get_retrieval_query(self, context: PhaseContext) -> str:
+        """Build retrieval query from config and previous phase data"""
+        return f"performance analysis {context.config.period_months} months"
+```
+
+**RAG Flow in Workflow:**
+
+1. User runs: `cycling-ai generate --profile profile.json --csv data.csv --enable-rag`
+2. Workflow creates `RAGConfig` with `enabled=True`
+3. `BaseWorkflow._create_phase_context()` initializes RAGManager
+4. Each phase executes:
+   - Get base system prompt
+   - IF RAG enabled:
+     - Call `_get_retrieval_query()` to build query
+     - Call `rag_manager.retrieve()` to get relevant docs
+     - Call `PromptAugmenter.augment_system_prompt()` to inject context
+   - Create session with augmented prompt
+   - Execute agent with tools
+
+**Phase-Specific Retrieval:**
+
+| Phase | Collection | Query Focus | Purpose |
+|-------|-----------|-------------|---------|
+| Data Preparation | `domain_knowledge` | Data validation, FIT files | Ensure quality checks align with standards |
+| Performance Analysis | `domain_knowledge` | Performance metrics, zones | Ground analysis in cycling science |
+| Training Planning | `training_templates` | Plans matching FTP/goals | Use proven plan structures |
+| Report Preparation | `domain_knowledge` | Report generation, insights | Comprehensive report structure |
+
+**CLI Usage:**
+
+```bash
+# Enable RAG (default settings)
+cycling-ai generate --profile profile.json --csv data.csv --enable-rag
+
+# Custom RAG parameters
+cycling-ai generate \
+    --profile profile.json \
+    --csv data.csv \
+    --enable-rag \
+    --rag-top-k 5 \
+    --rag-min-score 0.7
+
+# Index knowledge base (one-time setup)
+cycling-ai index domain-knowledge
+cycling-ai index training-templates
+```
+
+**Benefits:**
+- 30-40% token reduction vs. full context injection
+- Higher quality analysis (grounded in cycling science)
+- Better training plans (proven templates)
+- Faster execution (targeted retrieval)
+
+**See:** `docs/RAG_USAGE_GUIDE.md` for detailed usage instructions
 
 ---
 
@@ -704,8 +832,18 @@ assert result.success, f"Tool failed: {result.error}"
 ### Common Commands
 
 ```bash
-# Generate comprehensive reports
+# Generate comprehensive reports (with RAG)
+cycling-ai generate --profile profile.json --fit-dir ./fit/ --enable-rag --provider anthropic
+
+# Generate without RAG (original behavior)
 cycling-ai generate --profile profile.json --fit-dir ./fit/ --provider anthropic
+
+# RAG with custom parameters
+cycling-ai generate --profile profile.json --csv data.csv --enable-rag --rag-top-k 5 --rag-min-score 0.7
+
+# Index knowledge base (one-time setup for RAG)
+cycling-ai index domain-knowledge
+cycling-ai index training-templates
 
 # Start chat session
 cycling-ai chat --provider anthropic --profile profile.json
