@@ -127,67 +127,42 @@ def _initialize_onboarding_mode(session: ConversationSession) -> None:
     session.context["onboarding_manager"] = ProfileOnboardingManager()
 
 
-def _get_onboarding_system_prompt() -> str:
+def _get_onboarding_system_prompt(config: Any) -> str:
     """
     Get system prompt for profile onboarding mode.
 
-    Returns specialized prompt that guides the LLM to:
-    - Collect athlete profile information conversationally
-    - Use profile creation tools (update_profile_field, finalize_profile)
-    - Be friendly and encouraging
-    - Explain what information is needed and why
+    Loads prompt from external file using AgentPromptsManager.
+    This ensures prompt is version-controlled and externalized.
+
+    Args:
+        config: Configuration object containing prompt version
 
     Returns:
         System prompt string for onboarding mode
 
+    Raises:
+        FileNotFoundError: If prompt file doesn't exist for configured version
+
     Examples:
-        >>> prompt = _get_onboarding_system_prompt()
+        >>> config = load_config()
+        >>> prompt = _get_onboarding_system_prompt(config)
         >>> "profile" in prompt.lower()
         True
     """
-    return """You are a friendly cycling coach helping an athlete create their profile.
+    from cycling_ai.orchestration.prompts import AgentPromptsManager
 
-Your role is to collect the following information through natural conversation:
+    # Get prompt version from config (defaults to "1.3")
+    prompt_version = config.version if config else "1.3"
 
-**Required Core Fields (9):**
-1. name - Their name for personalization
-2. age - Age in years (18-100)
-3. gender - Male, Female, or Other
-4. weight_kg - Body weight in kilograms (40-200 kg)
-5. ftp - Functional Threshold Power in watts (50-600 watts)
-6. max_hr - Maximum heart rate in bpm (100-220 bpm)
-7. training_experience - beginner, intermediate, or advanced
-8. training_availability_hours_per_week - Hours available for training (1-40)
-9. goals - At least one training goal (e.g., "Improve FTP", "Complete century ride")
+    # Initialize prompts manager
+    prompts_manager = AgentPromptsManager(
+        prompts_dir=None,  # Use default prompts directory
+        model="default",
+        version=prompt_version,
+    )
 
-**Optional Enrichment Fields (3):**
-10. target_event - Upcoming event details (name, date, distance)
-11. previous_cycling_history - Background and experience
-12. limitations - Injuries or constraints to consider
-
-**Available Tools:**
-- update_profile_field(field_name, value) - Update a single field with validation
-- estimate_ftp(method, ...) - Estimate FTP using various methods
-- estimate_max_hr(age) - Estimate max HR from age
-- finalize_profile() - Save complete profile to disk
-
-**Your approach:**
-1. Be conversational and friendly - you're having a chat, not conducting an interview
-2. Ask for information ONE field at a time - don't overwhelm them
-3. Explain WHY you need each piece of information
-4. Use update_profile_field() after receiving each answer
-5. If they don't know FTP or max HR, offer to estimate
-6. After collecting all core fields, offer to collect optional enrichment
-7. When complete, call finalize_profile() to save their profile
-
-**Important:**
-- Don't ask for all fields at once - it's overwhelming
-- Be encouraging and explain the value of each metric
-- If they're unsure about a value, help them estimate
-- Validate inputs before calling tools
-- When finalize_profile() succeeds, congratulate them and transition to normal chat
-
-Start by warmly greeting them and asking for their name!"""
+    # Load and return onboarding prompt
+    return prompts_manager.get_profile_onboarding_prompt()
 
 
 def _check_onboarding_completion(session: ConversationSession) -> bool:
@@ -374,7 +349,7 @@ def chat(
             if needs_onboarding:
                 # NEW: Onboarding mode
                 context: dict[str, Any] = {}
-                system_prompt = _get_onboarding_system_prompt()
+                system_prompt = _get_onboarding_system_prompt(config)
 
                 session = session_manager.create_session(
                     provider_name=provider,

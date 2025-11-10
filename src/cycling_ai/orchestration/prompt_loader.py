@@ -426,6 +426,21 @@ class PromptLoader:
         # Format with provided variables
         return template.format(**kwargs)
 
+    def get_profile_onboarding_prompt(self) -> str:
+        """
+        Get profile onboarding system prompt for chat sessions.
+
+        Returns system prompt that guides the LLM to collect athlete profile
+        information conversationally and create the profile using tools.
+
+        Returns:
+            System prompt for profile onboarding mode
+
+        Raises:
+            FileNotFoundError: If prompt file doesn't exist
+        """
+        return self.load_prompt("profile_onboarding")
+
     @staticmethod
     def list_available_models(prompts_base_dir: Path | str | None = None) -> list[str]:
         """
