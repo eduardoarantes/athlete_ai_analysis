@@ -127,17 +127,21 @@ class PlanOverviewTool(BaseTool):
                                             "enum": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
                                             "description": "Day of the week"
                                         },
-                                        "workout_type": {
-                                            "type": "string",
-                                            "enum": ["rest", "recovery", "endurance", "tempo", "sweetspot", "threshold", "vo2max", "mixed", "strength"],
-                                            "description": "Workout type from library (or rest/strength)"
+                                        "workout_types": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string",
+                                                "enum": ["rest", "recovery", "endurance", "tempo", "sweetspot", "threshold", "vo2max", "mixed", "strength"]
+                                            },
+                                            "minItems": 1,
+                                            "description": "Array of workout types for this day (e.g., ['endurance', 'strength'] for cycling + strength on same day)"
                                         },
                                         "optional": {
                                             "type": "boolean",
                                             "description": "Whether this training day is optional (default: false)"
                                         }
                                     },
-                                    "required": ["weekday", "workout_type"]
+                                    "required": ["weekday", "workout_types"]
                                 },
                                 "description": "All 7 weekdays with prescribed workout types from library"
                             },
@@ -222,6 +226,7 @@ class PlanOverviewTool(BaseTool):
             # Validate training_days in each week
             valid_weekdays = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"}
             valid_workout_types = {"rest", "recovery", "endurance", "tempo", "sweetspot", "threshold", "vo2max", "mixed", "strength"}
+            cycling_workout_types = {"recovery", "endurance", "tempo", "sweetspot", "threshold", "vo2max", "mixed"}
             hard_workout_types = {"threshold", "vo2max", "sweetspot"}
 
             for i, week in enumerate(weekly_overview):
@@ -249,25 +254,38 @@ class PlanOverviewTool(BaseTool):
                     # Validate structure
                     if not isinstance(day_obj, dict):
                         raise ValueError(
-                            f"Week {week_num}: training_days entries must be objects with 'weekday' and 'workout_type'. "
+                            f"Week {week_num}: training_days entries must be objects with 'weekday' and 'workout_types'. "
                             f"Got: {day_obj}"
                         )
 
                     weekday = day_obj.get("weekday")
-                    workout_type_raw = day_obj.get("workout_type")
+                    workout_types_raw = day_obj.get("workout_types")
 
                     if not weekday:
                         raise ValueError(
                             f"Week {week_num}: training day entry missing 'weekday' field: {day_obj}"
                         )
 
-                    if not workout_type_raw:
+                    if not workout_types_raw:
                         raise ValueError(
-                            f"Week {week_num}: training day entry missing 'workout_type' field: {day_obj}"
+                            f"Week {week_num}: training day entry missing 'workout_types' field: {day_obj}"
                         )
 
-                    # Normalize workout_type to lowercase (LLMs sometimes return "Endurance" instead of "endurance")
-                    workout_type = workout_type_raw.lower() if isinstance(workout_type_raw, str) else workout_type_raw
+                    if not isinstance(workout_types_raw, list):
+                        raise ValueError(
+                            f"Week {week_num}, {weekday}: 'workout_types' must be an array, got: {type(workout_types_raw).__name__}"
+                        )
+
+                    if len(workout_types_raw) == 0:
+                        raise ValueError(
+                            f"Week {week_num}, {weekday}: 'workout_types' array cannot be empty"
+                        )
+
+                    # Normalize workout_types to lowercase (LLMs sometimes return "Endurance" instead of "endurance")
+                    workout_types = [
+                        wt.lower() if isinstance(wt, str) else wt
+                        for wt in workout_types_raw
+                    ]
 
                     # Validate weekday
                     if weekday not in valid_weekdays:
@@ -283,21 +301,32 @@ class PlanOverviewTool(BaseTool):
                         )
                     weekdays_seen.add(weekday)
 
-                    # Validate workout_type
-                    if workout_type not in valid_workout_types:
+                    # Validate each workout_type in the array
+                    for workout_type in workout_types:
+                        if workout_type not in valid_workout_types:
+                            raise ValueError(
+                                f"Week {week_num}, {weekday} has invalid workout_type '{workout_type}'. "
+                                f"Must be one of (case-insensitive): {', '.join(sorted(valid_workout_types))}"
+                            )
+
+                    # Validate: Cannot have both 'rest' and other workout types
+                    if "rest" in workout_types and len(workout_types) > 1:
                         raise ValueError(
-                            f"Week {week_num}, {weekday} has invalid workout_type '{workout_type_raw}' "
-                            f"(normalized to '{workout_type}'). "
-                            f"Must be one of (case-insensitive): {', '.join(sorted(valid_workout_types))}"
+                            f"Week {week_num}, {weekday}: Cannot combine 'rest' with other workout types. "
+                            f"Got: {workout_types}"
                         )
 
-                    # Update the day_obj with normalized value
-                    day_obj["workout_type"] = workout_type
+                    # Update the day_obj with normalized values
+                    day_obj["workout_types"] = workout_types
 
-                    # Count non-rest days and hard days
-                    if workout_type != "rest":
+                    # Count non-rest days and hard days (only count cycling workouts)
+                    has_cycling = any(wt in cycling_workout_types for wt in workout_types)
+                    has_rest = "rest" in workout_types
+
+                    if not has_rest and has_cycling:
                         non_rest_days += 1
-                        if workout_type in hard_workout_types:
+                        # Count hard days (only if cycling workout is hard)
+                        if any(wt in hard_workout_types for wt in workout_types):
                             hard_days_count += 1
 
                 # Validate all weekdays present

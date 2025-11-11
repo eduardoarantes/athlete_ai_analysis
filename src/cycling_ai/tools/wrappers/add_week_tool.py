@@ -39,17 +39,17 @@ def _detect_optional_recovery_workout(
 
     Args:
         workouts: List of workout dictionaries
-        training_days_objects: Week overview training days (with workout_type)
+        training_days_objects: Week overview training days (with workout_types array)
         week_number: Current week number (for logging)
 
     Returns:
         (recovery_workout_index_or_none, recovery_weekday_or_none)
     """
-    # Count non-rest training days
+    # Count non-rest training days (days with at least one non-rest workout type)
     training_days_count = sum(
         1
         for day in training_days_objects
-        if isinstance(day, dict) and day.get("workout_type") != "rest"
+        if isinstance(day, dict) and "rest" not in day.get("workout_types", [])
     )
 
     # Only applies to 6-day weeks
@@ -59,7 +59,7 @@ def _detect_optional_recovery_workout(
     # Find first recovery workout in training_days_objects
     recovery_weekday = None
     for day in training_days_objects:
-        if isinstance(day, dict) and day.get("workout_type") == "recovery":
+        if isinstance(day, dict) and "recovery" in day.get("workout_types", []):
             recovery_weekday = day.get("weekday")
             break
 
@@ -672,19 +672,22 @@ class AddWeekDetailsTool(BaseTool):
                 week_overview = {}
 
             # Get designated training days for this week
-            # (extract weekdays from objects, exclude rest days)
+            # Build a map of weekday -> list of expected workout_types
             training_days_objects = week_overview.get("training_days", [])
+            expected_workout_types_by_day: dict[str, list[str]] = {}
+
             if training_days_objects:
-                # Extract weekday strings for non-rest days only (filter out None values)
-                training_days_raw = [
-                    day_obj.get("weekday")
-                    for day_obj in training_days_objects
-                    if isinstance(day_obj, dict) and day_obj.get("workout_type") != "rest"
-                ]
-                # Filter out None values for type safety
-                training_days = [day for day in training_days_raw if day is not None]
+                for day_obj in training_days_objects:
+                    if not isinstance(day_obj, dict):
+                        continue
+                    weekday = day_obj.get("weekday")
+                    workout_types = day_obj.get("workout_types", [])
+
+                    if weekday and workout_types:
+                        # Only include days that have non-rest workouts
+                        if "rest" not in workout_types:
+                            expected_workout_types_by_day[weekday] = workout_types
             else:
-                training_days = []
                 logger.warning(
                     f"No training_days found in week {week_number} overview, "
                     f"skipping training day validation"
@@ -704,10 +707,10 @@ class AddWeekDetailsTool(BaseTool):
 
                 # Validate workout is on designated training day
                 workout_weekday = workout.get("weekday")
-                if training_days and workout_weekday not in training_days:
+                if expected_workout_types_by_day and workout_weekday not in expected_workout_types_by_day:
                     raise ValueError(
                         f"Workout {i + 1} scheduled on '{workout_weekday}' but this week's "
-                        f"training_days are: {', '.join(training_days)}. "
+                        f"training_days are: {', '.join(sorted(expected_workout_types_by_day.keys()))}. "
                         f"You can ONLY schedule workouts on designated training days. "
                         f"Other days are rest days."
                     )
@@ -734,25 +737,49 @@ class AddWeekDetailsTool(BaseTool):
                                 f"required field: '{field}'"
                             )
 
-            # Validate number of workouts matches number of training days
-            # Allow extra workouts if they are strength workouts (supplementary training)
-            if training_days:
-                # Count non-strength workouts
-                non_strength_workouts = [
-                    w for w in workouts
-                    if not ("strength" in w.get("description", "").lower() or
-                            any("strength" in seg.get("type", "").lower() for seg in w.get("segments", [])))
-                ]
+            # Validate workout counts match expected workout_types
+            if expected_workout_types_by_day:
+                # Group workouts by weekday
+                workouts_by_day: dict[str, list[dict[str, Any]]] = {}
+                for workout in workouts:
+                    weekday = workout.get("weekday")
+                    if weekday:
+                        if weekday not in workouts_by_day:
+                            workouts_by_day[weekday] = []
+                        workouts_by_day[weekday].append(workout)
 
-                if len(non_strength_workouts) != len(training_days):
-                    strength_count = len(workouts) - len(non_strength_workouts)
-                    raise ValueError(
-                        f"Week {week_number} has {len(non_strength_workouts)} cycling workouts "
-                        f"({strength_count} strength) but {len(training_days)} training days. "
-                        f"You must create exactly one cycling workout for each training day: "
-                        f"{', '.join(training_days)}. "
-                        f"Strength workouts can be added as supplementary training on any training day."
-                    )
+                # Calculate total expected workouts across all days
+                total_expected = sum(len(types) for types in expected_workout_types_by_day.values())
+
+                # Validate each day has the correct number and types of workouts
+                for weekday, expected_types in expected_workout_types_by_day.items():
+                    day_workouts = workouts_by_day.get(weekday, [])
+
+                    # Count expected cycling vs strength
+                    expected_cycling = sum(1 for wt in expected_types if wt != "strength")
+                    expected_strength = sum(1 for wt in expected_types if wt == "strength")
+
+                    # Count actual cycling vs strength
+                    actual_cycling = 0
+                    actual_strength = 0
+                    for workout in day_workouts:
+                        is_strength = (
+                            "strength" in workout.get("description", "").lower() or
+                            any("strength" in seg.get("type", "").lower() for seg in workout.get("segments", []))
+                        )
+                        if is_strength:
+                            actual_strength += 1
+                        else:
+                            actual_cycling += 1
+
+                    # Validate counts match
+                    if actual_cycling != expected_cycling or actual_strength != expected_strength:
+                        raise ValueError(
+                            f"Week {week_number}, {weekday}: Expected {expected_types} "
+                            f"({expected_cycling} cycling, {expected_strength} strength) "
+                            f"but got {actual_cycling} cycling and {actual_strength} strength workouts. "
+                            f"You must provide exactly the workout types specified in training_days."
+                        )
 
             target_hours = week_overview.get("total_hours")
             current_ftp = overview_data.get("target_ftp", 250)  # Default FTP if not provided
