@@ -15,10 +15,14 @@ import logging
 from pathlib import Path
 from typing import Any
 
+# Import WorkflowConfig at module level (no circular dependency)
 from cycling_ai.orchestration.base import WorkflowConfig
-from cycling_ai.orchestration.multi_agent import MultiAgentOrchestrator
-from cycling_ai.orchestration.prompts import AgentPromptsManager
-from cycling_ai.orchestration.session import SessionManager
+
+# Delay imports that cause circular dependencies (imported in execute() method):
+# - MultiAgentOrchestrator
+# - AgentPromptsManager
+# - SessionManager
+
 from cycling_ai.tools.base import (
     BaseTool,
     ToolDefinition,
@@ -165,6 +169,12 @@ class GenerateTrainingPlanTool(BaseTool):
         """
         logger.info("[GENERATE PLAN TOOL] Starting execution")
         logger.debug(f"[GENERATE PLAN TOOL] Received kwargs keys: {list(kwargs.keys())}")
+
+        # Import here to avoid circular dependency
+        # (MultiAgentOrchestrator → workflows → phases → agent → executor → tools)
+        from cycling_ai.orchestration.multi_agent import MultiAgentOrchestrator
+        from cycling_ai.orchestration.prompts import AgentPromptsManager
+        from cycling_ai.orchestration.session import SessionManager
 
         try:
             # Extract session context if provided
