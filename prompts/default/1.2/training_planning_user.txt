@@ -51,13 +51,13 @@ Call `create_plan_overview` with:
   "weekly_focus": "Endurance building",
   "weekly_watch_points": "Monitor fatigue and recovery",
   "training_days": [
-    {{"weekday": "Monday", "workout_type": "rest"}},
-    {{"weekday": "Tuesday", "workout_type": "endurance"}},
-    {{"weekday": "Wednesday", "workout_type": "recovery"}},
-    {{"weekday": "Thursday", "workout_type": "rest"}},
-    {{"weekday": "Friday", "workout_type": "tempo"}},
-    {{"weekday": "Saturday", "workout_type": "endurance"}},
-    {{"weekday": "Sunday", "workout_type": "endurance"}}
+    {{"weekday": "Monday", workout_types": ["rest"]}},
+    {{"weekday": "Tuesday", workout_types": ["endurance"]}},
+    {{"weekday": "Wednesday", workout_types": ["recovery"]}},
+    {{"weekday": "Thursday", workout_types": ["rest"]}},
+    {{"weekday": "Friday", workout_types": ["tempo"]}},
+    {{"weekday": "Saturday", workout_types": ["endurance"]}},
+    {{"weekday": "Sunday", workout_types": ["endurance"]}}
   ],
   "total_hours": 6.8
 }}

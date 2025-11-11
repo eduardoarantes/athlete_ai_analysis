@@ -39,13 +39,13 @@ Example for a 3-week plan (you must create {training_plan_weeks} weeks):
       "weekly_focus": "Endurance building",
       "weekly_watch_points": "Monitor fatigue and recovery",
       "training_days": [
-        {{"weekday": "Monday", "workout_type": "rest"}},
-        {{"weekday": "Tuesday", "workout_type": "endurance"}},
-        {{"weekday": "Wednesday", "workout_type": "recovery"}},
-        {{"weekday": "Thursday", "workout_type": "rest"}},
-        {{"weekday": "Friday", "workout_type": "tempo"}},
-        {{"weekday": "Saturday", "workout_type": "endurance"}},
-        {{"weekday": "Sunday", "workout_type": "endurance"}}
+        {{"weekday": "Monday", workout_types": ["rest"]}},
+        {{"weekday": "Tuesday", workout_types": ["endurance"]}},
+        {{"weekday": "Wednesday", workout_types": ["recovery"]}},
+        {{"weekday": "Thursday", workout_types": ["rest"]}},
+        {{"weekday": "Friday", workout_types": ["tempo"]}},
+        {{"weekday": "Saturday", workout_types": ["endurance"]}},
+        {{"weekday": "Sunday", workout_types": ["endurance"]}}
       ],
       "total_hours": 6.8
     }},
@@ -56,13 +56,13 @@ Example for a 3-week plan (you must create {training_plan_weeks} weeks):
       "weekly_focus": "Increase endurance volume",
       "weekly_watch_points": "Watch for cumulative fatigue",
       "training_days": [
-        {{"weekday": "Monday", "workout_type": "rest"}},
-        {{"weekday": "Tuesday", "workout_type": "endurance"}},
-        {{"weekday": "Wednesday", "workout_type": "sweet_spot"}},
-        {{"weekday": "Thursday", "workout_type": "recovery"}},
-        {{"weekday": "Friday", "workout_type": "tempo"}},
-        {{"weekday": "Saturday", "workout_type": "endurance"}},
-        {{"weekday": "Sunday", "workout_type": "endurance"}}
+        {{"weekday": "Monday", workout_types": ["rest"]}},
+        {{"weekday": "Tuesday", workout_types": ["endurance"]}},
+        {{"weekday": "Wednesday", workout_types": ["sweetspot"]}},
+        {{"weekday": "Thursday", workout_types": ["recovery"]}},
+        {{"weekday": "Friday", workout_types": ["tempo"]}},
+        {{"weekday": "Saturday", workout_types": ["endurance"]}},
+        {{"weekday": "Sunday", workout_types": ["endurance"]}}
       ],
       "total_hours": 7.3
     }},
@@ -73,13 +73,13 @@ Example for a 3-week plan (you must create {training_plan_weeks} weeks):
       "weekly_focus": "FTP development",
       "weekly_watch_points": "Monitor power at threshold",
       "training_days": [
-        {{"weekday": "Monday", "workout_type": "rest"}},
-        {{"weekday": "Tuesday", "workout_type": "sweet_spot"}},
-        {{"weekday": "Wednesday", "workout_type": "recovery"}},
-        {{"weekday": "Thursday", "workout_type": "threshold"}},
-        {{"weekday": "Friday", "workout_type": "rest"}},
-        {{"weekday": "Saturday", "workout_type": "endurance"}},
-        {{"weekday": "Sunday", "workout_type": "sweet_spot"}}
+        {{"weekday": "Monday", workout_types": ["rest"]}},
+        {{"weekday": "Tuesday", workout_types": ["sweetspot"]}},
+        {{"weekday": "Wednesday", workout_types": ["recovery"]}},
+        {{"weekday": "Thursday", workout_types": ["threshold"]}},
+        {{"weekday": "Friday", workout_types": ["rest"]}},
+        {{"weekday": "Saturday", workout_types": ["endurance"]}},
+        {{"weekday": "Sunday", workout_types": ["sweetspot"]}}
       ],
       "total_hours": 7.8
     }}
