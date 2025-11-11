@@ -18,12 +18,16 @@ import json
 from pathlib import Path
 from typing import Any
 
-from cycling_ai.orchestration.profile_onboarding import (
+from cycling_ai.core.athlete_validation import (
     validate_age,
     validate_ftp,
     validate_max_hr,
     validate_training_availability,
     validate_weight,
+)
+from cycling_ai.orchestration.profile_onboarding import (
+    PartialProfile,
+    ProfileOnboardingManager,
 )
 from cycling_ai.tools.base import (
     BaseTool,

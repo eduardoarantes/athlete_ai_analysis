@@ -18,6 +18,15 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
+# Import validation from centralized module
+from cycling_ai.core.athlete_validation import (
+    validate_age,
+    validate_ftp,
+    validate_max_hr,
+    validate_training_availability,
+    validate_weight,
+)
+
 
 class OnboardingState(Enum):
     """
@@ -227,134 +236,8 @@ class PartialProfile:
         )
 
 
-def validate_age(age: int) -> tuple[bool, str]:
-    """
-    Validate age is within acceptable range.
-
-    Args:
-        age: Age in years
-
-    Returns:
-        Tuple of (is_valid, error_message).
-        error_message is empty string if valid.
-
-    Examples:
-        >>> validate_age(35)
-        (True, '')
-        >>> validate_age(17)
-        (False, 'Age must be at least 18')
-    """
-    if not isinstance(age, int):
-        return False, "Age must be a whole number"
-    if age < 18:
-        return False, "Age must be at least 18"
-    if age > 100:
-        return False, "Age must be 100 or less"
-    return True, ""
-
-
-def validate_weight(weight_kg: float) -> tuple[bool, str]:
-    """
-    Validate weight is within acceptable range.
-
-    Args:
-        weight_kg: Weight in kilograms
-
-    Returns:
-        Tuple of (is_valid, error_message).
-        error_message is empty string if valid.
-
-    Examples:
-        >>> validate_weight(70.0)
-        (True, '')
-        >>> validate_weight(30.0)
-        (False, 'Weight must be between 40 and 200 kg')
-    """
-    if not isinstance(weight_kg, (int, float)):
-        return False, "Weight must be a number"
-    if weight_kg < 40.0:
-        return False, "Weight must be between 40 and 200 kg"
-    if weight_kg > 200.0:
-        return False, "Weight must be between 40 and 200 kg"
-    return True, ""
-
-
-def validate_ftp(ftp: int) -> tuple[bool, str]:
-    """
-    Validate FTP (Functional Threshold Power) is within acceptable range.
-
-    Args:
-        ftp: FTP in watts
-
-    Returns:
-        Tuple of (is_valid, error_message).
-        error_message is empty string if valid.
-
-    Examples:
-        >>> validate_ftp(250)
-        (True, '')
-        >>> validate_ftp(30)
-        (False, 'FTP must be between 50 and 600 watts')
-    """
-    if not isinstance(ftp, int):
-        return False, "FTP must be a whole number"
-    if ftp < 50:
-        return False, "FTP must be between 50 and 600 watts"
-    if ftp > 600:
-        return False, "FTP must be between 50 and 600 watts"
-    return True, ""
-
-
-def validate_max_hr(max_hr: int) -> tuple[bool, str]:
-    """
-    Validate maximum heart rate is within acceptable range.
-
-    Args:
-        max_hr: Maximum heart rate in beats per minute
-
-    Returns:
-        Tuple of (is_valid, error_message).
-        error_message is empty string if valid.
-
-    Examples:
-        >>> validate_max_hr(185)
-        (True, '')
-        >>> validate_max_hr(90)
-        (False, 'Maximum heart rate must be between 100 and 220 bpm')
-    """
-    if not isinstance(max_hr, int):
-        return False, "Maximum heart rate must be a whole number"
-    if max_hr < 100:
-        return False, "Maximum heart rate must be between 100 and 220 bpm"
-    if max_hr > 220:
-        return False, "Maximum heart rate must be between 100 and 220 bpm"
-    return True, ""
-
-
-def validate_training_availability(hours: float) -> tuple[bool, str]:
-    """
-    Validate training availability hours per week.
-
-    Args:
-        hours: Training availability in hours per week
-
-    Returns:
-        Tuple of (is_valid, error_message).
-        error_message is empty string if valid.
-
-    Examples:
-        >>> validate_training_availability(8.0)
-        (True, '')
-        >>> validate_training_availability(0.5)
-        (False, 'Training availability must be between 1 and 40 hours per week')
-    """
-    if not isinstance(hours, (int, float)):
-        return False, "Training availability must be a number"
-    if hours < 1.0:
-        return False, "Training availability must be between 1 and 40 hours per week"
-    if hours > 40.0:
-        return False, "Training availability must be between 1 and 40 hours per week"
-    return True, ""
+# Note: Validation functions moved to cycling_ai.core.athlete_validation
+# for consolidation and reuse. Import them from there.
 
 
 @dataclass
