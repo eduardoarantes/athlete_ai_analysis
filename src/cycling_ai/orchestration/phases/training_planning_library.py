@@ -170,7 +170,7 @@ class LibraryBasedTrainingPlanningWeeks:
 
         Args:
             weekday: Day of week (Monday, Tuesday, etc.)
-            workout_type: Workout type (endurance, sweet_spot, etc.)
+            workout_type: Workout type (endurance, sweetspot, etc.)
             phase: Training phase (Base, Build, etc.)
             target_duration_min: Target duration in minutes
             min_duration_min: Minimum acceptable duration
@@ -188,6 +188,28 @@ class LibraryBasedTrainingPlanningWeeks:
             max_duration_min=max_duration_min,
             temperature=self.temperature,
         )
+
+    def _create_strength_workout(self, weekday: str) -> dict[str, Any]:
+        """
+        Create a simple strength training workout structure.
+
+        Args:
+            weekday: Day of week (Monday, Tuesday, etc.)
+
+        Returns:
+            Strength workout dict matching expected workout format
+        """
+        return {
+            "weekday": weekday,
+            "description": "Strength Training",
+            "segments": [
+                {
+                    "type": "strength",
+                    "duration_min": 30,
+                    "description": "Strength training session (bodyweight, weights, or resistance exercises)",
+                }
+            ],
+        }
 
     def _load_weekly_overview(self, plan_id: str) -> list[dict[str, Any]]:
         """
@@ -331,72 +353,83 @@ class LibraryBasedTrainingPlanningWeeks:
         weekend_endurance_workouts = []  # Track endurance rides separately for scaling
         current_week_workout_ids: list[str] = []  # Track IDs used in this week (hard constraint)
 
-        # Select all workouts
+        # Select all workouts (now supporting multiple workout_types per day)
         for day in week["training_days"]:
-            if day["workout_type"] == "rest":
+            workout_types = day.get("workout_types", [])
+
+            # Skip rest days
+            if "rest" in workout_types:
                 continue
 
             is_weekend = day["weekday"] in ["Saturday", "Sunday"]
 
-            workout = self.selector.select_workout(
-                target_type=day["workout_type"],
-                target_phase=week["phase"],
-                target_weekday=day["weekday"],
-                target_duration_min=90 if is_weekend else 60,  # Base target
-                min_duration_min=90 if is_weekend else 45,
-                max_duration_min=100 if is_weekend else 75,  # Will scale UP after selection
-                temperature=self.temperature,
-                exclude_ids=current_week_workout_ids,  # Prevent same workout in same week
-            )
+            # Process each workout type for this day
+            for workout_type in workout_types:
+                if workout_type == "strength":
+                    # Create simple strength workout structure
+                    workout_dict = self._create_strength_workout(day["weekday"])
+                else:
+                    # Select cycling workout from library
+                    workout = self.selector.select_workout(
+                        target_type=workout_type,
+                        target_phase=week["phase"],
+                        target_weekday=day["weekday"],
+                        target_duration_min=90 if is_weekend else 60,  # Base target
+                        min_duration_min=90 if is_weekend else 45,
+                        max_duration_min=100 if is_weekend else 75,  # Will scale UP after selection
+                        temperature=self.temperature,
+                        exclude_ids=current_week_workout_ids,  # Prevent same workout in same week
+                    )
 
-            if workout is None:
-                raise RuntimeError(
-                    f"No matching workout found for week {week.get('week_number')}, "
-                    f"day {day['weekday']}, type {day['workout_type']}, phase {week['phase']}"
-                )
-
-            # Update trackers immediately after selection
-            self.selector.variety_tracker.add_workout(workout.id)
-            current_week_workout_ids.append(workout.id)
-
-            # Convert to dict
-            workout_dict = workout.model_dump()
-            workout_dict["weekday"] = day["weekday"]
-            workout_dict["description"] = workout.detailed_description or workout.name
-
-            # Ensure all segments have duration_min calculated (for interval sets)
-            for segment in workout_dict.get("segments", []):
-                if segment.get("duration_min") is None:
-                    if segment.get("sets") and segment.get("work") and segment.get("recovery"):
-                        # Calculate duration for interval sets
-                        work_duration = segment["work"].get("duration_min", 0) or 0
-                        recovery_duration = segment["recovery"].get("duration_min", 0) or 0
-                        segment["duration_min"] = segment["sets"] * (
-                            work_duration + recovery_duration
-                        )
-                    else:
-                        # Fallback: set to 0 if we can't calculate
-                        segment["duration_min"] = 0
-
-                # Copy power zones from work interval if missing (for interval segments)
-                if segment.get("power_low_pct") is None and segment.get("work"):
-                    segment["power_low_pct"] = segment["work"].get("power_low_pct", 50)
-                    if segment.get("power_high_pct") is None:
-                        segment["power_high_pct"] = segment["work"].get(
-                            "power_high_pct", 60
+                    if workout is None:
+                        raise RuntimeError(
+                            f"No matching workout found for week {week.get('week_number')}, "
+                            f"day {day['weekday']}, type {workout_type}, phase {week['phase']}"
                         )
 
-                # Ensure description exists
-                if not segment.get("description"):
-                    segment["description"] = f"{segment['type'].title()} segment"
+                    # Update trackers immediately after selection
+                    self.selector.variety_tracker.add_workout(workout.id)
+                    current_week_workout_ids.append(workout.id)
 
-            if is_weekend:
-                weekend_workouts.append(workout_dict)
-                # Only scale endurance workouts
-                if day["workout_type"] == "endurance":
-                    weekend_endurance_workouts.append(workout_dict)
-            else:
-                weekday_workouts.append(workout_dict)
+                    # Convert to dict
+                    workout_dict = workout.model_dump()
+                    workout_dict["weekday"] = day["weekday"]
+                    workout_dict["description"] = workout.detailed_description or workout.name
+
+                    # Ensure all segments have duration_min calculated (for interval sets)
+                    for segment in workout_dict.get("segments", []):
+                        if segment.get("duration_min") is None:
+                            if segment.get("sets") and segment.get("work") and segment.get("recovery"):
+                                # Calculate duration for interval sets
+                                work_duration = segment["work"].get("duration_min", 0) or 0
+                                recovery_duration = segment["recovery"].get("duration_min", 0) or 0
+                                segment["duration_min"] = segment["sets"] * (
+                                    work_duration + recovery_duration
+                                )
+                            else:
+                                # Fallback: set to 0 if we can't calculate
+                                segment["duration_min"] = 0
+
+                        # Copy power zones from work interval if missing (for interval segments)
+                        if segment.get("power_low_pct") is None and segment.get("work"):
+                            segment["power_low_pct"] = segment["work"].get("power_low_pct", 50)
+                            if segment.get("power_high_pct") is None:
+                                segment["power_high_pct"] = segment["work"].get(
+                                    "power_high_pct", 60
+                                )
+
+                        # Ensure description exists
+                        if not segment.get("description"):
+                            segment["description"] = f"{segment['type'].title()} segment"
+
+                # Add workout to appropriate list
+                if is_weekend:
+                    weekend_workouts.append(workout_dict)
+                    # Only scale endurance cycling workouts
+                    if workout_type == "endurance":
+                        weekend_endurance_workouts.append(workout_dict)
+                else:
+                    weekday_workouts.append(workout_dict)
 
         # Calculate current durations
         weekday_minutes = sum(
