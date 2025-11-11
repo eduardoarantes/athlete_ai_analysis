@@ -327,7 +327,7 @@ class TestSelectAndScaleWorkouts:
             "total_hours": 7.8,
             "training_days": [
                 {"weekday": "Monday", "workout_type": "rest"},
-                {"weekday": "Tuesday", "workout_type": "sweet_spot"},
+                {"weekday": "Tuesday", "workout_type": "sweetspot"},
                 {"weekday": "Wednesday", "workout_type": "recovery"},
                 {"weekday": "Thursday", "workout_type": "endurance"},
                 {"weekday": "Friday", "workout_type": "threshold"},

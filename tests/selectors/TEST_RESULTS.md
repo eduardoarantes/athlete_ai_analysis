@@ -68,7 +68,7 @@ WorkoutSelector Manual Test Runner
     'endurance': 104,
     'recovery': 11,
     'mixed': 11,
-    'sweet_spot': 2,
+    'sweetspot': 2,
     'vo2max': 5
   }
   Avg TSS: 68.8

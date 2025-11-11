@@ -119,13 +119,13 @@ class TestDetectOptionalRecoveryWorkout:
     def test_six_day_with_one_recovery(self):
         """6 days, 1 recovery → Returns (index, weekday)"""
         training_days_objects = [
-            {"weekday": "Monday", "workout_type": "endurance"},
-            {"weekday": "Tuesday", "workout_type": "intervals"},
-            {"weekday": "Wednesday", "workout_type": "recovery"},
-            {"weekday": "Thursday", "workout_type": "endurance"},
-            {"weekday": "Friday", "workout_type": "intervals"},
-            {"weekday": "Saturday", "workout_type": "endurance"},
-            {"weekday": "Sunday", "workout_type": "rest"},
+            {"weekday": "Monday", "workout_types": ["endurance"]},
+            {"weekday": "Tuesday", "workout_types": ["intervals"]},
+            {"weekday": "Wednesday", "workout_types": ["recovery"]},
+            {"weekday": "Thursday", "workout_types": ["endurance"]},
+            {"weekday": "Friday", "workout_types": ["intervals"]},
+            {"weekday": "Saturday", "workout_types": ["endurance"]},
+            {"weekday": "Sunday", "workout_types": ["rest"]},
         ]
 
         workouts = [
@@ -146,13 +146,13 @@ class TestDetectOptionalRecoveryWorkout:
     def test_five_day_week_returns_none(self):
         """5 days → Returns (None, None)"""
         training_days_objects = [
-            {"weekday": "Monday", "workout_type": "endurance"},
-            {"weekday": "Tuesday", "workout_type": "intervals"},
-            {"weekday": "Wednesday", "workout_type": "recovery"},
-            {"weekday": "Thursday", "workout_type": "endurance"},
-            {"weekday": "Friday", "workout_type": "intervals"},
-            {"weekday": "Saturday", "workout_type": "rest"},
-            {"weekday": "Sunday", "workout_type": "rest"},
+            {"weekday": "Monday", "workout_types": ["endurance"]},
+            {"weekday": "Tuesday", "workout_types": ["intervals"]},
+            {"weekday": "Wednesday", "workout_types": ["recovery"]},
+            {"weekday": "Thursday", "workout_types": ["endurance"]},
+            {"weekday": "Friday", "workout_types": ["intervals"]},
+            {"weekday": "Saturday", "workout_types": ["rest"]},
+            {"weekday": "Sunday", "workout_types": ["rest"]},
         ]
 
         workouts = [
@@ -453,13 +453,13 @@ class TestIntegration:
         """Full scenario: 6-day week with recovery, validate both scenarios"""
         # 6 training days with 1 recovery
         training_days_objects = [
-            {"weekday": "Monday", "workout_type": "endurance"},
-            {"weekday": "Tuesday", "workout_type": "intervals"},
-            {"weekday": "Wednesday", "workout_type": "recovery"},
-            {"weekday": "Thursday", "workout_type": "endurance"},
-            {"weekday": "Friday", "workout_type": "intervals"},
-            {"weekday": "Saturday", "workout_type": "endurance"},
-            {"weekday": "Sunday", "workout_type": "rest"},
+            {"weekday": "Monday", "workout_types": ["endurance"]},
+            {"weekday": "Tuesday", "workout_types": ["intervals"]},
+            {"weekday": "Wednesday", "workout_types": ["recovery"]},
+            {"weekday": "Thursday", "workout_types": ["endurance"]},
+            {"weekday": "Friday", "workout_types": ["intervals"]},
+            {"weekday": "Saturday", "workout_types": ["endurance"]},
+            {"weekday": "Sunday", "workout_types": ["rest"]},
         ]
 
         workouts = [

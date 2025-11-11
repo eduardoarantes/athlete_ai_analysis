@@ -66,7 +66,7 @@ def weekly_overview_data() -> dict:
                 "phase": "Base",
                 "training_days": [
                     {"weekday": "Monday", "workout_type": "endurance", "target_tss": 65},
-                    {"weekday": "Wednesday", "workout_type": "sweet_spot", "target_tss": 85},
+                    {"weekday": "Wednesday", "workout_type": "sweetspot", "target_tss": 85},
                     {"weekday": "Friday", "workout_type": "endurance", "target_tss": 70},
                     {"weekday": "Saturday", "workout_type": "endurance", "target_tss": 90},
                 ],
@@ -76,7 +76,7 @@ def weekly_overview_data() -> dict:
                 "phase": "Base",
                 "training_days": [
                     {"weekday": "Monday", "workout_type": "endurance", "target_tss": 70},
-                    {"weekday": "Wednesday", "workout_type": "sweet_spot", "target_tss": 90},
+                    {"weekday": "Wednesday", "workout_type": "sweetspot", "target_tss": 90},
                     {"weekday": "Friday", "workout_type": "endurance", "target_tss": 75},
                     {"weekday": "Saturday", "workout_type": "endurance", "target_tss": 95},
                 ],

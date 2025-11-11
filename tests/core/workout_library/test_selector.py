@@ -108,7 +108,7 @@ class TestWorkoutScoring:
             "endurance": "vo2max",
             "recovery": "threshold",
             "tempo": "recovery",
-            "sweet_spot": "recovery",
+            "sweetspot": "recovery",
             "threshold": "endurance",
             "vo2max": "endurance",
             "mixed": "vo2max",  # mixed is compatible with everything, use any
@@ -605,7 +605,7 @@ class TestWorkoutSelectorIntegration:
             week_ids: list[str] = []
             for day in range(5):
                 workout = selector.select_workout(
-                    target_type=["endurance", "tempo", "sweet_spot", "threshold", "recovery"][day],
+                    target_type=["endurance", "tempo", "sweetspot", "threshold", "recovery"][day],
                     target_phase=phase,
                     target_weekday="Monday",
                     target_duration_min=60,
