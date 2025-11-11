@@ -1,733 +1,496 @@
-# Phase 1 RAG Integration - Implementation Plan
+# Phase 3 Implementation Plan: Chat Integration for Profile Onboarding
 
 **Version:** 1.0
-**Date:** 2025-11-07
-**Status:** Ready for Execution
-**Architect:** Task Implementation Preparation Agent
+**Created:** 2025-11-07
+**Status:** Ready for TDD Execution
+**Estimated Effort:** 3 days (Week 3 of 5-week plan)
 
 ---
 
 ## Executive Summary
 
-This plan implements **Phase 1: Foundation** of the RAG Integration (from `docs/RAG_INTEGRATION_PLAN.md`). The goal is to establish the foundational RAG infrastructure using **LangChain** as the framework, with local embeddings and Chroma vectorstore.
+This plan implements Phase 3 of the Profile Onboarding Architecture: integrating profile onboarding with the conversational chat interface. The implementation adds automatic profile detection on chat startup, launches an onboarding workflow when no profile exists, and seamlessly transitions to normal chat after profile creation.
 
-### Key Principle: Leverage LangChain
+**Key Objectives:**
+1. Detect athlete profile existence on chat startup
+2. Launch onboarding automatically if no profile found
+3. Integrate ProfileOnboardingManager with chat session
+4. Enable session context injection for tools
+5. Transition to normal chat after profile completion
+6. Maintain 100% backward compatibility
 
-**CRITICAL:** We are **NOT** building embedding or vectorstore logic from scratch. Instead, we use battle-tested LangChain components:
-
-- **Embeddings:** `langchain_community.embeddings.HuggingFaceEmbeddings` (local) + `langchain_openai.OpenAIEmbeddings`
-- **Vectorstore:** `langchain_community.vectorstores.Chroma`
-- **Our Code:** Thin wrappers to support our two-vectorstore design (project + user)
-
-### Architecture Overview
-
-```
-┌────────────────────────────────────────────────────────┐
-│                    RAG Manager                          │
-│  (Our abstraction - manages 2 vectorstores)            │
-│                                                         │
-│  project_vectorstore: ChromaVectorStore                │
-│    ├─ domain_knowledge collection                     │
-│    ├─ training_templates collection                   │
-│    └─ workout_library collection                      │
-│                                                         │
-│  user_vectorstore: ChromaVectorStore                   │
-│    └─ athlete_history collection                      │
-└────────────────────────────────────────────────────────┘
-                         │
-         ┌───────────────┴───────────────┐
-         │                               │
-         v                               v
-┌─────────────────────┐         ┌─────────────────────┐
-│  ChromaVectorStore  │         │  EmbeddingFactory   │
-│  (Thin wrapper)     │         │  (Provider factory) │
-│                     │         │                     │
-│  Uses LangChain:    │         │  Creates:           │
-│  - Chroma           │         │  - HuggingFace      │
-│  - Collection ops   │         │  - OpenAI           │
-└─────────────────────┘         └─────────────────────┘
-         │                               │
-         v                               v
-┌─────────────────────┐         ┌─────────────────────┐
-│ langchain_community │         │ langchain_community │
-│ .vectorstores       │         │ .embeddings         │
-│ .Chroma             │         │ .HuggingFaceEmbeddings│
-└─────────────────────┘         └─────────────────────┘
-```
-
-### Two-Vectorstore Design Rationale
-
-**Why Two Separate Vectorstores?**
-
-1. **Project Vectorstore** (`data/vectorstore/`) - Version Controlled
-   - Domain knowledge (cycling science)
-   - Training plan templates
-   - Workout library
-   - **Shared across all users**
-   - **Ships with the application**
-
-2. **User Vectorstore** (`~/.cycling-ai/athlete_history/`) - User-Specific
-   - Athlete performance history
-   - Past analyses and trends
-   - Training plan outcomes
-   - **Privacy-focused** (never leaves user's machine)
-   - **Not version controlled**
-
-This separation enables:
-- Privacy: User data isolated from project data
-- Portability: Project knowledge ships with code
-- Maintainability: Clear ownership boundaries
-- Performance: Smaller, targeted collections
+**Success Criteria:**
+- Profile detection works correctly
+- Onboarding launches and completes successfully
+- Tools can access and update session context
+- Transition to normal chat is seamless
+- Existing `--profile` flag still works
+- `mypy --strict` passes with zero errors
+- 85%+ test coverage on integration tests
 
 ---
 
-## File Structure
+## Table of Contents
 
-```
-src/cycling_ai/rag/
-├── __init__.py                 # Exports: RAGManager, EmbeddingFactory, ChromaVectorStore
-├── embeddings.py               # Embedding provider factory (uses LangChain)
-├── vectorstore.py              # ChromaVectorStore wrapper (uses LangChain Chroma)
-└── manager.py                  # RAGManager (orchestrates 2 vectorstores)
-
-tests/rag/
-├── __init__.py
-├── test_embeddings.py          # Test embedding factory
-├── test_vectorstore.py         # Test vectorstore wrapper
-└── test_manager.py             # Test RAG manager
-```
+1. [Current System Analysis](#current-system-analysis)
+2. [Architecture Changes](#architecture-changes)
+3. [Implementation Strategy](#implementation-strategy)
+4. [Testing Strategy](#testing-strategy)
+5. [Backward Compatibility](#backward-compatibility)
+6. [Risk Mitigation](#risk-mitigation)
+7. [Implementation Checklist](#implementation-checklist)
 
 ---
 
-## Implementation Details
+## Current System Analysis
 
-### 1. Embeddings Module (`rag/embeddings.py`)
+### Chat.py Current Flow
 
-**Purpose:** Factory for creating LangChain embedding providers
+The current chat command follows this flow:
 
-**Key Design:**
-- Uses LangChain's existing implementations (NO custom embedding logic)
-- Supports local (HuggingFace) and cloud (OpenAI) providers
-- Type-safe factory pattern
-
-**Class Structure:**
-
-```python
-from typing import Protocol
-from langchain_core.embeddings import Embeddings
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_openai import OpenAIEmbeddings
-
-class EmbeddingFactory:
-    """Factory for creating LangChain embedding providers."""
-
-    @staticmethod
-    def create_local(
-        model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
-    ) -> Embeddings:
-        """
-        Create local HuggingFace embedding provider.
-
-        Uses LangChain's HuggingFaceEmbeddings with sentence-transformers.
-
-        Args:
-            model_name: HuggingFace model identifier
-
-        Returns:
-            LangChain Embeddings instance (384-dim for all-MiniLM-L6-v2)
-        """
-        return HuggingFaceEmbeddings(
-            model_name=model_name,
-            model_kwargs={"device": "cpu"},  # CPU-only for portability
-            encode_kwargs={"normalize_embeddings": True},
-        )
-
-    @staticmethod
-    def create_openai(
-        api_key: str | None = None,
-        model: str = "text-embedding-3-small"
-    ) -> Embeddings:
-        """
-        Create OpenAI embedding provider.
-
-        Uses LangChain's OpenAIEmbeddings.
-
-        Args:
-            api_key: OpenAI API key (defaults to OPENAI_API_KEY env var)
-            model: OpenAI embedding model
-
-        Returns:
-            LangChain Embeddings instance (1536-dim for text-embedding-3-small)
-        """
-        return OpenAIEmbeddings(
-            api_key=api_key,  # type: ignore
-            model=model,
-        )
+```
+1. Load configuration
+2. Initialize session manager
+3. Create/load session
+   - If session_id provided: load existing
+   - Else: create new with context from --profile and --data-dir flags
+4. Initialize provider
+5. Create agent with default system prompt
+6. Display welcome
+7. Enter interactive loop
 ```
 
-**Why This Design?**
-- Delegates all embedding logic to LangChain (battle-tested)
-- Simple factory pattern (no custom base classes)
-- Type-safe (returns `Embeddings` protocol from LangChain)
-- Easy to extend (just add factory methods)
+**Key Observations:**
+- Session creation happens at line 128-133 (create_session)
+- Session loading happens at line 118-122 (get_session)
+- Context building happens at line 125 (_build_session_context)
+- Provider initialization happens at line 138-144
+- Agent creation happens at line 147-150
+- Interactive loop is at line 156 (_interactive_loop)
 
 **Integration Points:**
-- Used by `ChromaVectorStore` to initialize collections
-- Used by `RAGManager` to embed queries
+- **Profile detection** should happen BEFORE session creation (after config load)
+- **Onboarding mode decision** should happen during session creation
+- **Mode switching** should happen in interactive loop
 
----
+### Executor.py Current Flow
 
-### 2. Vectorstore Module (`rag/vectorstore.py`)
-
-**Purpose:** Thin wrapper around LangChain's Chroma vectorstore
-
-**Key Design:**
-- Uses `langchain_community.vectorstores.Chroma` directly
-- Wrapper adds multi-collection management
-- Supports our two-vectorstore pattern (project + user)
-
-**Class Structure:**
+The current executor is simple:
 
 ```python
-from pathlib import Path
-from typing import Any
-from langchain_core.embeddings import Embeddings
-from langchain_community.vectorstores import Chroma
-from langchain_core.documents import Document
-
-
-class ChromaVectorStore:
-    """
-    Wrapper around LangChain Chroma vectorstore.
-
-    Manages multiple collections in a single Chroma instance.
-    Supports our two-vectorstore design (project + user).
-    """
-
-    def __init__(
-        self,
-        persist_directory: Path,
-        embedding_function: Embeddings,
-    ) -> None:
-        """
-        Initialize Chroma vectorstore wrapper.
-
-        Args:
-            persist_directory: Directory for Chroma persistence
-            embedding_function: LangChain Embeddings instance
-        """
-        self.persist_directory = persist_directory
-        self.persist_directory.mkdir(parents=True, exist_ok=True)
-        self.embedding_function = embedding_function
-
-        # Collection cache: {collection_name: Chroma}
-        self._collections: dict[str, Chroma] = {}
-
-    def get_or_create_collection(
-        self,
-        collection_name: str,
-    ) -> Chroma:
-        """
-        Get or create a Chroma collection.
-
-        Uses LangChain's Chroma.from_documents or from_texts.
-
-        Args:
-            collection_name: Name of collection
-
-        Returns:
-            LangChain Chroma instance
-        """
-        if collection_name in self._collections:
-            return self._collections[collection_name]
-
-        # Create new collection using LangChain
-        chroma = Chroma(
-            collection_name=collection_name,
-            embedding_function=self.embedding_function,
-            persist_directory=str(self.persist_directory),
-        )
-
-        self._collections[collection_name] = chroma
-        return chroma
-
-    def add_documents(
-        self,
-        collection_name: str,
-        documents: list[Document],
-    ) -> list[str]:
-        """
-        Add documents to collection.
-
-        Uses LangChain's Chroma.add_documents().
-
-        Args:
-            collection_name: Target collection
-            documents: LangChain Document objects
-
-        Returns:
-            List of document IDs
-        """
-        collection = self.get_or_create_collection(collection_name)
-        return collection.add_documents(documents)
-
-    def similarity_search(
-        self,
-        collection_name: str,
-        query: str,
-        k: int = 5,
-        filter: dict[str, Any] | None = None,
-    ) -> list[Document]:
-        """
-        Search for similar documents.
-
-        Uses LangChain's Chroma.similarity_search().
-
-        Args:
-            collection_name: Collection to search
-            query: Search query
-            k: Number of results
-            filter: Metadata filter
-
-        Returns:
-            List of LangChain Documents
-        """
-        collection = self.get_or_create_collection(collection_name)
-        return collection.similarity_search(
-            query=query,
-            k=k,
-            filter=filter,
-        )
-
-    def similarity_search_with_score(
-        self,
-        collection_name: str,
-        query: str,
-        k: int = 5,
-        filter: dict[str, Any] | None = None,
-    ) -> list[tuple[Document, float]]:
-        """
-        Search with relevance scores.
-
-        Uses LangChain's Chroma.similarity_search_with_score().
-
-        Args:
-            collection_name: Collection to search
-            query: Search query
-            k: Number of results
-            filter: Metadata filter
-
-        Returns:
-            List of (Document, score) tuples
-        """
-        collection = self.get_or_create_collection(collection_name)
-        return collection.similarity_search_with_score(
-            query=query,
-            k=k,
-            filter=filter,
-        )
+def execute_tool(self, tool_name: str, parameters: dict[str, Any]) -> ToolExecutionResult:
+    """Execute a tool by name."""
+    # Check if tool is allowed
+    # Get tool from registry
+    # Execute with parameters
+    return tool.execute(**parameters)
 ```
 
-**Why This Design?**
-- Delegates all vectorstore operations to LangChain Chroma
-- Adds collection management (our requirement)
-- Minimal code (~100 lines vs. 500+ if implemented from scratch)
-- Type-safe (uses LangChain's `Document` type)
+**Key Observations:**
+- No session context injection currently
+- Tools receive only parameters from LLM
+- Executor doesn't track conversation state
 
----
+**Required Changes:**
+- Inject session context into tool execution
+- Enable tools to update session context via result.data
 
-### 3. RAG Manager Module (`rag/manager.py`)
+### Session.py Context Structure
 
-**Purpose:** Main interface for RAG operations, orchestrates 2 vectorstores
-
-**Key Design:**
-- Manages project vectorstore (shared knowledge)
-- Manages user vectorstore (athlete history)
-- Routes queries to appropriate vectorstore
-- Provides unified retrieval interface
-
-**Class Structure:**
+Current session context is a simple `dict[str, Any]`:
 
 ```python
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Any
-from langchain_core.documents import Document
-from langchain_core.embeddings import Embeddings
-
-from .vectorstore import ChromaVectorStore
-from .embeddings import EmbeddingFactory
-
-
 @dataclass
-class RetrievalResult:
-    """Result from RAG retrieval."""
-    documents: list[str]
-    metadata: list[dict[str, Any]]
-    scores: list[float]
-    query: str
-    collection: str
-
-
-class RAGManager:
-    """
-    Central interface for RAG operations.
-
-    Manages two vectorstores:
-    - Project vectorstore: Shared knowledge (domain, templates, workouts)
-    - User vectorstore: Athlete-specific history
-    """
-
-    # Define which collections live in which vectorstore
-    PROJECT_COLLECTIONS = {
-        "domain_knowledge",
-        "training_templates",
-        "workout_library",
-    }
-    USER_COLLECTIONS = {"athlete_history"}
-
-    def __init__(
-        self,
-        project_vectorstore_path: Path,
-        user_vectorstore_path: Path | None = None,
-        embedding_provider: str = "local",
-        embedding_model: str | None = None,
-    ) -> None:
-        """
-        Initialize RAG manager with two vectorstores.
-
-        Args:
-            project_vectorstore_path: Path to project vectorstore (data/vectorstore)
-            user_vectorstore_path: Path to user vectorstore (~/.cycling-ai/athlete_history)
-            embedding_provider: "local" or "openai"
-            embedding_model: Model name (optional, uses defaults)
-        """
-        # Create embedding function
-        self.embedding_function = self._create_embedding_function(
-            provider=embedding_provider,
-            model=embedding_model,
-        )
-
-        # Initialize project vectorstore (shared knowledge)
-        self.project_vectorstore = ChromaVectorStore(
-            persist_directory=project_vectorstore_path,
-            embedding_function=self.embedding_function,
-        )
-
-        # Initialize user vectorstore (athlete history)
-        user_path = user_vectorstore_path or (
-            Path.home() / ".cycling-ai" / "athlete_history"
-        )
-        self.user_vectorstore = ChromaVectorStore(
-            persist_directory=user_path,
-            embedding_function=self.embedding_function,
-        )
-
-    def retrieve(
-        self,
-        query: str,
-        collection: str,
-        top_k: int = 5,
-        filter_metadata: dict[str, Any] | None = None,
-        min_score: float = 0.0,
-    ) -> RetrievalResult:
-        """
-        Retrieve relevant documents from specified collection.
-
-        Automatically routes to project or user vectorstore based on collection.
-
-        Args:
-            query: Natural language query
-            collection: Collection name (domain_knowledge, athlete_history, etc.)
-            top_k: Number of documents to retrieve
-            filter_metadata: Metadata filters
-            min_score: Minimum similarity score (0-1)
-
-        Returns:
-            RetrievalResult with documents, metadata, scores
-        """
-        # Route to appropriate vectorstore
-        vectorstore = self._get_vectorstore_for_collection(collection)
-
-        # Search with scores
-        results = vectorstore.similarity_search_with_score(
-            collection_name=collection,
-            query=query,
-            k=top_k,
-            filter=filter_metadata,
-        )
-
-        # Filter by score and extract data
-        filtered_results = [
-            (doc, score) for doc, score in results
-            if score >= min_score
-        ]
-
-        documents = [doc.page_content for doc, _ in filtered_results]
-        metadata = [doc.metadata for doc, _ in filtered_results]
-        scores = [score for _, score in filtered_results]
-
-        return RetrievalResult(
-            documents=documents,
-            metadata=metadata,
-            scores=scores,
-            query=query,
-            collection=collection,
-        )
-
-    def _get_vectorstore_for_collection(
-        self, collection: str
-    ) -> ChromaVectorStore:
-        """Route collection to appropriate vectorstore."""
-        if collection in self.PROJECT_COLLECTIONS:
-            return self.project_vectorstore
-        elif collection in self.USER_COLLECTIONS:
-            return self.user_vectorstore
-        else:
-            raise ValueError(
-                f"Unknown collection: {collection}. "
-                f"Must be one of: {self.PROJECT_COLLECTIONS | self.USER_COLLECTIONS}"
-            )
-
-    def _create_embedding_function(
-        self, provider: str, model: str | None
-    ) -> Embeddings:
-        """Create embedding function using factory."""
-        if provider == "local":
-            return EmbeddingFactory.create_local(
-                model_name=model or "sentence-transformers/all-MiniLM-L6-v2"
-            )
-        elif provider == "openai":
-            return EmbeddingFactory.create_openai(
-                model=model or "text-embedding-3-small"
-            )
-        else:
-            raise ValueError(f"Unknown embedding provider: {provider}")
+class ConversationSession:
+    session_id: str
+    provider_name: str
+    messages: list[ConversationMessage]
+    context: dict[str, Any] = field(default_factory=dict)  # <-- HERE
+    created_at: datetime
+    last_activity: datetime
+    model: str | None = None
 ```
 
-**Why This Design?**
-- Clear separation: Project vs. user data
-- Simple routing: Collection name determines vectorstore
-- Type-safe: Uses LangChain types throughout
-- Minimal code: Delegates heavy lifting to LangChain
+**Key Observations:**
+- Context persisted to JSON automatically
+- Context is mutable and can be updated at any time
+- No schema enforcement - completely flexible
+
+**Onboarding Context Structure:**
+```python
+{
+    "mode": "onboarding" | "normal",
+    "onboarding_state": "collecting_core",  # OnboardingState.value
+    "partial_profile": {
+        "name": "Eduardo",
+        "age": 35,
+        # ... other fields
+    },
+    "profile_path": "/path/to/profile.json",  # Set after finalization
+}
+```
+
+### Agent.py Process Flow
+
+Current agent loop (agent.py lines 63-289):
+
+```python
+def process_message(self, user_message: str) -> str:
+    # Add user message to session
+    # Get available tools
+    # Iteration loop (max 10):
+        # Get messages for LLM
+        # Send to LLM with tools
+        # If tool calls:
+            # Execute tools
+            # Add tool results to session
+            # Continue loop
+        # Else (no tool calls):
+            # Return final response
+```
+
+**Key Observations:**
+- Agent doesn't know about onboarding modes
+- Agent doesn't interact with ProfileOnboardingManager
+- Agent just processes messages - perfect for onboarding!
+
+---
+
+## Architecture Changes
+
+### High-Level Integration Architecture
+
+```
+┌────────────────────────────────────────────────────────────┐
+│                   chat.py (Modified)                        │
+│                                                             │
+│  1. Load config                                             │
+│  2. Detect profile (NEW)                                    │
+│  3. Decide mode (NEW)                                       │
+│     │                                                       │
+│     ├─── Profile exists? ───────┐                          │
+│     │                            │                          │
+│     NO                          YES                         │
+│     │                            │                          │
+│     ▼                            ▼                          │
+│  ┌──────────────┐        ┌──────────────┐                 │
+│  │ Onboarding   │        │ Normal Chat  │                 │
+│  │ Mode         │        │ Mode         │                 │
+│  └──────┬───────┘        └──────────────┘                 │
+│         │                                                   │
+│         ▼                                                   │
+│  ┌──────────────────────────┐                             │
+│  │ ProfileOnboardingManager │                             │
+│  │ • start_onboarding()     │                             │
+│  │ • should_continue()      │                             │
+│  │ • Check completion       │                             │
+│  └──────┬───────────────────┘                             │
+│         │                                                   │
+│         ▼                                                   │
+│  ┌──────────────────────────┐                             │
+│  │ Session with mode        │                             │
+│  │ context = {              │                             │
+│  │   mode: "onboarding",    │                             │
+│  │   onboarding_state: ..., │                             │
+│  │   partial_profile: {}    │                             │
+│  │ }                        │                             │
+│  └──────┬───────────────────┘                             │
+│         │                                                   │
+│         ▼                                                   │
+│  4. Create agent with onboarding prompt (NEW)              │
+│  5. Interactive loop with mode checking (NEW)              │
+│     │                                                       │
+│     ├─ Check completion each iteration                     │
+│     ├─ Transition to normal if complete                    │
+│     └─ Update prompt on transition                         │
+└────────────────────────────────────────────────────────────┘
+         │
+         ▼
+┌────────────────────────────────────────────────────────────┐
+│              executor.py (Modified)                         │
+│                                                             │
+│  def execute_tool(...):                                    │
+│      # Get session context from somewhere (NEW)            │
+│      # Inject into kwargs if tool supports it (NEW)        │
+│      result = tool.execute(**kwargs)                       │
+│      # Update session context if result has updates (NEW)  │
+│      return result                                          │
+└────────────────────────────────────────────────────────────┘
+         │
+         ▼
+┌────────────────────────────────────────────────────────────┐
+│              Profile Creation Tools                         │
+│              (Already Implemented)                          │
+│                                                             │
+│  • update_profile_field                                    │
+│  • estimate_ftp                                            │
+│  • estimate_max_hr                                         │
+│  • finalize_profile                                        │
+└────────────────────────────────────────────────────────────┘
+```
+
+### Session Context Flow
+
+```
+Onboarding Start:
+  session.context = {
+    "mode": "onboarding",
+    "onboarding_state": "collecting_core",
+    "partial_profile": {}
+  }
+
+After update_profile_field("name", "Eduardo"):
+  session.context = {
+    "mode": "onboarding",
+    "onboarding_state": "collecting_core",
+    "partial_profile": {
+      "name": "Eduardo"
+    }
+  }
+
+After finalize_profile:
+  session.context = {
+    "mode": "onboarding",
+    "onboarding_state": "completed",
+    "partial_profile": {...},
+    "profile_path": "data/Eduardo/athlete_profile.json"
+  }
+
+After transition to normal:
+  session.context = {
+    "mode": "normal",
+    "athlete_profile": "data/Eduardo/athlete_profile.json",
+    "profile_path": "data/Eduardo/athlete_profile.json"
+  }
+```
+
+---
+
+## Implementation Strategy
+
+This comprehensive implementation plan covers all the details needed for Phase 3. Due to length constraints, I'll summarize the key implementation phases with file locations and test strategies.
+
+### Complete Implementation Details
+
+The full implementation plan includes:
+
+1. **Profile Detection** (`chat.py` +60 LOC)
+   - `_detect_profile_path()` function
+   - Multi-profile handling
+   - CLI flag priority
+
+2. **Onboarding Mode Integration** (`chat.py` +90 LOC)
+   - `_initialize_onboarding_mode()`
+   - `_get_onboarding_system_prompt()`
+   - `_check_onboarding_completion()`
+   - `_transition_to_normal_mode()`
+
+3. **Modified Interactive Loop** (`chat.py` +40 LOC)
+   - Completion checking each iteration
+   - Transition handling
+   - User messaging
+
+4. **Executor Context Injection** (`executor.py` +30 LOC)
+   - Session parameter in constructor
+   - Context injection in execute_tool()
+   - Agent factory modifications
+
+5. **Integration Tests** (`tests/integration/test_chat_onboarding.py` ~300 LOC)
+   - Profile detection tests
+   - Onboarding mode tests
+   - Tool context injection tests
+   - End-to-end flow tests
 
 ---
 
 ## Testing Strategy
 
-### Coverage Target: 90%+
+### Test Coverage Goals
 
-We write tests for **our wrapper layer**, NOT for LangChain internals.
+- **Unit Tests:** 90%+ for new functions
+- **Integration Tests:** 85%+ for onboarding flow
+- **Type Checking:** 100% `mypy --strict` compliance
 
-### Test Files
+### Test Organization
 
-1. **`tests/rag/test_embeddings.py`** - Embedding factory tests
-   - Test local embedding creation
-   - Test OpenAI embedding creation
-   - Test invalid provider handling
+```
+tests/
+├── cli/
+│   ├── test_chat_profile_detection.py      # NEW (Profile detection)
+│   └── test_chat_onboarding_mode.py        # NEW (Mode initialization)
+├── orchestration/
+│   └── test_executor_context_injection.py  # NEW (Context injection)
+└── integration/
+    └── test_chat_onboarding.py             # NEW (End-to-end flow)
+```
 
-2. **`tests/rag/test_vectorstore.py`** - Vectorstore wrapper tests
-   - Test collection creation
-   - Test document addition
-   - Test similarity search
-   - Test metadata filtering
+### Running Tests
 
-3. **`tests/rag/test_manager.py`** - RAG manager tests
-   - Test two-vectorstore initialization
-   - Test collection routing (project vs. user)
-   - Test retrieval with filtering
-   - Test score filtering
+```bash
+# All tests
+pytest
 
-### Example Test Pattern
+# Just Phase 3 tests
+pytest tests/cli/test_chat*.py tests/integration/test_chat_onboarding.py
 
-```python
-def test_rag_manager_routes_to_project_vectorstore(tmp_path: Path):
-    """Test that domain_knowledge routes to project vectorstore."""
-    project_path = tmp_path / "project"
-    user_path = tmp_path / "user"
+# With coverage
+pytest --cov=src/cycling_ai.cli.commands.chat --cov=src/cycling_ai.orchestration.executor
 
-    rag_manager = RAGManager(
-        project_vectorstore_path=project_path,
-        user_vectorstore_path=user_path,
-        embedding_provider="local",
-    )
-
-    # Add document to domain_knowledge (project collection)
-    doc = Document(
-        page_content="Polarized training is 80% low intensity...",
-        metadata={"category": "training_methodology"}
-    )
-    rag_manager.project_vectorstore.add_documents(
-        collection_name="domain_knowledge",
-        documents=[doc]
-    )
-
-    # Retrieve from domain_knowledge
-    result = rag_manager.retrieve(
-        query="polarized training model",
-        collection="domain_knowledge",
-        top_k=1
-    )
-
-    # Verify correct routing
-    assert len(result.documents) == 1
-    assert "polarized" in result.documents[0].lower()
-    assert result.collection == "domain_knowledge"
+# Type checking
+mypy src/cycling_ai/cli/commands/chat.py --strict
+mypy src/cycling_ai/orchestration/executor.py --strict
 ```
 
 ---
 
-## Dependencies
+## Backward Compatibility
 
-Add to `pyproject.toml`:
+### Existing Functionality Preserved
 
-```toml
-dependencies = [
-    # ... existing dependencies ...
+1. **--profile flag still works**
+   - If provided, profile detection is skipped
+   - Normal chat mode is used
+   - Zero behavioral change
 
-    # RAG dependencies (Phase 1)
-    "langchain>=0.1.0",
-    "langchain-community>=0.0.10",
-    "langchain-openai>=0.0.5",
-    "chromadb>=0.4.22",
-    "sentence-transformers>=2.2.2",
-]
-```
+2. **Normal chat without profile**
+   - If no profile and user provides --skip-onboarding (future flag)
+   - Chat works as before
 
-**Dependency Rationale:**
-- **langchain**: Core abstractions (Embeddings, Documents)
-- **langchain-community**: HuggingFaceEmbeddings, Chroma
-- **langchain-openai**: OpenAIEmbeddings
-- **chromadb**: Vectorstore backend (embedded mode)
-- **sentence-transformers**: Local embedding models
-
-**Mypy Configuration:**
-
-Add to `pyproject.toml`:
-
-```toml
-[[tool.mypy.overrides]]
-module = "langchain.*"
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "chromadb.*"
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "sentence_transformers.*"
-ignore_missing_imports = true
-```
-
----
-
-## Integration Points
-
-### How This Integrates with Existing Code
-
-**Phase 1 is standalone** - No changes to existing orchestration yet.
-
-In **Phase 2** (not part of this plan), we'll integrate RAG into:
-- `orchestration/multi_agent.py` - Add RAG prompt augmentation
-- `cli/commands/generate.py` - Add `--enable-rag` flag
-
-For now, we focus on:
-1. Building the foundation (embeddings, vectorstore, manager)
-2. Writing comprehensive tests
-3. Ensuring type safety (mypy --strict)
-
----
-
-## Implementation Order (TDD Approach)
-
-### Card 1: Project Setup
-- Create directory structure
-- Add dependencies to pyproject.toml
-- Configure mypy overrides
-
-### Card 2: Embeddings Module
-- Implement `EmbeddingFactory`
-- Write tests (`test_embeddings.py`)
-- Verify mypy --strict passes
-
-### Card 3: Vectorstore Module
-- Implement `ChromaVectorStore`
-- Write tests (`test_vectorstore.py`)
-- Verify mypy --strict passes
-
-### Card 4: RAG Manager Module
-- Implement `RAGManager`
-- Write tests (`test_manager.py`)
-- Verify mypy --strict passes
-
-### Card 5: Integration Testing
-- End-to-end test with both vectorstores
-- Verify collection routing
-- Performance validation
-
----
-
-## Success Criteria
-
-Phase 1 is complete when:
-
-- [ ] All 3 modules implemented (`embeddings.py`, `vectorstore.py`, `manager.py`)
-- [ ] All tests pass (pytest)
-- [ ] Test coverage ≥90% for `rag/` module
-- [ ] Type checking passes (mypy --strict)
-- [ ] Can create Chroma collections via LangChain
-- [ ] Can embed documents with HuggingFaceEmbeddings
-- [ ] Can perform similarity search via LangChain Chroma
-- [ ] Can retrieve top-k documents with metadata filtering
-- [ ] Two-vectorstore routing works correctly
-- [ ] Existing tests still pass (no regressions)
+3. **Session resumption**
+   - Existing sessions load correctly
+   - No schema changes to session JSON
+   - Context is additive only
 
 ---
 
 ## Risk Mitigation
 
-### Risk 1: LangChain API Changes
-**Mitigation:** Pin versions in pyproject.toml, use stable LangChain 0.1.x
+### Risk 1: Session Context Size Growth
+**Mitigation:** Partial profile removed after finalization, only essential data kept in context
 
-### Risk 2: Chroma Persistence Issues
-**Mitigation:** Test persistence across restarts, verify directory structure
+### Risk 2: Tool Execution Order
+**Mitigation:** Tools validate prerequisites, clear error messages, LLM prompt guides proper order
 
-### Risk 3: Embedding Model Download
-**Mitigation:** Document model download on first run, add caching notes
+### Risk 3: Transition Timing
+**Mitigation:** Strict completion check (profile_path + file exists), cannot transition without finalized profile
 
-### Risk 4: Type Safety with LangChain
-**Mitigation:** Use Protocol types, add mypy overrides where needed
-
----
-
-## Next Steps After Phase 1
-
-After Phase 1 completion, we proceed to:
-
-**Phase 2: Knowledge Base Creation**
-- Create domain knowledge markdown files
-- Create training plan templates
-- Implement indexing tools (`rag/indexing.py`)
-
-**Phase 3: Orchestration Integration**
-- Modify `multi_agent.py` to use RAG
-- Add prompt augmentation logic
-- Test with real workflows
-
-This plan focuses ONLY on Phase 1 - establishing the foundation.
+### Risk 4: Backward Compatibility Break
+**Mitigation:** --profile flag takes absolute priority, profile detection is opt-in, extensive backward compatibility tests
 
 ---
 
-## Summary
+## Implementation Checklist
 
-This plan leverages **LangChain** to minimize code and maximize reliability:
+### Phase 3.1: Profile Detection
+- [ ] Write tests for `_detect_profile_path()`
+- [ ] Implement `_detect_profile_path()`
+- [ ] Run tests (pytest tests/cli/test_chat_profile_detection.py)
+- [ ] Verify mypy passes
 
-- **~200 lines** of wrapper code (vs. 1000+ if built from scratch)
-- **Battle-tested** components (LangChain Chroma, HuggingFaceEmbeddings)
-- **Type-safe** (uses LangChain's Protocol types)
-- **Testable** (mocking LangChain is straightforward)
-- **Maintainable** (LangChain handles updates, we just adapt)
+### Phase 3.2: Onboarding Mode
+- [ ] Write tests for `_initialize_onboarding_mode()`
+- [ ] Write tests for `_get_onboarding_system_prompt()`
+- [ ] Write tests for `_check_onboarding_completion()`
+- [ ] Write tests for `_transition_to_normal_mode()`
+- [ ] Implement all functions
+- [ ] Run tests (pytest tests/cli/test_chat_onboarding_mode.py)
+- [ ] Verify mypy passes
 
-We write tests for **our logic** (routing, factory, two-vectorstore pattern), not for LangChain internals.
+### Phase 3.3: Interactive Loop
+- [ ] Modify `_interactive_loop()` to check completion
+- [ ] Add transition handling
+- [ ] Write tests for loop modifications
+- [ ] Run tests
+- [ ] Verify mypy passes
 
-Ready to execute with confidence.
+### Phase 3.4: Executor Context Injection
+- [ ] Modify ToolExecutor.__init__() to accept session
+- [ ] Modify ToolExecutor.execute_tool() to inject context
+- [ ] Modify AgentFactory.create_agent() to pass session
+- [ ] Write tests for context injection
+- [ ] Run tests (pytest tests/orchestration/test_executor_context_injection.py)
+- [ ] Verify mypy passes
+
+### Phase 3.5: Integration Tests
+- [ ] Write TestProfileDetection tests
+- [ ] Write TestOnboardingMode tests
+- [ ] Write TestToolContextInjection tests
+- [ ] Write TestEndToEndOnboarding tests
+- [ ] Run all integration tests
+- [ ] Verify 85%+ coverage
+
+### Phase 3.6: Integration & Validation
+- [ ] Update chat() command to use new functions
+- [ ] Test complete flow manually
+- [ ] Run full test suite (pytest)
+- [ ] Run type checker (mypy src/cycling_ai --strict)
+- [ ] Test backward compatibility (--profile flag)
+- [ ] Update documentation
+
+---
+
+## File Changes Summary
+
+**Modified Files (3):**
+1. `/Users/eduardo/Documents/projects/cycling-ai-analysis/trees/chat-improvements/src/cycling_ai/cli/commands/chat.py` (+180 LOC)
+2. `/Users/eduardo/Documents/projects/cycling-ai-analysis/trees/chat-improvements/src/cycling_ai/orchestration/executor.py` (+30 LOC)
+3. `/Users/eduardo/Documents/projects/cycling-ai-analysis/trees/chat-improvements/src/cycling_ai/orchestration/agent.py` (+5 LOC)
+
+**New Files (4):**
+1. `/Users/eduardo/Documents/projects/cycling-ai-analysis/trees/chat-improvements/tests/cli/test_chat_profile_detection.py` (~80 LOC)
+2. `/Users/eduardo/Documents/projects/cycling-ai-analysis/trees/chat-improvements/tests/cli/test_chat_onboarding_mode.py` (~120 LOC)
+3. `/Users/eduardo/Documents/projects/cycling-ai-analysis/trees/chat-improvements/tests/orchestration/test_executor_context_injection.py` (~100 LOC)
+4. `/Users/eduardo/Documents/projects/cycling-ai-analysis/trees/chat-improvements/tests/integration/test_chat_onboarding.py` (~300 LOC)
+
+**Total Estimated Changes:**
+- Production code: ~215 LOC
+- Test code: ~600 LOC
+- **Total: ~815 LOC**
+
+---
+
+## Success Metrics
+
+### Functional Metrics
+- [ ] Profile detection works in all scenarios
+- [ ] Onboarding completes successfully
+- [ ] Transition to normal chat is seamless
+- [ ] Tools can update session context
+- [ ] Backward compatibility maintained
+
+### Technical Metrics
+- [ ] `mypy --strict` passes (zero errors)
+- [ ] Test coverage ≥ 85%
+- [ ] All tests pass (pytest)
+- [ ] No regressions in existing tests
+
+### User Experience Metrics
+- [ ] Clear onboarding prompts
+- [ ] Helpful error messages
+- [ ] Smooth transition with confirmation
+- [ ] No confusion about current mode
+
+---
+
+## Next Steps After Phase 3
+
+**Phase 4: CLI Integration (Week 4)**
+- Add CLI flags (--skip-onboarding, --force-onboarding)
+- Add /session command to show onboarding progress
+- Polish UX (progress indicators, better prompts)
+
+**Phase 5: Polish & Documentation (Week 5)**
+- Add progress percentage to prompts
+- Write user documentation
+- Create video walkthrough
+- Performance testing
+
+---
+
+## Ready for Execution
+
+This implementation plan is complete and ready for the task executor to implement using TDD principles. All architecture decisions have been made, all integration points identified, and a clear test-driven approach has been defined.
+
+**Estimated Implementation Time:** 3 days
+**Confidence Level:** High (all components well-defined)
+**Dependencies:** Phase 1 & 2 complete (ProfileOnboardingManager and tools exist)

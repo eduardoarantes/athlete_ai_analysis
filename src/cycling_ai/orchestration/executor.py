@@ -5,11 +5,15 @@ Simple orchestration layer for executing tools by name and managing results.
 """
 from __future__ import annotations
 
-from typing import Any
+import inspect
+from typing import TYPE_CHECKING, Any
 
 import cycling_ai.tools  # Trigger tool registration via load_all_tools()
 from cycling_ai.tools.base import ToolExecutionResult
 from cycling_ai.tools.registry import get_global_registry
+
+if TYPE_CHECKING:
+    from cycling_ai.orchestration.session import ConversationSession
 
 
 class ToolExecutor:
@@ -18,19 +22,28 @@ class ToolExecutor:
 
     Provides a simple interface for executing tools by name with parameters.
     Optionally supports filtering to only specific allowed tools.
+    Supports context injection from session for tools that accept session_context.
     """
 
-    def __init__(self, allowed_tools: list[str] | None = None) -> None:
+    def __init__(
+        self,
+        session: ConversationSession | None = None,
+        allowed_tools: list[str] | None = None,
+    ) -> None:
         """
         Initialize executor with global registry.
 
         Args:
+            session: Optional conversation session for context injection.
+                If provided, session.context will be injected into tools that
+                accept a session_context parameter.
             allowed_tools: Optional list of tool names to restrict access to.
                 If None, all registered tools are available.
         """
         # Ensure all tools are loaded before accessing registry
         cycling_ai.tools.load_all_tools()  # noqa: F405
         self.registry = get_global_registry()
+        self.session = session
         self.allowed_tools = allowed_tools
 
     def execute_tool(
@@ -38,6 +51,10 @@ class ToolExecutor:
     ) -> ToolExecutionResult:
         """
         Execute a tool by name.
+
+        If a session is configured, injects session.context into tools that
+        accept a session_context parameter. After execution, updates session
+        context from tool result metadata if context_updates are present.
 
         Args:
             tool_name: Name of tool to execute (e.g., "analyze_performance")
@@ -60,7 +77,30 @@ class ToolExecutor:
 
         try:
             tool = self.registry.get_tool(tool_name)
-            return tool.execute(**parameters)
+
+            # Inject session context if session is available and tool accepts it
+            parameters_with_context = parameters.copy()
+
+            if self.session is not None:
+                # Check if tool's execute method accepts session_context parameter
+                tool_execute_sig = inspect.signature(tool.execute)
+                if "session_context" in tool_execute_sig.parameters:
+                    # Only inject if not already provided (allow explicit override)
+                    if "session_context" not in parameters_with_context:
+                        parameters_with_context["session_context"] = self.session.context
+
+            # Execute tool
+            result = tool.execute(**parameters_with_context)
+
+            # Update session context from tool result metadata
+            if self.session is not None and result.success:
+                if result.metadata and "context_updates" in result.metadata:
+                    context_updates = result.metadata["context_updates"]
+                    if isinstance(context_updates, dict):
+                        self.session.context.update(context_updates)
+
+            return result
+
         except KeyError:
             return ToolExecutionResult(
                 success=False,

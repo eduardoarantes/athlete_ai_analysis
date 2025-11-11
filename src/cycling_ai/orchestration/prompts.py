@@ -197,3 +197,18 @@ class AgentPromptsManager:
             Formatted cross-training instructions or empty string
         """
         return self._prompt_loader.get_cross_training_instructions(**kwargs)
+
+    def get_profile_onboarding_prompt(self) -> str:
+        """
+        Get profile onboarding system prompt for chat sessions.
+
+        Returns system prompt that guides the LLM to collect athlete profile
+        information conversationally and create the profile using tools.
+
+        Returns:
+            System prompt for profile onboarding mode
+
+        Raises:
+            FileNotFoundError: If prompt file doesn't exist
+        """
+        return self._prompt_loader.get_profile_onboarding_prompt()
