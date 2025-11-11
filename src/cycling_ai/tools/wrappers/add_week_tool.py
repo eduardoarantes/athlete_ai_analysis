@@ -102,11 +102,21 @@ def _calculate_week_metrics(
         filtered_workouts = workouts
 
     # Exclude strength workouts from cycling volume calculations
-    cycling_workouts = [
-        workout for workout in filtered_workouts
-        if not ("strength" in workout.get("description", "").lower() or
-                any("strength" in seg.get("type", "").lower() for seg in workout.get("segments", [])))
-    ]
+    # Use explicit workout_type field if available (prevents mis-classification)
+    cycling_workouts = []
+    for workout in filtered_workouts:
+        workout_type = workout.get("workout_type")
+        if workout_type:
+            # Use explicit type from library
+            is_strength = (workout_type == "strength")
+        else:
+            # Fallback: keyword matching (old behavior)
+            is_strength = (
+                "strength" in workout.get("description", "").lower() or
+                any("strength" in seg.get("type", "").lower() for seg in workout.get("segments", []))
+            )
+        if not is_strength:
+            cycling_workouts.append(workout)
 
     # Calculate total duration (handle None values from library workouts)
     total_duration_min = sum(
@@ -605,7 +615,7 @@ class AddWeekDetailsTool(BaseTool):
             ToolExecutionResult with success status and progress info
         """
         logger.info("=" * 80)
-        logger.info("TOOL EXECUTION START: add_week_details")
+        logger.info("TOOL EXECUTION START: add_week_details") 
         logger.info("=" * 80)
 
         try:
@@ -748,9 +758,6 @@ class AddWeekDetailsTool(BaseTool):
                             workouts_by_day[weekday] = []
                         workouts_by_day[weekday].append(workout)
 
-                # Calculate total expected workouts across all days
-                total_expected = sum(len(types) for types in expected_workout_types_by_day.values())
-
                 # Validate each day has the correct number and types of workouts
                 for weekday, expected_types in expected_workout_types_by_day.items():
                     day_workouts = workouts_by_day.get(weekday, [])
@@ -763,10 +770,18 @@ class AddWeekDetailsTool(BaseTool):
                     actual_cycling = 0
                     actual_strength = 0
                     for workout in day_workouts:
-                        is_strength = (
-                            "strength" in workout.get("description", "").lower() or
-                            any("strength" in seg.get("type", "").lower() for seg in workout.get("segments", []))
-                        )
+                        # Use explicit workout_type field if available (from library workouts)
+                        # Falls back to keyword matching for backward compatibility
+                        workout_type = workout.get("workout_type")
+                        if workout_type:
+                            # Use explicit type from library
+                            is_strength = (workout_type == "strength")
+                        else:
+                            # Fallback: keyword matching (old behavior)
+                            is_strength = (
+                                "strength" in workout.get("description", "").lower() or
+                                any("strength" in seg.get("type", "").lower() for seg in workout.get("segments", []))
+                            )
                         if is_strength:
                             actual_strength += 1
                         else:

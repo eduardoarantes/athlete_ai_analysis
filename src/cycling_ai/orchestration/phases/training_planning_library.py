@@ -202,6 +202,7 @@ class LibraryBasedTrainingPlanningWeeks:
         return {
             "weekday": weekday,
             "description": "Strength Training",
+            "workout_type": "strength",  # Explicit type for validation
             "segments": [
                 {
                     "type": "strength",
@@ -210,6 +211,32 @@ class LibraryBasedTrainingPlanningWeeks:
                 }
             ],
         }
+
+    def _is_strength_workout(self, workout: dict[str, Any]) -> bool:
+        """
+        Check if workout is a strength workout.
+
+        Uses explicit workout_type field if available (from library workouts).
+        Falls back to keyword matching for backward compatibility.
+
+        Args:
+            workout: Workout dictionary
+
+        Returns:
+            True if strength workout, False if cycling workout
+        """
+        # Use explicit workout_type if available (prevents mis-classification)
+        workout_type = workout.get("workout_type")
+        if workout_type:
+            return workout_type == "strength"
+
+        # Fallback: keyword matching (old behavior)
+        description = workout.get("description", "").lower()
+        if "strength" in description:
+            return True
+
+        segments = workout.get("segments", [])
+        return any("strength" in seg.get("type", "").lower() for seg in segments)
 
     def _load_weekly_overview(self, plan_id: str) -> list[dict[str, Any]]:
         """
@@ -357,19 +384,31 @@ class LibraryBasedTrainingPlanningWeeks:
         for day in week["training_days"]:
             workout_types = day.get("workout_types", [])
 
+            logger.info(
+                f"Week {week.get('week_number')}, {day['weekday']}: "
+                f"Processing workout_types={workout_types}"
+            )
+
             # Skip rest days
             if "rest" in workout_types:
+                logger.info(f"  → Skipping rest day")
                 continue
 
             is_weekend = day["weekday"] in ["Saturday", "Sunday"]
 
             # Process each workout type for this day
             for workout_type in workout_types:
+                logger.info(f"  → Processing workout_type='{workout_type}'")
                 if workout_type == "strength":
                     # Create simple strength workout structure
                     workout_dict = self._create_strength_workout(day["weekday"])
+                    logger.info(f"    ✓ Created strength workout for {day['weekday']}")
                 else:
                     # Select cycling workout from library
+                    logger.info(
+                        f"    → Selecting cycling workout: type={workout_type}, "
+                        f"phase={week['phase']}, weekday={day['weekday']}"
+                    )
                     workout = self.selector.select_workout(
                         target_type=workout_type,
                         target_phase=week["phase"],
@@ -382,10 +421,19 @@ class LibraryBasedTrainingPlanningWeeks:
                     )
 
                     if workout is None:
+                        logger.error(
+                            f"    ✗ No matching workout found for week {week.get('week_number')}, "
+                            f"day {day['weekday']}, type {workout_type}, phase {week['phase']}"
+                        )
                         raise RuntimeError(
                             f"No matching workout found for week {week.get('week_number')}, "
                             f"day {day['weekday']}, type {workout_type}, phase {week['phase']}"
                         )
+
+                    logger.info(
+                        f"    ✓ Selected workout: {workout.name} (id={workout.id}, "
+                        f"duration={sum(s.duration_min or 0 for s in workout.segments):.0f}min)"
+                    )
 
                     # Update trackers immediately after selection
                     self.selector.variety_tracker.add_workout(workout.id)
@@ -395,6 +443,9 @@ class LibraryBasedTrainingPlanningWeeks:
                     workout_dict = workout.model_dump()
                     workout_dict["weekday"] = day["weekday"]
                     workout_dict["description"] = workout.detailed_description or workout.name
+                    # Preserve original workout_type from library for validation
+                    # This prevents mis-classification of cycling workouts with "strength" in name
+                    workout_dict["workout_type"] = workout.type
 
                     # Ensure all segments have duration_min calculated (for interval sets)
                     for segment in workout_dict.get("segments", []):
@@ -423,6 +474,14 @@ class LibraryBasedTrainingPlanningWeeks:
                             segment["description"] = f"{segment['type'].title()} segment"
 
                 # Add workout to appropriate list
+                workout_category = "weekend" if is_weekend else "weekday"
+                is_strength_workout = self._is_strength_workout(workout_dict)
+                logger.info(
+                    f"    ✓ Adding to {workout_category}_workouts: "
+                    f"type={'STRENGTH' if is_strength_workout else 'CYCLING'}, "
+                    f"description={workout_dict.get('description', 'N/A')[:50]}"
+                )
+
                 if is_weekend:
                     weekend_workouts.append(workout_dict)
                     # Only scale endurance cycling workouts
@@ -431,15 +490,18 @@ class LibraryBasedTrainingPlanningWeeks:
                 else:
                     weekday_workouts.append(workout_dict)
 
-        # Calculate current durations
+        # Calculate current durations (EXCLUDE strength workouts from time budget)
+        # Per design: strength workouts don't count toward weekly cycling hours
         weekday_minutes = sum(
             sum(seg["duration_min"] for seg in w["segments"])
             for w in weekday_workouts
+            if not self._is_strength_workout(w)
         )
 
         weekend_minutes_before = sum(
             sum(seg["duration_min"] for seg in w["segments"])
             for w in weekend_workouts
+            if not self._is_strength_workout(w)
         )
 
         # Calculate deficit (how much more time we need)
@@ -455,19 +517,39 @@ class LibraryBasedTrainingPlanningWeeks:
         non_endurance_weekend = [w for w in weekend_workouts if w not in weekend_endurance_workouts]
         all_workouts = weekday_workouts + non_endurance_weekend + scaled_endurance
 
-        # Log for debugging
-        actual_minutes = sum(
+        # Log for debugging (cycling time only, strength excluded from budget)
+        actual_cycling_minutes = sum(
             sum(seg["duration_min"] for seg in w["segments"])
             for w in all_workouts
+            if not self._is_strength_workout(w)
         )
+        actual_strength_minutes = sum(
+            sum(seg["duration_min"] for seg in w["segments"])
+            for w in all_workouts
+            if self._is_strength_workout(w)
+        )
+        actual_total_minutes = actual_cycling_minutes + actual_strength_minutes
+
         logger.info(
             f"Week {week.get('week_number')}: "
-            f"Target {target_minutes/60:.1f}h, "
+            f"Target {target_minutes/60:.1f}h (cycling only), "
             f"Weekdays {weekday_minutes/60:.1f}h, "
             f"Weekends (before) {weekend_minutes_before/60:.1f}h, "
             f"Deficit {deficit_minutes/60:.1f}h, "
-            f"Weekends (after) {(actual_minutes-weekday_minutes)/60:.1f}h, "
-            f"Total {actual_minutes/60:.1f}h"
+            f"Weekends (after) {(actual_cycling_minutes-weekday_minutes)/60:.1f}h, "
+            f"Cycling {actual_cycling_minutes/60:.1f}h, "
+            f"Strength {actual_strength_minutes/60:.1f}h, "
+            f"Total {actual_total_minutes/60:.1f}h"
         )
+
+        # Debug: Log each workout being returned
+        logger.info(f"Returning {len(all_workouts)} workouts to add_week_tool:")
+        for i, w in enumerate(all_workouts):
+            workout_dur = sum(seg.get("duration_min", 0) for seg in w.get("segments", []))
+            is_strength = self._is_strength_workout(w)
+            logger.info(
+                f"  [{i+1}] {w.get('weekday')}: {w.get('description', 'N/A')[:40]} "
+                f"({workout_dur:.0f}min, type={'STRENGTH' if is_strength else 'CYCLING'})"
+            )
 
         return all_workouts

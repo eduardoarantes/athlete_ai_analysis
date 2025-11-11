@@ -6,6 +6,7 @@ Provides template method pattern for coordinating phase execution.
 
 from __future__ import annotations
 
+import logging
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from datetime import datetime
@@ -22,6 +23,8 @@ from cycling_ai.orchestration.base import (
 from cycling_ai.orchestration.prompts import AgentPromptsManager
 from cycling_ai.orchestration.session import SessionManager
 from cycling_ai.orchestration.phases.base_phase import BasePhase
+
+logger = logging.getLogger(__name__)
 
 
 class BaseWorkflow(ABC):
@@ -176,7 +179,16 @@ class BaseWorkflow(ABC):
         # Initialize RAG manager if enabled
         rag_manager = None
         if config.rag_config.enabled:
+            logger.info("=" * 80)
+            logger.info("RAG (Retrieval Augmented Generation) ENABLED for this workflow")
+            logger.info(
+                f"RAG Config: top_k={config.rag_config.top_k}, "
+                f"min_score={config.rag_config.min_score}"
+            )
+            logger.info("=" * 80)
             rag_manager = self._initialize_rag_manager(config.rag_config)
+        else:
+            logger.info("RAG disabled for this workflow")
 
         return PhaseContext(
             config=config,
@@ -232,15 +244,23 @@ class BaseWorkflow(ABC):
             from cycling_ai.rag.manager import RAGManager
 
             logger.info(
-                f"Initializing RAG with vectorstore: {rag_config.project_vectorstore_path}"
+                f"RAG: Initializing RAG manager with vectorstore at: "
+                f"{rag_config.project_vectorstore_path}"
             )
+            logger.info(
+                f"RAG: Embedding provider: {rag_config.embedding_provider} "
+                f"(model: {rag_config.embedding_model})"
+            )
+
             rag_manager = RAGManager(
                 project_vectorstore_path=rag_config.project_vectorstore_path,
                 user_vectorstore_path=rag_config.user_vectorstore_path,
                 embedding_provider=rag_config.embedding_provider,
                 embedding_model=rag_config.embedding_model,
             )
-            logger.info("RAG manager initialized successfully")
+
+            logger.info("RAG: RAG manager initialized successfully")
+            logger.info("RAG: Knowledge base ready for retrieval")
             return rag_manager
         except Exception as e:
             logger.error(

@@ -276,10 +276,9 @@ def create_rag_config(
     ),
 )
 @click.option(
-    "--enable-rag",
-    is_flag=True,
-    default=False,
-    help="Enable RAG-enhanced prompts using knowledge base retrieval",
+    "--enable-rag/--disable-rag",
+    default=True,
+    help="Enable/disable RAG-enhanced prompts using knowledge base retrieval (enabled by default)",
 )
 @click.option(
     "--rag-top-k",
@@ -750,6 +749,10 @@ def _display_config_summary(config: WorkflowConfig) -> None:
         if config.generate_training_plan
         else "[dim]Disabled[/dim]",
     )
+
+    # Show workout library location when using library-based workouts
+    if config.generate_training_plan and config.workout_source == "library":
+        table.add_row("Workout Library", "data/workout_library.json")
 
     console.print(table)
 

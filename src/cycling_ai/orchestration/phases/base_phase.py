@@ -535,6 +535,7 @@ class BasePhase(ABC):
         """
         # Check if RAG is enabled
         if not context.config.rag_config.enabled:
+            logger.debug(f"[{self.phase_name}] RAG disabled, using base prompt")
             return base_prompt
 
         # Check if RAG manager is available
@@ -543,6 +544,12 @@ class BasePhase(ABC):
                 f"[{self.phase_name}] RAG enabled but no RAG manager available"
             )
             return base_prompt
+
+        logger.info(
+            f"[{self.phase_name}] RAG ENABLED - Augmenting prompt with knowledge base "
+            f"(top_k={context.config.rag_config.top_k}, "
+            f"min_score={context.config.rag_config.min_score})"
+        )
 
         try:
             # Import here to avoid circular dependency
@@ -553,8 +560,11 @@ class BasePhase(ABC):
             collection = self._get_retrieval_collection()
 
             logger.info(
-                f"[{self.phase_name}] RAG retrieval: query='{retrieval_query[:50]}...', "
-                f"collection='{collection}'"
+                f"[{self.phase_name}] RAG: Building retrieval query from phase context"
+            )
+            logger.info(
+                f"[{self.phase_name}] RAG: Query='{retrieval_query[:80]}...', "
+                f"Collection='{collection}'"
             )
 
             # Retrieve relevant documents
@@ -565,9 +575,16 @@ class BasePhase(ABC):
                 min_score=context.config.rag_config.min_score,
             )
 
-            logger.info(
-                f"[{self.phase_name}] Retrieved {len(retrieval_result.documents)} documents"
-            )
+            if retrieval_result.documents:
+                logger.info(
+                    f"[{self.phase_name}] RAG: Successfully retrieved "
+                    f"{len(retrieval_result.documents)} documents"
+                )
+            else:
+                logger.warning(
+                    f"[{self.phase_name}] RAG: No documents retrieved, "
+                    f"using base prompt only"
+                )
 
             # Augment prompt with retrieved context
             augmenter = PromptAugmenter(max_context_tokens=2000)

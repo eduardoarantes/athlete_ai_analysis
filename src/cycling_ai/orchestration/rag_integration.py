@@ -6,7 +6,11 @@ Provides PromptAugmenter for formatting retrieved documents into system prompts.
 
 from __future__ import annotations
 
+import logging
+
 from cycling_ai.rag.manager import RetrievalResult
+
+logger = logging.getLogger(__name__)
 
 
 class PromptAugmenter:
@@ -92,16 +96,32 @@ class PromptAugmenter:
         """
         # If no documents, return base prompt unchanged
         if not retrieval_result.documents:
+            logger.info("RAG: No documents retrieved, using base prompt only")
             return base_prompt
+
+        logger.info(
+            f"RAG: Augmenting prompt with {len(retrieval_result.documents)} documents "
+            f"from '{retrieval_result.collection}' (scores: "
+            f"{[f'{s:.3f}' for s in retrieval_result.scores]})"
+        )
 
         # Build context section
         context_section = self._format_retrieved_documents(retrieval_result)
 
         # Check token budget
-        if len(context_section) > self.max_context_chars:
+        context_chars = len(context_section)
+        if context_chars > self.max_context_chars:
+            logger.warning(
+                f"RAG: Context truncated from {context_chars} to {self.max_context_chars} chars "
+                f"(~{self.max_context_tokens} tokens)"
+            )
             # Truncate and add indicator
             context_section = context_section[:self.max_context_chars]
             context_section += "\n\n[...truncated due to length]"
+        else:
+            logger.info(
+                f"RAG: Context size: {context_chars} chars (~{context_chars // 4} tokens)"
+            )
 
         # Combine base prompt with retrieved context
         augmented_prompt = f"""{base_prompt}

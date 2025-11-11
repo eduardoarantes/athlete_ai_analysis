@@ -33,12 +33,15 @@ Examples:
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from .embeddings import EmbeddingFactory
 from .vectorstore import ChromaVectorStore
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -174,6 +177,11 @@ class RAGManager:
             ...     top_k=5
             ... )
         """
+        logger.info(
+            f"RAG: Initiating retrieval from '{collection}' "
+            f"(query: '{query[:50]}...', top_k={top_k}, min_score={min_score})"
+        )
+
         # Route to appropriate vectorstore
         vectorstore = self._get_vectorstore_for_collection(collection)
 
@@ -185,15 +193,31 @@ class RAGManager:
             filter=filter_metadata,
         )
 
+        logger.debug(f"RAG: Raw retrieval found {len(results)} documents")
+
         # Filter by score and extract data
         filtered_results = [
             (doc, score) for doc, score in results
             if score >= min_score
         ]
 
+        if len(filtered_results) < len(results):
+            logger.info(
+                f"RAG: Filtered to {len(filtered_results)}/{len(results)} documents "
+                f"(min_score={min_score})"
+            )
+
         documents = [doc.page_content for doc, _ in filtered_results]
         metadata = [doc.metadata for doc, _ in filtered_results]
         scores = [score for _, score in filtered_results]
+
+        if documents:
+            logger.info(
+                f"RAG: Retrieved {len(documents)} documents with scores: "
+                f"{[f'{s:.3f}' for s in scores]}"
+            )
+        else:
+            logger.warning(f"RAG: No documents retrieved from '{collection}'")
 
         return RetrievalResult(
             documents=documents,
