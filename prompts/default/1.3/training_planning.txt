@@ -31,13 +31,13 @@ Design a complete, personalized {training_plan_weeks}-week training plan using a
     "weekly_focus": "Endurance",
     "weekly_watch_points": "Monitor fatigue",
     "training_days": [
-      {{"weekday": "Monday", "workout_type": "rest"}},
-      {{"weekday": "Tuesday", "workout_type": "endurance"}},
-      {{"weekday": "Wednesday", "workout_type": "recovery"}},
-      {{"weekday": "Thursday", "workout_type": "rest"}},
-      {{"weekday": "Friday", "workout_type": "tempo"}},
-      {{"weekday": "Saturday", "workout_type": "endurance"}},
-      {{"weekday": "Sunday", "workout_type": "rest"}}
+      {{"weekday": "Monday", workout_types": ["rest"]}},
+      {{"weekday": "Tuesday", workout_types": ["endurance"]}},
+      {{"weekday": "Wednesday", workout_types": ["recovery"]}},
+      {{"weekday": "Thursday", workout_types": ["rest"]}},
+      {{"weekday": "Friday", workout_types": ["tempo"]}},
+      {{"weekday": "Saturday", workout_types": ["endurance"]}},
+      {{"weekday": "Sunday", workout_types": ["rest"]}}
     ],
     "total_hours": 6.5
   }},
@@ -64,7 +64,7 @@ You MUST provide ALL 7 weekdays in `training_days` array with specific workout t
 - **tempo**: Sub-threshold efforts (Z3, 76-90% FTP) - 8 workouts available
   - Use: Build phase, muscular endurance
   - Duration: 60-90 minutes with sustained efforts
-- **sweet_spot**: Sweet spot training (88-93% FTP) - Only 2 workouts available
+- **sweetspot**: Sweet spot training (88-93% FTP) - Only 2 workouts available
   - Use: SPARINGLY in Build phase (limited variety)
   - Duration: 60-75 minutes with intervals
 
@@ -83,14 +83,14 @@ You MUST provide ALL 7 weekdays in `training_days` array with specific workout t
 - MUST include all 7 weekdays (Monday-Sunday)
 - Each day must have a "weekday" and "workout_type"
 - Maximum 5 training days per week (minimum 2 rest days)
-- Maximum 2-3 hard days per week (threshold/vo2max/sweet_spot)
+- Maximum 2-3 hard days per week (threshold/vo2max/sweetspot)
 - **CRITICAL - High-Intensity Workout Spacing**:
-  - NEVER schedule high-intensity workouts (threshold/vo2max/sweet_spot) on consecutive days
+  - NEVER schedule high-intensity workouts (threshold/vo2max/sweetspot) on consecutive days
   - ALWAYS - do this instead- separate high-intensity sessions with AT LEAST ONE of the following:
     * recovery day (active recovery ride)
     * endurance day (easy Z2 aerobic ride)
     * rest day (complete rest)
-  - Example CORRECT: Tuesday (threshold) → Wednesday (recovery) → Thursday (sweet_spot)
+  - Example CORRECT: Tuesday (threshold) → Wednesday (recovery) → Thursday (sweetspot)
   - Example WRONG: Tuesday (threshold) → Wednesday (vo2max) [consecutive hard days]
   - This spacing allows proper recovery and adaptation between hard efforts
 - **WEEKEND PRIORITY**: If Saturday AND Sunday are BOTH available, MUST use them for training
@@ -116,13 +116,13 @@ You MUST provide ALL 7 weekdays in `training_days` array with specific workout t
   ✓ VO2max (Tue) → recovery (Wed) → rest (Thu) → threshold (Fri) - proper separation
 
 WRONG Example (DO NOT USE):
-- Mon: rest, Tue: threshold, Wed: sweet_spot, Thu: rest, Fri: recovery, Sat: vo2max, Sun: endurance
-  ✗ Threshold + sweet_spot on consecutive days (Tue/Wed)
+- Mon: rest, Tue: threshold, Wed: sweetspot, Thu: rest, Fri: recovery, Sat: vo2max, Sun: endurance
+  ✗ Threshold + sweetspot on consecutive days (Tue/Wed)
   ✗ Recovery + VO2max with no separation before weekend (Fri/Sat)
 
 **CRITICAL - Rest Days:**
 - Minimum 2 rest days per week (more for recovery weeks)
-- Rest days are explicitly listed with "workout_type": "rest"
+- Rest days are explicitly listed with "workout_types": ["rest"
 - More rest days for recovery weeks (3-4 rest days)
 
 **CRITICAL - Recovery/Rest Weeks**:
@@ -245,11 +245,11 @@ Assembles complete plan from overview + all week details, validates, and saves.
 ✅ **training_days array**: Each week must specify ALL 7 weekdays with workout types
    - Must have exactly 7 entries (Monday through Sunday)
    - Each entry must have "weekday" and "workout_type" fields
-   - workout_type must be one of: rest, recovery, endurance, tempo, sweet_spot, threshold, vo2max, mixed
+   - workout_type must be one of: rest, recovery, endurance, tempo, sweetspot, threshold, vo2max, mixed
    - Maximum 5 non-rest days per week (minimum 2 rest days)
-   - Maximum 2-3 hard days (threshold/vo2max/sweet_spot)
+   - Maximum 2-3 hard days (threshold/vo2max/sweetspot)
    - **CRITICAL**: 
-          - NEVER schedule high-intensity workouts (threshold/vo2max/sweet_spot) on consecutive days
+          - NEVER schedule high-intensity workouts (threshold/vo2max/sweetspot) on consecutive days
           - ALWAYS - do this instead-  separate high-intensity sessions with recovery, endurance, or rest day
    - **WEEKEND PRIORITY**: If Saturday AND Sunday are both available for training, you MUST use them:
      - Weekends are ideal for longer endurance rides (2-3 hours)

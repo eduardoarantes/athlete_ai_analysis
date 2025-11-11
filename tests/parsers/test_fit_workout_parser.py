@@ -769,7 +769,7 @@ class TestFitWorkoutParser:
 
         # Verify library format
         library_format = workout.to_library_format()
-        assert library_format["type"] in ["vo2max", "threshold", "sweet_spot"]
+        assert library_format["type"] in ["vo2max", "threshold", "sweetspot"]
         assert library_format["intensity"] in ["hard", "easy"]
 
     def test_parse_all_sample_files(self, parser, sample_fit_dir):

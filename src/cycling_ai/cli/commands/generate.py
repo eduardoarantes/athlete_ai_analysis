@@ -18,7 +18,7 @@ from rich.table import Table
 
 from cycling_ai.cli.formatting import console
 from cycling_ai.config.loader import load_config
-from cycling_ai.orchestration.base import PhaseStatus, WorkflowConfig, WorkflowResult
+from cycling_ai.orchestration.base import PhaseStatus, RAGConfig, WorkflowConfig, WorkflowResult
 from cycling_ai.orchestration.multi_agent import MultiAgentOrchestrator
 from cycling_ai.orchestration.prompts import AgentPromptsManager
 from cycling_ai.providers.base import BaseProvider, ProviderConfig
@@ -117,6 +117,83 @@ class PhaseProgressTracker:
             return str(status.value)
 
 
+def create_rag_config(
+    enabled: bool,
+    top_k: int,
+    min_score: float,
+) -> RAGConfig:
+    """
+    Create RAG configuration for workflow.
+
+    Sets up vectorstore paths and validates configuration.
+    Shows warnings if RAG enabled but vectorstore not available.
+
+    Args:
+        enabled: Whether RAG is enabled
+        top_k: Number of documents to retrieve
+        min_score: Minimum similarity score
+
+    Returns:
+        RAGConfig instance with appropriate settings
+    """
+
+    # Load configuration to get RAG paths
+    config = load_config()
+
+    # Determine vectorstore paths from config
+    project_vectorstore = Path(config.rag.project_vectorstore).expanduser().resolve()
+    user_vectorstore = Path(config.rag.user_vectorstore).expanduser().resolve()
+
+    # Check if project vectorstore exists
+    if enabled and not project_vectorstore.exists():
+        console.print(
+            "\n[yellow]⚠️  Warning: RAG enabled but vectorstore not found[/yellow]",
+            style="bold",
+        )
+        console.print(
+            f"[yellow]   Expected location: {project_vectorstore}[/yellow]"
+        )
+        console.print(
+            "\n[yellow]   To populate the vectorstore, run:[/yellow]"
+        )
+        console.print(
+            "[yellow]      cycling-ai index domain[/yellow]"
+        )
+        console.print(
+            "[yellow]      cycling-ai index templates[/yellow]"
+        )
+        console.print(
+            "\n[yellow]   RAG will be disabled for this run.[/yellow]\n"
+        )
+
+    # Create configuration
+    rag_config = RAGConfig(
+        enabled=enabled and project_vectorstore.exists(),  # Disable if vectorstore missing
+        top_k=top_k,
+        min_score=min_score,
+        project_vectorstore_path=(
+            project_vectorstore if project_vectorstore.exists() else None
+        ),
+        user_vectorstore_path=(
+            user_vectorstore if user_vectorstore.exists() else None
+        ),
+        embedding_provider="local",
+        embedding_model=None,  # Use provider defaults
+    )
+
+    # Log RAG status
+    if enabled:
+        if rag_config.enabled:
+            console.print(
+                f"[green]✓[/green] RAG enabled with top_k={top_k}, "
+                f"min_score={min_score}"
+            )
+        else:
+            console.print("[yellow]⚠️  RAG disabled (vectorstore not found)[/yellow]")
+
+    return rag_config
+
+
 @click.command()
 @click.option(
     "--csv",
@@ -198,6 +275,23 @@ class PhaseProgressTracker:
         "or 'llm' (flexible, uses tokens)"
     ),
 )
+@click.option(
+    "--enable-rag/--disable-rag",
+    default=True,
+    help="Enable/disable RAG-enhanced prompts using knowledge base retrieval (enabled by default)",
+)
+@click.option(
+    "--rag-top-k",
+    type=int,
+    default=3,
+    help="Number of documents to retrieve per phase (default: 3)",
+)
+@click.option(
+    "--rag-min-score",
+    type=float,
+    default=0.5,
+    help="Minimum similarity score for retrieval (0-1, default: 0.5)",
+)
 def generate(
     csv_file: Path | None,
     profile_file: Path,
@@ -213,6 +307,9 @@ def generate(
     prompt_model: str,
     prompt_version: str | None,
     workout_source: str,
+    enable_rag: bool,
+    rag_top_k: int,
+    rag_min_score: float,
 ) -> None:
     """
     Generate comprehensive cycling analysis reports.
@@ -369,6 +466,14 @@ def generate(
             )
         console.print()
 
+        # Setup RAG configuration
+        rag_config = create_rag_config(
+            enabled=enable_rag,
+            top_k=rag_top_k,
+            min_score=rag_min_score,
+        )
+        console.print()
+
         # Create workflow configuration
         workflow_config = WorkflowConfig(
             csv_file_path=csv_file,
@@ -382,6 +487,7 @@ def generate(
             skip_data_prep=skip_data_prep,
             analyze_cross_training=cross_training,
             workout_source=workout_source,
+            rag_config=rag_config,
         )
 
         # Validate configuration
@@ -643,6 +749,10 @@ def _display_config_summary(config: WorkflowConfig) -> None:
         if config.generate_training_plan
         else "[dim]Disabled[/dim]",
     )
+
+    # Show workout library location when using library-based workouts
+    if config.generate_training_plan and config.workout_source == "library":
+        table.add_row("Workout Library", "data/workout_library.json")
 
     console.print(table)
 

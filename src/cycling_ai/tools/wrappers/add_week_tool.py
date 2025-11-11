@@ -39,17 +39,17 @@ def _detect_optional_recovery_workout(
 
     Args:
         workouts: List of workout dictionaries
-        training_days_objects: Week overview training days (with workout_type)
+        training_days_objects: Week overview training days (with workout_types array)
         week_number: Current week number (for logging)
 
     Returns:
         (recovery_workout_index_or_none, recovery_weekday_or_none)
     """
-    # Count non-rest training days
+    # Count non-rest training days (days with at least one non-rest workout type)
     training_days_count = sum(
         1
         for day in training_days_objects
-        if isinstance(day, dict) and day.get("workout_type") != "rest"
+        if isinstance(day, dict) and "rest" not in day.get("workout_types", [])
     )
 
     # Only applies to 6-day weeks
@@ -59,7 +59,7 @@ def _detect_optional_recovery_workout(
     # Find first recovery workout in training_days_objects
     recovery_weekday = None
     for day in training_days_objects:
-        if isinstance(day, dict) and day.get("workout_type") == "recovery":
+        if isinstance(day, dict) and "recovery" in day.get("workout_types", []):
             recovery_weekday = day.get("weekday")
             break
 
@@ -101,15 +101,32 @@ def _calculate_week_metrics(
     else:
         filtered_workouts = workouts
 
+    # Exclude strength workouts from cycling volume calculations
+    # Use explicit workout_type field if available (prevents mis-classification)
+    cycling_workouts = []
+    for workout in filtered_workouts:
+        workout_type = workout.get("workout_type")
+        if workout_type:
+            # Use explicit type from library
+            is_strength = (workout_type == "strength")
+        else:
+            # Fallback: keyword matching (old behavior)
+            is_strength = (
+                "strength" in workout.get("description", "").lower() or
+                any("strength" in seg.get("type", "").lower() for seg in workout.get("segments", []))
+            )
+        if not is_strength:
+            cycling_workouts.append(workout)
+
     # Calculate total duration (handle None values from library workouts)
     total_duration_min = sum(
         sum((seg.get("duration_min") or 0) for seg in workout.get("segments", []))
-        for workout in filtered_workouts
+        for workout in cycling_workouts
     )
     total_hours = total_duration_min / 60.0
 
     # Calculate TSS
-    actual_tss = calculate_weekly_tss(filtered_workouts, current_ftp)
+    actual_tss = calculate_weekly_tss(cycling_workouts, current_ftp)
 
     return (total_hours, actual_tss)
 
@@ -598,7 +615,7 @@ class AddWeekDetailsTool(BaseTool):
             ToolExecutionResult with success status and progress info
         """
         logger.info("=" * 80)
-        logger.info("TOOL EXECUTION START: add_week_details")
+        logger.info("TOOL EXECUTION START: add_week_details") 
         logger.info("=" * 80)
 
         try:
@@ -665,19 +682,22 @@ class AddWeekDetailsTool(BaseTool):
                 week_overview = {}
 
             # Get designated training days for this week
-            # (extract weekdays from objects, exclude rest days)
+            # Build a map of weekday -> list of expected workout_types
             training_days_objects = week_overview.get("training_days", [])
+            expected_workout_types_by_day: dict[str, list[str]] = {}
+
             if training_days_objects:
-                # Extract weekday strings for non-rest days only (filter out None values)
-                training_days_raw = [
-                    day_obj.get("weekday")
-                    for day_obj in training_days_objects
-                    if isinstance(day_obj, dict) and day_obj.get("workout_type") != "rest"
-                ]
-                # Filter out None values for type safety
-                training_days = [day for day in training_days_raw if day is not None]
+                for day_obj in training_days_objects:
+                    if not isinstance(day_obj, dict):
+                        continue
+                    weekday = day_obj.get("weekday")
+                    workout_types = day_obj.get("workout_types", [])
+
+                    if weekday and workout_types:
+                        # Only include days that have non-rest workouts
+                        if "rest" not in workout_types:
+                            expected_workout_types_by_day[weekday] = workout_types
             else:
-                training_days = []
                 logger.warning(
                     f"No training_days found in week {week_number} overview, "
                     f"skipping training day validation"
@@ -697,17 +717,29 @@ class AddWeekDetailsTool(BaseTool):
 
                 # Validate workout is on designated training day
                 workout_weekday = workout.get("weekday")
-                if training_days and workout_weekday not in training_days:
+                if expected_workout_types_by_day and workout_weekday not in expected_workout_types_by_day:
                     raise ValueError(
                         f"Workout {i + 1} scheduled on '{workout_weekday}' but this week's "
-                        f"training_days are: {', '.join(training_days)}. "
+                        f"training_days are: {', '.join(sorted(expected_workout_types_by_day.keys()))}. "
                         f"You can ONLY schedule workouts on designated training days. "
                         f"Other days are rest days."
                     )
 
-                # Validate each segment
+                # Check if this is a strength workout (infer from workout description)
+                is_strength_workout = (
+                    "strength" in workout.get("description", "").lower() or
+                    any("strength" in seg.get("type", "").lower() for seg in workout.get("segments", []))
+                )
+
+                # Validate each segment (skip power zone validation for strength workouts)
                 for j, segment in enumerate(workout["segments"]):
-                    required_fields = ["type", "duration_min", "power_low_pct", "description"]
+                    if is_strength_workout:
+                        # Strength workouts don't need power zones
+                        required_fields = ["type", "duration_min", "description"]
+                    else:
+                        # Cycling workouts need power zones
+                        required_fields = ["type", "duration_min", "power_low_pct", "description"]
+
                     for field in required_fields:
                         if field not in segment:
                             raise ValueError(
@@ -715,14 +747,54 @@ class AddWeekDetailsTool(BaseTool):
                                 f"required field: '{field}'"
                             )
 
-            # Validate number of workouts matches number of training days
-            if training_days and len(workouts) != len(training_days):
-                raise ValueError(
-                    f"Week {week_number} has {len(workouts)} workouts but "
-                    f"{len(training_days)} training days. "
-                    f"You must create exactly one workout for each training day: "
-                    f"{', '.join(training_days)}"
-                )
+            # Validate workout counts match expected workout_types
+            if expected_workout_types_by_day:
+                # Group workouts by weekday
+                workouts_by_day: dict[str, list[dict[str, Any]]] = {}
+                for workout in workouts:
+                    weekday = workout.get("weekday")
+                    if weekday:
+                        if weekday not in workouts_by_day:
+                            workouts_by_day[weekday] = []
+                        workouts_by_day[weekday].append(workout)
+
+                # Validate each day has the correct number and types of workouts
+                for weekday, expected_types in expected_workout_types_by_day.items():
+                    day_workouts = workouts_by_day.get(weekday, [])
+
+                    # Count expected cycling vs strength
+                    expected_cycling = sum(1 for wt in expected_types if wt != "strength")
+                    expected_strength = sum(1 for wt in expected_types if wt == "strength")
+
+                    # Count actual cycling vs strength
+                    actual_cycling = 0
+                    actual_strength = 0
+                    for workout in day_workouts:
+                        # Use explicit workout_type field if available (from library workouts)
+                        # Falls back to keyword matching for backward compatibility
+                        workout_type = workout.get("workout_type")
+                        if workout_type:
+                            # Use explicit type from library
+                            is_strength = (workout_type == "strength")
+                        else:
+                            # Fallback: keyword matching (old behavior)
+                            is_strength = (
+                                "strength" in workout.get("description", "").lower() or
+                                any("strength" in seg.get("type", "").lower() for seg in workout.get("segments", []))
+                            )
+                        if is_strength:
+                            actual_strength += 1
+                        else:
+                            actual_cycling += 1
+
+                    # Validate counts match
+                    if actual_cycling != expected_cycling or actual_strength != expected_strength:
+                        raise ValueError(
+                            f"Week {week_number}, {weekday}: Expected {expected_types} "
+                            f"({expected_cycling} cycling, {expected_strength} strength) "
+                            f"but got {actual_cycling} cycling and {actual_strength} strength workouts. "
+                            f"You must provide exactly the workout types specified in training_days."
+                        )
 
             target_hours = week_overview.get("total_hours")
             current_ftp = overview_data.get("target_ftp", 250)  # Default FTP if not provided

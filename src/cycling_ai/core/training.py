@@ -118,7 +118,7 @@ def validate_training_plan(
                 day_minutes: float = 0
                 for seg_idx, segment in enumerate(segments, 1):
                     # Check segment type
-                    valid_types = {"warmup", "interval", "work", "recovery", "cooldown", "steady", "tempo"}
+                    valid_types = {"warmup", "interval", "work", "recovery", "cooldown", "steady", "tempo", "strength"}
                     seg_type = segment.get("type")
                     if seg_type not in valid_types:
                         errors.append(
@@ -135,11 +135,17 @@ def validate_training_plan(
                     else:
                         day_minutes += segment["duration_min"]
 
+                    # Skip power zone validation for strength segments
+                    is_strength_segment = (seg_type == "strength")
+                    if is_strength_segment:
+                        # Strength segments don't need power zones
+                        continue
+
                     # Auto-default power_high_pct to power_low_pct if not provided
                     if "power_low_pct" in segment and "power_high_pct" not in segment:
                         segment["power_high_pct"] = segment["power_low_pct"]
 
-                    # Check power percentage fields
+                    # Check power percentage fields (only for cycling segments)
                     if "power_low_pct" not in segment:
                         errors.append(f"Week {week_num}, {day}, segment {seg_idx}: Missing 'power_low_pct' field")
                     elif not isinstance(segment["power_low_pct"], (int, float)):

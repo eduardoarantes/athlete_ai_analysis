@@ -44,6 +44,13 @@ class OutputSettings(BaseModel):
     color: bool = True
 
 
+class RAGSettings(BaseModel):
+    """RAG (Retrieval Augmented Generation) settings."""
+
+    project_vectorstore: str = "data/vectorstore"
+    user_vectorstore: str = "~/.cycling-ai/athlete_history"
+
+
 class CyclingAIConfig(BaseModel):
     """Complete configuration for cycling AI analysis."""
 
@@ -54,6 +61,7 @@ class CyclingAIConfig(BaseModel):
     training: TrainingSettings = Field(default_factory=TrainingSettings)
     paths: PathSettings = Field(default_factory=PathSettings)
     output: OutputSettings = Field(default_factory=OutputSettings)
+    rag: RAGSettings = Field(default_factory=RAGSettings)
 
     @model_validator(mode="after")
     def validate_default_provider(self) -> CyclingAIConfig:

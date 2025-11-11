@@ -16,11 +16,27 @@ logger = logging.getLogger(__name__)
 TYPE_COMPATIBILITY: dict[str, list[str]] = {
     "endurance": ["recovery", "mixed"],
     "recovery": ["endurance", "mixed"],
-    "tempo": ["sweet_spot", "mixed"],
-    "sweet_spot": ["tempo", "mixed"],
+    "tempo": ["sweetspot", "mixed"],
+    "sweetspot": ["tempo", "mixed"],
     "threshold": ["vo2max", "mixed"],
     "vo2max": ["threshold", "mixed"],
-    "mixed": ["endurance", "recovery", "tempo", "sweet_spot", "threshold", "vo2max"],
+    "mixed": ["endurance", "recovery", "tempo", "sweetspot", "threshold", "vo2max"],
+}
+
+# Phase name mapping for LLM variations
+# Maps alternative phase names to canonical library phase names
+PHASE_NAME_MAPPING: dict[str, str] = {
+    "Base": "Foundation",  # LLM often uses "Base" instead of "Foundation"
+    "base": "Foundation",
+    "foundation": "Foundation",
+    "Build": "Build",
+    "build": "Build",
+    "Peak": "Peak",
+    "peak": "Peak",
+    "Recovery": "Recovery",
+    "recovery": "Recovery",
+    "Taper": "Taper",
+    "taper": "Taper",
 }
 
 
@@ -376,11 +392,19 @@ class WorkoutSelector:
         Returns:
             Selected and adjusted workout, or None if no candidates found
         """
+        # Normalize phase name using mapping (Base → Foundation, etc.)
+        normalized_phase = PHASE_NAME_MAPPING.get(target_phase, target_phase)
+        if normalized_phase != target_phase:
+            logger.info(
+                f"Mapped phase '{target_phase}' → '{normalized_phase}' "
+                f"for library compatibility"
+            )
+
         # Filter candidates by phase (mandatory)
         candidates = [
             w
             for w in self.library.workouts
-            if w.suitable_phases and target_phase in w.suitable_phases
+            if w.suitable_phases and normalized_phase in w.suitable_phases
         ]
 
         # Filter out excluded workout IDs (hard constraint for same-week duplicates)
@@ -389,7 +413,10 @@ class WorkoutSelector:
             logger.debug(f"Filtered out {len(exclude_ids)} excluded workout IDs")
 
         if not candidates:
-            logger.warning(f"No workouts found for phase={target_phase}")
+            logger.warning(
+                f"No workouts found for phase={normalized_phase} "
+                f"(original: {target_phase})"
+            )
             return None
 
         # Score all candidates
@@ -398,7 +425,7 @@ class WorkoutSelector:
             self.score_workout(
                 workout=w,
                 target_type=target_type,
-                target_phase=target_phase,
+                target_phase=normalized_phase,  # Use normalized phase for scoring
                 target_weekday=target_weekday,
                 target_duration_min=target_duration_min,
                 min_duration_min=min_duration_min,

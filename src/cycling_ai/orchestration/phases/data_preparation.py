@@ -363,3 +363,29 @@ class DataPreparationPhase(BasePhase):
             Empty dictionary (data extracted directly in _execute_phase)
         """
         return {}
+
+    def _get_retrieval_query(self, context: PhaseContext) -> str:
+        """
+        Build retrieval query for data validation best practices.
+
+        Phase 1 validates data files, so retrieve guidance on:
+        - Data validation best practices
+        - FIT file processing
+        - CSV data quality checks
+
+        Args:
+            context: Phase execution context
+
+        Returns:
+            Query string for domain knowledge retrieval
+        """
+        return "data validation best practices cycling FIT file CSV processing quality checks"
+
+    def _get_retrieval_collection(self) -> str:
+        """
+        Get collection name for data preparation retrieval.
+
+        Returns:
+            "domain_knowledge" - Use cycling science knowledge
+        """
+        return "domain_knowledge"

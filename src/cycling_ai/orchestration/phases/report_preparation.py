@@ -315,3 +315,32 @@ class ReportPreparationPhase(BasePhase):
             Empty dict (Phase 4 doesn't use LLM)
         """
         return {}
+
+    def _get_retrieval_query(self, context: PhaseContext) -> str:
+        """
+        Build retrieval query for report generation guidance.
+
+        Phase 4 generates reports, so retrieve guidance on:
+        - Report generation and data presentation
+        - Coaching insights and recommendations
+        - Performance summary best practices
+
+        Args:
+            context: Phase execution context
+
+        Returns:
+            Query string for domain knowledge retrieval
+        """
+        return (
+            "report generation coaching insights performance summary "
+            "recommendations data presentation athlete communication"
+        )
+
+    def _get_retrieval_collection(self) -> str:
+        """
+        Get collection name for report preparation retrieval.
+
+        Returns:
+            "domain_knowledge" - Use cycling science knowledge
+        """
+        return "domain_knowledge"

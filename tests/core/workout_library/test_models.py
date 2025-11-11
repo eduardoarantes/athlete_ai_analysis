@@ -157,7 +157,7 @@ class TestWorkout:
 
     def test_all_workout_types(self) -> None:
         """Test all valid workout types."""
-        valid_types = ["endurance", "tempo", "sweet_spot", "threshold", "vo2max", "recovery", "mixed"]
+        valid_types = ["endurance", "tempo", "sweetspot", "threshold", "vo2max", "recovery", "mixed"]
 
         for workout_type in valid_types:
             workout = Workout(
@@ -387,7 +387,7 @@ class TestWorkoutLibrary:
         assert first_workout.type in [
             "endurance",
             "tempo",
-            "sweet_spot",
+            "sweetspot",
             "threshold",
             "vo2max",
             "recovery",

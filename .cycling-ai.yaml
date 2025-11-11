@@ -50,3 +50,8 @@ output:
   format: "rich"  # "json", "markdown", "rich"
   verbose: false
   color: true
+
+# RAG (Retrieval Augmented Generation) settings
+rag:
+  project_vectorstore: "data/vectorstore"
+  user_vectorstore: "~/.cycling-ai/athlete_history"

@@ -969,6 +969,56 @@ class TrainingPlanningPhase(BasePhase):
 
         return extracted
 
+    def _get_retrieval_query(self, context: PhaseContext) -> str:
+        """
+        Build retrieval query for training plan templates.
+
+        Phase 3 creates training plans, so retrieve:
+        - Structured training plan templates
+        - Periodization strategies for the specified duration
+        - Plans appropriate for athlete's FTP level
+
+        Args:
+            context: Phase execution context
+
+        Returns:
+            Query string for training template retrieval with FTP and duration
+        """
+        weeks = context.config.training_plan_weeks
+
+        # Extract athlete's current FTP from performance analysis
+        # Performance data might be JSON string or dict
+        perf_data = context.previous_phase_data.get("performance_analysis", {})
+        if isinstance(perf_data, str):
+            import json
+            try:
+                perf_data = json.loads(perf_data)
+            except json.JSONDecodeError:
+                perf_data = {}
+
+        # Get current FTP, default to 250W if not available
+        ftp = perf_data.get("current_ftp", 250)
+
+        # Build query with athlete-specific context
+        query = (
+            f"training plan periodization {weeks} weeks duration "
+            f"FTP {ftp} watts base building structured plan template"
+        )
+
+        return query
+
+    def _get_retrieval_collection(self) -> str:
+        """
+        Get collection name for training planning retrieval.
+
+        This is the ONLY phase that uses training_templates collection.
+        All other phases use domain_knowledge.
+
+        Returns:
+            "training_templates" - Use structured training plan templates
+        """
+        return "training_templates"
+
     def _execute_phase(self, context: PhaseContext) -> PhaseResult:
         """
         Not used - TrainingPlanningPhase overrides execute() directly.

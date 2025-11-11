@@ -6,6 +6,7 @@ Provides template method pattern for coordinating phase execution.
 
 from __future__ import annotations
 
+import logging
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from datetime import datetime
@@ -22,6 +23,8 @@ from cycling_ai.orchestration.base import (
 from cycling_ai.orchestration.prompts import AgentPromptsManager
 from cycling_ai.orchestration.session import SessionManager
 from cycling_ai.orchestration.phases.base_phase import BasePhase
+
+logger = logging.getLogger(__name__)
 
 
 class BaseWorkflow(ABC):
@@ -160,7 +163,7 @@ class BaseWorkflow(ABC):
         Create phase execution context.
 
         Helper method to build PhaseContext with config and accumulated data
-        from previous phases.
+        from previous phases. If RAG is enabled, initializes RAGManager.
 
         Args:
             config: Workflow configuration
@@ -173,6 +176,20 @@ class BaseWorkflow(ABC):
             >>> context = self._create_phase_context(config, {})
             >>> result = phase.execute(context)
         """
+        # Initialize RAG manager if enabled
+        rag_manager = None
+        if config.rag_config.enabled:
+            logger.info("=" * 80)
+            logger.info("RAG (Retrieval Augmented Generation) ENABLED for this workflow")
+            logger.info(
+                f"RAG Config: top_k={config.rag_config.top_k}, "
+                f"min_score={config.rag_config.min_score}"
+            )
+            logger.info("=" * 80)
+            rag_manager = self._initialize_rag_manager(config.rag_config)
+        else:
+            logger.info("RAG disabled for this workflow")
+
         return PhaseContext(
             config=config,
             previous_phase_data=previous_phase_data,
@@ -180,7 +197,77 @@ class BaseWorkflow(ABC):
             provider=self.provider,
             prompts_manager=self.prompts_manager,
             progress_callback=self.progress_callback,
+            rag_manager=rag_manager,
         )
+
+    def _initialize_rag_manager(self, rag_config: Any) -> Any:
+        """
+        Initialize RAG manager with config.
+
+        Creates RAGManager if vectorstore exists, otherwise logs warning
+        and returns None for graceful degradation.
+
+        Args:
+            rag_config: RAG configuration
+
+        Returns:
+            RAGManager instance or None if initialization fails
+
+        Example:
+            >>> rag_manager = self._initialize_rag_manager(config.rag_config)
+            >>> if rag_manager:
+            ...     # RAG available
+        """
+        import logging
+
+        logger = logging.getLogger(__name__)
+
+        # Check if project vectorstore path is configured
+        if rag_config.project_vectorstore_path is None:
+            logger.warning(
+                "RAG enabled but no project vectorstore path configured. "
+                "RAG will be disabled."
+            )
+            return None
+
+        # Check if project vectorstore exists
+        if not rag_config.project_vectorstore_path.exists():
+            logger.warning(
+                f"RAG enabled but project vectorstore not found at: "
+                f"{rag_config.project_vectorstore_path}. "
+                f"Run 'cycling-ai index domain-knowledge' to populate vectorstore. "
+                f"RAG will be disabled for this run."
+            )
+            return None
+
+        try:
+            from cycling_ai.rag.manager import RAGManager
+
+            logger.info(
+                f"RAG: Initializing RAG manager with vectorstore at: "
+                f"{rag_config.project_vectorstore_path}"
+            )
+            logger.info(
+                f"RAG: Embedding provider: {rag_config.embedding_provider} "
+                f"(model: {rag_config.embedding_model})"
+            )
+
+            rag_manager = RAGManager(
+                project_vectorstore_path=rag_config.project_vectorstore_path,
+                user_vectorstore_path=rag_config.user_vectorstore_path,
+                embedding_provider=rag_config.embedding_provider,
+                embedding_model=rag_config.embedding_model,
+            )
+
+            logger.info("RAG: RAG manager initialized successfully")
+            logger.info("RAG: Knowledge base ready for retrieval")
+            return rag_manager
+        except Exception as e:
+            logger.error(
+                f"Failed to initialize RAG manager: {e}. "
+                f"RAG will be disabled for this run."
+            )
+            return None
 
     def _create_failed_workflow_result(
         self,
