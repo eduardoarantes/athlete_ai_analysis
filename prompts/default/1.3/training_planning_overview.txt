@@ -17,15 +17,16 @@ You must call `create_plan_overview` with:
    - Define each phase: Base / Build / Recovery / Peak / Taper.
    - Justify each phase’s purpose in 1–2 sentences.
 
-2. **Weekly Overview**  
+2. **Weekly Overview**
    Array of {training_plan_weeks} week objects, each containing:
    - `week_number`
    - `phase`
    - `phase_rationale` (concise)
    - `weekly_focus` (2–5 words)
    - `weekly_watch_points` (3–8 words)
-   - `training_days` → list of 7 weekday objects:  
-     `"weekday": "Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday", "workout_type": "endurance|tempo|sweet_spot|threshold|vo2max|mixed|recovery|rest"  `
+   - `training_days` → list of 7 weekday objects:
+     `"weekday": "Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday", "workout_types": ["endurance"|"tempo"|"sweetspot"|"threshold"|"vo2max"|"mixed"|"recovery"|"rest"|"strength"]`
+     Note: `workout_types` is an ARRAY. You can specify multiple types for one day (e.g., `["endurance", "strength"]` for cycling + strength on same day).
    - `total_hours` (sum of durations across training days)
 
 3. **Coaching Notes (200–400 words)**  
