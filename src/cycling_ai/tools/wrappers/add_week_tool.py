@@ -101,15 +101,22 @@ def _calculate_week_metrics(
     else:
         filtered_workouts = workouts
 
+    # Exclude strength workouts from cycling volume calculations
+    cycling_workouts = [
+        workout for workout in filtered_workouts
+        if not ("strength" in workout.get("description", "").lower() or
+                any("strength" in seg.get("type", "").lower() for seg in workout.get("segments", [])))
+    ]
+
     # Calculate total duration (handle None values from library workouts)
     total_duration_min = sum(
         sum((seg.get("duration_min") or 0) for seg in workout.get("segments", []))
-        for workout in filtered_workouts
+        for workout in cycling_workouts
     )
     total_hours = total_duration_min / 60.0
 
     # Calculate TSS
-    actual_tss = calculate_weekly_tss(filtered_workouts, current_ftp)
+    actual_tss = calculate_weekly_tss(cycling_workouts, current_ftp)
 
     return (total_hours, actual_tss)
 
@@ -705,9 +712,21 @@ class AddWeekDetailsTool(BaseTool):
                         f"Other days are rest days."
                     )
 
-                # Validate each segment
+                # Check if this is a strength workout (infer from workout description)
+                is_strength_workout = (
+                    "strength" in workout.get("description", "").lower() or
+                    any("strength" in seg.get("type", "").lower() for seg in workout.get("segments", []))
+                )
+
+                # Validate each segment (skip power zone validation for strength workouts)
                 for j, segment in enumerate(workout["segments"]):
-                    required_fields = ["type", "duration_min", "power_low_pct", "description"]
+                    if is_strength_workout:
+                        # Strength workouts don't need power zones
+                        required_fields = ["type", "duration_min", "description"]
+                    else:
+                        # Cycling workouts need power zones
+                        required_fields = ["type", "duration_min", "power_low_pct", "description"]
+
                     for field in required_fields:
                         if field not in segment:
                             raise ValueError(
@@ -716,13 +735,24 @@ class AddWeekDetailsTool(BaseTool):
                             )
 
             # Validate number of workouts matches number of training days
-            if training_days and len(workouts) != len(training_days):
-                raise ValueError(
-                    f"Week {week_number} has {len(workouts)} workouts but "
-                    f"{len(training_days)} training days. "
-                    f"You must create exactly one workout for each training day: "
-                    f"{', '.join(training_days)}"
-                )
+            # Allow extra workouts if they are strength workouts (supplementary training)
+            if training_days:
+                # Count non-strength workouts
+                non_strength_workouts = [
+                    w for w in workouts
+                    if not ("strength" in w.get("description", "").lower() or
+                            any("strength" in seg.get("type", "").lower() for seg in w.get("segments", [])))
+                ]
+
+                if len(non_strength_workouts) != len(training_days):
+                    strength_count = len(workouts) - len(non_strength_workouts)
+                    raise ValueError(
+                        f"Week {week_number} has {len(non_strength_workouts)} cycling workouts "
+                        f"({strength_count} strength) but {len(training_days)} training days. "
+                        f"You must create exactly one cycling workout for each training day: "
+                        f"{', '.join(training_days)}. "
+                        f"Strength workouts can be added as supplementary training on any training day."
+                    )
 
             target_hours = week_overview.get("total_hours")
             current_ftp = overview_data.get("target_ftp", 250)  # Default FTP if not provided

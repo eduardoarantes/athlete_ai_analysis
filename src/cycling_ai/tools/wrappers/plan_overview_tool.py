@@ -129,8 +129,8 @@ class PlanOverviewTool(BaseTool):
                                         },
                                         "workout_type": {
                                             "type": "string",
-                                            "enum": ["rest", "recovery", "endurance", "tempo", "sweet_spot", "threshold", "vo2max", "mixed"],
-                                            "description": "Workout type from library (or rest)"
+                                            "enum": ["rest", "recovery", "endurance", "tempo", "sweetspot", "threshold", "vo2max", "mixed", "strength"],
+                                            "description": "Workout type from library (or rest/strength)"
                                         },
                                         "optional": {
                                             "type": "boolean",
@@ -221,8 +221,8 @@ class PlanOverviewTool(BaseTool):
 
             # Validate training_days in each week
             valid_weekdays = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"}
-            valid_workout_types = {"rest", "recovery", "endurance", "tempo", "sweet_spot", "threshold", "vo2max", "mixed"}
-            hard_workout_types = {"threshold", "vo2max", "sweet_spot"}
+            valid_workout_types = {"rest", "recovery", "endurance", "tempo", "sweetspot", "threshold", "vo2max", "mixed", "strength"}
+            hard_workout_types = {"threshold", "vo2max", "sweetspot"}
 
             for i, week in enumerate(weekly_overview):
                 week_num = week.get("week_number", i + 1)
@@ -324,7 +324,7 @@ class PlanOverviewTool(BaseTool):
                 # Validate hard day count
                 if hard_days_count > 3:
                     raise ValueError(
-                        f"Week {week_num} has {hard_days_count} hard days (threshold/vo2max/sweet_spot). "
+                        f"Week {week_num} has {hard_days_count} hard days (threshold/vo2max/sweetspot). "
                         f"Maximum is 3 hard days per week to ensure adequate recovery."
                     )
 

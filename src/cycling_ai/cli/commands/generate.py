@@ -137,10 +137,12 @@ def create_rag_config(
         RAGConfig instance with appropriate settings
     """
 
-    # Determine vectorstore paths
-    project_root = Path(__file__).parent.parent.parent.parent
-    project_vectorstore = project_root / "data" / "vectorstore"
-    user_vectorstore = Path.home() / ".cycling-ai" / "athlete_history"
+    # Load configuration to get RAG paths
+    config = load_config()
+
+    # Determine vectorstore paths from config
+    project_vectorstore = Path(config.rag.project_vectorstore).expanduser().resolve()
+    user_vectorstore = Path(config.rag.user_vectorstore).expanduser().resolve()
 
     # Check if project vectorstore exists
     if enabled and not project_vectorstore.exists():
