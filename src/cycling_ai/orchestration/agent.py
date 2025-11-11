@@ -224,7 +224,8 @@ class LLMAgent:
                 # Check for phase-completion tools (single-call phases should exit immediately)
                 phase_completion_tools = {
                     "finalize_training_plan": "Training plan has been successfully created and saved.",
-                    "create_plan_overview": "Training plan overview has been created.",
+                    # Removed create_plan_overview - not a complete phase in chat context
+                    # (it's only Phase 3a; needs 3b and 3c for completion)
                 }
 
                 for tool_name, completion_msg in phase_completion_tools.items():
@@ -493,7 +494,7 @@ analysis and actionable recommendations.
 **Available Analysis Tools:**
 - analyze_performance: Compare recent performance vs previous period
 - analyze_zones: Calculate time spent in each power zone
-- generate_training_plan: Create periodized training plan
+- generate_complete_training_plan: Generate comprehensive training plan with detailed workouts using full 4-phase workflow (data validation, performance analysis, training plan with library-based workouts, report generation). This executes the same process as the 'cycling-ai generate' command.
 - analyze_cross_training: Understand impact of non-cycling activities
 - generate_report: Create comprehensive analysis report
 
@@ -501,4 +502,9 @@ analysis and actionable recommendations.
 1. Start with broad analysis (performance, zones)
 2. Based on findings, dive deeper if needed
 3. Provide actionable recommendations
-4. Offer to generate training plan if improvements are needed"""
+4. When user requests a complete training plan, use generate_complete_training_plan (not create_plan_overview). This tool automatically generates detailed weekly workouts from the library.
+
+**IMPORTANT for Training Plans:**
+- Use generate_complete_training_plan for complete plans with detailed workouts
+- This tool runs the full 4-phase workflow and may take 2-5 minutes
+- Do NOT use create_plan_overview for training plans - it only creates an overview without detailed workouts"""
