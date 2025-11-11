@@ -130,6 +130,12 @@ class TestChatOnboardingModeInitialization:
         # Setup: No profile detected
         mock_detect.return_value = None
 
+        # Mock config to return valid config object
+        from cycling_ai.config.schema import CyclingAIConfig, ProviderSettings
+        mock_config.return_value = CyclingAIConfig(
+            providers={"anthropic": ProviderSettings(model="claude-3-5-sonnet-20241022")}
+        )
+
         # Create session manager mock
         session_manager = MagicMock()
         session = ConversationSession(
@@ -143,6 +149,9 @@ class TestChatOnboardingModeInitialization:
         session_manager.create_session.return_value = session
         mock_get_manager.return_value = session_manager
 
+        # Mock provider initialization
+        mock_init_provider.return_value = MagicMock()
+
         # Run chat
         from click.testing import CliRunner
 
@@ -150,7 +159,7 @@ class TestChatOnboardingModeInitialization:
         result = runner.invoke(chat, ["--provider", "anthropic"])
 
         # Verify session was created with onboarding context
-        assert session_manager.create_session.called
+        assert session_manager.create_session.called, "create_session was not called"
         call_kwargs = session_manager.create_session.call_args.kwargs
 
         # Check that context includes onboarding mode

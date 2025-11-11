@@ -23,6 +23,7 @@ from cycling_ai.orchestration.session import (
     SessionManager,
     get_default_session_manager,
 )
+from cycling_ai.orchestration.session_context import SessionContextKey, SessionMode
 from cycling_ai.providers.base import BaseProvider
 from cycling_ai.providers.factory import ProviderFactory
 
@@ -123,8 +124,8 @@ def _initialize_onboarding_mode(session: ConversationSession) -> None:
         >>> isinstance(session.context["onboarding_manager"], ProfileOnboardingManager)
         True
     """
-    session.context["mode"] = "onboarding"
-    session.context["onboarding_manager"] = ProfileOnboardingManager()
+    session.context[SessionContextKey.MODE] = SessionMode.ONBOARDING
+    session.context[SessionContextKey.ONBOARDING_MANAGER] = ProfileOnboardingManager()
 
 
 def _get_onboarding_system_prompt(config: Any) -> str:

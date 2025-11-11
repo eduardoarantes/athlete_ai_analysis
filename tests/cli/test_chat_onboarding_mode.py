@@ -79,14 +79,22 @@ class TestGetOnboardingSystemPrompt:
 
     def test_returns_string_prompt(self) -> None:
         """Test that function returns a non-empty string."""
-        prompt = _get_onboarding_system_prompt()
+        from cycling_ai.config.schema import CyclingAIConfig, ProviderSettings
+        config = CyclingAIConfig(
+            providers={"anthropic": ProviderSettings(model="claude-3-5-sonnet-20241022")}
+        )
+        prompt = _get_onboarding_system_prompt(config)
 
         assert isinstance(prompt, str)
         assert len(prompt) > 100  # Should be substantial
 
     def test_prompt_contains_key_instructions(self) -> None:
         """Test that prompt contains essential onboarding instructions."""
-        prompt = _get_onboarding_system_prompt()
+        from cycling_ai.config.schema import CyclingAIConfig, ProviderSettings
+        config = CyclingAIConfig(
+            providers={"anthropic": ProviderSettings(model="claude-3-5-sonnet-20241022")}
+        )
+        prompt = _get_onboarding_system_prompt(config)
 
         # Should mention profile creation
         assert "profile" in prompt.lower()
@@ -99,7 +107,11 @@ class TestGetOnboardingSystemPrompt:
 
     def test_prompt_mentions_profile_tools(self) -> None:
         """Test that prompt mentions profile creation tools."""
-        prompt = _get_onboarding_system_prompt()
+        from cycling_ai.config.schema import CyclingAIConfig, ProviderSettings
+        config = CyclingAIConfig(
+            providers={"anthropic": ProviderSettings(model="claude-3-5-sonnet-20241022")}
+        )
+        prompt = _get_onboarding_system_prompt(config)
 
         # Should mention the profile tools
         assert (
@@ -110,7 +122,11 @@ class TestGetOnboardingSystemPrompt:
 
     def test_prompt_is_conversational(self) -> None:
         """Test that prompt encourages conversational interaction."""
-        prompt = _get_onboarding_system_prompt()
+        from cycling_ai.config.schema import CyclingAIConfig, ProviderSettings
+        config = CyclingAIConfig(
+            providers={"anthropic": ProviderSettings(model="claude-3-5-sonnet-20241022")}
+        )
+        prompt = _get_onboarding_system_prompt(config)
 
         # Should encourage friendly conversation
         conversation_indicators = [
