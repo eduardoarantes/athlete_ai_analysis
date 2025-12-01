@@ -32,7 +32,8 @@ class PlannedWorkout:
     Attributes:
         date: Workout date
         weekday: Day name (e.g., "Monday")
-        workout_type: Type derived from segments ("endurance", "threshold", "vo2max", "recovery", "tempo")
+        workout_type: Type derived from segments
+            ("endurance", "threshold", "vo2max", "recovery", "tempo")
         total_duration_minutes: Total planned duration
         planned_tss: Planned Training Stress Score
         segments: Raw segment data from plan
@@ -647,7 +648,9 @@ class DeviationDetector:
         # 1. Completion deviation
         if not metrics.completed:
             deviations.append(
-                f"Workout skipped entirely ({planned.workout_type}, {planned.total_duration_minutes:.0f} min, {planned.planned_tss:.0f} TSS)"
+                f"Workout skipped entirely ({planned.workout_type}, "
+                f"{planned.total_duration_minutes:.0f} min, "
+                f"{planned.planned_tss:.0f} TSS)"
             )
             return deviations  # No other deviations to detect
 
@@ -655,28 +658,34 @@ class DeviationDetector:
         if actual and metrics.duration_compliance_pct < 90:
             shortfall = 100 - metrics.duration_compliance_pct
             deviations.append(
-                f"Duration {shortfall:.0f}% shorter than planned ({actual.duration_minutes:.0f} min vs {planned.total_duration_minutes:.0f} min planned)"
+                f"Duration {shortfall:.0f}% shorter than planned "
+                f"({actual.duration_minutes:.0f} min vs "
+                f"{planned.total_duration_minutes:.0f} min planned)"
             )
         elif actual and metrics.duration_compliance_pct > 110:
             excess = metrics.duration_compliance_pct - 100
             deviations.append(
-                f"Duration {excess:.0f}% longer than planned ({actual.duration_minutes:.0f} min vs {planned.total_duration_minutes:.0f} min planned)"
+                f"Duration {excess:.0f}% longer than planned "
+                f"({actual.duration_minutes:.0f} min vs "
+                f"{planned.total_duration_minutes:.0f} min planned)"
             )
 
         # 3. Intensity deviations
         if metrics.intensity_score < 70:
             deviations.append(
-                f"Intensity deviated from plan (zone match score: {metrics.intensity_score:.0f}/100)"
+                f"Intensity deviated from plan "
+                f"(zone match score: {metrics.intensity_score:.0f}/100)"
             )
 
         # 4. TSS deviations
-        if metrics.tss_compliance_pct is not None:
-            if metrics.tss_compliance_pct < 85:
-                shortfall = 100 - metrics.tss_compliance_pct
-                if actual and actual.actual_tss:
-                    deviations.append(
-                        f"TSS {shortfall:.0f}% lower than planned ({actual.actual_tss:.0f} vs {planned.planned_tss:.0f} TSS planned)"
-                    )
+        if metrics.tss_compliance_pct is not None and metrics.tss_compliance_pct < 85:
+            shortfall = 100 - metrics.tss_compliance_pct
+            if actual and actual.actual_tss:
+                deviations.append(
+                    f"TSS {shortfall:.0f}% lower than planned "
+                    f"({actual.actual_tss:.0f} vs "
+                    f"{planned.planned_tss:.0f} TSS planned)"
+                )
 
         return deviations
 
@@ -718,35 +727,72 @@ class RecommendationEngine:
         # Excellent compliance (90-100)
         if score >= 90:
             if score == 100:
-                return "Excellent execution! Workout completed exactly as planned. Continue this level of consistency."
+                return (
+                    "Excellent execution! Workout completed exactly as planned. "
+                    "Continue this level of consistency."
+                )
             else:
-                return f"Great execution ({score:.0f}% compliance). Minor deviations are perfectly normal. Keep up the excellent work!"
+                return (
+                    f"Great execution ({score:.0f}% compliance). "
+                    f"Minor deviations are perfectly normal. Keep up the excellent work!"
+                )
 
         # Good compliance (70-89)
         elif score >= 70:
             if len(deviations) == 0:
-                return f"Good compliance ({score:.0f}%). Workout completed with minor modifications. This level of adherence supports consistent training progress."
+                return (
+                    f"Good compliance ({score:.0f}%). Workout completed with minor "
+                    f"modifications. This level of adherence supports consistent training progress."
+                )
             else:
                 main_issue = deviations[0] if deviations else "some modifications"
-                return f"Good compliance ({score:.0f}%) despite modifications ({main_issue}). If this was due to fatigue or time constraints, it was appropriate. If recurring, consider adjusting the plan."
+                return (
+                    f"Good compliance ({score:.0f}%) despite modifications ({main_issue}). "
+                    f"If this was due to fatigue or time constraints, it was appropriate. "
+                    f"If recurring, consider adjusting the plan."
+                )
 
         # Moderate compliance (50-69)
         elif score >= 50:
             if not metrics.completed:
                 workout_type_desc = f"{planned.workout_type} workout"
-                return f"Workout skipped. If this was a one-time occurrence, consider rescheduling this {workout_type_desc} for tomorrow. If skipping workouts is becoming a pattern, review your weekly schedule to protect key training days."
+                return (
+                    f"Workout skipped. If this was a one-time occurrence, consider "
+                    f"rescheduling this {workout_type_desc} for tomorrow. If skipping "
+                    f"workouts is becoming a pattern, review your weekly schedule to "
+                    f"protect key training days."
+                )
             else:
-                return f"Moderate compliance ({score:.0f}%). Significant modifications were made. If this was due to fatigue, it may have been the right call for recovery. If due to time constraints, consider whether the plan needs adjustment to fit your schedule better."
+                return (
+                    f"Moderate compliance ({score:.0f}%). Significant modifications were made. "
+                    f"If this was due to fatigue, it may have been the right call for recovery. "
+                    f"If due to time constraints, consider whether the plan needs adjustment to "
+                    f"fit your schedule better."
+                )
 
         # Poor compliance (0-49)
         else:
             if not metrics.completed:
                 if planned.workout_type in ["threshold", "vo2max", "tempo"]:
-                    return f"High-intensity {planned.workout_type} workout skipped. These are critical for fitness gains. Try to reschedule within the next 2 days if possible. If consistently unable to complete hard workouts, the plan may need adjustment."
+                    return (
+                        f"High-intensity {planned.workout_type} workout skipped. "
+                        f"These are critical for fitness gains. Try to reschedule within "
+                        f"the next 2 days if possible. If consistently unable to complete "
+                        f"hard workouts, the plan may need adjustment."
+                    )
                 else:
-                    return f"{planned.workout_type.capitalize()} workout skipped. While missing one workout isn't critical, consistent completion is important for progress. Review your schedule to identify and protect your training time."
+                    return (
+                        f"{planned.workout_type.capitalize()} workout skipped. While missing one "
+                        f"workout isn't critical, consistent completion is important for progress. "
+                        f"Review your schedule to identify and protect your training time."
+                    )
             else:
-                return f"Low compliance ({score:.0f}%). The workout completed was quite different from planned. This may indicate the plan doesn't match your current fitness level, available time, or recovery needs. Consider discussing plan modifications with a coach."
+                return (
+                    f"Low compliance ({score:.0f}%). The workout completed was quite different "
+                    f"from planned. This may indicate the plan doesn't match your current fitness "
+                    f"level, available time, or recovery needs. Consider discussing plan "
+                    f"modifications with a coach."
+                )
 
 
 # =============================================================================
@@ -830,7 +876,10 @@ class PatternDetector:
 
         pattern = WeeklyPattern(
             pattern_type="skipped_hard_workouts",
-            description=f"High-intensity workouts (threshold/VO2max/tempo) consistently skipped ({len(skipped_hard)} of {total_hard} planned)",
+            description=(
+                f"High-intensity workouts (threshold/VO2max/tempo) consistently skipped "
+                f"({len(skipped_hard)} of {total_hard} planned)"
+            ),
             severity=severity,
             affected_workouts=skipped_hard,
         )
@@ -876,7 +925,10 @@ class PatternDetector:
 
         pattern = WeeklyPattern(
             pattern_type="short_duration",
-            description=f"Workouts consistently cut short (avg {avg_duration_pct:.0f}% of planned duration, {len(short_workouts)} workouts affected)",
+            description=(
+                f"Workouts consistently cut short (avg {avg_duration_pct:.0f}% of planned "
+                f"duration, {len(short_workouts)} workouts affected)"
+            ),
             severity=severity,
             affected_workouts=short_workouts,
         )
@@ -919,7 +971,11 @@ class PatternDetector:
         if avg_weekend - avg_weekday > 20:
             pattern = WeeklyPattern(
                 pattern_type="weekend_warrior",
-                description=f"Weekend compliance ({avg_weekend:.0f}%) significantly higher than weekday ({avg_weekday:.0f}%). Consider shifting key workouts to weekends or adjusting weekday availability.",
+                description=(
+                    f"Weekend compliance ({avg_weekend:.0f}%) significantly higher than weekday "
+                    f"({avg_weekday:.0f}%). Consider shifting key workouts to weekends or "
+                    f"adjusting weekday availability."
+                ),
                 severity="low",
                 affected_workouts=[],
             )
@@ -958,7 +1014,10 @@ class PatternDetector:
             if len(dates) >= min_occurrences:
                 pattern = WeeklyPattern(
                     pattern_type="scheduling_conflict",
-                    description=f"{weekday} workouts consistently skipped ({len(dates)} times). This may indicate a scheduling conflict on this day.",
+                    description=(
+                        f"{weekday} workouts consistently skipped ({len(dates)} times). "
+                        f"This may indicate a scheduling conflict on this day."
+                    ),
                     severity="medium",
                     affected_workouts=dates,
                 )
@@ -997,7 +1056,10 @@ class PatternDetector:
 
         pattern = WeeklyPattern(
             pattern_type="intensity_avoidance",
-            description=f"Consistently training at lower intensity than planned (avg zone match score: {avg_intensity:.0f}/100, {len(low_intensity_workouts)} workouts affected)",
+            description=(
+                f"Consistently training at lower intensity than planned (avg zone match score: "
+                f"{avg_intensity:.0f}/100, {len(low_intensity_workouts)} workouts affected)"
+            ),
             severity="medium",
             affected_workouts=low_intensity_workouts,
         )
@@ -1187,13 +1249,27 @@ class WorkoutComparer:
 
         # Generate weekly recommendation
         if completion_rate_pct == 100 and avg_compliance_score >= 90:
-            weekly_recommendation = "Excellent week! All workouts completed with high compliance. Continue this consistency for optimal training adaptation."
+            weekly_recommendation = (
+                "Excellent week! All workouts completed with high compliance. "
+                "Continue this consistency for optimal training adaptation."
+            )
         elif completion_rate_pct >= 80:
-            weekly_recommendation = f"Good week with {completion_rate_pct:.0f}% completion rate. Focus on maintaining consistency and addressing any identified patterns."
+            weekly_recommendation = (
+                f"Good week with {completion_rate_pct:.0f}% completion rate. "
+                f"Focus on maintaining consistency and addressing any identified patterns."
+            )
         elif completion_rate_pct >= 60:
-            weekly_recommendation = f"Moderate week with {completion_rate_pct:.0f}% completion rate. Review the identified patterns and consider adjusting your schedule or plan to improve adherence."
+            weekly_recommendation = (
+                f"Moderate week with {completion_rate_pct:.0f}% completion rate. "
+                f"Review the identified patterns and consider adjusting your schedule or plan "
+                f"to improve adherence."
+            )
         else:
-            weekly_recommendation = f"Challenging week with only {completion_rate_pct:.0f}% completion rate. Review patterns and consider whether the plan aligns with your current availability and recovery needs."
+            weekly_recommendation = (
+                f"Challenging week with only {completion_rate_pct:.0f}% completion rate. "
+                f"Review patterns and consider whether the plan aligns with your current "
+                f"availability and recovery needs."
+            )
 
         return WeeklyComparison(
             week_number=week_number,
@@ -1298,7 +1374,11 @@ class WorkoutComparer:
 
         # Parse zone distribution from columns
         zone_distribution: dict[str, float] = {}
-        for zone in ["zone1_minutes", "zone2_minutes", "zone3_minutes", "zone4_minutes", "zone5_minutes"]:
+        zone_columns = [
+            "zone1_minutes", "zone2_minutes", "zone3_minutes",
+            "zone4_minutes", "zone5_minutes"
+        ]
+        for zone in zone_columns:
             if zone in row and row[zone]:
                 zone_name = f"Z{zone[4]}"  # Extract zone number
                 zone_distribution[zone_name] = float(row[zone])
