@@ -332,11 +332,15 @@ def analyze_cross_training_impact(
         },
         "activity_distribution": [],
         "load_balance": {
-            "averages": {},
-            "recommendation": None,
-            "is_optimal": False
+            "cycling_percent": 0.0,
+            "strength_percent": 0.0,
+            "cardio_percent": 0.0,
+            "assessment": None,
+            "is_optimal": False,
+            "recommendation": None
         },
         "weekly_loads": [],
+        "interference_events": [],
         "interference_analysis": {
             "total_events": len(interference_events),
             "high_interference": [],
@@ -365,11 +369,9 @@ def analyze_cross_training_impact(
     avg_strength_pct = float(np.mean([w.strength_percent for w in weekly_loads]))
     avg_cardio_pct = float(np.mean([w.cardio_percent for w in weekly_loads]))
 
-    response_data["load_balance"]["averages"] = {
-        "cycling_percent": avg_cycling_pct,
-        "strength_percent": avg_strength_pct,
-        "cardio_percent": avg_cardio_pct
-    }
+    response_data["load_balance"]["cycling_percent"] = round(avg_cycling_pct, 2)
+    response_data["load_balance"]["strength_percent"] = round(avg_strength_pct, 2)
+    response_data["load_balance"]["cardio_percent"] = round(avg_cardio_pct, 2)
 
     # Provide context for LLM to assess balance appropriateness
     # No hard-coded "optimal" threshold - depends on athlete goals, age, gender, training status
@@ -402,6 +404,20 @@ def analyze_cross_training_impact(
         medium_interference = [e for e in interference_events if 4 <= e.interference_score < 7]
         low_interference = [e for e in interference_events if e.interference_score < 4]
 
+        # Populate interference_events list (flat structure for Pydantic model)
+        # Include top 10 most significant events
+        all_events_sorted = sorted(interference_events, key=lambda e: e.interference_score, reverse=True)
+        for event in all_events_sorted[:10]:
+            response_data["interference_events"].append({
+                "date": event.date.strftime('%Y-%m-%d'),
+                "activity1": event.activity1_name,
+                "activity2": event.activity2_name,
+                "hours_between": float(event.hours_between),
+                "score": int(event.interference_score),
+                "explanation": event.explanation
+            })
+
+        # Also keep the nested structure for backward compatibility with analysis tools
         for event in high_interference[:5]:  # Top 5
             response_data["interference_analysis"]["high_interference"].append({
                 "date": event.date.strftime('%Y-%m-%d'),

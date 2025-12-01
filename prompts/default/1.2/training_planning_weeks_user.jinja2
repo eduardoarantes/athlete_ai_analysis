@@ -1,0 +1,101 @@
+Generate detailed workouts for all {{ training_plan_weeks }} weeks using the plan_id: **{{ plan_id }}**
+
+**Training Constraints**:
+- Available training days: {{ available_days }} ({{ num_available_days }} days/week)
+- Weekly time budget: {{ weekly_time_budget_hours }} hours
+- **Daily duration limits**:
+  - **Weekdays** (Mon-Fri): 45-90 minutes per workout
+  - **Weekends** (Sat-Sun): 90-360+ minutes (longer endurance rides)
+
+**Power Zones**:
+{{ power_zones }}
+
+---
+
+## Your Task: Generate {{ training_plan_weeks }} Weeks
+
+You will call `add_week_details` EXACTLY {{ training_plan_weeks }} TIMES - once for each week.
+
+**CRITICAL: Each call to `add_week_details` adds workouts for ONE week only.**
+
+**Sequence:**
+
+You must call `add_week_details` {{ training_plan_weeks }} times in order - once for each week.
+
+For each week, create workouts ONLY for the non-rest training days shown below:
+
+{% for week in weekly_overview %}
+{%- set training_days = [] %}
+{%- for day in week.training_days %}
+{%- if day.workout_type != "rest" %}
+{%- set _ = training_days.append(day.weekday) %}
+{%- endif %}
+{%- endfor %}
+**Week {{ week.week_number }}**: Call `add_week_details(plan_id="{{ plan_id }}", week_number={{ week.week_number }}, workouts=[{{ training_days|length }} workouts for {{ training_days|join(', ') }}])`
+{% endfor %}
+
+**CRITICAL RULES:**
+1. Each week shows the EXACT days you must create workouts for
+2. Create EXACTLY the number of workouts shown (e.g., "5 workouts for Tuesday, Wednesday..." means create 5 workout objects)
+3. Each workout's "weekday" field must match one of the days listed for that week
+4. DO NOT create workouts for days not listed (those are rest days)
+5. Process weeks sequentially (1, 2, 3, ... {{ training_plan_weeks }})
+
+After calling `add_week_details` for week {{ training_plan_weeks }}, you will see the message:
+"All weeks complete! Your work in this phase is done. The plan will be finalized automatically."
+
+When you see this message, respond with:
+"All {{ training_plan_weeks }} weeks generated successfully. Phase 3b complete."
+
+**DO NOT**:
+- Call `add_week_details` more than {{ training_plan_weeks }} times
+- Pass workouts for multiple weeks in one call (each call = one week only)
+- Create workouts for days not listed for that week
+- Restart from week 1 after completing week {{ training_plan_weeks }}
+- Call any finalization tools
+
+---
+
+**Example: Adding Week 1**
+
+```json
+{
+  "plan_id": "{{ plan_id }}",
+  "week_number": 1,
+  "workouts": [
+    {
+      "weekday": "Tuesday",
+      "description": "Z2 endurance ride",
+      "segments": [
+        {"type": "warmup", "duration_min": 10, "power_low_pct": 50, "power_high_pct": 65, "description": "Easy spin"},
+        {"type": "steady", "duration_min": 50, "power_low_pct": 56, "power_high_pct": 75, "description": "Z2 aerobic base"},
+        {"type": "cooldown", "duration_min": 10, "power_low_pct": 50, "power_high_pct": 60, "description": "Cool down"}
+      ]
+    },
+    {
+      "weekday": "Thursday",
+      "description": "Sweet spot intervals",
+      "segments": [
+        {"type": "warmup", "duration_min": 10, "power_low_pct": 50, "power_high_pct": 65, "description": "Easy spin"},
+        {"type": "interval", "duration_min": 15, "power_low_pct": 88, "power_high_pct": 93, "description": "Sweet spot"},
+        {"type": "recovery", "duration_min": 5, "power_low_pct": 50, "power_high_pct": 60, "description": "Easy recovery"},
+        {"type": "interval", "duration_min": 15, "power_low_pct": 88, "power_high_pct": 93, "description": "Sweet spot"},
+        {"type": "cooldown", "duration_min": 10, "power_low_pct": 50, "power_high_pct": 60, "description": "Cool down"}
+      ]
+    },
+    {
+      "weekday": "Saturday",
+      "description": "Long endurance ride",
+      "segments": [
+        {"type": "warmup", "duration_min": 15, "power_low_pct": 50, "power_high_pct": 65, "description": "Easy spin"},
+        {"type": "steady", "duration_min": 120, "power_low_pct": 56, "power_high_pct": 75, "description": "Z2 aerobic base"},
+        {"type": "cooldown", "duration_min": 15, "power_low_pct": 50, "power_high_pct": 60, "description": "Cool down"}
+      ]
+    }
+  ]
+}
+```
+
+This example shows **3 workouts for week 1** (Tuesday, Thursday, Saturday).
+Each week may have different training days - follow the instructions above for each week.
+

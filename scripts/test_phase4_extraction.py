@@ -11,7 +11,7 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from cycling_ai.orchestration.multi_agent import PhaseResult, PhaseStatus
+from cycling_ai.orchestration.base import PhaseResult, PhaseStatus
 
 
 def test_phase3_extraction():

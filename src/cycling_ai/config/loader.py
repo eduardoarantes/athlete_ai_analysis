@@ -89,7 +89,7 @@ def create_default_config(config_path: Path) -> CyclingAIConfig:
 
     # Write default config with comments
     config_content = """# Cycling AI Configuration
-version: "1.0"
+version: "1.3"
 
 # Default provider to use
 default_provider: "anthropic"

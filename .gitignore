@@ -50,6 +50,5 @@ htmlcov/
 *.fit.gz
 cache/
 reports/
-logs
-logs/notification.json
-logs/notification.json
+logs/
+.playwright-mcp

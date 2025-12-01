@@ -118,7 +118,7 @@ def validate_training_plan(
                 day_minutes: float = 0
                 for seg_idx, segment in enumerate(segments, 1):
                     # Check segment type
-                    valid_types = {"warmup", "interval", "work", "recovery", "cooldown", "steady", "tempo"}
+                    valid_types = {"warmup", "interval", "work", "recovery", "cooldown", "steady", "tempo", "strength"}
                     seg_type = segment.get("type")
                     if seg_type not in valid_types:
                         errors.append(
@@ -135,20 +135,26 @@ def validate_training_plan(
                     else:
                         day_minutes += segment["duration_min"]
 
+                    # Skip power zone validation for strength segments
+                    is_strength_segment = (seg_type == "strength")
+                    if is_strength_segment:
+                        # Strength segments don't need power zones
+                        continue
+
                     # Auto-default power_high_pct to power_low_pct if not provided
                     if "power_low_pct" in segment and "power_high_pct" not in segment:
                         segment["power_high_pct"] = segment["power_low_pct"]
 
-                    # Check power percentage fields
+                    # Check power percentage fields (only for cycling segments)
                     if "power_low_pct" not in segment:
                         errors.append(f"Week {week_num}, {day}, segment {seg_idx}: Missing 'power_low_pct' field")
                     elif not isinstance(segment["power_low_pct"], (int, float)):
                         errors.append(
                             f"Week {week_num}, {day}, segment {seg_idx}: 'power_low_pct' must be a number"
                         )
-                    elif not (0 <= segment["power_low_pct"] <= 200):
+                    elif segment["power_low_pct"] < 0:
                         errors.append(
-                            f"Week {week_num}, {day}, segment {seg_idx}: 'power_low_pct' must be between 0 and 200 (got {segment['power_low_pct']})"
+                            f"Week {week_num}, {day}, segment {seg_idx}: 'power_low_pct' must be >= 0 (got {segment['power_low_pct']})"
                         )
 
                     # Validate power_high_pct >= power_low_pct if present
@@ -157,9 +163,9 @@ def validate_training_plan(
                             errors.append(
                                 f"Week {week_num}, {day}, segment {seg_idx}: 'power_high_pct' must be a number"
                             )
-                        elif not (0 <= segment["power_high_pct"] <= 200):
+                        elif segment["power_high_pct"] < 0:
                             errors.append(
-                                f"Week {week_num}, {day}, segment {seg_idx}: 'power_high_pct' must be between 0 and 200 (got {segment['power_high_pct']})"
+                                f"Week {week_num}, {day}, segment {seg_idx}: 'power_high_pct' must be >= 0 (got {segment['power_high_pct']})"
                             )
                         elif segment["power_high_pct"] < segment.get("power_low_pct", 0):
                             errors.append(
@@ -175,13 +181,13 @@ def validate_training_plan(
 
                 week_minutes += day_minutes
 
-            # Check weekly hours constraint (with 10% tolerance)
+            # Check weekly hours constraint (with 20% tolerance to match add_week_details validation)
             max_weekly_minutes = weekly_hours * 60
-            tolerance = 0.10  # 10% tolerance
+            tolerance = 0.20  # 20% tolerance (aligned with add_week_details per-week validation)
             max_with_tolerance = max_weekly_minutes * (1 + tolerance)
             if week_minutes > max_with_tolerance:
                 errors.append(
-                    f"Week {week_num}: Total duration {week_minutes} min exceeds weekly limit of {max_weekly_minutes} min ({weekly_hours} hours) + 10% tolerance ({max_with_tolerance} min)"
+                    f"Week {week_num}: Total duration {week_minutes} min exceeds weekly limit of {max_weekly_minutes} min ({weekly_hours} hours) + 20% tolerance ({max_with_tolerance} min)"
                 )
 
     except Exception as e:

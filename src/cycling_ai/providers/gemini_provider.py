@@ -3,14 +3,18 @@ Google Gemini provider adapter.
 
 Implements the provider interface for Google's Gemini models.
 Supports function calling via function declarations.
+
+Uses the new google-genai SDK (unified Google Gen AI SDK).
 """
 from __future__ import annotations
 
+import json
+import logging
 import time
 from typing import Any
 
-import google.generativeai as genai
-from google.generativeai.types import FunctionDeclaration, Tool
+from google import genai
+from google.genai import types
 
 from cycling_ai.providers.base import (
     BaseProvider,
@@ -21,6 +25,8 @@ from cycling_ai.providers.base import (
 from cycling_ai.providers.interaction_logger import get_interaction_logger
 from cycling_ai.providers.provider_utils import retry_with_exponential_backoff
 from cycling_ai.tools.base import ToolDefinition, ToolExecutionResult
+
+logger = logging.getLogger(__name__)
 
 
 class GeminiProvider(BaseProvider):
@@ -48,17 +54,17 @@ class GeminiProvider(BaseProvider):
             config: Provider configuration including API key and model
         """
         super().__init__(config)
-        genai.configure(api_key=config.api_key)  # type: ignore[attr-defined]
+        self.client = genai.Client(api_key=config.api_key)
 
-    def convert_tool_schema(self, tools: list[ToolDefinition]) -> list[Tool]:
+    def convert_tool_schema(self, tools: list[ToolDefinition]) -> list[types.Tool]:
         """
-        Convert generic tool definitions to Gemini function declarations.
+        Convert generic tool definitions to Gemini Tool objects.
 
         Args:
             tools: List of generic tool definitions
 
         Returns:
-            List of Gemini Tool objects
+            List of Gemini Tool objects with function declarations
 
         Example:
             >>> tools_schema = provider.convert_tool_schema([tool_def])
@@ -66,37 +72,51 @@ class GeminiProvider(BaseProvider):
         function_declarations = []
 
         for tool in tools:
-            properties: dict[str, Any] = {}
+            properties: dict[str, types.Schema] = {}
             required: list[str] = []
 
             for param in tool.parameters:
                 # Gemini uses uppercase type names (STRING, INTEGER, etc.)
-                param_schema: dict[str, Any] = {
-                    "type": param.type.upper(),
-                    "description": param.description,
+                # Convert string type to types.Type enum
+                type_map = {
+                    "string": types.Type.STRING,
+                    "number": types.Type.NUMBER,
+                    "integer": types.Type.INTEGER,
+                    "boolean": types.Type.BOOLEAN,
+                    "array": types.Type.ARRAY,
+                    "object": types.Type.OBJECT,
                 }
+                param_type = type_map.get(param.type.lower(), types.Type.STRING)
+
+                param_schema = types.Schema(
+                    type=param_type,
+                    description=param.description,
+                )
                 if param.enum:
-                    param_schema["enum"] = param.enum
+                    param_schema.enum = param.enum
                 # Add items schema for array types (required by Gemini)
-                if param.type == "array" and param.items:
-                    param_schema["items"] = param.items
+                if param.type == "array" and param.items and isinstance(param.items, dict):
+                    item_type_str = param.items.get("type", "string")
+                    item_type = type_map.get(item_type_str.lower(), types.Type.STRING)
+                    param_schema.items = types.Schema(type=item_type)
                 properties[param.name] = param_schema
 
                 if param.required:
                     required.append(param.name)
 
-            func_decl = FunctionDeclaration(
+            func_decl = types.FunctionDeclaration(
                 name=tool.name,
                 description=tool.description,
-                parameters={
-                    "type": "OBJECT",
-                    "properties": properties,
-                    "required": required,
-                },
+                parameters=types.Schema(
+                    type=types.Type.OBJECT,
+                    properties=properties,
+                    required=required,
+                ),
             )
             function_declarations.append(func_decl)
 
-        return [Tool(function_declarations=function_declarations)]
+        # Wrap function declarations in a Tool object
+        return [types.Tool(function_declarations=function_declarations)]
 
     def invoke_tool(self, tool_name: str, parameters: dict[str, Any]) -> ToolExecutionResult:
         """
@@ -112,10 +132,8 @@ class GeminiProvider(BaseProvider):
         Example:
             >>> result = provider.invoke_tool("analyze_performance", {"period_months": 6})
         """
-        import logging
         from cycling_ai.tools.registry import get_global_registry
 
-        logger = logging.getLogger(__name__)
         logger.debug(f"[GEMINI PROVIDER] invoke_tool called: {tool_name}")
         logger.debug(f"[GEMINI PROVIDER] Parameters: {parameters}")
 
@@ -183,24 +201,16 @@ class GeminiProvider(BaseProvider):
             if not messages:
                 raise ValueError("messages list cannot be empty")
 
-            # Create model with tools if provided
-            model_kwargs: dict[str, Any] = {"model_name": self.config.model}
-            if tools:
-                model_kwargs["tools"] = self.convert_tool_schema(tools)
+            # Build contents list from messages
+            contents: list[types.Content] = []
 
-            model = genai.GenerativeModel(**model_kwargs)  # type: ignore[attr-defined]
-
-            # Build chat history
-            chat = model.start_chat(history=[])
-            for msg in messages[:-1]:  # All but last message
+            for msg in messages:
                 if not msg or not hasattr(msg, 'role') or not hasattr(msg, 'content'):
                     continue
 
                 # Handle tool/function results specially
                 if msg.role == "tool":
                     # Tool results need to be formatted as function responses
-                    # Parse the JSON content and format as Gemini expects
-                    import json
                     try:
                         tool_data = json.loads(msg.content) if msg.content else {}
                     except json.JSONDecodeError:
@@ -212,18 +222,20 @@ class GeminiProvider(BaseProvider):
                         tool_name = msg.tool_results[0].get("tool_name", "unknown")
 
                     # DEBUG: Print what we're sending to Gemini
-                    import logging
-                    logging.info(f"[GEMINI DEBUG] Adding function response: name={tool_name}, data_keys={list(tool_data.keys())}")
+                    logger.info(
+                        f"[GEMINI DEBUG] Adding function response: "
+                        f"name={tool_name}, data_keys={list(tool_data.keys())}"
+                    )
 
-                    chat.history.append({
-                        "role": "function",
-                        "parts": [{
-                            "function_response": {
-                                "name": tool_name,
-                                "response": tool_data
-                            }
-                        }]
-                    })  # type: ignore[arg-type]
+                    contents.append(types.Content(
+                        role="function",
+                        parts=[types.Part(
+                            function_response=types.FunctionResponse(
+                                name=tool_name,
+                                response=tool_data
+                            )
+                        )]
+                    ))
                 else:
                     # Regular messages
                     role = "user" if msg.role in ("user", "system") else "model"
@@ -232,79 +244,93 @@ class GeminiProvider(BaseProvider):
                     # Handle assistant messages with tool calls
                     if msg.role == "assistant" and hasattr(msg, 'tool_calls') and msg.tool_calls:
                         # Assistant is making function calls
-                        parts = []
+                        parts: list[types.Part] = []
 
                         # Add text content if present
                         if content:
-                            parts.append(content)
+                            parts.append(types.Part(text=content))
 
                         # Add function calls
                         for tool_call in msg.tool_calls:
-                            import google.ai.generativelanguage as glm
-                            # Convert tool call to Gemini FunctionCall format
-                            parts.append(glm.Part(
-                                function_call=glm.FunctionCall(
+                            parts.append(types.Part(
+                                function_call=types.FunctionCall(
                                     name=tool_call.get("name", ""),
                                     args=tool_call.get("arguments", {})
                                 )
                             ))
 
-                        chat.history.append({"role": role, "parts": parts})  # type: ignore[arg-type]
+                        contents.append(types.Content(role=role, parts=parts))
                     else:
                         # Regular text message
-                        chat.history.append({"role": role, "parts": [content]})  # type: ignore[arg-type]
+                        contents.append(types.Content(
+                            role=role,
+                            parts=[types.Part(text=content)]
+                        ))
 
-            # Send last message
-            generation_config: dict[str, Any] = {
-                "max_output_tokens": self.config.max_tokens,
+            # Build configuration
+            config_kwargs: dict[str, Any] = {
                 "temperature": self.config.temperature,
+                "max_output_tokens": self.config.max_tokens,
             }
 
+            # Add tools if provided
+            if tools:
+                config_kwargs["tools"] = self.convert_tool_schema(tools)
+                # Disable automatic function calling since we handle it manually
+                config_kwargs["automatic_function_calling"] = types.AutomaticFunctionCallingConfig(
+                    disable=True
+                )
+
             # Configure tool calling behavior
-            tool_config: dict[str, Any] | None = None
             if tools and force_tool_call:
                 # Force tool calling if requested by phase configuration
                 # This is crucial for phases like training_planning where the LLM
                 # must call the tool rather than just explaining what it plans to do
-                import google.ai.generativelanguage as glm
-                tool_config = {
-                    "function_calling_config": {
-                        "mode": glm.FunctionCallingConfig.Mode.ANY
-                    }
-                }
+                config_kwargs["tool_config"] = types.ToolConfig(
+                    function_calling_config=types.FunctionCallingConfig(
+                        mode=types.FunctionCallingConfigMode.ANY
+                    )
+                )
 
-            last_content = messages[-1].content if messages[-1].content is not None else ""
-            response = chat.send_message(
-                last_content,
-                generation_config=generation_config,
-                tool_config=tool_config  # type: ignore[arg-type]
+            generate_config = types.GenerateContentConfig(**config_kwargs)
+
+            # Call the API
+            response = self.client.models.generate_content(
+                model=self.config.model,
+                contents=contents,
+                config=generate_config,
             )
 
-            # Extract response
+            # Extract function calls first (to avoid accessing .text when there are function calls)
             content = ""
-            try:
-                if hasattr(response, "text") and response.text:
-                    content = response.text
-            except (ValueError, AttributeError):
-                # response.text can raise ValueError if there's no text content
-                pass
-
             tool_calls = None
 
-            # Extract function calls
             if hasattr(response, "candidates") and response.candidates:
                 candidate = response.candidates[0]
-                if hasattr(candidate, "content") and hasattr(candidate.content, "parts") and candidate.content.parts:
+                if (
+                    hasattr(candidate, "content")
+                    and candidate.content is not None
+                    and hasattr(candidate.content, "parts")
+                    and candidate.content.parts is not None
+                ):
+                    # Check if response contains function calls
+                    has_function_calls = False
                     for i, part in enumerate(candidate.content.parts):
-                        if hasattr(part, "function_call"):
+                        if hasattr(part, "function_call") and part.function_call:
+                            has_function_calls = True
                             # Skip if function_call.name is empty or missing
-                            if not hasattr(part.function_call, "name") or not part.function_call.name:
+                            has_name = hasattr(part.function_call, "name")
+                            if not has_name or not part.function_call.name:
                                 continue
 
                             if tool_calls is None:
                                 tool_calls = []
                             # Convert args to dict, handling None case
-                            args = part.function_call.args if part.function_call.args is not None else {}
+                            args = (
+                                part.function_call.args
+                                if part.function_call.args is not None
+                                else {}
+                            )
                             tool_calls.append(
                                 {
                                     "name": part.function_call.name,
@@ -313,8 +339,25 @@ class GeminiProvider(BaseProvider):
                                 }
                             )
 
+                    # Only try to access .text if there are no function calls
+                    # (accessing .text when function calls exist triggers SDK warning)
+                    if not has_function_calls:
+                        try:
+                            if hasattr(response, "text") and response.text:
+                                content = response.text
+                        except (ValueError, AttributeError):
+                            # response.text can raise ValueError if there's no text content
+                            logger.debug("No text content in response")
+            else:
+                # No candidates, try to get text anyway
+                try:
+                    if hasattr(response, "text") and response.text:
+                        content = response.text
+                except (ValueError, AttributeError):
+                    logger.debug("No text content in response")
+
             metadata: dict[str, Any] = {"model": self.config.model}
-            if hasattr(response, "usage_metadata"):
+            if hasattr(response, "usage_metadata") and response.usage_metadata is not None:
                 metadata["usage"] = {
                     "prompt_tokens": response.usage_metadata.prompt_token_count,
                     "total_tokens": response.usage_metadata.total_token_count,
@@ -326,7 +369,9 @@ class GeminiProvider(BaseProvider):
             duration_ms = (time.time() - start_time) * 1000
 
             # Create response object
-            completion_response = CompletionResponse(content=content, tool_calls=tool_calls, metadata=metadata)
+            completion_response = CompletionResponse(
+                content=content, tool_calls=tool_calls, metadata=metadata
+            )
 
             # Log the interaction
             try:
@@ -341,8 +386,7 @@ class GeminiProvider(BaseProvider):
                 )
             except Exception as e:
                 # Don't fail the request if logging fails
-                import logging as log
-                log.warning(f"Failed to log LLM interaction: {e}")
+                logger.warning(f"Failed to log LLM interaction: {e}")
 
             return completion_response
 

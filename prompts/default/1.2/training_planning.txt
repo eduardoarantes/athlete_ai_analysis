@@ -15,9 +15,9 @@ Design a complete, personalized {training_plan_weeks}-week training plan using a
 **What to generate**:
 - Periodization strategy for all {training_plan_weeks} weeks
 - Weekly phase assignments (Foundation/Build/Recovery/Peak/Taper)
-- TSS targets per week
+- Weekly time budget (total hours per week)
+- Daily duration ranges based on day type (weekdays: 45-90min, weekends: 90-180min)
 - Hard vs easy day distribution per week
-- Total hours per week
 - Coaching notes explaining overall strategy (200-400 words)
 - Monitoring guidance with KPIs and warning signs (150-300 words)
 
@@ -30,15 +30,91 @@ Design a complete, personalized {training_plan_weeks}-week training plan using a
     "phase_rationale": "Build aerobic base",
     "weekly_focus": "Endurance",
     "weekly_watch_points": "Monitor fatigue",
-    "target_tss": 250,
-    "hard_days": 1,
-    "easy_days": 2,
-    "rest_days": 1,
+    "training_days": [
+      {{"weekday": "Monday", workout_types": ["rest"]}},
+      {{"weekday": "Tuesday", workout_types": ["endurance"]}},
+      {{"weekday": "Wednesday", workout_types": ["recovery"]}},
+      {{"weekday": "Thursday", workout_types": ["rest"]}},
+      {{"weekday": "Friday", workout_types": ["tempo"]}},
+      {{"weekday": "Saturday", workout_types": ["endurance"]}},
+      {{"weekday": "Sunday", workout_types": ["rest"]}}
+    ],
     "total_hours": 6.5
   }},
   // ... weeks 2-{training_plan_weeks}
 ]
 ```
+
+**CRITICAL - Training Day Prescription**:
+You MUST provide ALL 7 weekdays in `training_days` array with specific workout types from the 222-workout library.
+
+**Workout Types Available (from workout_library.json):**
+
+- **rest**: Complete rest day (no training)
+
+**Easy Intensity (Active Recovery & Aerobic Base):**
+- **recovery**: Active recovery spin (Z1, <55% FTP) - 11 workouts available
+  - Use: Day after hard session, between hard efforts
+  - Duration: 30-60 minutes, very easy pace
+- **endurance**: Long aerobic rides (Z2, 56-75% FTP) - 104 workouts available
+  - Use: Foundation building, long weekend rides
+  - Duration: 60-180 minutes, conversational pace
+
+**Moderate Intensity (Sub-Threshold Work):**
+- **tempo**: Sub-threshold efforts (Z3, 76-90% FTP) - 8 workouts available
+  - Use: Build phase, muscular endurance
+  - Duration: 60-90 minutes with sustained efforts
+- **sweetspot**: Sweet spot training (88-93% FTP) - Only 2 workouts available
+  - Use: SPARINGLY in Build phase (limited variety)
+  - Duration: 60-75 minutes with intervals
+
+**Hard Intensity (High-Intensity Training):**
+- **threshold**: FTP/lactate threshold (90-105% FTP) - 81 workouts available
+  - Use: Build/Peak phases, FTP development
+  - Duration: 60-90 minutes with intervals
+- **vo2max**: VO2max intervals (>105% FTP) - Only 5 workouts available
+  - Use: Peak phase only, SPARINGLY (limited variety)
+  - Duration: 45-75 minutes with short hard intervals
+- **mixed**: Combined intensities - 11 workouts available
+  - Use: Variety, race simulation
+  - Duration: Varies
+
+**Training Day Guidelines:**
+- MUST include all 7 weekdays (Monday-Sunday)
+- Each day must have a "weekday" and "workout_type"
+- Maximum 5 training days per week (minimum 2 rest days)
+- Maximum 2-3 hard days per week (threshold/vo2max/sweetspot)
+- Space hard days with recovery/endurance days between
+- **WEEKEND PRIORITY**: If Saturday AND Sunday are BOTH available, MUST use them for training
+  - Weekends allow longer rides (2-3 hours) without time constraints
+  - Saturday: Schedule long endurance ride OR key quality workout
+  - Sunday: Schedule long endurance ride OR active recovery (if Saturday was hard)
+  - Only make weekends rest days if they are NOT available for training
+- Use recovery day after hard session
+- Optional flag: Add "optional": true for flexible training days
+
+**Example Training Week Patterns:**
+
+4-day Foundation week (Sat/Sun available):
+- Mon: rest, Tue: endurance, Wed: rest, Thu: recovery, Fri: rest, Sat: endurance, Sun: endurance
+
+5-day Build week (Sat/Sun available):
+- Mon: recovery, Tue: threshold, Wed: rest, Thu: tempo, Fri: rest, Sat: endurance, Sun: endurance
+
+5-day Peak week (Sat/Sun available):
+- Mon: rest, Tue: threshold, Wed: recovery, Thu: rest, Fri: vo2max, Sat: endurance, Sun: recovery
+
+**CRITICAL - Rest Days:**
+- Minimum 2 rest days per week (more for recovery weeks)
+- Rest days are explicitly listed with "workout_types": ["rest"
+- More rest days for recovery weeks (3-4 rest days)
+
+**CRITICAL - Recovery/Rest Weeks**:
+- For plans 8+ weeks, include Recovery weeks every 3-4 weeks (e.g., weeks 4, 8, 12)
+- Recovery weeks have REDUCED volume: 40-60% of normal weekly hours
+- Example: If normal week = 8h, recovery week = 4-5h
+- Set phase="Recovery" and adjust total_hours accordingly
+- This allows supercompensation and prevents overtraining
 
 **Output**: Returns `plan_id` for next phase.
 
@@ -102,34 +178,31 @@ Call add_week_details with:
 - Endurance rides may omit warmup/cooldown
 
 **AUTOMATIC VALIDATION** (happens immediately after each week):
-After you call `add_week_details`, the tool automatically validates your week against the targets you set in `create_plan_overview`:
+After you call `add_week_details`, the tool automatically validates your week against the targets you set in `create_plan_overview`.
 
-✅ **Time Budget Validation**:
-- ±10% tolerance = ✓ Success with warning
-- >20% difference = ❌ FAILS - you must retry that week
-- Example: If target is 7.0h, acceptable range is 6.3h-7.7h (±10%), max range is 5.6h-8.4h (±20%)
+**Your Goal**: Match total_hours from weekly_overview as closely as possible while respecting daily duration constraints.
 
-✅ **TSS Target Validation**:
-- ±15% tolerance = ✓ Success with warning
-- >25% difference = ❌ FAILS - you must retry that week
-- Example: If target is 300 TSS, acceptable range is 255-345 (±15%), max range is 225-375 (±25%)
+**Duration Constraints**:
+- **Weekday workouts**: 45-90 minutes each (Mon-Fri)
+- **Weekend workouts**: 90-180 minutes (Sat-Sun) - ideal for longer endurance rides
+- **High-intensity workouts**: Typically 60-75 minutes (with warmup/cooldown)
 
-**If validation fails**, you'll receive:
+**If validation fails**, you'll receive an error message:
 ```
 Error: Week 3 validation failed. Please adjust workouts:
-Week 3 TSS target violation: Actual 410 TSS vs target 300 TSS (37% difference, max 25% allowed)
+Week 3 time budget violation: Actual 8.5h vs target 7.0h (21% over target)
 
 Suggestions:
-- To reduce TSS: Lower power targets or shorten high-intensity intervals
-- To increase TSS: Raise power targets or extend work intervals
+- To reduce time: Shorten workout segments or remove intervals
+- To increase time: Extend main work segments or add intervals
 ```
 
-**Action required**: Call `add_week_details` again for the same week with adjusted workouts. DO NOT proceed to the next week until validation passes.
+**Action required**: Call `add_week_details` again for the same week_number with adjusted workouts. DO NOT proceed to the next week until validation passes.
 
 **If validation succeeds**, you'll see:
 ```
 Week 3 details added. 3/12 weeks complete.
-✓ Time: 7.2h (target: 7.0h) | ✓ TSS: 312 (target: 300)
+✓ Time: 7.2h (target: 7.0h)
 ```
 
 Proceed to the next week!
@@ -153,9 +226,25 @@ Assembles complete plan from overview + all week details, validates, and saves.
 
 ✅ **weekly_overview array**: Must have exactly {training_plan_weeks} entries
 
-✅ **Available days**: ONLY schedule on: {available_days}
-   - Use ALL available days each week (except recovery weeks)
-   - Rest days NOT in workouts array
+✅ **training_days array**: Each week must specify ALL 7 weekdays with workout types
+   - Must have exactly 7 entries (Monday through Sunday)
+   - Each entry must have "weekday" and "workout_type" fields
+   - workout_type must be one of: rest, recovery, endurance, tempo, sweetspot, threshold, vo2max, mixed
+   - Maximum 5 non-rest days per week (minimum 2 rest days)
+   - Maximum 2-3 hard days (threshold/vo2max/sweetspot)
+   - Space hard days with recovery/endurance days between
+   - **WEEKEND PRIORITY**: If Saturday AND Sunday are both available for training, you MUST use them:
+     - Weekends are ideal for longer endurance rides (2-3 hours)
+     - Saturday: Long endurance ride or key quality session
+     - Sunday: Long endurance ride or active recovery (if Saturday was hard)
+     - DO NOT leave weekends as rest days if they are available
+   - Athlete's available days for training: {available_days}{mandatory_rest_days_text}
+   
+
+✅ **Workout scheduling**: ONLY create workouts for NON-REST days
+   - Phase 2 must schedule workouts ONLY for days with workout_type != "rest"
+   - Number of workouts must equal count of non-rest days in training_days
+   - Workout intensity must match the workout_type prescribed in weekly_overview
 
 ✅ **Weekly time budget**: ~{weekly_time_budget_hours} hours per week (±10%)
    - Calculate: sum of all segment durations
@@ -220,7 +309,7 @@ Assembles complete plan from overview + all week details, validates, and saves.
 
 1. Call create_plan_overview:
    - Generate periodization for all {training_plan_weeks} weeks
-   - Define phases, TSS targets, focus areas
+   - Define phases, weekly time budgets, focus areas
    - Returns plan_id
 
 2. Call add_week_details for week 1:
@@ -255,24 +344,22 @@ Before calling each tool, verify:
 
 **create_plan_overview**:
 - All {training_plan_weeks} weeks in weekly_overview?
-- TSS targets realistic for each phase? (Foundation: 200-300, Build: 300-450, Recovery: 150-250)
 - Weekly hours match athlete's available time?
+- For 8+ week plans: Recovery weeks every 3-4 weeks with 40-60% volume?
 
 **add_week_details** (CRITICAL - Calculate before calling):
 1. **Calculate total weekly hours**:
    - Sum ALL segment durations across ALL workouts
    - Example: 3 workouts × (15min warmup + 60min work + 10min cooldown) = 255min = 4.25h
-   - Check: Is this within ±20% of target_hours from overview?
+   - Check: Is this within ±10% of target_hours from overview?
 
-2. **Estimate weekly TSS**:
-   - Quick estimate: Z2 ride (70% FTP) for 1h ≈ 50 TSS
-   - Quick estimate: Threshold work (95% FTP) for 1h ≈ 90 TSS
-   - Quick estimate: VO2 intervals (110% FTP) for 1h ≈ 120 TSS
-   - Check: Is this within ±25% of target_tss from overview?
+2. **Check workout durations**:
+   - Weekday workouts: 45-90 min range
+   - Weekend workouts: 90-180 min for endurance
+   - High-intensity workouts: typically 60-75 min (with warmup/cooldown)
 
-3. **If estimates are outside tolerance**:
+3. **If outside tolerance**:
    - Adjust segment durations (±5-10 min per workout)
-   - Adjust power targets (±5-10% FTP)
    - Add/remove recovery segments
    - Then recalculate before calling tool
 

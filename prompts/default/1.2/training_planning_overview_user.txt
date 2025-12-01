@@ -5,6 +5,8 @@ Design a high-level {training_plan_weeks}-week training plan overview for this a
 **Performance Data** (use this to inform your plan):
 {performance_summary}
 
+**Goal:** {goal_event_type}
+**Athlete Level:** {athlete_level}  
 **Training Constraints**:
 - Available training days: {available_days} ({num_available_days} days/week)
 - Weekly time budget: {weekly_time_budget_hours} hours
@@ -19,31 +21,75 @@ Design a high-level {training_plan_weeks}-week training plan overview for this a
 
 Call `create_plan_overview` with:
 
+**CRITICAL**: The `weekly_overview` array MUST contain EXACTLY {training_plan_weeks} week objects.
+Each week object MUST be fully populated with ALL required fields.
+
+Example for a 3-week plan (you must create {training_plan_weeks} weeks):
+
 ```json
 {{
   "athlete_profile_json": "{athlete_profile_path}",
   "total_weeks": {training_plan_weeks},
   "target_ftp": <your calculated target FTP in watts>,
   "weekly_overview": [
-    // Array of {training_plan_weeks} week objects
-    // Each week must include all required fields (see system prompt)
     {{
       "week_number": 1,
       "phase": "Foundation",
       "phase_rationale": "Establish aerobic base",
       "weekly_focus": "Endurance building",
       "weekly_watch_points": "Monitor fatigue and recovery",
-      "target_tss": 280,
-      "hard_days": 1,
-      "easy_days": 2,
-      "rest_days": {num_rest_days},
+      "training_days": [
+        {{"weekday": "Monday", workout_types": ["rest"]}},
+        {{"weekday": "Tuesday", workout_types": ["endurance"]}},
+        {{"weekday": "Wednesday", workout_types": ["recovery"]}},
+        {{"weekday": "Thursday", workout_types": ["rest"]}},
+        {{"weekday": "Friday", workout_types": ["tempo"]}},
+        {{"weekday": "Saturday", workout_types": ["endurance"]}},
+        {{"weekday": "Sunday", workout_types": ["endurance"]}}
+      ],
       "total_hours": 6.8
     }},
-    // ... weeks 2 through {training_plan_weeks}
+    {{
+      "week_number": 2,
+      "phase": "Foundation",
+      "phase_rationale": "Continue base building with progressive overload",
+      "weekly_focus": "Increase endurance volume",
+      "weekly_watch_points": "Watch for cumulative fatigue",
+      "training_days": [
+        {{"weekday": "Monday", workout_types": ["rest"]}},
+        {{"weekday": "Tuesday", workout_types": ["endurance"]}},
+        {{"weekday": "Wednesday", workout_types": ["sweetspot"]}},
+        {{"weekday": "Thursday", workout_types": ["recovery"]}},
+        {{"weekday": "Friday", workout_types": ["tempo"]}},
+        {{"weekday": "Saturday", workout_types": ["endurance"]}},
+        {{"weekday": "Sunday", workout_types": ["endurance"]}}
+      ],
+      "total_hours": 7.3
+    }},
+    {{
+      "week_number": 3,
+      "phase": "Build",
+      "phase_rationale": "Introduce threshold work",
+      "weekly_focus": "FTP development",
+      "weekly_watch_points": "Monitor power at threshold",
+      "training_days": [
+        {{"weekday": "Monday", workout_types": ["rest"]}},
+        {{"weekday": "Tuesday", workout_types": ["sweetspot"]}},
+        {{"weekday": "Wednesday", workout_types": ["recovery"]}},
+        {{"weekday": "Thursday", workout_types": ["threshold"]}},
+        {{"weekday": "Friday", workout_types": ["rest"]}},
+        {{"weekday": "Saturday", workout_types": ["endurance"]}},
+        {{"weekday": "Sunday", workout_types": ["sweetspot"]}}
+      ],
+      "total_hours": 7.8
+    }}
   ],
   "coaching_notes": "<200-400 words explaining periodization strategy, target FTP rationale, progression logic>",
   "monitoring_guidance": "<150-300 words on KPIs to track, warning signs, when to adjust>"
 }}
 ```
 
-**Call the tool now to generate the plan overview.**
+**IMPORTANT**: The above example shows 3 weeks. You MUST create ALL {training_plan_weeks} weeks with complete data.
+DO NOT use empty objects {{}} or skip weeks. Every week from 1 to {training_plan_weeks} must be fully defined.
+
+**Call the tool now to generate the complete {training_plan_weeks}-week plan overview.**

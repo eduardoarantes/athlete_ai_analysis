@@ -1,0 +1,41 @@
+================================================================================
+WORKOUT EXTRACTION FROM REPORTS - SUMMARY
+================================================================================
+
+Extraction Date: 2025-11-03
+Source: /tmp/cycling_*/report_data.json
+Output File: /Users/eduardo/Documents/projects/cycling-ai-analysis/data/workout_library_from_reports.json
+
+STATISTICS:
+--------------------------------------------------------------------------------
+Report files processed: 10
+Total workouts found: 156
+Duplicates removed: 31
+Final unique workouts: 125
+
+WORKOUTS BY SOURCE:
+--------------------------------------------------------------------------------
+  cycling_tom_20251101_1518: 48 workouts
+  cycling_tom_20251131_1820: 36 workouts
+  cycling_eduardo_20251101_1632: 20 workouts
+  cycling_eduardo_202511020645: 20 workouts
+  cycling_tom_2025111_1146: 16 workouts
+  cycling_tom_20251131_0955: 16 workouts
+
+WORKOUT TYPES:
+--------------------------------------------------------------------------------
+  endurance: 64
+  sweet_spot: 28
+  vo2max: 25
+  tempo: 5
+  threshold: 3
+
+INTENSITY DISTRIBUTION:
+--------------------------------------------------------------------------------
+  easy: 66
+  moderate: 32
+  hard: 27
+
+================================================================================
+END OF REPORT
+================================================================================
