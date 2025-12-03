@@ -63,6 +63,13 @@ Works with your choice of LLM:
 - Python 3.11 or higher
 - uv (recommended) or pip
 
+> **Note:** If your system's default Python is older (e.g., Python 3.9 or 3.10), you'll need to use `python3.11` explicitly:
+> ```bash
+> python3.11 -m venv venv
+> python3.11 -m pip install -e ".[dev]"
+> python3.11 -m pytest  # for running tests
+> ```
+
 ```bash
 # Clone repository
 git clone https://github.com/yourusername/cycling-ai-analysis.git
@@ -335,6 +342,10 @@ pytest tests/orchestration/test_agent.py -v
 
 # Watch mode
 pytest-watch
+
+# If using Python 3.11 explicitly (when system default is older)
+python3.11 -m pytest
+python3.11 -m pytest --cov=src/cycling_ai
 ```
 
 ### Type Checking

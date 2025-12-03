@@ -1,0 +1,115 @@
+{
+    "id": "30_s_x_4m_interval_repeats",
+    "name": "30 s x 4m interval repeats",
+    "detailed_description": "",
+    "type": "mixed",
+    "intensity": "easy",
+    "suitable_phases": [
+        "Foundation",
+        "Recovery",
+        "Taper"
+    ],
+    "suitable_weekdays": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday"
+    ],
+    "segments": [
+        {
+            "type": "steady",
+            "duration_min": 3.0,
+            "power_low_pct": 55,
+            "power_high_pct": 65,
+            "description": ""
+        },
+        {
+            "type": "steady",
+            "duration_min": 3.0,
+            "power_low_pct": 65,
+            "power_high_pct": 75,
+            "description": ""
+        },
+        {
+            "type": "steady",
+            "duration_min": 3.0,
+            "power_low_pct": 75,
+            "power_high_pct": 85,
+            "description": ""
+        },
+        {
+            "type": "steady",
+            "duration_min": 1.0,
+            "power_low_pct": 85,
+            "power_high_pct": 95,
+            "description": ""
+        },
+        {
+            "type": "warmup",
+            "duration_min": 5.0,
+            "power_low_pct": 40,
+            "power_high_pct": 50,
+            "description": "Warm up"
+        },
+        {
+            "type": "interval",
+            "sets": 3,
+            "work": {
+                "duration_min": 0.5,
+                "power_low_pct": 120,
+                "power_high_pct": 150,
+                "description": "Hard"
+            },
+            "recovery": {
+                "duration_min": 4.0,
+                "power_low_pct": 50,
+                "power_high_pct": 60,
+                "description": "Easy"
+            }
+        },
+        {
+            "type": "recovery",
+            "duration_min": 10.0,
+            "power_low_pct": 50,
+            "power_high_pct": 60,
+            "description": "Recovery"
+        },
+        {
+            "type": "interval",
+            "sets": 4,
+            "work": {
+                "duration_min": 0.5,
+                "power_low_pct": 120,
+                "power_high_pct": 150,
+                "description": "Hard"
+            },
+            "recovery": {
+                "duration_min": 4.0,
+                "power_low_pct": 50,
+                "power_high_pct": 60,
+                "description": "Easy"
+            }
+        },
+        {
+            "type": "cooldown",
+            "duration_min": 10.0,
+            "power_low_pct": 40,
+            "power_high_pct": 50,
+            "description": "Cool down"
+        }
+    ],
+    "base_duration_min": 66,
+    "base_tss": 39.0,
+    "variable_components": {
+        "adjustable_field": "sets",
+        "min_value": 1,
+        "max_value": 6,
+        "tss_per_unit": 3.1,
+        "duration_per_unit_min": 4.5
+    },
+    "source_file": "workout_3411097383.json",
+    "source_format": "json"
+}

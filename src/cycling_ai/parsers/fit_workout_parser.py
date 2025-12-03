@@ -195,7 +195,7 @@ class FitRepeatStructure:
             "type": "interval",
             "sets": self.repeat_count,
             "work": {
-                "duration_min": int(self.work_step.duration_value / 60),
+                "duration_min": float(self.work_step.duration_value / 60),
                 "power_low_pct": self._calculate_power_pct(
                     self.work_step.custom_power_low or 0, ftp
                 ),
@@ -208,7 +208,7 @@ class FitRepeatStructure:
 
         if self.recovery_step:
             segment["recovery"] = {
-                "duration_min": int(self.recovery_step.duration_value / 60),
+                "duration_min": float(self.recovery_step.duration_value / 60),
                 "power_low_pct": self._calculate_power_pct(
                     self.recovery_step.custom_power_low or 0, ftp
                 ),
@@ -262,7 +262,7 @@ class ParsedWorkout:
 
     metadata: FitWorkoutMetadata
     segments: list[dict[str, Any]]
-    base_duration_min: int
+    base_duration_min: float
     base_tss: float
 
     def to_library_format(self) -> dict[str, Any]:
@@ -705,7 +705,7 @@ class FitWorkoutParser:
         segment_type = self._map_intensity_to_type(step.intensity)
 
         # Convert duration to minutes
-        duration_min = int(step.duration_value / 60)
+        duration_min = float(step.duration_value / 60)
 
         # Get power percentages
         power_low_pct = self._get_power_pct(step, ftp, is_low=True)
@@ -764,6 +764,19 @@ class FitWorkoutParser:
             watts = step.custom_power_low if is_low else step.custom_power_high
             if watts is None:
                 return 75  # Default to moderate effort
+            
+            # Handle common offset of 1000 (e.g., 1150 = 150W)
+            # If watts are unreasonably high (>1000) and not a sprint (<30s), assume offset
+            # Or if > 1000 and > 400% FTP, definitely offset
+            if watts >= 1000:
+                # Check if it's likely an offset
+                # 1000W is very high for sustained power. 
+                # If it's > 1000, it's almost certainly an offset for most riders
+                # unless it's a very short sprint.
+                # But even for sprints, 1000+ is rare for average riders.
+                # Safe heuristic: if > 1000, subtract 1000.
+                watts -= 1000
+                
             return int((watts / ftp) * 100)
 
         elif step.has_power_zone():
@@ -936,7 +949,7 @@ class FitWorkoutParser:
             "type": "interval",
             "sets": repeat_count,
             "work": {
-                "duration_min": int(work_step.duration_value / 60),
+                "duration_min": float(work_step.duration_value / 60),
                 "power_low_pct": self._get_power_pct(work_step, ftp, is_low=True),
                 "power_high_pct": self._get_power_pct(work_step, ftp, is_low=False),
                 "description": work_step.step_name or "Work",
@@ -945,7 +958,7 @@ class FitWorkoutParser:
 
         if recovery_step:
             segment["recovery"] = {
-                "duration_min": int(recovery_step.duration_value / 60),
+                "duration_min": float(recovery_step.duration_value / 60),
                 "power_low_pct": self._get_power_pct(recovery_step, ftp, is_low=True),
                 "power_high_pct": self._get_power_pct(
                     recovery_step, ftp, is_low=False
@@ -955,7 +968,7 @@ class FitWorkoutParser:
 
         return segment
 
-    def _calculate_total_duration(self, segments: list[dict[str, Any]]) -> int:
+    def _calculate_total_duration(self, segments: list[dict[str, Any]]) -> float:
         """
         Calculate total workout duration in minutes.
 
