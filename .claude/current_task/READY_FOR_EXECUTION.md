@@ -58,6 +58,7 @@ Original task specification with:
 - Create Next.js 14+ with TypeScript and App Router
 - Configure Tailwind CSS and shadcn/ui
 - Set up TypeScript strict mode
+- Enable React Compiler v1.0 for automatic memoization
 
 **P1-T2:** Configure ESLint and Prettier (1 hour)
 - Install and configure code quality tools
@@ -155,9 +156,10 @@ To speed up implementation, these architectural decisions are already made:
 3. **Styling:** Tailwind CSS + shadcn/ui components
 4. **Database:** Supabase (PostgreSQL with built-in auth)
 5. **Authentication:** Email/password (OAuth in Phase 3)
-6. **Deployment:** Vercel for Next.js, Supabase Cloud for database
-7. **CI/CD:** GitHub Actions
-8. **Package Manager:** pnpm (faster than npm/yarn)
+6. **Optimization:** React Compiler v1.0 (automatic memoization, 12% faster page loads)
+7. **Deployment:** Vercel for Next.js, Supabase Cloud for database
+8. **CI/CD:** GitHub Actions
+9. **Package Manager:** pnpm (faster than npm/yarn)
 
 **No decisions needed** - just follow the plan!
 

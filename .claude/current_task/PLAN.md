@@ -251,7 +251,33 @@ pnpx shadcn-ui@latest add input
 pnpx shadcn-ui@latest add label
 ```
 
-### Step 6: Update package.json Scripts
+### Step 6: Configure React Compiler
+
+React Compiler v1.0 (stable as of October 2025) provides automatic memoization and performance optimizations. Enable it for better performance and cleaner code.
+
+**Update `next.config.ts`:**
+
+```typescript
+import type { NextConfig } from 'next'
+
+const nextConfig: NextConfig = {
+  experimental: {
+    reactCompiler: true, // Enable React Compiler for automatic memoization
+  },
+}
+
+export default nextConfig
+```
+
+**Benefits:**
+- Automatic memoization (eliminates manual `useMemo`, `useCallback`, `React.memo`)
+- Fewer re-renders and more responsive UI
+- Simpler, more maintainable code
+- Production-tested (Meta uses it in Quest Store with 12% faster page loads)
+
+**Note:** React Compiler is stable and production-ready. It works automatically with zero code changes required.
+
+### Step 7: Update package.json Scripts
 
 Add these scripts to `package.json`:
 
@@ -269,7 +295,7 @@ Add these scripts to `package.json`:
 }
 ```
 
-### Step 7: Test Development Server
+### Step 8: Test Development Server
 
 ```bash
 pnpm dev
@@ -277,7 +303,7 @@ pnpm dev
 
 Visit http://localhost:3000 - should see Next.js default page
 
-### Step 8: Create Basic Landing Page
+### Step 9: Create Basic Landing Page
 
 Replace `app/page.tsx`:
 
@@ -314,16 +340,18 @@ pnpm dev
 
 **Expected Results:**
 - ✅ `pnpm type-check` - No TypeScript errors
-- ✅ `pnpm build` - Build succeeds
+- ✅ `pnpm build` - Build succeeds (may see "Compiled successfully" with React Compiler enabled)
 - ✅ `pnpm dev` - Dev server starts on port 3000
 - ✅ Tailwind CSS working (test with utility classes)
 - ✅ shadcn/ui initialized (Button component renders)
+- ✅ React Compiler enabled (check build output for compiler optimizations)
 
 **Acceptance Criteria:**
 - [x] Next.js 14+ project created with App Router
 - [x] TypeScript strict mode enabled and passing
 - [x] Tailwind CSS configured and working
 - [x] shadcn/ui initialized with components.json
+- [x] React Compiler enabled in next.config.ts
 - [x] Development server runs without errors
 - [x] Landing page displays correctly
 
