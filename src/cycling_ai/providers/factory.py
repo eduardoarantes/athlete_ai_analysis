@@ -115,3 +115,10 @@ try:
     ProviderFactory.register_provider("ollama", OllamaProvider)
 except ImportError:
     pass
+
+try:
+    from cycling_ai.providers.bedrock_provider import BedrockProvider
+
+    ProviderFactory.register_provider("bedrock", BedrockProvider)
+except ImportError:
+    pass
