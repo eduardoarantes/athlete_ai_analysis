@@ -15,6 +15,11 @@ providers:
     # region: us-east-1
     # Optional: Use named AWS profile from ~/.aws/credentials
     # profile_name: my-aws-profile
+    # Optional: AWS Bedrock Guardrails (content filtering, PII detection)
+    # NOTE: Guardrails are NOT compatible with tool use
+    # guardrail_id: your-guardrail-id
+    # guardrail_version: DRAFT
+    # guardrail_trace: false
 
   # Anthropic Claude - Direct API access (recommended for development)
   anthropic:

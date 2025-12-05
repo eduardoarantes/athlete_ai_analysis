@@ -359,6 +359,25 @@ class BedrockProvider(BaseProvider):
                 if force_tool_call:
                     request_params["toolChoice"] = {"any": {}}
 
+            # Add guardrails if configured (NOT compatible with tools)
+            guardrail_id = self.config.additional_params.get("guardrail_id")
+            guardrail_version = self.config.additional_params.get("guardrail_version")
+
+            if guardrail_id and not tools:
+                # Guardrails cannot be used with tool calling
+                request_params["guardrailConfig"] = {
+                    "guardrailIdentifier": guardrail_id,
+                    "guardrailVersion": guardrail_version or "DRAFT",
+                }
+                # Optionally enable trace for debugging
+                if self.config.additional_params.get("guardrail_trace"):
+                    request_params["guardrailConfig"]["trace"] = "enabled"
+            elif guardrail_id and tools:
+                logger.warning(
+                    "Guardrails are not compatible with tool use in Bedrock. "
+                    "Skipping guardrail configuration."
+                )
+
             # Call Bedrock Converse API
             start_time = time.time()
             response = self.bedrock_client.converse(**request_params)
@@ -398,6 +417,10 @@ class BedrockProvider(BaseProvider):
                 },
                 "duration": duration,
             }
+
+            # Add guardrail trace if present
+            if "trace" in response:
+                metadata["guardrail_trace"] = response["trace"]
 
             # Create completion response
             completion_response = CompletionResponse(

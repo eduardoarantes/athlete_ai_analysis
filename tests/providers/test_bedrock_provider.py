@@ -806,3 +806,128 @@ class TestHelperMethods:
 
             # Should have content as JSON string
             assert isinstance(formatted["content"], str)
+
+
+class TestGuardrails:
+    """Test guardrail configuration and usage."""
+
+    def test_guardrails_added_to_request_when_configured(self, bedrock_config):
+        """Test that guardrails are added to request when configured."""
+        # Add guardrail configuration
+        bedrock_config.additional_params["guardrail_id"] = "test-guardrail-id"
+        bedrock_config.additional_params["guardrail_version"] = "1.0"
+
+        with patch("boto3.Session"):
+            provider = BedrockProvider(bedrock_config)
+
+            # Mock Bedrock client
+            mock_response = {
+                "output": {"message": {"content": [{"text": "Test response"}]}},
+                "usage": {"inputTokens": 10, "outputTokens": 20, "totalTokens": 30},
+            }
+            provider.bedrock_client.converse = Mock(return_value=mock_response)
+
+            # Call with no tools (guardrails compatible)
+            messages = [ProviderMessage(role="user", content="Hello")]
+            provider.create_completion(messages)
+
+            # Verify guardrailConfig was added
+            call_kwargs = provider.bedrock_client.converse.call_args.kwargs
+            assert "guardrailConfig" in call_kwargs
+            assert call_kwargs["guardrailConfig"]["guardrailIdentifier"] == "test-guardrail-id"
+            assert call_kwargs["guardrailConfig"]["guardrailVersion"] == "1.0"
+
+    def test_guardrails_not_added_with_tools(self, bedrock_config):
+        """Test that guardrails are NOT added when tools are present (incompatible)."""
+        from cycling_ai.tools.base import ToolDefinition, ToolParameter
+
+        # Add guardrail configuration
+        bedrock_config.additional_params["guardrail_id"] = "test-guardrail-id"
+
+        with patch("boto3.Session"):
+            provider = BedrockProvider(bedrock_config)
+
+            # Mock Bedrock client
+            mock_response = {
+                "output": {"message": {"content": [{"text": "Test response"}]}},
+                "usage": {"inputTokens": 10, "outputTokens": 20, "totalTokens": 30},
+            }
+            provider.bedrock_client.converse = Mock(return_value=mock_response)
+
+            # Call with tools (incompatible with guardrails)
+            messages = [ProviderMessage(role="user", content="Hello")]
+            tools = [
+                ToolDefinition(
+                    name="test_tool",
+                    description="Test tool",
+                    category="analysis",
+                    parameters=[
+                        ToolParameter(
+                            name="param",
+                            type="string",
+                            description="Test parameter",
+                            required=True,
+                        )
+                    ],
+                    returns={"type": "string", "format": "json"},
+                )
+            ]
+
+            with patch("logging.Logger.warning") as mock_warning:
+                provider.create_completion(messages, tools=tools)
+
+                # Verify warning was logged
+                mock_warning.assert_called_once()
+                warning_msg = mock_warning.call_args[0][0]
+                assert "not compatible" in warning_msg.lower()
+
+            # Verify guardrailConfig was NOT added
+            call_kwargs = provider.bedrock_client.converse.call_args.kwargs
+            assert "guardrailConfig" not in call_kwargs
+
+    def test_guardrails_with_trace_enabled(self, bedrock_config):
+        """Test that trace can be enabled for guardrails."""
+        bedrock_config.additional_params["guardrail_id"] = "test-guardrail-id"
+        bedrock_config.additional_params["guardrail_trace"] = True
+
+        with patch("boto3.Session"):
+            provider = BedrockProvider(bedrock_config)
+
+            # Mock Bedrock client
+            mock_response = {
+                "output": {"message": {"content": [{"text": "Test response"}]}},
+                "usage": {"inputTokens": 10, "outputTokens": 20, "totalTokens": 30},
+                "trace": {"guardrail": "trace data"},
+            }
+            provider.bedrock_client.converse = Mock(return_value=mock_response)
+
+            messages = [ProviderMessage(role="user", content="Hello")]
+            response = provider.create_completion(messages)
+
+            # Verify trace was added to request
+            call_kwargs = provider.bedrock_client.converse.call_args.kwargs
+            assert call_kwargs["guardrailConfig"]["trace"] == "enabled"
+
+            # Verify trace was added to response metadata
+            assert "guardrail_trace" in response.metadata
+
+    def test_guardrails_default_version_draft(self, bedrock_config):
+        """Test that guardrail version defaults to DRAFT if not specified."""
+        bedrock_config.additional_params["guardrail_id"] = "test-guardrail-id"
+        # Don't specify version
+
+        with patch("boto3.Session"):
+            provider = BedrockProvider(bedrock_config)
+
+            mock_response = {
+                "output": {"message": {"content": [{"text": "Test response"}]}},
+                "usage": {"inputTokens": 10, "outputTokens": 20, "totalTokens": 30},
+            }
+            provider.bedrock_client.converse = Mock(return_value=mock_response)
+
+            messages = [ProviderMessage(role="user", content="Hello")]
+            provider.create_completion(messages)
+
+            # Verify version defaults to DRAFT
+            call_kwargs = provider.bedrock_client.converse.call_args.kwargs
+            assert call_kwargs["guardrailConfig"]["guardrailVersion"] == "DRAFT"

@@ -266,6 +266,15 @@ def _transition_to_normal_mode(session: ConversationSession) -> None:
     help="AWS profile name for Bedrock (optional)",
 )
 @click.option(
+    "--guardrail-id",
+    help="AWS Bedrock Guardrail ID (optional, for content filtering)",
+)
+@click.option(
+    "--guardrail-version",
+    default="DRAFT",
+    help="AWS Bedrock Guardrail version (default: DRAFT)",
+)
+@click.option(
     "--profile",
     type=click.Path(exists=True, path_type=Path),
     help="Path to athlete profile JSON (sets conversation context)",
@@ -296,6 +305,8 @@ def chat(
     model: str | None,
     aws_region: str,
     aws_profile: str | None,
+    guardrail_id: str | None,
+    guardrail_version: str,
     profile: Path | None,
     data_dir: Path | None,
     session_id: str | None,
@@ -397,6 +408,8 @@ def chat(
             config=config,
             aws_region=aws_region,
             aws_profile=aws_profile,
+            guardrail_id=guardrail_id,
+            guardrail_version=guardrail_version,
         )
 
         # Create agent
@@ -452,6 +465,8 @@ def _initialize_provider(
     config: Any,
     aws_region: str = "us-east-1",
     aws_profile: str | None = None,
+    guardrail_id: str | None = None,
+    guardrail_version: str = "DRAFT",
 ) -> BaseProvider:
     """
     Initialize LLM provider from configuration.
@@ -464,6 +479,8 @@ def _initialize_provider(
         config: Configuration object
         aws_region: AWS region for Bedrock (default: us-east-1)
         aws_profile: AWS profile name for Bedrock (optional)
+        guardrail_id: AWS Bedrock Guardrail ID (optional)
+        guardrail_version: AWS Bedrock Guardrail version (default: DRAFT)
 
     Returns:
         Provider instance
@@ -526,6 +543,9 @@ def _initialize_provider(
         additional_params["region"] = aws_region
         if aws_profile:
             additional_params["profile_name"] = aws_profile
+        if guardrail_id:
+            additional_params["guardrail_id"] = guardrail_id
+            additional_params["guardrail_version"] = guardrail_version
 
     provider_config = ProviderConfig(
         provider_name=provider_name,

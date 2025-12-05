@@ -261,6 +261,15 @@ def create_rag_config(
     help="AWS profile name for Bedrock (optional)",
 )
 @click.option(
+    "--guardrail-id",
+    help="AWS Bedrock Guardrail ID (optional, for content filtering)",
+)
+@click.option(
+    "--guardrail-version",
+    default="DRAFT",
+    help="AWS Bedrock Guardrail version (default: DRAFT)",
+)
+@click.option(
     "--prompts-dir",
     type=click.Path(exists=True, path_type=Path),
     help="Base directory containing prompt files (defaults to ./prompts)",
@@ -314,6 +323,8 @@ def generate(
     model: str | None,
     aws_region: str,
     aws_profile: str | None,
+    guardrail_id: str | None,
+    guardrail_version: str,
     prompts_dir: Path | None,
     prompt_model: str,
     prompt_version: str | None,
@@ -446,7 +457,9 @@ def generate(
         # Initialize provider
         console.print("[cyan]Initializing LLM provider...[/cyan]")
         try:
-            provider_instance = _initialize_provider(provider, model, config, aws_region, aws_profile)
+            provider_instance = _initialize_provider(
+                provider, model, config, aws_region, aws_profile, guardrail_id, guardrail_version
+            )
             console.print(
                 f"[green]✓ Provider initialized: {provider} ({provider_instance.config.model})[/green]"
             )
@@ -646,6 +659,8 @@ def _initialize_provider(
     config: Any,
     aws_region: str = "us-east-1",
     aws_profile: str | None = None,
+    guardrail_id: str | None = None,
+    guardrail_version: str = "DRAFT",
 ) -> BaseProvider:
     """
     Initialize LLM provider from configuration.
@@ -656,6 +671,8 @@ def _initialize_provider(
         config: Configuration object
         aws_region: AWS region for Bedrock (default: us-east-1)
         aws_profile: AWS profile name for Bedrock (optional)
+        guardrail_id: AWS Bedrock Guardrail ID (optional)
+        guardrail_version: AWS Bedrock Guardrail version (default: DRAFT)
 
     Returns:
         Initialized provider instance
@@ -732,6 +749,9 @@ def _initialize_provider(
         additional_params["region"] = aws_region
         if aws_profile:
             additional_params["profile_name"] = aws_profile
+        if guardrail_id:
+            additional_params["guardrail_id"] = guardrail_id
+            additional_params["guardrail_version"] = guardrail_version
 
     provider_config = ProviderConfig(
         provider_name=provider_name,

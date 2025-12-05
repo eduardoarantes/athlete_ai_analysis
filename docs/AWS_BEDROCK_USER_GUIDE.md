@@ -577,6 +577,193 @@ response = provider.create_completion(messages)
 print(response.content)
 ```
 
+### AWS Bedrock Guardrails
+
+AWS Bedrock Guardrails provide content filtering, safety controls, and PII detection for your LLM applications. You can configure guardrails to ensure responsible AI usage.
+
+#### Important Limitations
+
+**Guardrails are NOT compatible with tool use** in Bedrock. If you enable guardrails when tools are configured, the system will:
+1. Log a warning message
+2. Skip guardrail configuration
+3. Proceed with tool use enabled
+
+This is a Bedrock platform limitation, not a cycling-ai limitation.
+
+#### Creating a Guardrail
+
+1. **Navigate to AWS Bedrock Console**
+   - Go to: https://console.aws.amazon.com/bedrock/
+   - Select "Guardrails" from the left menu
+   - Click "Create guardrail"
+
+2. **Configure Guardrail Policies**
+   - **Content Filters**: Block harmful content (hate, insults, sexual, violence)
+   - **Denied Topics**: Block specific topics (e.g., financial advice)
+   - **Word Filters**: Block specific words or phrases
+   - **PII Filters**: Detect and redact personally identifiable information
+   - **Sensitive Information Filters**: Detect credentials, API keys, etc.
+
+3. **Create Version**
+   - After configuration, create a version (e.g., "1.0")
+   - Or use "DRAFT" for testing
+
+4. **Note the Guardrail ID**
+   - Format: `guardrail-id` or full ARN
+   - Example: `abc123def456` or `arn:aws:bedrock:us-east-1:123456789012:guardrail/abc123def456`
+
+#### CLI Usage
+
+**Basic Usage (without tools):**
+
+```bash
+# Generate report with guardrails (no training plan)
+cycling-ai generate \
+  --csv activities.csv \
+  --profile profile.json \
+  --provider bedrock \
+  --model anthropic.claude-3-5-sonnet-20241022-v2:0 \
+  --guardrail-id abc123def456 \
+  --guardrail-version 1.0 \
+  --no-training-plan
+
+# Chat with guardrails
+cycling-ai chat \
+  --provider bedrock \
+  --model anthropic.claude-3-5-sonnet-20241022-v2:0 \
+  --guardrail-id abc123def456 \
+  --guardrail-version DRAFT
+```
+
+**Important Notes:**
+- Guardrails work with `--no-training-plan` (no tool use)
+- Guardrails are automatically disabled when tools are present
+- Default version is "DRAFT" if not specified
+- Use `--guardrail-version 1.0` for production deployments
+
+#### Configuration File
+
+Add guardrails to your `.cycling-ai.yaml`:
+
+```yaml
+version: "1.3"
+
+providers:
+  bedrock:
+    model: anthropic.claude-3-5-sonnet-20241022-v2:0
+    region: us-east-1
+    guardrail_id: abc123def456
+    guardrail_version: "1.0"
+    # Optional: Enable trace for debugging
+    guardrail_trace: true
+```
+
+#### Python API
+
+```python
+from cycling_ai.providers.factory import ProviderFactory
+from cycling_ai.providers.base import ProviderConfig, ProviderMessage
+
+# Configure with guardrails
+config = ProviderConfig(
+    provider_name="bedrock",
+    api_key="",
+    model="anthropic.claude-3-5-sonnet-20241022-v2:0",
+    additional_params={
+        "region": "us-east-1",
+        "guardrail_id": "abc123def456",
+        "guardrail_version": "1.0",
+        "guardrail_trace": True,  # Optional: Enable trace
+    }
+)
+
+provider = ProviderFactory.create_provider(config)
+
+# Use without tools (guardrails enabled)
+messages = [
+    ProviderMessage(role="user", content="What's a good FTP test protocol?")
+]
+response = provider.create_completion(messages)  # Guardrails applied
+
+# If you pass tools, guardrails are automatically skipped
+from cycling_ai.tools.registry import get_global_registry
+registry = get_global_registry()
+tools = [registry.get_tool("analyze_performance").definition]
+
+response = provider.create_completion(messages, tools=tools)  # No guardrails
+# Warning: "Guardrails are not compatible with tool use in Bedrock. Skipping..."
+```
+
+#### Guardrail Trace (Debugging)
+
+Enable trace to see detailed guardrail evaluation:
+
+```python
+config = ProviderConfig(
+    provider_name="bedrock",
+    api_key="",
+    model="anthropic.claude-3-5-sonnet-20241022-v2:0",
+    additional_params={
+        "region": "us-east-1",
+        "guardrail_id": "abc123def456",
+        "guardrail_version": "1.0",
+        "guardrail_trace": True,  # Enable trace
+    }
+)
+
+provider = ProviderFactory.create_provider(config)
+response = provider.create_completion(messages)
+
+# Access trace data
+if "guardrail_trace" in response.metadata:
+    trace = response.metadata["guardrail_trace"]
+    print(f"Guardrail trace: {trace}")
+```
+
+#### Cost Implications
+
+- **Guardrails pricing**: $0.75 per 1,000 input tokens, $1.00 per 1,000 output tokens
+- **Additional latency**: ~200-500ms per request
+- **Best practices**:
+  - Use for sensitive/production workloads
+  - Disable for development/testing
+  - Monitor costs in CloudWatch
+
+#### Common Use Cases
+
+1. **Content Moderation**: Block harmful content in user inputs
+2. **PII Protection**: Detect and redact personal information
+3. **Compliance**: Enforce regulatory requirements (HIPAA, GDPR)
+4. **Brand Safety**: Prevent off-brand responses
+5. **Topic Control**: Block out-of-scope topics
+
+#### Troubleshooting
+
+**Guardrails not working:**
+- Verify guardrail ID exists in your AWS account
+- Check guardrail version is deployed (not just DRAFT)
+- Ensure IAM permissions include `bedrock:ApplyGuardrail`
+- Confirm you're NOT using tools (incompatible)
+
+**Guardrail blocking valid content:**
+- Review guardrail policies in Bedrock console
+- Adjust content filter thresholds
+- Test with trace enabled to see evaluation details
+- Consider using "DRAFT" version for testing
+
+**Performance issues:**
+- Guardrails add ~200-500ms latency
+- Consider caching common queries
+- Use guardrails only for sensitive operations
+
+#### Reference
+
+- [AWS Bedrock Guardrails Documentation](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html)
+- [Converse API with Guardrails](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-use-converse-api.html)
+- [Guardrails Pricing](https://aws.amazon.com/bedrock/pricing/)
+
+---
+
 ### Multi-Region Deployment
 
 Deploy in multiple regions for redundancy:
