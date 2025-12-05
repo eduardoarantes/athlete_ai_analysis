@@ -41,6 +41,7 @@ Chat naturally with an AI assistant that:
 
 ### 🌐 Multi-Provider Support
 Works with your choice of LLM:
+- **AWS Bedrock** (Claude, Nova, Llama, Mistral) - **NEW!** Enterprise-grade with pay-per-use
 - **Anthropic** (Claude 3.5 Sonnet) - **Recommended** for production
 - **OpenAI** (GPT-4 Turbo)
 - **Google Gemini** (Gemini 1.5 Pro) - Best value
@@ -91,6 +92,10 @@ pip install -e ".[dev]"
 Set up your preferred LLM provider:
 
 ```bash
+# AWS Bedrock (NEW! - Enterprise-grade, pay-per-use)
+aws configure  # One-time setup
+# See docs/AWS_BEDROCK_USER_GUIDE.md for detailed setup
+
 # Anthropic Claude (recommended)
 export ANTHROPIC_API_KEY="your-api-key"
 
@@ -113,7 +118,14 @@ export GOOGLE_API_KEY="your-api-key"
 The `generate` command creates comprehensive cycling reports using a 4-phase multi-agent system:
 
 ```bash
-# Basic usage
+# Basic usage with AWS Bedrock (NEW!)
+cycling-ai generate \
+  --csv ~/Downloads/activities.csv \
+  --profile athlete_profile.json \
+  --provider bedrock \
+  --model anthropic.claude-3-5-sonnet-20241022-v2:0
+
+# Basic usage with Anthropic
 cycling-ai generate \
   --csv ~/Downloads/activities.csv \
   --profile athlete_profile.json \
@@ -514,6 +526,7 @@ Built with:
 ## 📚 Documentation
 
 ### User Documentation
+- **[AWS Bedrock User Guide](docs/AWS_BEDROCK_USER_GUIDE.md)** - **NEW!** Complete guide for AWS Bedrock setup and usage
 - **[User Guide: Generate Command](docs/USER_GUIDE_GENERATE.md)** - Complete guide for report generation
 - **[Deployment Checklist](docs/DEPLOYMENT_CHECKLIST.md)** - Production deployment guide
 - **[Troubleshooting Guide](docs/TROUBLESHOOTING.md)** - Common issues and solutions
