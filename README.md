@@ -94,7 +94,8 @@ Set up your preferred LLM provider:
 ```bash
 # AWS Bedrock (NEW! - Enterprise-grade, pay-per-use)
 aws configure  # One-time setup
-# See docs/AWS_BEDROCK_USER_GUIDE.md for detailed setup
+# See docs/AWS_BEDROCK_SETUP_GUIDE.md for complete step-by-step setup
+# See docs/AWS_BEDROCK_USER_GUIDE.md for usage details
 
 # Anthropic Claude (recommended)
 export ANTHROPIC_API_KEY="your-api-key"
@@ -526,7 +527,8 @@ Built with:
 ## 📚 Documentation
 
 ### User Documentation
-- **[AWS Bedrock User Guide](docs/AWS_BEDROCK_USER_GUIDE.md)** - **NEW!** Complete guide for AWS Bedrock setup and usage
+- **[AWS Bedrock Setup Guide](docs/AWS_BEDROCK_SETUP_GUIDE.md)** - **NEW!** Step-by-step AWS Bedrock setup from scratch
+- **[AWS Bedrock User Guide](docs/AWS_BEDROCK_USER_GUIDE.md)** - **NEW!** Complete usage guide for AWS Bedrock
 - **[User Guide: Generate Command](docs/USER_GUIDE_GENERATE.md)** - Complete guide for report generation
 - **[Deployment Checklist](docs/DEPLOYMENT_CHECKLIST.md)** - Production deployment guide
 - **[Troubleshooting Guide](docs/TROUBLESHOOTING.md)** - Common issues and solutions
