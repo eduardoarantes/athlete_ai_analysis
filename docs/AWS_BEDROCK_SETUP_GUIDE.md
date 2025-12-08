@@ -92,7 +92,7 @@ Before starting, ensure you have:
 2. **Select Region:**
    - Top right corner: ensure you're in a supported region
    - **Recommended regions:**
-     - `us-east-1` (N. Virginia) - Most models available
+     - `ap-southeast-2` (N. Virginia) - Most models available
      - `us-west-2` (Oregon) - Good alternative
      - `eu-west-1` (Ireland) - For EU users
 
@@ -214,7 +214,7 @@ aws configure
 # Enter when prompted:
 AWS Access Key ID [None]: AKIAIOSFODNN7EXAMPLE
 AWS Secret Access Key [None]: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-Default region name [None]: us-east-1
+Default region name [None]: ap-southeast-2
 Default output format [None]: json
 ```
 
@@ -232,7 +232,7 @@ aws sts get-caller-identity
 # }
 
 # Test Bedrock access
-aws bedrock list-foundation-models --region us-east-1
+aws bedrock list-foundation-models --region ap-southeast-2
 
 # Expected: List of models (no error)
 ```
@@ -260,7 +260,7 @@ version: "1.3"
 providers:
   bedrock:
     model: anthropic.claude-3-5-sonnet-20241022-v2:0
-    region: us-east-1
+    region: ap-southeast-2
     profile_name: cycling-ai  # Use named profile
 ```
 
@@ -282,7 +282,7 @@ cycling-ai generate \
 # Export credentials
 export AWS_ACCESS_KEY_ID="AKIAIOSFODNN7EXAMPLE"
 export AWS_SECRET_ACCESS_KEY="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-export AWS_DEFAULT_REGION="us-east-1"
+export AWS_DEFAULT_REGION="ap-southeast-2"
 
 # Verify
 echo $AWS_ACCESS_KEY_ID
@@ -294,13 +294,13 @@ echo $AWS_ACCESS_KEY_ID
 # For bash
 echo 'export AWS_ACCESS_KEY_ID="AKIAIOSFODNN7EXAMPLE"' >> ~/.bashrc
 echo 'export AWS_SECRET_ACCESS_KEY="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"' >> ~/.bashrc
-echo 'export AWS_DEFAULT_REGION="us-east-1"' >> ~/.bashrc
+echo 'export AWS_DEFAULT_REGION="ap-southeast-2"' >> ~/.bashrc
 source ~/.bashrc
 
 # For zsh
 echo 'export AWS_ACCESS_KEY_ID="AKIAIOSFODNN7EXAMPLE"' >> ~/.zshrc
 echo 'export AWS_SECRET_ACCESS_KEY="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"' >> ~/.zshrc
-echo 'export AWS_DEFAULT_REGION="us-east-1"' >> ~/.zshrc
+echo 'export AWS_DEFAULT_REGION="ap-southeast-2"' >> ~/.zshrc
 source ~/.zshrc
 ```
 
@@ -313,7 +313,7 @@ source ~/.zshrc
 ```bash
 # List available models
 aws bedrock list-foundation-models \
-  --region us-east-1 \
+  --region ap-southeast-2 \
   --by-provider anthropic
 
 # Expected output: JSON with Claude models
@@ -343,6 +343,12 @@ cycling-ai chat \
   --model anthropic.claude-3-5-sonnet-20241022-v2:0 \
   --profile test_profile.json
 
+cycling-ai chat \
+  --provider bedrock \
+  --model amazon.nova-pro-v1:0 \
+  --profile test_profile.json
+
+
 # Once in chat, type:
 > What is my FTP?
 
@@ -361,7 +367,7 @@ config = ProviderConfig(
     provider_name="bedrock",
     api_key="",  # Not needed
     model="anthropic.claude-3-5-sonnet-20241022-v2:0",
-    additional_params={"region": "us-east-1"}
+    additional_params={"region": "ap-southeast-2"}
 )
 
 # Create provider
@@ -423,7 +429,7 @@ version: "1.3"
 providers:
   bedrock:
     model: anthropic.claude-3-5-sonnet-20241022-v2:0
-    region: us-east-1
+    region: ap-southeast-2
     # Optional: Use named profile
     # profile_name: cycling-ai
 
@@ -471,7 +477,7 @@ provider_config = ProviderConfig(
     temperature=0.7,
     max_tokens=4096,
     additional_params={
-        "region": "us-east-1",
+        "region": "ap-southeast-2",
         # "profile_name": "cycling-ai"  # Optional
     }
 )
@@ -578,7 +584,7 @@ version: "1.3"
 providers:
   bedrock:
     model: anthropic.claude-3-5-sonnet-20241022-v2:0
-    region: us-east-1
+    region: ap-southeast-2
     guardrail_id: abc123def456
     guardrail_version: "1.0"
     guardrail_trace: true  # Enable debugging
@@ -602,10 +608,10 @@ aws configure get region
 aws account list-regions --region-opt-in-status-contains ENABLED,OPTED_IN
 
 # Update region
-aws configure set region us-east-1
+aws configure set region ap-southeast-2
 
 # Or specify in command
-cycling-ai generate --aws-region us-east-1 ...
+cycling-ai generate --aws-region ap-southeast-2 ...
 ```
 
 ### Error: "AccessDeniedException"
@@ -638,7 +644,7 @@ cycling-ai generate --aws-region us-east-1 ...
 1. **List Available Models:**
    ```bash
    aws bedrock list-foundation-models \
-     --region us-east-1 \
+     --region ap-southeast-2 \
      --by-provider anthropic
 
    # Find exact model ID
@@ -646,7 +652,7 @@ cycling-ai generate --aws-region us-east-1 ...
 
 2. **Check Region:**
    - Some models only available in specific regions
-   - Try `us-east-1` (most models available)
+   - Try `ap-southeast-2` (most models available)
 
 3. **Use Correct Model ID:**
    ```bash
@@ -788,11 +794,11 @@ aws configure
 aws sts get-caller-identity
 
 # List models
-aws bedrock list-foundation-models --region us-east-1
+aws bedrock list-foundation-models --region ap-southeast-2
 
 # Test Bedrock access
 aws bedrock invoke-model \
-  --region us-east-1 \
+  --region ap-southeast-2 \
   --model-id anthropic.claude-3-haiku-20240307-v1:0 \
   --body '{"messages":[{"role":"user","content":"test"}],"anthropic_version":"bedrock-2023-05-31","max_tokens":100}' \
   output.json
