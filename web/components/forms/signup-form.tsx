@@ -30,7 +30,7 @@ export function SignupForm() {
     setError(null)
 
     try {
-      const { error: signupError } = await supabase.auth.signUp({
+      const { data: signupData, error: signupError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
@@ -44,8 +44,16 @@ export function SignupForm() {
         return
       }
 
-      // Redirect to email verification page
-      router.push('/auth/verify-email')
+      // Check if email confirmation is disabled (development mode)
+      // If user.identities is empty, email confirmation is required
+      // If session exists, user is automatically logged in
+      if (signupData.session) {
+        // User is already logged in (email confirmation disabled)
+        router.push('/onboarding')
+      } else {
+        // Email confirmation required
+        router.push('/auth/verify-email')
+      }
     } catch {
       setError('An unexpected error occurred')
       setIsLoading(false)
