@@ -126,7 +126,7 @@ export function StepOne({ initialData, onSubmit }: StepOneProps) {
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger className="max-w-[250px]">
-                      <SelectValue placeholder="Select your gender" />
+                      <SelectValue placeholder={t('genderPlaceholder')} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>

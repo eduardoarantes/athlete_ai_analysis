@@ -2,8 +2,6 @@ import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { UserMenu } from './user-menu'
 import { MobileNav } from './mobile-nav'
-import { ThemeToggle } from './theme-toggle'
-import { LanguageSwitcher } from './language-switcher'
 
 export function Navbar() {
   const t = useTranslations('nav')
@@ -46,8 +44,6 @@ export function Navbar() {
 
         {/* Right side actions */}
         <div className="flex flex-1 items-center justify-end space-x-4">
-          <LanguageSwitcher />
-          <ThemeToggle />
           <UserMenu />
           <MobileNav />
         </div>

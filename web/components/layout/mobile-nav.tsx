@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import {
@@ -16,6 +17,8 @@ import {
 export function MobileNav() {
   const router = useRouter()
   const supabase = createClient()
+  const t = useTranslations('nav')
+  const tUser = useTranslations('userMenu')
   const [isOpen, setIsOpen] = useState(false)
 
   const handleLogout = async () => {
@@ -46,27 +49,27 @@ export function MobileNav() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuItem asChild>
-          <Link href="/dashboard">Dashboard</Link>
+          <Link href="/dashboard">{t('dashboard')}</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/activities">Activities</Link>
+          <Link href="/activities">{t('activities')}</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/reports">Reports</Link>
+          <Link href="/reports">{t('reports')}</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/training-plans">Training Plans</Link>
+          <Link href="/training-plans">{t('trainingPlans')}</Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/profile">Profile Settings</Link>
+          <Link href="/profile">{t('profile')}</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/settings">Settings</Link>
+          <Link href="/settings">{t('settings')}</Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout} className="text-red-600">
-          Log out
+          {tUser('logout')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

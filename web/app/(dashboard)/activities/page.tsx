@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -21,6 +22,8 @@ interface Activity {
   average_watts?: number
   weighted_average_watts?: number
   average_heartrate?: number
+  tss?: number | null
+  tss_method?: string | null
 }
 
 interface Pagination {
@@ -31,6 +34,7 @@ interface Pagination {
 }
 
 export default function ActivitiesPage() {
+  const t = useTranslations('activitiesPage')
   const [activities, setActivities] = useState<Activity[]>([])
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
@@ -106,9 +110,9 @@ export default function ActivitiesPage() {
     <div className="container max-w-7xl py-8">
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Activities</h1>
+          <h1 className="text-3xl font-bold">{t('title')}</h1>
           <p className="text-muted-foreground mt-2">
-            Browse and analyze your synced Strava activities
+            {t('subtitle')}
           </p>
         </div>
 
@@ -124,7 +128,7 @@ export default function ActivitiesPage() {
                 className="gap-2"
               >
                 <Table className="h-4 w-4" />
-                Table
+                {t('tableView')}
               </Button>
               <Button
                 variant={viewMode === 'calendar' ? 'default' : 'ghost'}
@@ -133,7 +137,7 @@ export default function ActivitiesPage() {
                 className="gap-2"
               >
                 <Calendar className="h-4 w-4" />
-                Calendar
+                {t('calendarView')}
               </Button>
             </div>
 
@@ -143,7 +147,7 @@ export default function ActivitiesPage() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="text"
-                  placeholder="Search activities..."
+                  placeholder={t('searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value)
@@ -155,7 +159,7 @@ export default function ActivitiesPage() {
             )}
 
             <div className="flex gap-2 items-center">
-              <label className="text-sm font-medium">Sport Type:</label>
+              <label className="text-sm font-medium">{t('sportType')}:</label>
               <select
                 value={sportTypeFilter}
                 onChange={(e) => {
@@ -164,32 +168,33 @@ export default function ActivitiesPage() {
                 }}
                 className="px-3 py-1 border rounded-md text-sm"
               >
-                <option value="">All</option>
-                <option value="Ride">Ride</option>
-                <option value="VirtualRide">Virtual Ride</option>
-                <option value="Run">Run</option>
-                <option value="Swim">Swim</option>
+                <option value="">{t('all')}</option>
+                <option value="Ride">{t('ride')}</option>
+                <option value="VirtualRide">{t('virtualRide')}</option>
+                <option value="Run">{t('run')}</option>
+                <option value="Swim">{t('swim')}</option>
               </select>
             </div>
 
             {viewMode === 'table' && (
               <>
                 <div className="flex gap-2 items-center">
-                  <label className="text-sm font-medium">Sort By:</label>
+                  <label className="text-sm font-medium">{t('sortBy')}:</label>
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
                     className="px-3 py-1 border rounded-md text-sm"
                   >
-                    <option value="start_date">Date</option>
-                    <option value="distance">Distance</option>
-                    <option value="moving_time">Duration</option>
-                    <option value="average_watts">Power</option>
+                    <option value="start_date">{t('date')}</option>
+                    <option value="distance">{t('distance')}</option>
+                    <option value="moving_time">{t('duration')}</option>
+                    <option value="average_watts">{t('power')}</option>
+                    <option value="tss">{t('tss')}</option>
                   </select>
                 </div>
 
                 <div className="flex gap-2 items-center">
-                  <label className="text-sm font-medium">Order:</label>
+                  <label className="text-sm font-medium">{t('order')}:</label>
                   <select
                     value={sortOrder}
                     onChange={(e) =>
@@ -197,15 +202,15 @@ export default function ActivitiesPage() {
                     }
                     className="px-3 py-1 border rounded-md text-sm"
                   >
-                    <option value="desc">Descending</option>
-                    <option value="asc">Ascending</option>
+                    <option value="desc">{t('descending')}</option>
+                    <option value="asc">{t('ascending')}</option>
                   </select>
                 </div>
               </>
             )}
 
             <div className="ml-auto text-sm text-muted-foreground">
-              {pagination.total} total activities
+              {t('totalActivities', { count: pagination.total })}
             </div>
           </div>
         </Card>
@@ -213,12 +218,12 @@ export default function ActivitiesPage() {
         {/* Activities View */}
         {loading ? (
           <Card className="p-8 text-center text-muted-foreground">
-            Loading activities...
+            {t('loading')}
           </Card>
         ) : activities.length === 0 ? (
           <Card className="p-8 text-center">
             <p className="text-muted-foreground">
-              No activities found. Sync your Strava account to see activities.
+              {t('noActivities')}
             </p>
           </Card>
         ) : viewMode === 'table' ? (
@@ -228,28 +233,31 @@ export default function ActivitiesPage() {
                 <thead className="bg-muted">
                   <tr>
                     <th className="px-4 py-3 text-left text-sm font-medium">
-                      Date
+                      {t('date')}
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-medium">
-                      Activity
+                      {t('activity')}
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-medium">
-                      Type
+                      {t('type')}
                     </th>
                     <th className="px-4 py-3 text-right text-sm font-medium">
-                      Distance
+                      {t('distance')}
                     </th>
                     <th className="px-4 py-3 text-right text-sm font-medium">
-                      Duration
+                      {t('duration')}
                     </th>
                     <th className="px-4 py-3 text-right text-sm font-medium">
-                      Elevation
+                      {t('elevation')}
                     </th>
                     <th className="px-4 py-3 text-right text-sm font-medium">
-                      Power
+                      {t('power')}
                     </th>
                     <th className="px-4 py-3 text-right text-sm font-medium">
-                      HR
+                      {t('hr')}
+                    </th>
+                    <th className="px-4 py-3 text-right text-sm font-medium">
+                      {t('tss')}
                     </th>
                   </tr>
                 </thead>
@@ -287,6 +295,15 @@ export default function ActivitiesPage() {
                           ? `${Math.round(activity.average_heartrate)} bpm`
                           : '-'}
                       </td>
+                      <td className="px-4 py-3 text-sm text-right">
+                        {activity.tss != null ? (
+                          <span title={activity.tss_method ? t(`tssMethod.${activity.tss_method}`) : ''}>
+                            {Math.round(activity.tss)}
+                          </span>
+                        ) : (
+                          '-'
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -307,10 +324,10 @@ export default function ActivitiesPage() {
               disabled={pagination.page === 1}
               variant="outline"
             >
-              Previous
+              {t('previous')}
             </Button>
             <div className="flex items-center px-4">
-              Page {pagination.page} of {pagination.totalPages}
+              {t('pageOf', { current: pagination.page, total: pagination.totalPages })}
             </div>
             <Button
               onClick={() =>
@@ -319,7 +336,7 @@ export default function ActivitiesPage() {
               disabled={pagination.page === pagination.totalPages}
               variant="outline"
             >
-              Next
+              {t('next')}
             </Button>
           </div>
         )}

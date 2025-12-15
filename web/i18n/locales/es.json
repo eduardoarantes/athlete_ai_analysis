@@ -25,6 +25,13 @@
     "activities": "Actividades",
     "reports": "Informes",
     "training": "Entrenamiento",
+    "trainingPlans": "Planes de Entrenamiento",
+    "logout": "Cerrar sesión"
+  },
+  "userMenu": {
+    "myAccount": "Mi Cuenta",
+    "profile": "Perfil",
+    "settings": "Configuración",
     "logout": "Cerrar sesión"
   },
   "auth": {
@@ -65,22 +72,125 @@
     "selectAtLeastOne": "Por favor, selecciona al menos una opción"
   },
   "dashboard": {
-    "welcome": "¡Bienvenido de nuevo, {name}!",
+    "welcome": "¡Bienvenido de nuevo!",
+    "welcomeWithName": "¡Bienvenido de nuevo, {name}!",
     "welcomeNew": "¡Bienvenido a Cycling AI!",
+    "subtitle": "Aquí tienes un resumen de tu rendimiento ciclista.",
     "completeProfile": "Completa tu perfil para comenzar",
+    "completeProfilePrompt": "Completa tu perfil de atleta para obtener análisis personalizados con IA.",
     "setupProfile": "Configurar tu perfil",
-    "recentActivities": "Actividades recientes",
-    "trainingOverview": "Resumen de entrenamiento",
-    "performanceMetrics": "Métricas de rendimiento",
+    "setupProfilePrompt": "Configura tu perfil para análisis personalizados",
+    "recentActivities": "Actividades Recientes",
+    "recentActivitiesDescription": "Tus últimas actividades ciclistas",
+    "trainingOverview": "Resumen de Entrenamiento",
+    "performanceMetrics": "Métricas de Rendimiento",
     "noActivities": "No hay actividades todavía",
     "connectStrava": "Conecta Strava para importar tus actividades",
-    "generateReport": "Generar informe"
+    "generateReport": "Generar Informe",
+    "createTrainingPlan": "Crear Plan de Entrenamiento",
+    "viewAll": "Ver Todas",
+    "athlete": "Atleta",
+    "totalActivities": "Total de Actividades",
+    "syncedFromStrava": "Sincronizado desde Strava",
+    "connectStravaToSync": "Conecta Strava para sincronizar",
+    "thisWeek": "Esta Semana",
+    "thisMonth": "Este Mes",
+    "riding": "pedaleando",
+    "ftp": "FTP",
+    "maxHr": "FC Máx",
+    "weight": "Peso",
+    "wkg": "W/kg"
+  },
+  "activities": {
+    "title": "Actividades",
+    "noActivities": "No hay actividades todavía",
+    "activitiesWillAppear": "Tus actividades aparecerán aquí después de sincronizar",
+    "connectStravaPrompt": "Conecta tu cuenta de Strava para sincronizar automáticamente tus rutas",
+    "syncActivities": "Sincronizar Actividades",
+    "connectStrava": "Conectar Strava"
+  },
+  "activitiesPage": {
+    "title": "Actividades",
+    "subtitle": "Explora y analiza tus actividades sincronizadas de Strava",
+    "tableView": "Tabla",
+    "calendarView": "Calendario",
+    "searchPlaceholder": "Buscar actividades...",
+    "sportType": "Tipo de Deporte",
+    "all": "Todos",
+    "ride": "Ruta",
+    "virtualRide": "Ruta Virtual",
+    "run": "Carrera",
+    "swim": "Natación",
+    "sortBy": "Ordenar Por",
+    "order": "Orden",
+    "date": "Fecha",
+    "distance": "Distancia",
+    "duration": "Duración",
+    "power": "Potencia",
+    "descending": "Descendente",
+    "ascending": "Ascendente",
+    "totalActivities": "{count} actividades en total",
+    "loading": "Cargando actividades...",
+    "noActivities": "No se encontraron actividades. Sincroniza tu cuenta de Strava para ver actividades.",
+    "activity": "Actividad",
+    "type": "Tipo",
+    "elevation": "Elevación",
+    "hr": "FC",
+    "tss": "TSS",
+    "tssMethod": {
+      "power": "TSS basado en potencia",
+      "heart_rate": "TSS basado en frecuencia cardíaca",
+      "estimated": "TSS estimado"
+    },
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "pageOf": "Página {current} de {total}"
+  },
+  "strava": {
+    "loading": "Cargando conexión con Strava...",
+    "connectTitle": "Conectar a Strava",
+    "connectDescription": "Conecta tu cuenta de Strava para sincronizar actividades y analizar tu rendimiento",
+    "connectButton": "Conectar con Strava",
+    "connectionTitle": "Conexión Strava",
+    "athleteId": "ID de Atleta",
+    "syncActivities": "Sincronizar Actividades",
+    "syncing": "Sincronizando...",
+    "disconnect": "Desconectar",
+    "tokenExpired": "Token expirado. Por favor, desconecta y vuelve a conectar.",
+    "disconnectedSuccess": "Strava desconectado con éxito",
+    "failedToDisconnect": "Error al desconectar de Strava",
+    "failedToLoadStatus": "Error al cargar el estado de Strava",
+    "failedToSync": "Error al sincronizar actividades",
+    "syncedActivities": "Sincronizadas {count} actividades con éxito",
+    "activitySync": "Sincronización de Actividades",
+    "totalActivities": "Total de Actividades",
+    "syncStatus": "Estado de Sincronización",
+    "lastSynced": "Última sincronización",
+    "ftpDetection": "Detección Automática de FTP",
+    "ftpDetectionDescription": "Analiza tus datos de potencia para estimar el FTP",
+    "detectFtp": "Detectar FTP",
+    "detecting": "Detectando...",
+    "detectAndUpdate": "Detectar y Actualizar Perfil",
+    "ftpDetected": "FTP detectado: {ftp}W y actualizado en el perfil",
+    "ftpDetectedConfidence": "FTP detectado: {ftp}W (confianza {confidence})",
+    "failedToDetectFtp": "Error al detectar FTP",
+    "watts": "vatios",
+    "confidence": "confianza",
+    "basedOnActivities": "Basado en {count} actividades",
+    "connectionSuccess": "¡Strava conectado con éxito!",
+    "connectionSuccessDescription": "Tus actividades se están sincronizando.",
+    "connectionError": "Error de conexión",
+    "connectionErrorDescription": "No se pudo conectar a Strava. Por favor, inténtalo de nuevo.",
+    "errorAccessDenied": "Acceso denegado. Por favor, inténtalo de nuevo y autoriza la conexión.",
+    "errorInvalidScope": "Faltan permisos. Por favor, inténtalo de nuevo y concede todos los permisos solicitados.",
+    "errorDefault": "Algo salió mal. Por favor, inténtalo de nuevo."
   },
   "onboarding": {
     "title": "¡Bienvenido! Configuremos tu perfil",
     "subtitle": "Esto solo tomará unos minutos",
     "stepProgress": "Paso {current} de {total}",
     "completeSetup": "Completar configuración",
+    "step": "Paso {number}",
     "step1": {
       "title": "Información básica",
       "subtitle": "Cuéntanos un poco sobre ti",
@@ -91,6 +201,7 @@
       "age": "Edad",
       "agePlaceholder": "Introduce tu edad",
       "gender": "Género",
+      "genderPlaceholder": "Selecciona tu género",
       "male": "Masculino",
       "female": "Femenino",
       "other": "Otro",
@@ -105,6 +216,10 @@
       "maxHr": "Frecuencia cardíaca máxima",
       "maxHrPlaceholder": "Introduce tu FC máx en ppm",
       "maxHrTooltip": "Tu frecuencia cardíaca máxima es la FC más alta que puedes alcanzar. Si no la conoces, una estimación aproximada es 220 menos tu edad.",
+      "maxHrDescription": "Usada para zonas de frecuencia cardíaca y cálculos de carga de entrenamiento",
+      "restingHr": "Frecuencia Cardíaca en Reposo",
+      "restingHrPlaceholder": "Introduce tu FC en reposo en ppm",
+      "restingHrDescription": "Usada para cálculo de hrTSS. Mide al despertar.",
       "weight": "Peso",
       "weightPlaceholder": "Introduce tu peso",
       "weightTooltip": "Tu peso actual ayuda a calcular la relación potencia-peso y otras métricas.",
@@ -167,10 +282,228 @@
   "settings": {
     "title": "Configuración",
     "subtitle": "Gestiona la configuración de tu cuenta",
+    "nav": {
+      "appearance": "Apariencia",
+      "integrations": "Integraciones"
+    },
     "account": "Cuenta",
     "profile": "Perfil",
     "notifications": "Notificaciones",
     "privacy": "Privacidad",
-    "danger": "Zona de peligro"
+    "danger": "Zona de peligro",
+    "appearance": "Apariencia",
+    "appearanceDescription": "Personaliza la apariencia de tu aplicación",
+    "theme": "Tema",
+    "themeLight": "Claro",
+    "themeDark": "Oscuro",
+    "themeSystem": "Sistema",
+    "themeDescription": "Selecciona tu tema de colores preferido",
+    "language": "Idioma",
+    "languageDescription": "Selecciona tu idioma preferido",
+    "integrations": {
+      "strava": "Strava",
+      "stravaDescription": "Sincroniza actividades, analiza rendimiento y detecta automáticamente el FTP desde tu cuenta de Strava",
+      "garmin": "Garmin Connect",
+      "garminDescription": "Importa actividades y datos de salud directamente desde Garmin Connect",
+      "wahoo": "Wahoo Cloud",
+      "wahooDescription": "Sincroniza entrenamientos y actividades desde dispositivos Wahoo ELEMNT",
+      "trainingpeaks": "TrainingPeaks",
+      "trainingpeaksDescription": "Importa entrenamientos estructurados y planes de entrenamiento",
+      "categories": {
+        "trainingPlatforms": "Plataformas de Entrenamiento",
+        "devices": "Dispositivos y Sensores"
+      },
+      "status": {
+        "connected": "Conectado",
+        "comingSoon": "Próximamente"
+      },
+      "configure": "Configurar",
+      "hide": "Ocultar",
+      "comingSoonMessage": "Esta integración está actualmente en desarrollo. Vuelve pronto para ver las actualizaciones.",
+      "needDifferent": "¿Necesitas una integración diferente?",
+      "needDifferentDescription": "Estamos constantemente añadiendo nuevas integraciones para ayudarte a sacar el máximo provecho de tus datos de entrenamiento. Si te gustaría ver una plataforma o dispositivo específico soportado, ¡háganoslo saber!"
+    }
+  },
+  "createPlan": {
+    "title": "Crea Tu Plan de Entrenamiento",
+    "subtitle": "Construyamos un plan de entrenamiento personalizado con insights potenciados por IA",
+    "loading": "Cargando tu asistente de entrenamiento...",
+    "stepTitle": "Paso {step}: {name}",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "processing": "Procesando...",
+    "generatePlan": "Generar Plan",
+    "steps": {
+      "goal": "Objetivo",
+      "timeline": "Cronograma",
+      "profile": "Perfil",
+      "preferences": "Preferencias",
+      "review": "Revisión"
+    },
+    "goalStep": {
+      "title": "¿Cuál es tu objetivo principal de entrenamiento?",
+      "description": "Elige el objetivo principal para tu plan de entrenamiento. Esto nos ayudará a adaptar los entrenamientos y la progresión a tus necesidades específicas.",
+      "customGoalLabel": "O describe tu propio objetivo (opcional)",
+      "customGoalPlaceholder": "Ej., 'Quiero completar una ruta de 160km en menos de 5 horas' o 'Mejorar mi capacidad de escalada para etapas de montaña'",
+      "customGoalHint": "Nuestra IA analizará tu objetivo personalizado y creará un plan a medida.",
+      "goals": {
+        "improve-ftp": {
+          "label": "Mejorar FTP",
+          "description": "Aumentar la potencia umbral funcional mediante intervalos estructurados"
+        },
+        "build-endurance": {
+          "label": "Desarrollar Resistencia",
+          "description": "Desarrollar base aeróbica para rutas y eventos más largos"
+        },
+        "race-prep": {
+          "label": "Preparación para Carrera",
+          "description": "Alcanzar el pico para un evento específico con entrenamiento dirigido"
+        },
+        "weight-loss": {
+          "label": "Pérdida de Peso",
+          "description": "Plan enfocado en quema de grasa con énfasis en zona 2"
+        },
+        "general-fitness": {
+          "label": "Condición Física General",
+          "description": "Enfoque equilibrado para la condición física ciclista general"
+        }
+      }
+    },
+    "timelineStep": {
+      "title": "¿Cuál es tu cronograma?",
+      "description": "¿Tienes un evento específico para entrenar, o solo un marco de tiempo general?",
+      "hasEventQuestion": "¿Tienes un evento objetivo?",
+      "yesHaveEvent": "Sí, tengo un evento",
+      "noJustDuration": "No, solo duración de entrenamiento",
+      "eventType": "Tipo de Evento",
+      "selectEventType": "Seleccionar tipo de evento",
+      "eventDate": "Fecha del Evento",
+      "weeksUntilEvent": "{weeks} semanas hasta tu evento",
+      "trainingDuration": "Duración del Entrenamiento (semanas)",
+      "weeksMin": "4 semanas",
+      "weeksMax": "24 semanas",
+      "weeksValue": "{weeks} semanas",
+      "eventTypes": {
+        "centuryRide": "Ruta de 160km (100 millas)",
+        "granFondo": "Gran Fondo",
+        "criterium": "Criterium",
+        "roadRace": "Carrera en Ruta",
+        "timeTrial": "Contrarreloj",
+        "mtbRace": "Carrera de Mountain Bike",
+        "gravelEvent": "Evento de Gravel",
+        "multiDayTour": "Tour de Varios Días",
+        "other": "Otro"
+      }
+    },
+    "profileStep": {
+      "title": "Tu Perfil de Atleta",
+      "description": "Hemos prellenado algunos datos de tu perfil. Por favor revisa y actualiza según sea necesario.",
+      "ftp": "Potencia Umbral Funcional (FTP)",
+      "watts": "vatios",
+      "ftpSuggestion": "Basado en tus actividades recientes, sugerimos un FTP de {ftp}W.",
+      "applySuggestion": "Aplicar sugerencia",
+      "weight": "Peso",
+      "kg": "kg",
+      "powerToWeight": "Relación Potencia-Peso",
+      "wkgExcellent": "¡Excelente! Tienes una relación potencia-peso competitiva.",
+      "wkgGood": "Buena relación potencia-peso con margen de mejora.",
+      "wkgImprove": "Enfócate en desarrollar potencia y optimizar peso para mejores resultados.",
+      "maxHr": "Frecuencia Cardíaca Máxima",
+      "bpm": "ppm",
+      "maxHrHint": "Si no la conoces, estima: 220 - tu edad = FC máx",
+      "weeklyHours": "Tiempo Semanal Disponible para Entrenar",
+      "selectWeeklyHours": "Seleccionar horas semanales",
+      "hours3to5": "3-5 horas/semana",
+      "hours5to8": "5-8 horas/semana",
+      "hours8to12": "8-12 horas/semana",
+      "hours12plus": "12+ horas/semana",
+      "experience": "Experiencia Ciclista",
+      "selectExperience": "Seleccionar nivel de experiencia",
+      "beginner": "Principiante (< 6 meses)",
+      "intermediate": "Intermedio (6-24 meses)",
+      "advanced": "Avanzado (2+ años)",
+      "expert": "Experto/Competitivo (5+ años)"
+    },
+    "preferencesStep": {
+      "title": "Preferencias de Entrenamiento",
+      "description": "Personaliza tu plan según tus preferencias y disponibilidad",
+      "daysPerWeek": "Días de Entrenamiento por Semana",
+      "daysMin": "3 días",
+      "daysMax": "7 días",
+      "daysValue": "{days} días",
+      "workoutTypes": "Tipos de Entrenamiento Preferidos (selecciona todos los que apliquen)",
+      "workoutTypeOptions": {
+        "intervals": {
+          "label": "Intervalos Estructurados",
+          "description": "Entrenamiento de intervalos de alta intensidad"
+        },
+        "endurance": {
+          "label": "Rutas Largas de Resistencia",
+          "description": "Desarrollar base aeróbica"
+        },
+        "recovery": {
+          "label": "Rutas de Recuperación",
+          "description": "Sesiones de recuperación activa"
+        },
+        "tempo": {
+          "label": "Entrenamientos de Tempo",
+          "description": "Esfuerzos sostenidos en umbral"
+        },
+        "sweet-spot": {
+          "label": "Entrenamiento Sweet Spot",
+          "description": "88-94% del FTP"
+        },
+        "vo2max": {
+          "label": "Intervalos de VO2 Máx",
+          "description": "Trabajo de capacidad aeróbica máxima"
+        }
+      },
+      "indoorOnly": "Solo Entrenamiento Indoor",
+      "indoorOnlyDescription": "El plan incluirá solo entrenamientos en rodillo"
+    },
+    "reviewStep": {
+      "title": "Revisa Tu Plan de Entrenamiento",
+      "description": "Por favor revisa todos los detalles antes de generar tu plan de entrenamiento personalizado",
+      "trainingGoal": "Objetivo de Entrenamiento",
+      "customGoal": "Objetivo personalizado: \"{goal}\"",
+      "timeline": "Cronograma",
+      "eventType": "Tipo de Evento",
+      "eventDate": "Fecha del Evento",
+      "weeksUntilEvent": "Semanas hasta el evento",
+      "weeksValue": "{weeks} semanas",
+      "trainingDuration": "Duración del Entrenamiento",
+      "athleteProfile": "Perfil del Atleta",
+      "ftp": "FTP",
+      "weight": "Peso",
+      "wkg": "W/kg",
+      "weeklyTrainingTime": "Tiempo de Entrenamiento Semanal",
+      "experienceLevel": "Nivel de Experiencia",
+      "trainingPreferences": "Preferencias de Entrenamiento",
+      "trainingDaysPerWeek": "Días de Entrenamiento por Semana",
+      "daysValue": "{days} días",
+      "workoutTypes": "Tipos de Entrenamiento",
+      "indoorTrainingOnly": "Solo Entrenamiento Indoor",
+      "planWillInclude": "Tu plan incluirá:",
+      "planItem1": "Estructura de entrenamiento personalizada basada en tu nivel {level}",
+      "planItem2": "Sobrecarga progresiva enfocada en tu objetivo de {goal}",
+      "planItem3": "{days} entrenamientos por semana con recuperación óptima",
+      "planItem4": "Zonas de potencia calculadas desde tu FTP de {ftp}W",
+      "planItem5": "Periodización con pico para tu {eventType}"
+    },
+    "aiAssistant": {
+      "title": "Coach de IA",
+      "description": "Orientación personalizada para tu plan de entrenamiento",
+      "noSuggestion": "Completa los pasos del asistente para recibir recomendaciones personalizadas...",
+      "quickInsights": "Insights Rápidos",
+      "yourStats": "Tus Estadísticas",
+      "currentFtp": "FTP Actual",
+      "weight": "Peso",
+      "wkg": "W/kg",
+      "insightWkgExcellent": "¡Excelente relación potencia-peso! Tu {wkg} W/kg te coloca en la categoría avanzada.",
+      "insightWkgImprove": "Tu relación W/kg tiene gran margen de mejora. ¡Un plan estructurado puede ayudarte a alcanzar nuevos niveles!",
+      "insightFtpDays": "La mejora del FTP típicamente requiere 4-5 días de entrenamiento por semana. Considera aumentar la frecuencia de entrenamiento para resultados óptimos.",
+      "insightFtpWeeks": "Las ganancias de FTP típicamente requieren 8-12 semanas. Considera extender la duración de tu plan.",
+      "insightGreatTimeline": "¡Gran cronograma! Esto nos da suficiente tiempo para una periodización adecuada."
+    }
   }
 }

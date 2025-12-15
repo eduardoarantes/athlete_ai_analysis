@@ -127,6 +127,7 @@ export default function ProfilePage() {
           gender: profile.gender,
           ftp: profile.ftp,
           maxHr: profile.max_hr,
+          restingHr: profile.resting_hr,
           weightKg: profile.weight_kg,
           goals: profile.goals || [],
           preferredLanguage: profile.preferred_language,

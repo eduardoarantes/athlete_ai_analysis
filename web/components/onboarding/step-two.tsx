@@ -41,6 +41,7 @@ export function StepTwo({ initialData, onSubmit }: StepTwoProps) {
     defaultValues: initialData || {
       ftp: null,
       maxHr: null,
+      restingHr: null,
       weightKg: null,
       unitsSystem: 'metric',
     },

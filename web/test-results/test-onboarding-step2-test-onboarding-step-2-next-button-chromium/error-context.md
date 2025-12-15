@@ -1,0 +1,76 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - link "Cycling AI" [ref=e5] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e6]: Cycling AI
+        - navigation [ref=e7]:
+          - link "Dashboard" [ref=e8] [cursor=pointer]:
+            - /url: /dashboard
+          - link "Activities" [ref=e9] [cursor=pointer]:
+            - /url: /activities
+          - link "Reports" [ref=e10] [cursor=pointer]:
+            - /url: /reports
+          - link "Training" [ref=e11] [cursor=pointer]:
+            - /url: /training-plans
+        - button [ref=e13]
+    - main [ref=e16]:
+      - generic [ref=e18]:
+        - generic [ref=e19]:
+          - heading "Welcome! Let's set up your profile" [level=1] [ref=e20]
+          - paragraph [ref=e21]: This will only take a few minutes
+        - generic [ref=e22]:
+          - paragraph [ref=e23]: Step 1 of 4
+          - generic [ref=e24]:
+            - generic [ref=e26]:
+              - generic [ref=e28]: "1"
+              - generic [ref=e29]: Step 1
+            - generic [ref=e32]:
+              - generic [ref=e34]: "2"
+              - generic [ref=e35]: Step 2
+            - generic [ref=e38]:
+              - generic [ref=e40]: "3"
+              - generic [ref=e41]: Step 3
+            - generic [ref=e44]:
+              - generic [ref=e46]: "4"
+              - generic [ref=e47]: Step 4
+        - generic [ref=e48]:
+          - generic [ref=e49]:
+            - heading "Basic Information" [level=2] [ref=e50]
+            - paragraph [ref=e51]: Tell us a bit about yourself
+          - generic [ref=e53]:
+            - generic [ref=e54]:
+              - generic [ref=e55]: First Name
+              - textbox "First Name" [ref=e56]:
+                - /placeholder: Enter your first name
+                - text: Test
+            - generic [ref=e57]:
+              - generic [ref=e58]: Last Name
+              - textbox "Last Name" [ref=e59]:
+                - /placeholder: Enter your last name
+                - text: User
+            - generic [ref=e60]:
+              - generic [ref=e61]:
+                - generic [ref=e62]: Age
+                - spinbutton "Age" [active] [ref=e63]: "30"
+              - generic [ref=e64]:
+                - generic [ref=e65]: Gender
+                - combobox "Gender" [ref=e66]:
+                  - generic: Select your gender
+                  - img [ref=e67]
+                - combobox [ref=e69]
+          - generic [ref=e70]:
+            - button "Back" [disabled]:
+              - img
+              - text: Back
+            - button "Next" [ref=e71]:
+              - text: Next
+              - img
+  - button "Open Next.js Dev Tools" [ref=e77] [cursor=pointer]:
+    - img [ref=e78]
+  - alert [ref=e81]
+```

@@ -5,6 +5,12 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { StravaService, type StravaActivity } from './strava-service'
+import {
+  calculateTSS,
+  type ActivityData,
+  type AthleteData,
+  type TSSResult,
+} from './tss-calculation-service'
 
 export interface SyncResult {
   success: boolean
@@ -105,8 +111,60 @@ export class StravaSyncService {
   }
 
   /**
+   * Fetch athlete profile data for TSS calculation
+   */
+  private async getAthleteData(userId: string): Promise<AthleteData | null> {
+    const supabase = await createClient()
+
+    const { data: profile, error } = await supabase
+      .from('athlete_profiles')
+      .select('ftp, max_hr, resting_hr, gender')
+      .eq('user_id', userId)
+      .single<{
+        ftp: number | null
+        max_hr: number | null
+        resting_hr: number | null
+        gender: string | null
+      }>()
+
+    if (error || !profile) {
+      return null
+    }
+
+    return {
+      ftp: profile.ftp ?? undefined,
+      maxHr: profile.max_hr ?? undefined,
+      restingHr: profile.resting_hr ?? undefined,
+      gender: (profile.gender as AthleteData['gender']) ?? undefined,
+    }
+  }
+
+  /**
+   * Calculate TSS for an activity
+   */
+  private calculateActivityTSS(
+    activity: StravaActivity,
+    athleteData: AthleteData | null
+  ): TSSResult | null {
+    if (!athleteData) {
+      return null
+    }
+
+    const activityData: ActivityData = {
+      movingTimeSeconds: activity.moving_time,
+      normalizedPower: activity.weighted_average_watts ?? undefined,
+      averageWatts: activity.average_watts ?? undefined,
+      averageHeartRate: activity.average_heartrate ?? undefined,
+      maxHeartRate: activity.max_heartrate ?? undefined,
+    }
+
+    return calculateTSS(activityData, athleteData)
+  }
+
+  /**
    * Store activities in the database
    * Uses upsert to handle both new activities and updates
+   * Also calculates and stores TSS for each activity
    */
   private async storeActivities(
     userId: string,
@@ -114,24 +172,34 @@ export class StravaSyncService {
   ): Promise<number> {
     const supabase = await createClient()
 
-    const activityRows = activities.map((activity) => ({
-      user_id: userId,
-      strava_activity_id: activity.id,
-      name: activity.name,
-      type: activity.type,
-      sport_type: activity.sport_type,
-      start_date: activity.start_date,
-      distance: activity.distance,
-      moving_time: activity.moving_time,
-      elapsed_time: activity.elapsed_time,
-      total_elevation_gain: activity.total_elevation_gain,
-      average_watts: activity.average_watts,
-      max_watts: activity.max_watts,
-      weighted_average_watts: activity.weighted_average_watts,
-      average_heartrate: activity.average_heartrate,
-      max_heartrate: activity.max_heartrate,
-      raw_data: activity as never, // Store full activity object as JSONB
-    }))
+    // Fetch athlete data for TSS calculation
+    const athleteData = await this.getAthleteData(userId)
+
+    const activityRows = activities.map((activity) => {
+      // Calculate TSS for this activity
+      const tssResult = this.calculateActivityTSS(activity, athleteData)
+
+      return {
+        user_id: userId,
+        strava_activity_id: activity.id,
+        name: activity.name,
+        type: activity.type,
+        sport_type: activity.sport_type,
+        start_date: activity.start_date,
+        distance: activity.distance,
+        moving_time: activity.moving_time,
+        elapsed_time: activity.elapsed_time,
+        total_elevation_gain: activity.total_elevation_gain,
+        average_watts: activity.average_watts,
+        max_watts: activity.max_watts,
+        weighted_average_watts: activity.weighted_average_watts,
+        average_heartrate: activity.average_heartrate,
+        max_heartrate: activity.max_heartrate,
+        raw_data: activity as never, // Store full activity object as JSONB
+        tss: tssResult?.tss ?? null,
+        tss_method: tssResult?.method ?? null,
+      }
+    })
 
     // Upsert activities (insert or update if strava_activity_id already exists)
     const { error, count } = await supabase

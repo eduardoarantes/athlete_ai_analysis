@@ -1,18 +1,15 @@
-import { StravaConnection } from '@/components/strava/strava-connection'
+'use client'
+
+import { Toaster } from 'react-hot-toast'
+import { IntegrationsSettings } from '@/components/settings/integrations-settings'
 
 export default function IntegrationsPage() {
   return (
-    <div className="container max-w-4xl py-8">
+    <>
+      <Toaster position="top-center" />
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Integrations</h1>
-          <p className="text-muted-foreground mt-2">
-            Connect your training platforms to sync activities and analyze performance
-          </p>
-        </div>
-
-        <StravaConnection />
+        <IntegrationsSettings />
       </div>
-    </div>
+    </>
   )
 }

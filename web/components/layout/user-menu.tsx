@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 import {
   DropdownMenu,
@@ -16,6 +17,7 @@ import { useEffect, useState } from 'react'
 export function UserMenu() {
   const router = useRouter()
   const supabase = createClient()
+  const t = useTranslations('userMenu')
   const [userEmail, setUserEmail] = useState<string>('')
 
   useEffect(() => {
@@ -51,16 +53,16 @@ export function UserMenu() {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">My Account</p>
+            <p className="text-sm font-medium leading-none">{t('myAccount')}</p>
             <p className="text-xs leading-none text-muted-foreground">{userEmail}</p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => router.push('/profile')}>Profile Settings</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => router.push('/settings')}>Settings</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => router.push('/profile')}>{t('profile')}</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => router.push('/settings')}>{t('settings')}</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout} className="text-red-600">
-          Log out
+          {t('logout')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

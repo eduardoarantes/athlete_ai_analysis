@@ -87,6 +87,7 @@ export async function PUT(request: NextRequest) {
     if (updates.gender !== undefined) updateData.gender = updates.gender
     if (updates.ftp !== undefined) updateData.ftp = updates.ftp
     if (updates.maxHr !== undefined) updateData.max_hr = updates.maxHr
+    if (updates.restingHr !== undefined) updateData.resting_hr = updates.restingHr
     if (updates.weightKg !== undefined) updateData.weight_kg = updates.weightKg
     if (updates.goals !== undefined) updateData.goals = updates.goals
     if (updates.preferredLanguage !== undefined)

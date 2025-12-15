@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
+import { toast } from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -29,6 +31,7 @@ interface FTPEstimate {
 }
 
 export function StravaConnection() {
+  const t = useTranslations('strava')
   const [status, setStatus] = useState<StravaStatus | null>(null)
   const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null)
   const [ftpEstimate, setFtpEstimate] = useState<FTPEstimate | null>(null)
@@ -62,8 +65,8 @@ export function StravaConnection() {
           }
         }
       }
-    } catch (err) {
-      setError('Failed to load Strava status')
+    } catch {
+      setError(t('failedToLoadStatus'))
     } finally {
       setLoading(false)
     }
@@ -80,15 +83,15 @@ export function StravaConnection() {
       })
 
       if (res.ok) {
-        setSuccessMessage('Strava disconnected successfully')
+        setSuccessMessage(t('disconnectedSuccess'))
         setStatus(null)
         setSyncStatus(null)
         setFtpEstimate(null)
       } else {
-        setError('Failed to disconnect from Strava')
+        setError(t('failedToDisconnect'))
       }
-    } catch (err) {
-      setError('Failed to disconnect from Strava')
+    } catch {
+      setError(t('failedToDisconnect'))
     }
   }
 
@@ -104,14 +107,23 @@ export function StravaConnection() {
 
       if (res.ok) {
         const data = await res.json()
-        setSuccessMessage(`Synced ${data.activitiesSynced} activities successfully`)
+        const message = t('syncedActivities', { count: data.activitiesSynced })
+        setSuccessMessage(message)
+        toast.success(message, {
+          duration: 5000,
+          icon: '✅',
+        })
         loadStatus() // Reload status to get updated counts
       } else {
         const errorData = await res.json()
-        setError(errorData.error || 'Failed to sync activities')
+        const error = errorData.error || t('failedToSync')
+        setError(error)
+        toast.error(error)
       }
-    } catch (err) {
-      setError('Failed to sync activities')
+    } catch {
+      const error = t('failedToSync')
+      setError(error)
+      toast.error(error)
     } finally {
       setSyncing(false)
     }
@@ -135,19 +147,20 @@ export function StravaConnection() {
         setFtpEstimate(data.estimate)
 
         if (data.updated) {
-          setSuccessMessage(
-            `FTP detected: ${data.estimate.estimatedFTP}W and updated in profile`
-          )
+          setSuccessMessage(t('ftpDetected', { ftp: data.estimate.estimatedFTP }))
         } else if (data.estimate.estimatedFTP > 0) {
           setSuccessMessage(
-            `FTP detected: ${data.estimate.estimatedFTP}W (${data.estimate.confidence} confidence)`
+            t('ftpDetectedConfidence', {
+              ftp: data.estimate.estimatedFTP,
+              confidence: data.estimate.confidence,
+            })
           )
         }
       } else {
-        setError('Failed to detect FTP')
+        setError(t('failedToDetectFtp'))
       }
-    } catch (err) {
-      setError('Failed to detect FTP')
+    } catch {
+      setError(t('failedToDetectFtp'))
     } finally {
       setDetectingFTP(false)
     }
@@ -157,7 +170,7 @@ export function StravaConnection() {
     return (
       <Card>
         <CardContent className="pt-6">
-          <p className="text-muted-foreground">Loading Strava connection...</p>
+          <p className="text-muted-foreground">{t('loading')}</p>
         </CardContent>
       </Card>
     )
@@ -167,11 +180,8 @@ export function StravaConnection() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Connect to Strava</CardTitle>
-          <CardDescription>
-            Connect your Strava account to sync activities and analyze your
-            performance
-          </CardDescription>
+          <CardTitle>{t('connectTitle')}</CardTitle>
+          <CardDescription>{t('connectDescription')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {error && (
@@ -180,7 +190,7 @@ export function StravaConnection() {
             </Alert>
           )}
           <Button onClick={handleConnect} className="w-full">
-            Connect with Strava
+            {t('connectButton')}
           </Button>
         </CardContent>
       </Card>
@@ -192,9 +202,9 @@ export function StravaConnection() {
       {/* Connection Status */}
       <Card>
         <CardHeader>
-          <CardTitle>Strava Connection</CardTitle>
+          <CardTitle>{t('connectionTitle')}</CardTitle>
           <CardDescription>
-            Athlete ID: {status.athlete_id}
+            {t('athleteId')}: {status.athlete_id}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -215,18 +225,16 @@ export function StravaConnection() {
               disabled={syncing || status.token_expired}
               variant="default"
             >
-              {syncing ? 'Syncing...' : 'Sync Activities'}
+              {syncing ? t('syncing') : t('syncActivities')}
             </Button>
             <Button onClick={handleDisconnect} variant="outline">
-              Disconnect
+              {t('disconnect')}
             </Button>
           </div>
 
           {status.token_expired && (
             <Alert variant="destructive">
-              <AlertDescription>
-                Token expired. Please disconnect and reconnect.
-              </AlertDescription>
+              <AlertDescription>{t('tokenExpired')}</AlertDescription>
             </Alert>
           )}
         </CardContent>
@@ -236,16 +244,16 @@ export function StravaConnection() {
       {syncStatus && (
         <Card>
           <CardHeader>
-            <CardTitle>Activity Sync</CardTitle>
+            <CardTitle>{t('activitySync')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-muted-foreground">Total Activities</p>
+                <p className="text-muted-foreground">{t('totalActivities')}</p>
                 <p className="text-2xl font-bold">{syncStatus.activityCount}</p>
               </div>
               <div>
-                <p className="text-muted-foreground">Sync Status</p>
+                <p className="text-muted-foreground">{t('syncStatus')}</p>
                 <p className="text-lg font-semibold capitalize">
                   {syncStatus.syncStatus}
                 </p>
@@ -253,7 +261,7 @@ export function StravaConnection() {
             </div>
             {syncStatus.lastSyncAt && (
               <p className="text-sm text-muted-foreground">
-                Last synced:{' '}
+                {t('lastSynced')}:{' '}
                 {new Date(syncStatus.lastSyncAt).toLocaleString()}
               </p>
             )}
@@ -269,10 +277,8 @@ export function StravaConnection() {
       {/* FTP Detection */}
       <Card>
         <CardHeader>
-          <CardTitle>FTP Auto-Detection</CardTitle>
-          <CardDescription>
-            Analyze your power data to estimate FTP
-          </CardDescription>
+          <CardTitle>{t('ftpDetection')}</CardTitle>
+          <CardDescription>{t('ftpDetectionDescription')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex gap-2">
@@ -281,14 +287,14 @@ export function StravaConnection() {
               disabled={detectingFTP}
               variant="outline"
             >
-              {detectingFTP ? 'Detecting...' : 'Detect FTP'}
+              {detectingFTP ? t('detecting') : t('detectFtp')}
             </Button>
             {ftpEstimate && ftpEstimate.estimatedFTP > 0 && (
               <Button
                 onClick={() => handleDetectFTP(true)}
                 disabled={detectingFTP}
               >
-                Detect & Update Profile
+                {t('detectAndUpdate')}
               </Button>
             )}
           </div>
@@ -301,7 +307,7 @@ export function StravaConnection() {
                     <span className="text-3xl font-bold">
                       {ftpEstimate.estimatedFTP}
                     </span>
-                    <span className="text-muted-foreground">watts</span>
+                    <span className="text-muted-foreground">{t('watts')}</span>
                     <span
                       className={`ml-auto text-sm px-2 py-1 rounded ${
                         ftpEstimate.confidence === 'high'
@@ -311,11 +317,11 @@ export function StravaConnection() {
                             : 'bg-red-100 text-red-800'
                       }`}
                     >
-                      {ftpEstimate.confidence} confidence
+                      {ftpEstimate.confidence} {t('confidence')}
                     </span>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Based on {ftpEstimate.dataPoints} activities
+                    {t('basedOnActivities', { count: ftpEstimate.dataPoints })}
                   </p>
                   <p className="text-sm">{ftpEstimate.reasoning}</p>
                 </>

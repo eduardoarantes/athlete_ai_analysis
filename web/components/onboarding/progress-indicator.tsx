@@ -54,7 +54,7 @@ export function ProgressIndicator({ currentStep, totalSteps }: ProgressIndicator
                     'text-muted-foreground': !isCurrent,
                   })}
                 >
-                  Step {step}
+                  {t('step', { number: step })}
                 </span>
               </div>
 

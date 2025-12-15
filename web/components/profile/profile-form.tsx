@@ -224,7 +224,7 @@ export function ProfileForm({ initialData, onSave }: ProfileFormProps) {
               <CardTitle>{t('performanceMetrics')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="ftp"
@@ -235,29 +235,6 @@ export function ProfileForm({ initialData, onSave }: ProfileFormProps) {
                         <Input
                           type="number"
                           placeholder={tStep2('ftpPlaceholder')}
-                          {...field}
-                          value={field.value || ''}
-                          onChange={(e) => {
-                            const value = e.target.value
-                            field.onChange(value === '' ? null : parseInt(value, 10))
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="maxHr"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{tStep2('maxHr')}</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          placeholder={tStep2('maxHrPlaceholder')}
                           {...field}
                           value={field.value || ''}
                           onChange={(e) => {
@@ -290,6 +267,56 @@ export function ProfileForm({ initialData, onSave }: ProfileFormProps) {
                           }}
                         />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="maxHr"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{tStep2('maxHr')}</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder={tStep2('maxHrPlaceholder')}
+                          {...field}
+                          value={field.value || ''}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            field.onChange(value === '' ? null : parseInt(value, 10))
+                          }}
+                        />
+                      </FormControl>
+                      <FormDescription>{tStep2('maxHrDescription')}</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="restingHr"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{tStep2('restingHr')}</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder={tStep2('restingHrPlaceholder')}
+                          {...field}
+                          value={field.value || ''}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            field.onChange(value === '' ? null : parseInt(value, 10))
+                          }}
+                        />
+                      </FormControl>
+                      <FormDescription>{tStep2('restingHrDescription')}</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
