@@ -153,7 +153,16 @@
     "saving": "Saving...",
     "saved": "Saved",
     "errorSaving": "Error saving changes",
-    "autoSave": "Changes are automatically saved"
+    "autoSave": "Changes are automatically saved",
+    "profileComplete": "Your profile is complete",
+    "profileIncomplete": "Complete your profile",
+    "missingFields": "Missing",
+    "errorLoading": "Failed to load profile",
+    "errorTitle": "Error",
+    "profileNotFound": "Profile not found",
+    "setupRequired": "Profile Setup Required",
+    "setupRequiredDescription": "You haven't set up your athlete profile yet. Complete the setup to start tracking your cycling performance.",
+    "startSetup": "Set Up Profile"
   },
   "settings": {
     "title": "Settings",

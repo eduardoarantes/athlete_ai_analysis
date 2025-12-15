@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
@@ -22,11 +22,60 @@ interface Activity {
 }
 
 interface ActivitiesCalendarProps {
-  activities: Activity[]
+  sportTypeFilter?: string
 }
 
-export function ActivitiesCalendar({ activities }: ActivitiesCalendarProps) {
+export function ActivitiesCalendar({ sportTypeFilter }: ActivitiesCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date())
+  const [activities, setActivities] = useState<Activity[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadActivitiesForMonth()
+  }, [currentDate, sportTypeFilter])
+
+  const loadActivitiesForMonth = async () => {
+    try {
+      setLoading(true)
+
+      // Get first and last day of the month
+      const firstDay = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        1
+      )
+      const lastDay = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth() + 1,
+        0,
+        23,
+        59,
+        59
+      )
+
+      const params = new URLSearchParams({
+        startDate: firstDay.toISOString(),
+        endDate: lastDay.toISOString(),
+        sortBy: 'start_date',
+        sortOrder: 'asc',
+        limit: '1000', // Get all activities for the month
+      })
+
+      if (sportTypeFilter) {
+        params.append('sportType', sportTypeFilter)
+      }
+
+      const res = await fetch(`/api/activities?${params}`)
+      if (res.ok) {
+        const data = await res.json()
+        setActivities(data.activities || [])
+      }
+    } catch (err) {
+      console.error('Failed to load activities for month:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const formatDuration = (seconds: number) => {
     const hours = Math.floor(seconds / 3600)
@@ -104,6 +153,14 @@ export function ActivitiesCalendar({ activities }: ActivitiesCalendarProps) {
     year: 'numeric',
   })
 
+  if (loading) {
+    return (
+      <Card className="p-8 text-center text-muted-foreground">
+        Loading calendar...
+      </Card>
+    )
+  }
+
   return (
     <div className="space-y-4">
       {/* Calendar Header */}
@@ -117,10 +174,16 @@ export function ActivitiesCalendar({ activities }: ActivitiesCalendarProps) {
             onClick={goToPreviousMonth}
             variant="outline"
             size="icon"
+            aria-label="Previous month"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <Button onClick={goToNextMonth} variant="outline" size="icon">
+          <Button
+            onClick={goToNextMonth}
+            variant="outline"
+            size="icon"
+            aria-label="Next month"
+          >
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>

@@ -153,7 +153,16 @@
     "saving": "Enregistrement...",
     "saved": "Enregistré",
     "errorSaving": "Erreur lors de l'enregistrement des modifications",
-    "autoSave": "Les modifications sont enregistrées automatiquement"
+    "autoSave": "Les modifications sont enregistrées automatiquement",
+    "profileComplete": "Votre profil est complet",
+    "profileIncomplete": "Complétez votre profil",
+    "missingFields": "Manquant",
+    "errorLoading": "Échec du chargement du profil",
+    "errorTitle": "Erreur",
+    "profileNotFound": "Profil non trouvé",
+    "setupRequired": "Configuration du Profil Requise",
+    "setupRequiredDescription": "Vous n'avez pas encore configuré votre profil d'athlète. Complétez la configuration pour commencer à suivre vos performances cyclistes.",
+    "startSetup": "Configurer le Profil"
   },
   "settings": {
     "title": "Paramètres",

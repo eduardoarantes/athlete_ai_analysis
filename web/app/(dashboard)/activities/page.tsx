@@ -271,7 +271,7 @@ export default function ActivitiesPage() {
             </div>
           </Card>
         ) : (
-          <ActivitiesCalendar activities={activities} />
+          <ActivitiesCalendar sportTypeFilter={sportTypeFilter} />
         )}
 
         {/* Pagination - Only for Table View */}
