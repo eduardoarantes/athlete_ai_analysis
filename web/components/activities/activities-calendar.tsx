@@ -45,6 +45,115 @@ interface ActivitiesCalendarProps {
   sportTypeFilter?: string
 }
 
+const getActivityColors = (sportType: string) => {
+  switch (sportType) {
+    // Cycling - Blue shades
+    case 'Ride':
+      return 'bg-blue-100/80 hover:bg-blue-200/80 border-blue-200'
+    case 'VirtualRide':
+      return 'bg-blue-50/80 hover:bg-blue-100/80 border-blue-100'
+    case 'EBikeRide':
+    case 'EMountainBikeRide':
+      return 'bg-violet-100/80 hover:bg-violet-200/80 border-violet-200'
+    case 'GravelRide':
+    case 'MountainBikeRide':
+      return 'bg-blue-200/80 hover:bg-blue-300/80 border-blue-300'
+
+    // Running - Orange shades
+    case 'Run':
+      return 'bg-orange-100/80 hover:bg-orange-200/80 border-orange-200'
+    case 'VirtualRun':
+      return 'bg-orange-50/80 hover:bg-orange-100/80 border-orange-100'
+    case 'TrailRun':
+      return 'bg-amber-100/80 hover:bg-amber-200/80 border-amber-200'
+
+    // Swimming - Cyan shades
+    case 'Swim':
+      return 'bg-cyan-100/80 hover:bg-cyan-200/80 border-cyan-200'
+
+    // Walking/Hiking - Green shades
+    case 'Walk':
+      return 'bg-green-100/80 hover:bg-green-200/80 border-green-200'
+    case 'Hike':
+      return 'bg-emerald-100/80 hover:bg-emerald-200/80 border-emerald-200'
+
+    // Winter Sports - Sky/ice blue
+    case 'AlpineSki':
+    case 'BackcountrySki':
+    case 'NordicSki':
+      return 'bg-sky-100/80 hover:bg-sky-200/80 border-sky-200'
+    case 'Snowboard':
+      return 'bg-sky-200/80 hover:bg-sky-300/80 border-sky-300'
+    case 'Snowshoe':
+      return 'bg-sky-50/80 hover:bg-sky-100/80 border-sky-100'
+    case 'IceSkate':
+      return 'bg-indigo-100/80 hover:bg-indigo-200/80 border-indigo-200'
+
+    // Water Sports - Teal shades
+    case 'Kayaking':
+    case 'Canoeing':
+      return 'bg-teal-100/80 hover:bg-teal-200/80 border-teal-200'
+    case 'Rowing':
+      return 'bg-teal-200/80 hover:bg-teal-300/80 border-teal-300'
+    case 'StandUpPaddling':
+    case 'Surfing':
+      return 'bg-cyan-200/80 hover:bg-cyan-300/80 border-cyan-300'
+    case 'Kitesurf':
+    case 'Windsurf':
+      return 'bg-teal-50/80 hover:bg-teal-100/80 border-teal-100'
+
+    // Strength - Purple shades
+    case 'WeightTraining':
+      return 'bg-purple-100/80 hover:bg-purple-200/80 border-purple-200'
+    case 'Workout':
+    case 'CrossFit':
+    case 'HIIT':
+      return 'bg-purple-200/80 hover:bg-purple-300/80 border-purple-300'
+    case 'Yoga':
+    case 'Pilates':
+      return 'bg-purple-50/80 hover:bg-purple-100/80 border-purple-100'
+
+    // Indoor Cardio - Rose shades
+    case 'Elliptical':
+    case 'StairStepper':
+      return 'bg-rose-100/80 hover:bg-rose-200/80 border-rose-200'
+
+    // Skating - Indigo shades
+    case 'InlineSkate':
+    case 'RollerSki':
+      return 'bg-indigo-50/80 hover:bg-indigo-100/80 border-indigo-100'
+
+    // Climbing - Stone shades
+    case 'RockClimbing':
+      return 'bg-stone-200/80 hover:bg-stone-300/80 border-stone-300'
+
+    // Sports - Red/pink shades
+    case 'Golf':
+      return 'bg-lime-100/80 hover:bg-lime-200/80 border-lime-200'
+    case 'Tennis':
+    case 'Badminton':
+    case 'Squash':
+      return 'bg-yellow-100/80 hover:bg-yellow-200/80 border-yellow-200'
+    case 'Soccer':
+    case 'Football':
+    case 'Basketball':
+      return 'bg-red-100/80 hover:bg-red-200/80 border-red-200'
+    case 'Baseball':
+    case 'Softball':
+      return 'bg-red-50/80 hover:bg-red-100/80 border-red-100'
+    case 'Hockey':
+    case 'IceHockey':
+      return 'bg-slate-100/80 hover:bg-slate-200/80 border-slate-200'
+    case 'Rugby':
+    case 'Volleyball':
+      return 'bg-red-200/80 hover:bg-red-300/80 border-red-300'
+
+    // Default - Gray
+    default:
+      return 'bg-gray-100/80 hover:bg-gray-200/80 border-gray-200'
+  }
+}
+
 const getActivityIcon = (sportType: string) => {
   const iconProps = { className: 'h-3 w-3 flex-shrink-0', strokeWidth: 2 }
 
@@ -407,7 +516,7 @@ export function ActivitiesCalendar({ sportTypeFilter }: ActivitiesCalendarProps)
                     {dayActivities.map((activity) => (
                       <div
                         key={activity.id}
-                        className="text-xs p-1 rounded bg-primary/10 hover:bg-primary/20 cursor-pointer transition-colors"
+                        className={`text-xs p-1 rounded cursor-pointer transition-colors border ${getActivityColors(activity.sport_type)}`}
                         title={`${activity.name}\n${formatDistance(activity.distance)} • ${formatDuration(activity.moving_time)}`}
                       >
                         <div className="font-medium flex items-center gap-1 min-w-0">
