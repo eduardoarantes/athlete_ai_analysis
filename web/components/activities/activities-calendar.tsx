@@ -171,11 +171,46 @@ export function ActivitiesCalendar({ sportTypeFilter }: ActivitiesCalendarProps)
     year: 'numeric',
   })
 
+  // Calculate monthly summary stats (only for current month activities)
+  const currentMonthActivities = activities.filter((activity) => {
+    const activityDate = new Date(activity.start_date)
+    return (
+      activityDate.getMonth() === currentDate.getMonth() &&
+      activityDate.getFullYear() === currentDate.getFullYear()
+    )
+  })
+
+  const totalActivities = currentMonthActivities.length
+  const activeDays = new Set(
+    currentMonthActivities.map((activity) => {
+      const date = new Date(activity.start_date)
+      return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`
+    })
+  ).size
+  const totalHours =
+    currentMonthActivities.reduce(
+      (sum, activity) => sum + activity.moving_time,
+      0
+    ) / 3600
+
   return (
     <div className="space-y-4 relative">
       {/* Calendar Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">{monthName}</h2>
+        <div>
+          <h2 className="text-2xl font-bold">{monthName}</h2>
+          <div className="flex gap-4 mt-1 text-sm text-muted-foreground">
+            <span>
+              {totalActivities} {totalActivities === 1 ? 'activity' : 'activities'}
+            </span>
+            <span>•</span>
+            <span>
+              {activeDays} active {activeDays === 1 ? 'day' : 'days'}
+            </span>
+            <span>•</span>
+            <span>{totalHours.toFixed(1)} hours</span>
+          </div>
+        </div>
         <div className="flex gap-2">
           <Button onClick={goToToday} variant="outline" size="sm">
             Today
