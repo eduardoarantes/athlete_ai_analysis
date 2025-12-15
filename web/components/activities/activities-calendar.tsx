@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 
 interface Activity {
   id: string
@@ -38,27 +38,42 @@ export function ActivitiesCalendar({ sportTypeFilter }: ActivitiesCalendarProps)
     try {
       setLoading(true)
 
-      // Get first and last day of the month
-      const firstDay = new Date(
+      // Calculate the visible date range (including previous/next month days)
+      const firstDayOfMonth = new Date(
         currentDate.getFullYear(),
         currentDate.getMonth(),
         1
       )
-      const lastDay = new Date(
+      const firstDayOfWeek = firstDayOfMonth.getDay()
+
+      // First visible day (may be from previous month)
+      const firstVisibleDay = new Date(firstDayOfMonth)
+      firstVisibleDay.setDate(firstVisibleDay.getDate() - firstDayOfWeek)
+      firstVisibleDay.setHours(0, 0, 0, 0)
+
+      // Last day of month
+      const lastDayOfMonth = new Date(
         currentDate.getFullYear(),
         currentDate.getMonth() + 1,
-        0,
-        23,
-        59,
-        59
+        0
       )
 
+      // Calculate total calendar cells needed
+      const daysInMonth = lastDayOfMonth.getDate()
+      const totalCells = firstDayOfWeek + daysInMonth
+      const weeksNeeded = Math.ceil(totalCells / 7)
+
+      // Last visible day (may be from next month)
+      const lastVisibleDay = new Date(firstVisibleDay)
+      lastVisibleDay.setDate(lastVisibleDay.getDate() + weeksNeeded * 7 - 1)
+      lastVisibleDay.setHours(23, 59, 59, 999)
+
       const params = new URLSearchParams({
-        startDate: firstDay.toISOString(),
-        endDate: lastDay.toISOString(),
+        startDate: firstVisibleDay.toISOString(),
+        endDate: lastVisibleDay.toISOString(),
         sortBy: 'start_date',
         sortOrder: 'asc',
-        limit: '1000', // Get all activities for the month
+        limit: '1000', // Get all activities for visible period
       })
 
       if (sportTypeFilter) {
@@ -106,18 +121,21 @@ export function ActivitiesCalendar({ sportTypeFilter }: ActivitiesCalendarProps)
   // Get day of week for first day (0 = Sunday)
   const firstDayOfWeek = firstDayOfMonth.getDay()
 
-  // Generate calendar days
+  // Calculate first visible day (may be from previous month)
+  const firstVisibleDate = new Date(firstDayOfMonth)
+  firstVisibleDate.setDate(firstVisibleDate.getDate() - firstDayOfWeek)
+
+  // Generate calendar days (including previous and next month)
   const daysInMonth = lastDayOfMonth.getDate()
-  const calendarDays: (number | null)[] = []
+  const totalCells = firstDayOfWeek + daysInMonth
+  const weeksNeeded = Math.ceil(totalCells / 7)
+  const totalDays = weeksNeeded * 7
 
-  // Add empty cells for days before month starts
-  for (let i = 0; i < firstDayOfWeek; i++) {
-    calendarDays.push(null)
-  }
-
-  // Add days of month
-  for (let day = 1; day <= daysInMonth; day++) {
-    calendarDays.push(day)
+  const calendarDays: Date[] = []
+  for (let i = 0; i < totalDays; i++) {
+    const date = new Date(firstVisibleDate)
+    date.setDate(date.getDate() + i)
+    calendarDays.push(date)
   }
 
   // Group activities by date
@@ -153,16 +171,8 @@ export function ActivitiesCalendar({ sportTypeFilter }: ActivitiesCalendarProps)
     year: 'numeric',
   })
 
-  if (loading) {
-    return (
-      <Card className="p-8 text-center text-muted-foreground">
-        Loading calendar...
-      </Card>
-    )
-  }
-
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 relative">
       {/* Calendar Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">{monthName}</h2>
@@ -203,43 +213,31 @@ export function ActivitiesCalendar({ sportTypeFilter }: ActivitiesCalendarProps)
           ))}
 
           {/* Calendar Days */}
-          {calendarDays.map((day, index) => {
-            if (day === null) {
-              return (
-                <div
-                  key={`empty-${index}`}
-                  className="bg-muted/50 min-h-[120px]"
-                />
-              )
-            }
-
-            const dateKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+          {calendarDays.map((date, index) => {
+            const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
             const dayActivities = activitiesByDate.get(dateKey) || []
 
-            const isToday =
-              new Date().toDateString() ===
-              new Date(
-                currentDate.getFullYear(),
-                currentDate.getMonth(),
-                day
-              ).toDateString()
+            const isToday = new Date().toDateString() === date.toDateString()
+            const isCurrentMonth = date.getMonth() === currentDate.getMonth()
 
             return (
               <div
-                key={day}
+                key={`${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`}
                 className={`bg-background p-2 min-h-[120px] ${
                   isToday ? 'ring-2 ring-primary ring-inset' : ''
-                }`}
+                } ${!isCurrentMonth ? 'opacity-50' : ''}`}
               >
                 <div className="flex flex-col h-full">
                   <div
                     className={`text-sm font-medium mb-2 ${
                       isToday
                         ? 'text-primary font-bold'
-                        : 'text-muted-foreground'
+                        : isCurrentMonth
+                          ? 'text-foreground'
+                          : 'text-muted-foreground'
                     }`}
                   >
-                    {day}
+                    {date.getDate()}
                   </div>
                   <div className="space-y-1 flex-1 overflow-y-auto">
                     {dayActivities.map((activity) => (
@@ -275,6 +273,16 @@ export function ActivitiesCalendar({ sportTypeFilter }: ActivitiesCalendarProps)
           <span>Activity</span>
         </div>
       </div>
+
+      {/* Loading Overlay */}
+      {loading && (
+        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center rounded-lg z-10">
+          <div className="flex flex-col items-center gap-2">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">Loading activities...</p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
