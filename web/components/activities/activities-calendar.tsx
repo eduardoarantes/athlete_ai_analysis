@@ -192,6 +192,11 @@ export function ActivitiesCalendar({ sportTypeFilter }: ActivitiesCalendarProps)
       (sum, activity) => sum + activity.moving_time,
       0
     ) / 3600
+  const totalDistance =
+    currentMonthActivities.reduce(
+      (sum, activity) => sum + activity.distance,
+      0
+    ) / 1000
 
   return (
     <div className="space-y-4 relative">
@@ -207,6 +212,8 @@ export function ActivitiesCalendar({ sportTypeFilter }: ActivitiesCalendarProps)
             <span>
               {activeDays} active {activeDays === 1 ? 'day' : 'days'}
             </span>
+            <span>•</span>
+            <span>{totalDistance.toFixed(0)} km</span>
             <span>•</span>
             <span>{totalHours.toFixed(1)} hours</span>
           </div>
