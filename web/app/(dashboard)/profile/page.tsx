@@ -225,7 +225,9 @@ export default function ProfilePage() {
           <p className="text-muted-foreground mt-2">{t('subtitle')}</p>
         </div>
 
-        {completeness && <ProfileCompletenessCard completeness={completeness} />}
+        {completeness && !completeness.isComplete && (
+          <ProfileCompletenessCard completeness={completeness} />
+        )}
 
         <ProfileForm initialData={profileData} onSave={handleSave} />
       </div>
