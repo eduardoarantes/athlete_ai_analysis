@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Loader2, Bike, Monitor, PersonStanding, Waves, Mountain } from 'lucide-react'
 
 interface Activity {
   id: string
@@ -23,6 +23,27 @@ interface Activity {
 
 interface ActivitiesCalendarProps {
   sportTypeFilter?: string
+}
+
+const getActivityIcon = (sportType: string) => {
+  const iconProps = { className: 'h-3 w-3', strokeWidth: 2 }
+
+  switch (sportType) {
+    case 'Ride':
+      return <Bike {...iconProps} />
+    case 'VirtualRide':
+      return <Monitor {...iconProps} />
+    case 'Run':
+    case 'VirtualRun':
+      return <PersonStanding {...iconProps} />
+    case 'Swim':
+      return <Waves {...iconProps} />
+    case 'Hike':
+    case 'Walk':
+      return <Mountain {...iconProps} />
+    default:
+      return <Bike {...iconProps} />
+  }
 }
 
 export function ActivitiesCalendar({ sportTypeFilter }: ActivitiesCalendarProps) {
@@ -288,8 +309,9 @@ export function ActivitiesCalendar({ sportTypeFilter }: ActivitiesCalendarProps)
                         className="text-xs p-1 rounded bg-primary/10 hover:bg-primary/20 cursor-pointer transition-colors"
                         title={`${activity.name}\n${formatDistance(activity.distance)} • ${formatDuration(activity.moving_time)}`}
                       >
-                        <div className="font-medium truncate">
-                          {activity.name}
+                        <div className="font-medium truncate flex items-center gap-1">
+                          {getActivityIcon(activity.sport_type)}
+                          <span className="truncate">{activity.name}</span>
                         </div>
                         <div className="text-muted-foreground">
                           {formatDistance(activity.distance)}
