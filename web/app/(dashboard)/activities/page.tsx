@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import { ActivitiesCalendar } from '@/components/activities/activities-calendar'
-import { Calendar, Table } from 'lucide-react'
+import { Calendar, Table, Search } from 'lucide-react'
 
 interface Activity {
   id: string
@@ -41,11 +42,12 @@ export default function ActivitiesPage() {
   const [sortBy, setSortBy] = useState('start_date')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [sportTypeFilter, setSportTypeFilter] = useState<string>('')
+  const [searchQuery, setSearchQuery] = useState('')
   const [viewMode, setViewMode] = useState<'table' | 'calendar'>('table')
 
   useEffect(() => {
     loadActivities()
-  }, [pagination.page, sortBy, sortOrder, sportTypeFilter])
+  }, [pagination.page, sortBy, sortOrder, sportTypeFilter, searchQuery])
 
   const loadActivities = async () => {
     try {
@@ -59,6 +61,10 @@ export default function ActivitiesPage() {
 
       if (sportTypeFilter) {
         params.append('sportType', sportTypeFilter)
+      }
+
+      if (searchQuery) {
+        params.append('search', searchQuery)
       }
 
       const res = await fetch(`/api/activities?${params}`)
@@ -130,6 +136,23 @@ export default function ActivitiesPage() {
                 Calendar
               </Button>
             </div>
+
+            {/* Search Input - Only for Table View */}
+            {viewMode === 'table' && (
+              <div className="relative flex-1 max-w-sm">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Search activities..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value)
+                    setPagination((p) => ({ ...p, page: 1 }))
+                  }}
+                  className="pl-9"
+                />
+              </div>
+            )}
 
             <div className="flex gap-2 items-center">
               <label className="text-sm font-medium">Sport Type:</label>

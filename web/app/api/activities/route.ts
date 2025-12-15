@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
     const sportType = searchParams.get('sportType')
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
+    const search = searchParams.get('search')
 
     const from = (page - 1) * limit
     const to = from + limit - 1
@@ -53,6 +54,9 @@ export async function GET(request: NextRequest) {
     }
     if (endDate) {
       query = query.lte('start_date', endDate)
+    }
+    if (search) {
+      query = query.ilike('name', `%${search}%`)
     }
 
     // Apply sorting
