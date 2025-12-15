@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Select } from '@/components/ui/select'
+import { ActivitiesCalendar } from '@/components/activities/activities-calendar'
+import { Calendar, Table } from 'lucide-react'
 
 interface Activity {
   id: string
@@ -40,6 +41,7 @@ export default function ActivitiesPage() {
   const [sortBy, setSortBy] = useState('start_date')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [sportTypeFilter, setSportTypeFilter] = useState<string>('')
+  const [viewMode, setViewMode] = useState<'table' | 'calendar'>('table')
 
   useEffect(() => {
     loadActivities()
@@ -107,6 +109,28 @@ export default function ActivitiesPage() {
         {/* Filters */}
         <Card className="p-4">
           <div className="flex gap-4 items-center flex-wrap">
+            {/* View Toggle */}
+            <div className="flex gap-1 border rounded-md">
+              <Button
+                variant={viewMode === 'table' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('table')}
+                className="gap-2"
+              >
+                <Table className="h-4 w-4" />
+                Table
+              </Button>
+              <Button
+                variant={viewMode === 'calendar' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('calendar')}
+                className="gap-2"
+              >
+                <Calendar className="h-4 w-4" />
+                Calendar
+              </Button>
+            </div>
+
             <div className="flex gap-2 items-center">
               <label className="text-sm font-medium">Sport Type:</label>
               <select
@@ -125,31 +149,37 @@ export default function ActivitiesPage() {
               </select>
             </div>
 
-            <div className="flex gap-2 items-center">
-              <label className="text-sm font-medium">Sort By:</label>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-3 py-1 border rounded-md text-sm"
-              >
-                <option value="start_date">Date</option>
-                <option value="distance">Distance</option>
-                <option value="moving_time">Duration</option>
-                <option value="average_watts">Power</option>
-              </select>
-            </div>
+            {viewMode === 'table' && (
+              <>
+                <div className="flex gap-2 items-center">
+                  <label className="text-sm font-medium">Sort By:</label>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="px-3 py-1 border rounded-md text-sm"
+                  >
+                    <option value="start_date">Date</option>
+                    <option value="distance">Distance</option>
+                    <option value="moving_time">Duration</option>
+                    <option value="average_watts">Power</option>
+                  </select>
+                </div>
 
-            <div className="flex gap-2 items-center">
-              <label className="text-sm font-medium">Order:</label>
-              <select
-                value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
-                className="px-3 py-1 border rounded-md text-sm"
-              >
-                <option value="desc">Descending</option>
-                <option value="asc">Ascending</option>
-              </select>
-            </div>
+                <div className="flex gap-2 items-center">
+                  <label className="text-sm font-medium">Order:</label>
+                  <select
+                    value={sortOrder}
+                    onChange={(e) =>
+                      setSortOrder(e.target.value as 'asc' | 'desc')
+                    }
+                    className="px-3 py-1 border rounded-md text-sm"
+                  >
+                    <option value="desc">Descending</option>
+                    <option value="asc">Ascending</option>
+                  </select>
+                </div>
+              </>
+            )}
 
             <div className="ml-auto text-sm text-muted-foreground">
               {pagination.total} total activities
@@ -157,7 +187,7 @@ export default function ActivitiesPage() {
           </div>
         </Card>
 
-        {/* Activities Table */}
+        {/* Activities View */}
         {loading ? (
           <Card className="p-8 text-center text-muted-foreground">
             Loading activities...
@@ -168,7 +198,7 @@ export default function ActivitiesPage() {
               No activities found. Sync your Strava account to see activities.
             </p>
           </Card>
-        ) : (
+        ) : viewMode === 'table' ? (
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -240,10 +270,12 @@ export default function ActivitiesPage() {
               </table>
             </div>
           </Card>
+        ) : (
+          <ActivitiesCalendar activities={activities} />
         )}
 
-        {/* Pagination */}
-        {pagination.totalPages > 1 && (
+        {/* Pagination - Only for Table View */}
+        {viewMode === 'table' && pagination.totalPages > 1 && (
           <div className="flex justify-center gap-2">
             <Button
               onClick={() =>
