@@ -46,7 +46,7 @@ interface ActivitiesCalendarProps {
 }
 
 const getActivityIcon = (sportType: string) => {
-  const iconProps = { className: 'h-3 w-3', strokeWidth: 2 }
+  const iconProps = { className: 'h-3 w-3 flex-shrink-0', strokeWidth: 2 }
 
   switch (sportType) {
     // Cycling
@@ -410,9 +410,9 @@ export function ActivitiesCalendar({ sportTypeFilter }: ActivitiesCalendarProps)
                         className="text-xs p-1 rounded bg-primary/10 hover:bg-primary/20 cursor-pointer transition-colors"
                         title={`${activity.name}\n${formatDistance(activity.distance)} • ${formatDuration(activity.moving_time)}`}
                       >
-                        <div className="font-medium truncate flex items-center gap-1">
+                        <div className="font-medium flex items-center gap-1 min-w-0">
                           {getActivityIcon(activity.sport_type)}
-                          <span className="truncate">{activity.name}</span>
+                          <span className="truncate flex-1">{activity.name}</span>
                         </div>
                         <div className="text-muted-foreground">
                           {formatDistance(activity.distance)}
