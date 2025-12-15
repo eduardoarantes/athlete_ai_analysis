@@ -3,7 +3,27 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { ChevronLeft, ChevronRight, Loader2, Bike, Monitor, PersonStanding, Waves, Mountain } from 'lucide-react'
+import {
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  Bike,
+  Monitor,
+  PersonStanding,
+  Waves,
+  Mountain,
+  Dumbbell,
+  Zap,
+  TrendingUp,
+  Snowflake,
+  Ship,
+  Wind,
+  Activity,
+  Trophy,
+  Target,
+  Flag,
+  User
+} from 'lucide-react'
 
 interface Activity {
   id: string
@@ -29,20 +49,101 @@ const getActivityIcon = (sportType: string) => {
   const iconProps = { className: 'h-3 w-3', strokeWidth: 2 }
 
   switch (sportType) {
+    // Cycling
     case 'Ride':
       return <Bike {...iconProps} />
     case 'VirtualRide':
       return <Monitor {...iconProps} />
+    case 'EBikeRide':
+    case 'EMountainBikeRide':
+      return <Zap {...iconProps} />
+    case 'GravelRide':
+    case 'MountainBikeRide':
+      return <Mountain {...iconProps} />
+
+    // Running
     case 'Run':
     case 'VirtualRun':
+    case 'TrailRun':
       return <PersonStanding {...iconProps} />
+
+    // Swimming
     case 'Swim':
       return <Waves {...iconProps} />
-    case 'Hike':
+
+    // Walking/Hiking
     case 'Walk':
+      return <PersonStanding {...iconProps} />
+    case 'Hike':
       return <Mountain {...iconProps} />
+
+    // Winter Sports
+    case 'AlpineSki':
+    case 'BackcountrySki':
+    case 'NordicSki':
+    case 'Snowboard':
+    case 'Snowshoe':
+      return <Snowflake {...iconProps} />
+    case 'IceSkate':
+      return <Snowflake {...iconProps} />
+
+    // Water Sports
+    case 'Kayaking':
+    case 'Canoeing':
+    case 'Rowing':
+    case 'StandUpPaddling':
+    case 'Kitesurf':
+    case 'Windsurf':
+      return <Ship {...iconProps} />
+    case 'Surfing':
+      return <Waves {...iconProps} />
+
+    // Strength & Fitness
+    case 'WeightTraining':
+      return <Dumbbell {...iconProps} />
+    case 'Workout':
+    case 'CrossFit':
+    case 'HIIT':
+      return <Activity {...iconProps} />
+    case 'Yoga':
+    case 'Pilates':
+      return <User {...iconProps} />
+
+    // Indoor Cardio
+    case 'Elliptical':
+    case 'StairStepper':
+      return <TrendingUp {...iconProps} />
+
+    // Skating
+    case 'InlineSkate':
+    case 'RollerSki':
+      return <Wind {...iconProps} />
+
+    // Climbing
+    case 'RockClimbing':
+      return <Mountain {...iconProps} />
+
+    // Sports
+    case 'Golf':
+      return <Flag {...iconProps} />
+    case 'Tennis':
+    case 'Badminton':
+    case 'Squash':
+      return <Target {...iconProps} />
+    case 'Soccer':
+    case 'Football':
+    case 'Basketball':
+    case 'Baseball':
+    case 'Softball':
+    case 'Hockey':
+    case 'IceHockey':
+    case 'Rugby':
+    case 'Volleyball':
+      return <Trophy {...iconProps} />
+
+    // Default
     default:
-      return <Bike {...iconProps} />
+      return <Activity {...iconProps} />
   }
 }
 
