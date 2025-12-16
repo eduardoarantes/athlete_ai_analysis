@@ -28,7 +28,7 @@ export interface TrainingPlanParams {
     maxHR: number
     weeklyHours: string
     experienceLevel: string
-    daysPerWeek: number
+    trainingDays: string[]
   }
 }
 
@@ -103,6 +103,12 @@ export class CyclingCoachService {
         ? this.calculateWeeksUntilEvent(params.timeline.eventDate!)
         : params.timeline.weeks || 12
 
+      // Convert training days to the format expected by the API
+      // e.g., ['monday', 'wednesday', 'friday'] -> "Monday, Wednesday, Friday"
+      const trainingDaysFormatted = (params.profile.trainingDays || [])
+        .map((day) => day.charAt(0).toUpperCase() + day.slice(1))
+        .join(', ')
+
       // Call FastAPI to generate plan
       const response = await fetch(`${FASTAPI_URL}/api/v1/plan/generate`, {
         method: 'POST',
@@ -116,7 +122,10 @@ export class CyclingCoachService {
             goals: params.customGoal ? [params.goal, params.customGoal] : [params.goal],
             experience_level: params.profile.experienceLevel,
             weekly_hours_available: parseFloat(params.profile.weeklyHours) || 7,
-            training_days_per_week: params.profile.daysPerWeek,
+            training_availability: {
+              hours_per_week: parseFloat(params.profile.weeklyHours) || 7,
+              week_days: trainingDaysFormatted,
+            },
           },
           weeks,
           target_ftp: params.profile.ftp * 1.05, // 5% improvement target
@@ -368,6 +377,11 @@ export class CyclingCoachService {
       .single()
 
     // Create athlete profile JSON
+    // Convert training days to comma-separated format
+    const trainingDaysFormatted = (params.profile.trainingDays || [])
+      .map((day) => day.charAt(0).toUpperCase() + day.slice(1))
+      .join(', ')
+
     const athleteProfile = {
       ftp: params.profile.ftp,
       weight_kg: params.profile.weight,
@@ -376,7 +390,8 @@ export class CyclingCoachService {
       goals: params.customGoal ? [params.goal, params.customGoal] : [params.goal],
       experience_level: params.profile.experienceLevel,
       weekly_hours_available: params.profile.weeklyHours,
-      training_days_per_week: params.profile.daysPerWeek,
+      training_days_per_week: (params.profile.trainingDays || []).length,
+      training_days: trainingDaysFormatted,
     }
 
     const profilePath = join(outputDir, 'athlete_profile.json')
