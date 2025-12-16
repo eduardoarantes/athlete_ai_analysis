@@ -17,6 +17,7 @@ interface ProfileStepProps {
       maxHR: number
       weeklyHours: string
       experienceLevel: string
+      daysPerWeek: number
     }
   }
   onUpdate: (data: any) => void
@@ -24,12 +25,14 @@ interface ProfileStepProps {
 
 export function ProfileStep({ data, onUpdate }: ProfileStepProps) {
   const t = useTranslations('createPlan.profileStep')
+  const t2 = useTranslations('createPlan.preferencesStep')
   const profile = data.profile || {
     ftp: 0,
     weight: 0,
     maxHR: 0,
     weeklyHours: '',
     experienceLevel: 'intermediate',
+    daysPerWeek: 4,
   }
 
   const [suggestedFTP] = useState(275) // This would come from API
@@ -172,6 +175,28 @@ export function ProfileStep({ data, onUpdate }: ProfileStepProps) {
             <SelectItem value="expert">{t('expert')}</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+
+      {/* Days per week */}
+      <div className="space-y-2">
+        <Label htmlFor="daysPerWeek">{t2('daysPerWeek')}</Label>
+        <div className="space-y-4">
+          <Input
+            id="daysPerWeek"
+            type="range"
+            min="3"
+            max="7"
+            step="1"
+            value={profile.daysPerWeek}
+            onChange={(e) => handleFieldChange('daysPerWeek', parseInt(e.target.value))}
+            className="w-full"
+          />
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">{t2('daysMin')}</span>
+            <span className="font-semibold text-primary">{t2('daysValue', { days: profile.daysPerWeek })}</span>
+            <span className="text-muted-foreground">{t2('daysMax')}</span>
+          </div>
+        </div>
       </div>
     </div>
   )

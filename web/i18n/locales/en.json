@@ -94,8 +94,13 @@
     "syncedFromStrava": "Synced from Strava",
     "connectStravaToSync": "Connect Strava to sync",
     "thisWeek": "This Week",
+    "lastWeek": "Last Week",
     "thisMonth": "This Month",
+    "thisYear": "This Year",
     "riding": "riding",
+    "stats": "My Stats",
+    "activitiesCount": "{count} activities",
+    "elevationGain": "{meters}m",
     "ftp": "FTP",
     "maxHr": "Max HR",
     "weight": "Weight",
@@ -339,7 +344,6 @@
       "goal": "Goal",
       "timeline": "Timeline",
       "profile": "Profile",
-      "preferences": "Preferences",
       "review": "Review"
     },
     "goalStep": {
@@ -427,41 +431,10 @@
       "expert": "Expert/Competitive (5+ years)"
     },
     "preferencesStep": {
-      "title": "Training Preferences",
-      "description": "Customize your plan based on your preferences and availability",
       "daysPerWeek": "Training Days per Week",
       "daysMin": "3 days",
       "daysMax": "7 days",
-      "daysValue": "{days} days",
-      "workoutTypes": "Preferred Workout Types (select all that apply)",
-      "workoutTypeOptions": {
-        "intervals": {
-          "label": "Structured Intervals",
-          "description": "High-intensity interval training"
-        },
-        "endurance": {
-          "label": "Long Endurance Rides",
-          "description": "Build aerobic base"
-        },
-        "recovery": {
-          "label": "Recovery Rides",
-          "description": "Active recovery sessions"
-        },
-        "tempo": {
-          "label": "Tempo Workouts",
-          "description": "Sustained efforts at threshold"
-        },
-        "sweet-spot": {
-          "label": "Sweet Spot Training",
-          "description": "88-94% of FTP"
-        },
-        "vo2max": {
-          "label": "VO2 Max Intervals",
-          "description": "Max aerobic capacity work"
-        }
-      },
-      "indoorOnly": "Indoor Training Only",
-      "indoorOnlyDescription": "Plan will include only indoor trainer workouts"
+      "daysValue": "{days} days"
     },
     "reviewStep": {
       "title": "Review Your Training Plan",
@@ -480,11 +453,8 @@
       "wkg": "W/kg",
       "weeklyTrainingTime": "Weekly Training Time",
       "experienceLevel": "Experience Level",
-      "trainingPreferences": "Training Preferences",
       "trainingDaysPerWeek": "Training Days per Week",
       "daysValue": "{days} days",
-      "workoutTypes": "Workout Types",
-      "indoorTrainingOnly": "Indoor Training Only",
       "planWillInclude": "Your plan will include:",
       "planItem1": "Personalized workout structure based on your {level} level",
       "planItem2": "Progressive overload targeting your {goal} goal",
@@ -507,6 +477,23 @@
       "insightFtpWeeks": "FTP gains typically require 8-12 weeks. Consider extending your plan duration.",
       "insightGreatTimeline": "Great timeline! This gives us plenty of time for proper periodization."
     }
+  },
+  "planStatus": {
+    "title": "Creating Your Training Plan",
+    "subtitle": "Our AI coach is building a personalized plan just for you",
+    "loading": "Loading...",
+    "queued": "In Queue",
+    "generating": "Generating your plan...",
+    "completed": "Plan Ready!",
+    "failed": "Generation Failed",
+    "pleaseWait": "This usually takes 1-2 minutes. Feel free to browse while we work.",
+    "inQueue": "Your plan is in the queue and will start processing shortly.",
+    "readyToView": "Your personalized training plan is ready to view!",
+    "somethingWentWrong": "We couldn't generate your plan. Please try again.",
+    "errorTitle": "Something went wrong",
+    "tryAgain": "Try Again",
+    "viewPlan": "View Training Plan",
+    "continueBrowsing": "Continue Browsing"
   },
   "aboutPage": {
     "backToHome": "Back to Home",

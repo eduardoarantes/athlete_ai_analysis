@@ -27,10 +27,8 @@ export async function POST(request: NextRequest) {
         "A 12-week plan is ideal for building sustainable improvements. Consider planning around your schedule.",
       profile:
         currentData.profile?.ftp
-          ? `Your current FTP of ${currentData.profile.ftp}W gives you a power-to-weight ratio to build on.`
+          ? `Your current FTP of ${currentData.profile.ftp}W gives you a power-to-weight ratio to build on. Training 4-5 days per week typically yields the best results.`
           : "Complete your profile for personalized recommendations.",
-      preferences:
-        "Training 4-5 days per week with a mix of intervals and endurance rides yields the best results.",
       review:
         "Your plan looks great! This balanced approach will help you reach your goals effectively.",
     }

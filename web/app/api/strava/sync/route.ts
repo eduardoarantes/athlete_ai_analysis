@@ -3,6 +3,7 @@ import { waitUntil } from '@vercel/functions'
 import { createClient } from '@/lib/supabase/server'
 import { jobService } from '@/lib/services/job-service'
 import { executeStravaSyncJob } from '@/lib/jobs/strava-sync-job'
+import { StravaSyncService } from '@/lib/services/strava-sync-service'
 import type { StravaSyncJobPayload } from '@/lib/types/jobs'
 import { STRAVA_SYNC, HTTP_STATUS, MESSAGES } from '@/lib/constants'
 import { rateLimiters, getClientIdentifier } from '@/lib/rate-limit'
@@ -57,19 +58,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Atomically check and set sync status to 'in_progress'
+    // Atomically check and set sync status to 'syncing'
     // This prevents race conditions where multiple requests could start sync simultaneously
-    // The UPDATE will only succeed if sync_status is NOT already 'in_progress'
-    const { data: updateResult, count } = await supabase
+    // The UPDATE will only succeed if sync_status is NOT already 'syncing'
+    // Valid values per DB constraint: 'pending', 'syncing', 'success', 'error'
+    const { data: updateResult } = await supabase
       .from('strava_connections')
-      .update({ sync_status: 'in_progress' })
+      .update({ sync_status: 'syncing' })
       .eq('user_id', user.id)
-      .neq('sync_status', 'in_progress')
+      .neq('sync_status', 'syncing')
       .select('id')
       .single<{ id: string }>()
 
-    // If count is 0, it means sync_status was already 'in_progress'
-    if (!updateResult || count === 0) {
+    // If updateResult is null, the update failed (likely sync already in progress or no connection)
+    if (!updateResult) {
       // Check if the connection exists at all
       const { data: connection } = await supabase
         .from('strava_connections')

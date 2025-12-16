@@ -6,11 +6,11 @@ import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { ArrowLeft, ArrowRight, Sparkles } from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { ArrowLeft, ArrowRight, Sparkles, AlertCircle, AlertTriangle } from 'lucide-react'
 import { GoalStep } from './components/goal-step'
 import { TimelineStep } from './components/timeline-step'
 import { ProfileStep } from './components/profile-step'
-import { PreferencesStep } from './components/preferences-step'
 import { ReviewStep } from './components/review-step'
 import { AIAssistant } from './components/ai-assistant'
 
@@ -28,17 +28,13 @@ interface WizardData {
     maxHR: number
     weeklyHours: string
     experienceLevel: string
-  }
-  preferences?: {
     daysPerWeek: number
-    workoutTypes: string[]
-    indoorOnly: boolean
   }
 }
 
-const STEP_KEYS = ['goal', 'timeline', 'profile', 'preferences', 'review'] as const
+const STEP_KEYS = ['goal', 'timeline', 'profile', 'review'] as const
 
-const STEP_COMPONENTS = [GoalStep, TimelineStep, ProfileStep, PreferencesStep, ReviewStep]
+const STEP_COMPONENTS = [GoalStep, TimelineStep, ProfileStep, ReviewStep]
 
 export default function CreateTrainingPlanPage() {
   const router = useRouter()
@@ -48,6 +44,8 @@ export default function CreateTrainingPlanPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isInitializing, setIsInitializing] = useState(true)
   const [aiSuggestion, setAiSuggestion] = useState<string>('')
+  const [validationErrors, setValidationErrors] = useState<string[]>([])
+  const [validationWarnings, setValidationWarnings] = useState<string[]>([])
 
   // Load initial data and saved wizard state
   useEffect(() => {
@@ -64,7 +62,6 @@ export default function CreateTrainingPlanPage() {
 
         if (sessionData.session) {
           // Resume from saved session
-          console.log('Resuming from saved session:', sessionData.session)
           setWizardData(sessionData.session.wizardData)
           setCurrentStep(sessionData.session.currentStep)
         } else {
@@ -76,6 +73,7 @@ export default function CreateTrainingPlanPage() {
               maxHR: initData.profile.maxHR || 0,
               weeklyHours: '',
               experienceLevel: initData.experienceLevel || 'intermediate',
+              daysPerWeek: 4,
             },
           })
         }
@@ -139,6 +137,8 @@ export default function CreateTrainingPlanPage() {
   }, [currentStep, wizardData])
 
   const handleStepData = (stepData: Partial<WizardData>) => {
+    // Clear validation errors when user makes changes
+    setValidationErrors([])
     setWizardData((prev) => ({ ...prev, ...stepData }))
   }
 
@@ -157,7 +157,12 @@ export default function CreateTrainingPlanPage() {
 
       const validation = await response.json()
 
+      // Always update warnings (even if valid)
+      setValidationWarnings(validation.warnings || [])
+
       if (validation.valid) {
+        // Clear errors and proceed
+        setValidationErrors([])
         if (currentStep === STEP_KEYS.length) {
           // Final step - generate plan
           await handleGeneratePlan()
@@ -166,7 +171,7 @@ export default function CreateTrainingPlanPage() {
         }
       } else {
         // Show validation errors
-        console.error('Validation errors:', validation.errors)
+        setValidationErrors(validation.errors || [])
       }
     } catch (error) {
       console.error('Validation failed:', error)
@@ -176,6 +181,9 @@ export default function CreateTrainingPlanPage() {
   }
 
   const handleBack = () => {
+    // Clear validation messages when going back
+    setValidationErrors([])
+    setValidationWarnings([])
     setCurrentStep((prev) => Math.max(1, prev - 1))
   }
 
@@ -213,7 +221,7 @@ export default function CreateTrainingPlanPage() {
   // Show loading state while initializing
   if (isInitializing) {
     return (
-      <div className="container max-w-5xl py-8">
+      <div className="container max-w-5xl py-8 mx-auto">
         <div className="space-y-8">
           <div>
             <h1 className="text-3xl font-bold flex items-center gap-2">
@@ -236,7 +244,7 @@ export default function CreateTrainingPlanPage() {
   }
 
   return (
-    <div className="container max-w-5xl py-8">
+    <div className="container max-w-5xl py-8 mx-auto">
       <div className="space-y-8">
         {/* Header */}
         <div>
@@ -284,6 +292,34 @@ export default function CreateTrainingPlanPage() {
                   data={wizardData}
                   onUpdate={handleStepData}
                 />
+
+                {/* Validation Errors */}
+                {validationErrors.length > 0 && (
+                  <Alert variant="destructive" className="mt-6">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      <ul className="list-disc list-inside space-y-1">
+                        {validationErrors.map((error, index) => (
+                          <li key={index}>{error}</li>
+                        ))}
+                      </ul>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {/* Validation Warnings */}
+                {validationWarnings.length > 0 && (
+                  <Alert className="mt-4 border-yellow-500 bg-yellow-50 text-yellow-800">
+                    <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                    <AlertDescription className="text-yellow-800">
+                      <ul className="list-disc list-inside space-y-1">
+                        {validationWarnings.map((warning, index) => (
+                          <li key={index}>{warning}</li>
+                        ))}
+                      </ul>
+                    </AlertDescription>
+                  </Alert>
+                )}
 
                 {/* Navigation Buttons */}
                 <div className="flex justify-between mt-8">

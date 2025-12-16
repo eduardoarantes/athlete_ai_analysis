@@ -6,7 +6,7 @@ import { StravaService } from '@/lib/services/strava-service'
  * Disconnect Strava integration
  * POST /api/auth/strava/disconnect
  */
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     const supabase = await createClient()
     const {

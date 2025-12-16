@@ -27,8 +27,39 @@ export async function POST(request: NextRequest) {
     const wizardData = await request.json()
 
     // Validate required fields
-    if (!wizardData.goal || !wizardData.profile || !wizardData.preferences) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    const validationErrors: string[] = []
+
+    if (!wizardData.goal) {
+      validationErrors.push('Goal is required')
+    }
+
+    if (!wizardData.profile) {
+      validationErrors.push('Profile is required')
+    } else {
+      if (!wizardData.profile.ftp || wizardData.profile.ftp <= 0) {
+        validationErrors.push('FTP must be a positive number')
+      }
+      if (!wizardData.profile.weight || wizardData.profile.weight <= 0) {
+        validationErrors.push('Weight must be a positive number')
+      }
+      if (!wizardData.profile.daysPerWeek || wizardData.profile.daysPerWeek < 3 || wizardData.profile.daysPerWeek > 7) {
+        validationErrors.push('Days per week must be between 3 and 7')
+      }
+    }
+
+    if (!wizardData.timeline) {
+      validationErrors.push('Timeline is required')
+    } else if (wizardData.timeline.hasEvent && !wizardData.timeline.eventDate) {
+      validationErrors.push('Event date is required when training for an event')
+    } else if (!wizardData.timeline.hasEvent && !wizardData.timeline.weeks) {
+      validationErrors.push('Training duration is required')
+    }
+
+    if (validationErrors.length > 0) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: validationErrors },
+        { status: 400 }
+      )
     }
 
     // Generate training plan using Python backend

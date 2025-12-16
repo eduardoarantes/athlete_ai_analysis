@@ -313,7 +313,7 @@ export default function ActivitiesPage() {
                             href={`https://www.strava.com/activities/${activity.strava_activity_id}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-[#FC4C02] hover:text-[#FC4C02]/80 transition-colors"
+                            className="inline-flex items-center gap-1 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
                             title={t('viewOnStrava')}
                             onClick={(e) => e.stopPropagation()}
                           >

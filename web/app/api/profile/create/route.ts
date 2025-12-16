@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { completeProfileSchema } from '@/lib/validations/profile'
+import { errorLogger } from '@/lib/monitoring/error-logger'
 import type { Database } from '@/lib/types/database'
 
 /**
@@ -26,18 +27,11 @@ export async function POST(request: NextRequest) {
       authError = userResult.error
     }
 
-    // Debug logging
-    console.log('Auth check:', {
-      hasUser: !!user,
-      hasError: !!authError,
-      errorMessage: authError?.message,
-      userId: user?.id,
-      userEmail: user?.email,
-      emailConfirmed: user?.email_confirmed_at,
-    })
-
     if (authError || !user) {
-      console.error('Auth failed:', authError)
+      errorLogger.logWarning('Profile create auth failed', {
+        path: '/api/profile/create',
+        metadata: { hasError: !!authError, errorMessage: authError?.message },
+      })
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -94,13 +88,19 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (createError) {
-      console.error('Error creating profile:', createError)
+      errorLogger.logError(new Error(`Failed to create profile: ${createError.message}`), {
+        userId: user.id,
+        path: '/api/profile/create',
+      })
       return NextResponse.json({ error: 'Failed to create profile' }, { status: 500 })
     }
 
     return NextResponse.json({ profile }, { status: 201 })
   } catch (error) {
-    console.error('Unexpected error in POST /api/profile/create:', error)
+    errorLogger.logError(error as Error, {
+      path: '/api/profile/create',
+      method: 'POST',
+    })
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

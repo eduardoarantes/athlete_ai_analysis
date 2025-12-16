@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test } from '@playwright/test'
 
 test('test onboarding step 2 next button', async ({ page }) => {
   // Navigate to onboarding

@@ -93,7 +93,11 @@ export async function PUT(request: NextRequest) {
     }
 
     // Map camelCase to snake_case for database
-    const updateData = mapProfileUpdates(validationResult.data)
+    // Filter out undefined values to satisfy exactOptionalPropertyTypes
+    const cleanedData = Object.fromEntries(
+      Object.entries(validationResult.data).filter(([, v]) => v !== undefined)
+    ) as Parameters<typeof mapProfileUpdates>[0]
+    const updateData = mapProfileUpdates(cleanedData)
 
     // Update profile
     const { data: profile, error: updateError } = await supabase
