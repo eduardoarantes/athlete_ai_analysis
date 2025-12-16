@@ -123,6 +123,13 @@ export function StravaSyncStatus() {
   // Use correct status value: 'syncing' per database constraint
   const isSyncing = isPolling || syncStatus.syncStatus === 'syncing'
   const hasError = syncStatus.syncStatus === 'error'
+  const hasSyncedBefore = syncStatus.lastSyncAt !== null
+
+  // Hide the panel when sync completed successfully and not currently syncing
+  // Only show when: never synced, currently syncing, or has error
+  if (!isSyncing && !hasError && hasSyncedBefore) {
+    return null
+  }
 
   return (
     <Card>
