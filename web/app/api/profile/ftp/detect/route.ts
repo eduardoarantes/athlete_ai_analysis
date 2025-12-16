@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { FTPDetectionService } from '@/lib/services/ftp-detection-service'
+import { FTP_DETECTION, HTTP_STATUS, MESSAGES } from '@/lib/constants'
 
 /**
  * Detect FTP from activity data
@@ -20,27 +21,46 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser()
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json(
+        { error: MESSAGES.UNAUTHORIZED },
+        { status: HTTP_STATUS.UNAUTHORIZED }
+      )
     }
 
     // Parse and validate query parameters
     const { searchParams } = new URL(request.url)
 
     const periodDaysParam = searchParams.get('periodDays')
-    const periodDays = periodDaysParam ? parseInt(periodDaysParam, 10) : 90
-    if (isNaN(periodDays) || periodDays < 1 || periodDays > 365) {
+    const periodDays = periodDaysParam
+      ? parseInt(periodDaysParam, 10)
+      : FTP_DETECTION.DEFAULT_PERIOD_DAYS
+    if (
+      isNaN(periodDays) ||
+      periodDays < FTP_DETECTION.MIN_PERIOD_DAYS ||
+      periodDays > FTP_DETECTION.MAX_PERIOD_DAYS
+    ) {
       return NextResponse.json(
-        { error: 'periodDays must be between 1 and 365' },
-        { status: 400 }
+        {
+          error: `periodDays must be between ${FTP_DETECTION.MIN_PERIOD_DAYS} and ${FTP_DETECTION.MAX_PERIOD_DAYS}`,
+        },
+        { status: HTTP_STATUS.BAD_REQUEST }
       )
     }
 
     const minActivitiesParam = searchParams.get('minActivities')
-    const minActivities = minActivitiesParam ? parseInt(minActivitiesParam, 10) : 5
-    if (isNaN(minActivities) || minActivities < 1 || minActivities > 100) {
+    const minActivities = minActivitiesParam
+      ? parseInt(minActivitiesParam, 10)
+      : FTP_DETECTION.DEFAULT_MIN_ACTIVITIES
+    if (
+      isNaN(minActivities) ||
+      minActivities < FTP_DETECTION.MIN_MIN_ACTIVITIES ||
+      minActivities > FTP_DETECTION.MAX_MIN_ACTIVITIES
+    ) {
       return NextResponse.json(
-        { error: 'minActivities must be between 1 and 100' },
-        { status: 400 }
+        {
+          error: `minActivities must be between ${FTP_DETECTION.MIN_MIN_ACTIVITIES} and ${FTP_DETECTION.MAX_MIN_ACTIVITIES}`,
+        },
+        { status: HTTP_STATUS.BAD_REQUEST }
       )
     }
 
@@ -54,7 +74,10 @@ export async function POST(request: NextRequest) {
     })
 
     if (!result.success) {
-      return NextResponse.json({ error: result.error }, { status: 500 })
+      return NextResponse.json(
+        { error: result.error },
+        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
+      )
     }
 
     // Update profile if requested and FTP was detected
@@ -89,9 +112,9 @@ export async function POST(request: NextRequest) {
     console.error('FTP detection error:', error)
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : 'Failed to detect FTP',
+        error: error instanceof Error ? error.message : MESSAGES.FAILED_TO_DETECT_FTP,
       },
-      { status: 500 }
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
     )
   }
 }
@@ -108,22 +131,28 @@ export async function GET() {
     } = await supabase.auth.getUser()
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json(
+        { error: MESSAGES.UNAUTHORIZED },
+        { status: HTTP_STATUS.UNAUTHORIZED }
+      )
     }
 
     const ftpService = new FTPDetectionService()
     const result = await ftpService.getCurrentFTP(user.id)
 
     if (result.error) {
-      return NextResponse.json({ error: result.error }, { status: 500 })
+      return NextResponse.json(
+        { error: result.error },
+        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
+      )
     }
 
     return NextResponse.json({ ftp: result.ftp })
   } catch (error) {
     console.error('Get FTP error:', error)
     return NextResponse.json(
-      { error: 'Failed to get FTP' },
-      { status: 500 }
+      { error: MESSAGES.FAILED_TO_GET_FTP },
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
     )
   }
 }

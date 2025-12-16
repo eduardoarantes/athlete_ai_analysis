@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { jobService } from '@/lib/services/job-service'
 import { executeStravaSyncJob } from '@/lib/jobs/strava-sync-job'
 import type { StravaSyncJobPayload } from '@/lib/types/jobs'
+import { STRAVA_SYNC, HTTP_STATUS, MESSAGES } from '@/lib/constants'
 
 /**
  * Sync activities from Strava (Background Job)
@@ -26,7 +27,10 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser()
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json(
+        { error: MESSAGES.UNAUTHORIZED },
+        { status: HTTP_STATUS.UNAUTHORIZED }
+      )
     }
 
     // Atomically check and set sync status to 'in_progress'
@@ -51,21 +55,21 @@ export async function POST(request: NextRequest) {
 
       if (!connection) {
         return NextResponse.json(
-          { error: 'Strava not connected. Please connect your Strava account first.' },
-          { status: 400 }
+          { error: MESSAGES.STRAVA_NOT_CONNECTED },
+          { status: HTTP_STATUS.BAD_REQUEST }
         )
       }
 
       // Connection exists but sync is already in progress
       return NextResponse.json(
         {
-          error: 'Sync already in progress',
-          message: 'Another sync operation is currently running. Please wait for it to complete.',
+          error: MESSAGES.SYNC_IN_PROGRESS,
+          message: MESSAGES.SYNC_IN_PROGRESS_MESSAGE,
         },
         {
-          status: 409,
+          status: HTTP_STATUS.CONFLICT,
           headers: {
-            'Retry-After': '30', // Suggest retry after 30 seconds
+            'Retry-After': String(STRAVA_SYNC.RETRY_AFTER_SECONDS),
           },
         }
       )
@@ -96,24 +100,36 @@ export async function POST(request: NextRequest) {
       const perPageParam = searchParams.get('perPage')
       if (perPageParam) {
         const perPage = parseInt(perPageParam, 10)
-        if (isNaN(perPage) || perPage < 1 || perPage > 200) {
+        if (
+          isNaN(perPage) ||
+          perPage < STRAVA_SYNC.MIN_ACTIVITIES_PER_PAGE ||
+          perPage > STRAVA_SYNC.MAX_ACTIVITIES_PER_PAGE
+        ) {
           return NextResponse.json(
-            { error: 'perPage must be between 1 and 200' },
-            { status: 400 }
+            {
+              error: `perPage must be between ${STRAVA_SYNC.MIN_ACTIVITIES_PER_PAGE} and ${STRAVA_SYNC.MAX_ACTIVITIES_PER_PAGE}`,
+            },
+            { status: HTTP_STATUS.BAD_REQUEST }
           )
         }
         syncOptions.perPage = perPage
       } else {
-        syncOptions.perPage = 30
+        syncOptions.perPage = STRAVA_SYNC.DEFAULT_ACTIVITIES_PER_PAGE
       }
 
       const maxPagesParam = searchParams.get('maxPages')
       if (maxPagesParam) {
         const maxPages = parseInt(maxPagesParam, 10)
-        if (isNaN(maxPages) || maxPages < 1 || maxPages > 100) {
+        if (
+          isNaN(maxPages) ||
+          maxPages < STRAVA_SYNC.MIN_PAGES_LIMIT ||
+          maxPages > STRAVA_SYNC.MAX_PAGES_LIMIT
+        ) {
           return NextResponse.json(
-            { error: 'maxPages must be between 1 and 100' },
-            { status: 400 }
+            {
+              error: `maxPages must be between ${STRAVA_SYNC.MIN_PAGES_LIMIT} and ${STRAVA_SYNC.MAX_PAGES_LIMIT}`,
+            },
+            { status: HTTP_STATUS.BAD_REQUEST }
           )
         }
         syncOptions.maxPages = maxPages
@@ -145,11 +161,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: true,
-          message: 'Sync started in background',
+          message: MESSAGES.SYNC_STARTED,
           jobId,
           statusUrl: `/api/strava/sync/status/${jobId}`,
         },
-        { status: 202 } // 202 Accepted - request accepted, processing async
+        { status: HTTP_STATUS.ACCEPTED }
       )
     } catch (jobError) {
       // Failed to create job or start background task
@@ -173,9 +189,9 @@ export async function POST(request: NextRequest) {
     console.error('[API] Sync error:', error)
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : 'Failed to start sync',
+        error: error instanceof Error ? error.message : MESSAGES.FAILED_TO_START_SYNC,
       },
-      { status: 500 }
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
     )
   }
 }
@@ -192,7 +208,10 @@ export async function GET() {
     } = await supabase.auth.getUser()
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json(
+        { error: MESSAGES.UNAUTHORIZED },
+        { status: HTTP_STATUS.UNAUTHORIZED }
+      )
     }
 
     // Get sync status and activity count
