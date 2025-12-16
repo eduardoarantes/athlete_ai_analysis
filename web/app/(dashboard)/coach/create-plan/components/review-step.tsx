@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { CheckCircle, Calendar, User, Settings, Target } from 'lucide-react'
+import { CheckCircle, Calendar, User, Target } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 interface ReviewStepProps {
@@ -13,9 +13,8 @@ interface ReviewStepProps {
 export function ReviewStep({ data }: ReviewStepProps) {
   const t = useTranslations('createPlan.reviewStep')
   const tGoals = useTranslations('createPlan.goalStep.goals')
-  const tWorkouts = useTranslations('createPlan.preferencesStep.workoutTypeOptions')
   const tProfile = useTranslations('createPlan.profileStep')
-  const { goal, timeline, profile, preferences } = data
+  const { goal, timeline, profile } = data
 
   const formatGoal = (goalId: string): string => {
     if (!goalId || goalId === 'custom') return goalId
@@ -31,14 +30,6 @@ export function ReviewStep({ data }: ReviewStepProps) {
       return tProfile(level)
     } catch {
       return level
-    }
-  }
-
-  const formatWorkoutType = (type: string): string => {
-    try {
-      return tWorkouts(`${type}.label`)
-    } catch {
-      return type
     }
   }
 
@@ -151,40 +142,11 @@ export function ReviewStep({ data }: ReviewStepProps) {
                   <Badge variant="outline">{formatExperience(profile.experienceLevel)}</Badge>
                 </div>
               )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Preferences Summary */}
-      {preferences && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              {t('trainingPreferences')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">{t('trainingDaysPerWeek')}</span>
-                <Badge variant="outline">{t('daysValue', { days: preferences.daysPerWeek })}</Badge>
-              </div>
-              {preferences.workoutTypes?.length > 0 && (
-                <div>
-                  <span className="text-sm text-muted-foreground block mb-2">{t('workoutTypes')}</span>
-                  <div className="flex flex-wrap gap-2">
-                    {preferences.workoutTypes.map((type: string) => (
-                      <Badge key={type} variant="secondary">
-                        {formatWorkoutType(type)}
-                      </Badge>
-                    ))}
-                  </div>
+              {profile.daysPerWeek && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">{t('trainingDaysPerWeek')}</span>
+                  <Badge variant="outline">{t('daysValue', { days: profile.daysPerWeek })}</Badge>
                 </div>
-              )}
-              {preferences.indoorOnly && (
-                <Badge variant="outline">{t('indoorTrainingOnly')}</Badge>
               )}
             </div>
           </CardContent>
@@ -199,7 +161,7 @@ export function ReviewStep({ data }: ReviewStepProps) {
           <ul className="space-y-1 text-sm">
             <li>• {t('planItem1', { level: formatExperience(profile?.experienceLevel || '') })}</li>
             <li>• {t('planItem2', { goal: formatGoal(goal) })}</li>
-            <li>• {t('planItem3', { days: preferences?.daysPerWeek })}</li>
+            <li>• {t('planItem3', { days: profile?.daysPerWeek })}</li>
             <li>• {t('planItem4', { ftp: profile?.ftp })}</li>
             {timeline?.hasEvent && <li>• {t('planItem5', { eventType: timeline.eventType })}</li>}
           </ul>

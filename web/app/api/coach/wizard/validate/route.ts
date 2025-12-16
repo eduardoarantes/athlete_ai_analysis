@@ -55,14 +55,8 @@ export async function POST(request: NextRequest) {
         if (!data.profile?.weeklyHours) {
           errors.push('Please select your weekly training time availability')
         }
-        break
-
-      case 'preferences':
-        if (!data.preferences?.daysPerWeek || data.preferences.daysPerWeek < 3) {
+        if (data.profile?.daysPerWeek && data.profile.daysPerWeek < 3) {
           warnings.push('Training less than 3 days per week may limit progress')
-        }
-        if (!data.preferences?.workoutTypes || data.preferences.workoutTypes.length === 0) {
-          errors.push('Please select at least one workout type')
         }
         break
     }

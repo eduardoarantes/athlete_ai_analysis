@@ -11,7 +11,6 @@ import { ArrowLeft, ArrowRight, Sparkles, AlertCircle, AlertTriangle } from 'luc
 import { GoalStep } from './components/goal-step'
 import { TimelineStep } from './components/timeline-step'
 import { ProfileStep } from './components/profile-step'
-import { PreferencesStep } from './components/preferences-step'
 import { ReviewStep } from './components/review-step'
 import { AIAssistant } from './components/ai-assistant'
 
@@ -29,17 +28,13 @@ interface WizardData {
     maxHR: number
     weeklyHours: string
     experienceLevel: string
-  }
-  preferences?: {
     daysPerWeek: number
-    workoutTypes: string[]
-    indoorOnly: boolean
   }
 }
 
-const STEP_KEYS = ['goal', 'timeline', 'profile', 'preferences', 'review'] as const
+const STEP_KEYS = ['goal', 'timeline', 'profile', 'review'] as const
 
-const STEP_COMPONENTS = [GoalStep, TimelineStep, ProfileStep, PreferencesStep, ReviewStep]
+const STEP_COMPONENTS = [GoalStep, TimelineStep, ProfileStep, ReviewStep]
 
 export default function CreateTrainingPlanPage() {
   const router = useRouter()
@@ -79,6 +74,7 @@ export default function CreateTrainingPlanPage() {
               maxHR: initData.profile.maxHR || 0,
               weeklyHours: '',
               experienceLevel: initData.experienceLevel || 'intermediate',
+              daysPerWeek: 4,
             },
           })
         }

@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     const wizardData = await request.json()
 
     // Validate required fields
-    if (!wizardData.goal || !wizardData.profile || !wizardData.preferences) {
+    if (!wizardData.goal || !wizardData.profile) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 

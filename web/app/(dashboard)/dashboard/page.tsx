@@ -9,7 +9,8 @@ import type { Database } from '@/lib/types/database'
 import { RecentActivitiesList } from '@/components/dashboard/recent-activities-list'
 import { StravaConnectionToast } from '@/components/dashboard/strava-connection-toast'
 import { StravaSyncStatus } from '@/components/dashboard/strava-sync-status'
-import { User, Zap, Heart, Scale, TrendingUp, Mountain } from 'lucide-react'
+import { StatsPanel } from '@/components/dashboard/stats-panel'
+import { User, Zap, Heart, Scale, TrendingUp } from 'lucide-react'
 
 type AthleteProfile = Database['public']['Tables']['athlete_profiles']['Row']
 
@@ -35,9 +36,9 @@ export default async function DashboardPage() {
 
   // Fetch activity statistics
   let recentActivities: any[] = []
-  let lastWeekStats = { distance: 0, time: 0, elevation: 0, count: 0 }
-  let monthlyStats = { distance: 0, time: 0, elevation: 0, count: 0 }
-  let yearlyStats = { distance: 0, time: 0, elevation: 0, count: 0 }
+  let lastWeekActivities: any[] = []
+  let monthActivities: any[] = []
+  let yearActivities: any[] = []
   let stravaConnected = false
 
   if (user?.id) {
@@ -94,63 +95,33 @@ export default async function DashboardPage() {
       // Start of current year (Jan 1st)
       const startOfYear = new Date(todayInUserTz.getFullYear(), 0, 1)
 
-      // Get last week stats
-      const { data: lastWeekActivities } = await supabase
+      // Get last week activities
+      const { data: lastWeekData } = await supabase
         .from('strava_activities')
-        .select('distance, moving_time, total_elevation_gain')
+        .select('sport_type, distance, moving_time, total_elevation_gain, start_date')
         .eq('user_id', user.id)
         .gte('start_date', startOfLastWeek.toISOString())
         .lt('start_date', endOfLastWeek.toISOString())
 
-      if (lastWeekActivities) {
-        lastWeekStats = lastWeekActivities.reduce(
-          (acc, activity) => ({
-            distance: acc.distance + (activity.distance || 0),
-            time: acc.time + (activity.moving_time || 0),
-            elevation: acc.elevation + (activity.total_elevation_gain || 0),
-            count: acc.count + 1,
-          }),
-          { distance: 0, time: 0, elevation: 0, count: 0 }
-        )
-      }
+      lastWeekActivities = lastWeekData || []
 
-      // Get monthly stats
-      const { data: monthActivities } = await supabase
+      // Get monthly activities
+      const { data: monthData } = await supabase
         .from('strava_activities')
-        .select('distance, moving_time, total_elevation_gain')
+        .select('sport_type, distance, moving_time, total_elevation_gain, start_date')
         .eq('user_id', user.id)
         .gte('start_date', startOfMonth.toISOString())
 
-      if (monthActivities) {
-        monthlyStats = monthActivities.reduce(
-          (acc, activity) => ({
-            distance: acc.distance + (activity.distance || 0),
-            time: acc.time + (activity.moving_time || 0),
-            elevation: acc.elevation + (activity.total_elevation_gain || 0),
-            count: acc.count + 1,
-          }),
-          { distance: 0, time: 0, elevation: 0, count: 0 }
-        )
-      }
+      monthActivities = monthData || []
 
-      // Get yearly stats
-      const { data: yearActivities } = await supabase
+      // Get yearly activities
+      const { data: yearData } = await supabase
         .from('strava_activities')
-        .select('distance, moving_time, total_elevation_gain')
+        .select('sport_type, distance, moving_time, total_elevation_gain, start_date')
         .eq('user_id', user.id)
         .gte('start_date', startOfYear.toISOString())
 
-      if (yearActivities) {
-        yearlyStats = yearActivities.reduce(
-          (acc, activity) => ({
-            distance: acc.distance + (activity.distance || 0),
-            time: acc.time + (activity.moving_time || 0),
-            elevation: acc.elevation + (activity.total_elevation_gain || 0),
-            count: acc.count + 1,
-          }),
-          { distance: 0, time: 0, elevation: 0, count: 0 }
-        )
-      }
+      yearActivities = yearData || []
     }
   }
 
@@ -250,80 +221,19 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Stats Card */}
+        {/* Stats Panel with Sport Filter */}
         {stravaConnected && (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">{t('stats')}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* This Year */}
-              <div className="space-y-1">
-                <p className="text-xs font-medium text-muted-foreground">{t('thisYear')}</p>
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <div>
-                    <p className="text-lg font-bold">{yearlyStats.count}</p>
-                    <p className="text-[10px] text-muted-foreground">activities</p>
-                  </div>
-                  <div>
-                    <p className="text-lg font-bold">{(yearlyStats.distance / 1000).toFixed(0)}</p>
-                    <p className="text-[10px] text-muted-foreground">km</p>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <div className="flex items-center gap-0.5">
-                      <Mountain className="h-3 w-3 text-muted-foreground" />
-                      <p className="text-lg font-bold">{yearlyStats.elevation.toFixed(0)}</p>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground">m</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* This Month */}
-              <div className="space-y-1">
-                <p className="text-xs font-medium text-muted-foreground">{t('thisMonth')}</p>
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <div>
-                    <p className="text-lg font-bold">{monthlyStats.count}</p>
-                    <p className="text-[10px] text-muted-foreground">activities</p>
-                  </div>
-                  <div>
-                    <p className="text-lg font-bold">{(monthlyStats.distance / 1000).toFixed(0)}</p>
-                    <p className="text-[10px] text-muted-foreground">km</p>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <div className="flex items-center gap-0.5">
-                      <Mountain className="h-3 w-3 text-muted-foreground" />
-                      <p className="text-lg font-bold">{monthlyStats.elevation.toFixed(0)}</p>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground">m</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Last Week */}
-              <div className="space-y-1">
-                <p className="text-xs font-medium text-muted-foreground">{t('lastWeek')}</p>
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <div>
-                    <p className="text-lg font-bold">{lastWeekStats.count}</p>
-                    <p className="text-[10px] text-muted-foreground">activities</p>
-                  </div>
-                  <div>
-                    <p className="text-lg font-bold">{(lastWeekStats.distance / 1000).toFixed(0)}</p>
-                    <p className="text-[10px] text-muted-foreground">km</p>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <div className="flex items-center gap-0.5">
-                      <Mountain className="h-3 w-3 text-muted-foreground" />
-                      <p className="text-lg font-bold">{lastWeekStats.elevation.toFixed(0)}</p>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground">m</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <StatsPanel
+            yearActivities={yearActivities}
+            monthActivities={monthActivities}
+            lastWeekActivities={lastWeekActivities}
+            translations={{
+              stats: t('stats'),
+              thisYear: t('thisYear'),
+              thisMonth: t('thisMonth'),
+              lastWeek: t('lastWeek'),
+            }}
+          />
         )}
       </aside>
 
