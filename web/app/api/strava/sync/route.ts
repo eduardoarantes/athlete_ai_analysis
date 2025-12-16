@@ -5,6 +5,7 @@ import { jobService } from '@/lib/services/job-service'
 import { executeStravaSyncJob } from '@/lib/jobs/strava-sync-job'
 import type { StravaSyncJobPayload } from '@/lib/types/jobs'
 import { STRAVA_SYNC, HTTP_STATUS, MESSAGES } from '@/lib/constants'
+import { rateLimiters, getClientIdentifier } from '@/lib/rate-limit'
 
 /**
  * Sync activities from Strava (Background Job)
@@ -30,6 +31,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: MESSAGES.UNAUTHORIZED },
         { status: HTTP_STATUS.UNAUTHORIZED }
+      )
+    }
+
+    // Check rate limit
+    const clientId = getClientIdentifier(user.id, request.headers.get('x-forwarded-for'))
+    const rateLimit = rateLimiters.stravaSync.check(clientId)
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        {
+          error: 'Rate limit exceeded',
+          message: 'Too many sync requests. Please try again later.',
+          retryAfter: Math.ceil((rateLimit.reset - Date.now()) / 1000),
+        },
+        {
+          status: 429, // Too Many Requests
+          headers: {
+            'X-RateLimit-Limit': String(rateLimit.limit),
+            'X-RateLimit-Remaining': String(rateLimit.remaining),
+            'X-RateLimit-Reset': String(rateLimit.reset),
+            'Retry-After': String(Math.ceil((rateLimit.reset - Date.now()) / 1000)),
+          },
+        }
       )
     }
 
@@ -165,7 +189,14 @@ export async function POST(request: NextRequest) {
           jobId,
           statusUrl: `/api/strava/sync/status/${jobId}`,
         },
-        { status: HTTP_STATUS.ACCEPTED }
+        {
+          status: HTTP_STATUS.ACCEPTED,
+          headers: {
+            'X-RateLimit-Limit': String(rateLimit.limit),
+            'X-RateLimit-Remaining': String(rateLimit.remaining),
+            'X-RateLimit-Reset': String(rateLimit.reset),
+          },
+        }
       )
     } catch (jobError) {
       // Failed to create job or start background task
