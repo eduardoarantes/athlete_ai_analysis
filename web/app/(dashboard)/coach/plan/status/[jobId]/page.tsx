@@ -34,9 +34,14 @@ export default function PlanStatusPage() {
   useEffect(() => {
     if (!jobId) return
 
+    let isMounted = true
+    let timeoutId: NodeJS.Timeout
+
     const pollStatus = async () => {
       try {
         const response = await fetch(`/api/coach/plan/status/${jobId}`)
+
+        if (!isMounted) return
 
         if (!response.ok) {
           if (response.status === 404) {
@@ -47,19 +52,30 @@ export default function PlanStatusPage() {
         }
 
         const data = await response.json()
+
+        if (!isMounted) return
+
         setJob(data)
 
         // Continue polling if job is still running
         if (data.status === 'queued' || data.status === 'running') {
-          setTimeout(pollStatus, 2000)
+          timeoutId = setTimeout(pollStatus, 2000)
         }
       } catch (err) {
+        if (!isMounted) return
         console.error('Failed to fetch job status:', err)
         setError('Failed to fetch job status')
       }
     }
 
     pollStatus()
+
+    return () => {
+      isMounted = false
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+      }
+    }
   }, [jobId])
 
   const getStatusIcon = () => {
