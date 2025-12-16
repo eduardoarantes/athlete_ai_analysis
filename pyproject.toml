@@ -35,6 +35,7 @@ dependencies = [
     # Configuration
     "pyyaml>=6.0.0",
     "pydantic>=2.0.0",
+    "pydantic-settings>=2.1.0",
     # CLI
     "click>=8.1.0",
     "rich>=13.0.0",
@@ -48,6 +49,10 @@ dependencies = [
     "langchain-openai>=0.0.5",
     "chromadb>=0.4.22",
     "sentence-transformers>=2.2.2",
+    # FastAPI for REST API
+    "fastapi>=0.109.0",
+    "uvicorn[standard]>=0.27.0",
+    "python-multipart>=0.0.6",
 ]
 
 [project.scripts]
@@ -166,6 +171,14 @@ ignore_missing_imports = true
 module = "sentence_transformers.*"
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = "fastapi.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "uvicorn.*"
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
@@ -181,6 +194,8 @@ addopts = [
     "-v",
     "-m", "not integration",
 ]
+# Configure anyio to use asyncio only (trio not installed)
+anyio_backends = ["asyncio"]
 
 [dependency-groups]
 dev = [

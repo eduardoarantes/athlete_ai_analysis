@@ -1,34 +1,17 @@
 /**
  * Cycling Coach Service
- * Integrates Next.js web API with Python cycling-ai backend
+ * Integrates Next.js web API with Python cycling-ai FastAPI backend
  */
 
-import { spawn, exec } from 'child_process'
-import { promisify } from 'util'
 import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { createClient } from '@/lib/supabase/server'
 
-const execAsync = promisify(exec)
-
 // Configuration
-const PYTHON_CLI_PATH = process.env.CYCLING_AI_CLI_PATH || 'cycling-ai'
+const FASTAPI_URL = process.env.FASTAPI_URL || 'http://localhost:8000'
 const TEMP_DATA_DIR = process.env.TEMP_DATA_DIR || '/tmp/cycling-ai-jobs'
 
-/**
- * Get project root path from environment variable.
- * Falls back to parent of current working directory (assumes running from web/).
- */
-function getProjectRoot(): string {
-  if (process.env.PROJECT_ROOT) {
-    return process.env.PROJECT_ROOT
-  }
-  // In development, Next.js runs from web/ directory, so go up one level
-  // In production, this should be set via environment variable
-  return join(process.cwd(), '..')
-}
-
-const PROJECT_ROOT = getProjectRoot()
+import { errorLogger } from '@/lib/monitoring/error-logger'
 
 export interface TrainingPlanParams {
   goal: string
@@ -103,78 +86,128 @@ export class CyclingCoachService {
   }
 
   /**
-   * Execute the Python CLI command for plan generation (background process)
+   * Execute plan generation via FastAPI (background process)
    */
   private async executePlanGeneration(
-    jobId: string,
-    jobDir: string,
+    dbJobId: string,
+    _jobDir: string,
     _csvPath: string,
-    profilePath: string,
+    _profilePath: string,
     params: TrainingPlanParams
   ): Promise<void> {
     const supabase = await createClient()
 
     try {
-      // Update status to running
-      await supabase
-        .from('plan_generation_jobs')
-        .update({ status: 'running' })
-        .eq('id', jobId)
-
-      // Build CLI command
+      // Calculate weeks
       const weeks = params.timeline.hasEvent
         ? this.calculateWeeksUntilEvent(params.timeline.eventDate!)
-        : params.timeline.weeks
+        : params.timeline.weeks || 12
 
-      const args = [
-        'plan',
-        'generate',
-        '--profile',
-        profilePath,
-        '--weeks',
-        weeks?.toString() || '12',
-        '--target-ftp',
-        (params.profile.ftp * 1.05).toString(), // 5% improvement target
-        '--output',
-        join(jobDir, 'training_plan.json'),
-      ]
+      // Call FastAPI to generate plan
+      const response = await fetch(`${FASTAPI_URL}/api/v1/plan/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          athlete_profile: {
+            ftp: params.profile.ftp,
+            weight_kg: params.profile.weight,
+            max_hr: params.profile.maxHR,
+            age: 35, // TODO: Get from user profile
+            goals: params.customGoal ? [params.goal, params.customGoal] : [params.goal],
+            experience_level: params.profile.experienceLevel,
+            weekly_hours_available: parseFloat(params.profile.weeklyHours) || 7,
+            training_days_per_week: params.profile.daysPerWeek,
+          },
+          weeks,
+          target_ftp: params.profile.ftp * 1.05, // 5% improvement target
+        }),
+      })
 
-      // Execute Python CLI
-      const pythonProcess = spawn(PYTHON_CLI_PATH, args, {
-        cwd: PROJECT_ROOT,
-        env: {
-          ...process.env,
-          PYTHONPATH: join(PROJECT_ROOT, 'src'),
+      if (!response.ok) {
+        throw new Error(`FastAPI returned ${response.status}: ${await response.text()}`)
+      }
+
+      const { job_id: apiJobId } = await response.json()
+
+      errorLogger.logInfo('Plan generation started via FastAPI', {
+        metadata: {
+          dbJobId,
+          apiJobId,
+          weeks,
         },
       })
 
-      let stdout = ''
-      let stderr = ''
-
-      pythonProcess.stdout.on('data', (data) => {
-        stdout += data.toString()
-        // Parse progress updates from Python output
-        this.updateJobProgress(jobId, stdout)
+      // Poll FastAPI for job completion
+      await this.pollForCompletion(dbJobId, apiJobId, params, weeks)
+    } catch (error) {
+      errorLogger.logError(error as Error, {
+        path: '/services/cycling-coach/executePlanGeneration',
+        metadata: { jobId: dbJobId },
       })
 
-      pythonProcess.stderr.on('data', (data) => {
-        stderr += data.toString()
-      })
+      // Update job as failed
+      await supabase
+        .from('plan_generation_jobs')
+        .update({
+          status: 'failed',
+          error: error instanceof Error ? error.message : 'Unknown error',
+        })
+        .eq('id', dbJobId)
+    }
+  }
 
-      pythonProcess.on('close', async (code) => {
-        if (code === 0) {
-          // Success - read generated plan
-          const planPath = join(jobDir, 'training_plan.json')
-          const planData = await this.readJSONFile(planPath)
+  /**
+   * Poll FastAPI for job completion
+   */
+  private async pollForCompletion(
+    dbJobId: string,
+    apiJobId: string,
+    params: TrainingPlanParams,
+    weeks: number
+  ): Promise<void> {
+    const supabase = await createClient()
+    const maxAttempts = 60 // 5 minutes max (5s intervals)
+    let attempts = 0
+
+    const poll = async (): Promise<void> => {
+      try {
+        const response = await fetch(`${FASTAPI_URL}/api/v1/plan/status/${apiJobId}`)
+
+        if (!response.ok) {
+          throw new Error(`Failed to get job status: ${response.status}`)
+        }
+
+        const jobStatus = await response.json()
+
+        // Update progress in database
+        if (jobStatus.progress) {
+          await supabase
+            .from('plan_generation_jobs')
+            .update({
+              status: jobStatus.status === 'running' ? 'running' : jobStatus.status,
+              progress: jobStatus.progress as never,
+            } as never)
+            .eq('id', dbJobId)
+        }
+
+        if (jobStatus.status === 'completed') {
+          // Extract plan data
+          const planData = jobStatus.result?.training_plan
+
+          if (!planData) {
+            throw new Error('No plan data in completed job')
+          }
+
+          // Calculate end date
+          const endDate = new Date()
+          endDate.setDate(endDate.getDate() + weeks * 7)
 
           // Store plan in database
-          const endDate = new Date()
-          endDate.setDate(endDate.getDate() + (weeks || 12) * 7) // Calculate end date based on weeks
-
+          const userId = dbJobId.split('_')[2] ?? ''
           const { data: plan } = await supabase
             .from('training_plans')
             .insert({
-              user_id: jobId.split('_')[2] ?? '', // Extract user_id from jobId pattern
+              user_id: userId,
               name: `${params.goal} - ${weeks} weeks`,
               description: `Training plan for ${params.goal}`,
               start_date: new Date().toISOString().split('T')[0] ?? '',
@@ -190,30 +223,53 @@ export class CyclingCoachService {
             .from('plan_generation_jobs')
             .update({
               status: 'completed',
-              result: { plan_id: plan?.id, plan_data: planData } as unknown as Record<string, unknown>,
+              result: { plan_id: plan?.id, plan_data: planData } as unknown as Record<
+                string,
+                unknown
+              >,
             } as never)
-            .eq('id', jobId)
-        } else {
-          // Failure
-          await supabase
-            .from('plan_generation_jobs')
-            .update({
-              status: 'failed',
-              error: stderr || 'Python process exited with error',
-            })
-            .eq('id', jobId)
+            .eq('id', dbJobId)
+
+          errorLogger.logInfo('Plan generation completed', {
+            metadata: {
+              dbJobId,
+              apiJobId,
+              planId: plan?.id,
+            },
+          })
+
+          return
         }
-      })
-    } catch (error) {
-      // Update job as failed
-      await supabase
-        .from('plan_generation_jobs')
-        .update({
-          status: 'failed',
-          error: error instanceof Error ? error.message : 'Unknown error',
+
+        if (jobStatus.status === 'failed') {
+          throw new Error(jobStatus.error || 'Plan generation failed')
+        }
+
+        // Continue polling
+        attempts++
+        if (attempts >= maxAttempts) {
+          throw new Error('Plan generation timed out')
+        }
+
+        setTimeout(poll, 5000) // Poll every 5 seconds
+      } catch (error) {
+        errorLogger.logError(error as Error, {
+          path: '/services/cycling-coach/pollForCompletion',
+          metadata: { dbJobId, apiJobId, attempts },
         })
-        .eq('id', jobId)
+
+        await supabase
+          .from('plan_generation_jobs')
+          .update({
+            status: 'failed',
+            error: error instanceof Error ? error.message : 'Unknown error',
+          })
+          .eq('id', dbJobId)
+      }
     }
+
+    // Start polling
+    setTimeout(poll, 2000) // Start after 2 seconds
   }
 
   /**
@@ -329,112 +385,13 @@ export class CyclingCoachService {
     return profilePath
   }
 
-  /**
-   * Conversational chat with AI coach
-   */
-  async chat(userId: string, message: string, sessionId?: string): Promise<{
-    reply: string
-    sessionId: string
-  }> {
-    const supabase = await createClient()
-
-    // Get or create chat session
-    let session
-    if (sessionId) {
-      const { data } = await supabase
-        .from('coach_chat_sessions')
-        .select('*')
-        .eq('id', sessionId)
-        .single()
-      session = data
-    }
-
-    if (!session) {
-      const { data: newSession } = await supabase
-        .from('coach_chat_sessions')
-        .insert({
-          user_id: userId,
-          messages: [],
-        })
-        .select()
-        .single()
-      session = newSession
-    }
-
-    // Export context for AI (activities, profile)
-    const currentSessionId = session?.id ?? 'temp'
-    const jobDir = join(TEMP_DATA_DIR, `chat_${currentSessionId}`)
-    await mkdir(jobDir, { recursive: true })
-
-    const csvPath = await this.exportActivitiesToCSV(userId, jobDir)
-    const profilePath = await this.exportUserProfile(userId, {} as TrainingPlanParams, jobDir)
-
-    // Execute Python CLI chat command
-    const { stdout } = await execAsync(
-      `${PYTHON_CLI_PATH} chat --message "${message}" --session-id "${currentSessionId}" --profile "${profilePath}" --csv "${csvPath}"`,
-      {
-        cwd: PROJECT_ROOT,
-        env: {
-          ...process.env,
-          PYTHONPATH: join(PROJECT_ROOT, 'src'),
-        },
-      }
-    )
-
-    // Parse AI response from stdout
-    const reply = stdout.trim()
-
-    // Update session messages
-    const updatedMessages = [
-      ...(session?.messages || []),
-      { role: 'user', content: message },
-      { role: 'assistant', content: reply },
-    ]
-
-    if (session?.id) {
-      await supabase
-        .from('coach_chat_sessions')
-        .update({ messages: updatedMessages })
-        .eq('id', session.id)
-    }
-
-    return {
-      reply,
-      sessionId: session?.id ?? '',
-    }
-  }
-
   // Helper methods
-  private async updateJobProgress(jobId: string, stdout: string): Promise<void> {
-    // Parse progress from Python output (e.g., "Phase 2: Performance Analysis - 50%")
-    const progressMatch = stdout.match(/Phase (\d+): (.+) - (\d+)%/)
-    if (progressMatch) {
-      const [, , phase, percentage] = progressMatch
-      const supabase = await createClient()
-
-      await supabase
-        .from('plan_generation_jobs')
-        .update({
-          progress: {
-            phase,
-            percentage: parseInt(percentage ?? '0'),
-          } as never,
-        })
-        .eq('id', jobId)
-    }
-  }
 
   private calculateWeeksUntilEvent(eventDate: string): number {
     const event = new Date(eventDate)
     const now = new Date()
     const diffTime = Math.abs(event.getTime() - now.getTime())
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 7))
-  }
-
-  private async readJSONFile(path: string): Promise<any> {
-    const { readFile } = await import('fs/promises')
-    const content = await readFile(path, 'utf-8')
-    return JSON.parse(content)
   }
 }
 
