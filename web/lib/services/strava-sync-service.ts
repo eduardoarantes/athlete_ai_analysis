@@ -99,8 +99,16 @@ export class StravaSyncService {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error'
 
-      // Update sync status to 'error'
-      await this.updateSyncStatus(userId, 'error', errorMessage)
+      // Try to update sync status to 'error'
+      // Don't throw if this fails to avoid masking the original error
+      try {
+        await this.updateSyncStatus(userId, 'error', errorMessage)
+      } catch (statusError) {
+        console.error(
+          'Failed to update sync status to error:',
+          statusError instanceof Error ? statusError.message : statusError
+        )
+      }
 
       return {
         success: false,
@@ -246,7 +254,7 @@ export class StravaSyncService {
       .eq('user_id', userId)
 
     if (updateError) {
-      console.error('Failed to update sync status:', updateError)
+      throw new Error(`Failed to update sync status: ${updateError.message}`)
     }
   }
 
