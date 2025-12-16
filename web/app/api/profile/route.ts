@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { updateProfileSchema } from '@/lib/validations/profile'
-import type { Database } from '@/lib/types/database'
+import { mapProfileUpdates } from '@/lib/helpers/profile-mapper'
+import { HTTP_STATUS, MESSAGES } from '@/lib/constants'
 
 /**
  * GET /api/profile
@@ -18,7 +19,10 @@ export async function GET() {
     } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json(
+        { error: MESSAGES.UNAUTHORIZED },
+        { status: HTTP_STATUS.UNAUTHORIZED }
+      )
     }
 
     // Fetch athlete profile
@@ -31,16 +35,25 @@ export async function GET() {
     if (profileError) {
       if (profileError.code === 'PGRST116') {
         // No profile found
-        return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
+        return NextResponse.json(
+          { error: MESSAGES.PROFILE_NOT_FOUND },
+          { status: HTTP_STATUS.NOT_FOUND }
+        )
       }
       console.error('Error fetching profile:', profileError)
-      return NextResponse.json({ error: 'Failed to fetch profile' }, { status: 500 })
+      return NextResponse.json(
+        { error: MESSAGES.FAILED_TO_FETCH_PROFILE },
+        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
+      )
     }
 
     return NextResponse.json({ profile })
   } catch (error) {
     console.error('Unexpected error in GET /api/profile:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json(
+      { error: MESSAGES.INTERNAL_SERVER_ERROR },
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
+    )
   }
 }
 
@@ -59,7 +72,10 @@ export async function PUT(request: NextRequest) {
     } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json(
+        { error: MESSAGES.UNAUTHORIZED },
+        { status: HTTP_STATUS.UNAUTHORIZED }
+      )
     }
 
     // Parse and validate request body
@@ -69,31 +85,15 @@ export async function PUT(request: NextRequest) {
     if (!validationResult.success) {
       return NextResponse.json(
         {
-          error: 'Validation failed',
+          error: MESSAGES.VALIDATION_FAILED,
           details: validationResult.error.issues,
         },
-        { status: 400 }
+        { status: HTTP_STATUS.BAD_REQUEST }
       )
     }
 
-    const updates = validationResult.data
-
-    // Build update object (only include provided fields)
-    const updateData: Database['public']['Tables']['athlete_profiles']['Update'] = {}
-
-    if (updates.firstName !== undefined) updateData.first_name = updates.firstName
-    if (updates.lastName !== undefined) updateData.last_name = updates.lastName
-    if (updates.age !== undefined) updateData.age = updates.age
-    if (updates.gender !== undefined) updateData.gender = updates.gender
-    if (updates.ftp !== undefined) updateData.ftp = updates.ftp
-    if (updates.maxHr !== undefined) updateData.max_hr = updates.maxHr
-    if (updates.restingHr !== undefined) updateData.resting_hr = updates.restingHr
-    if (updates.weightKg !== undefined) updateData.weight_kg = updates.weightKg
-    if (updates.goals !== undefined) updateData.goals = updates.goals
-    if (updates.preferredLanguage !== undefined)
-      updateData.preferred_language = updates.preferredLanguage
-    if (updates.timezone !== undefined) updateData.timezone = updates.timezone
-    if (updates.unitsSystem !== undefined) updateData.units_system = updates.unitsSystem
+    // Map camelCase to snake_case for database
+    const updateData = mapProfileUpdates(validationResult.data)
 
     // Update profile
     const { data: profile, error: updateError } = await supabase
@@ -105,12 +105,18 @@ export async function PUT(request: NextRequest) {
 
     if (updateError) {
       console.error('Error updating profile:', updateError)
-      return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 })
+      return NextResponse.json(
+        { error: MESSAGES.FAILED_TO_UPDATE_PROFILE },
+        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
+      )
     }
 
     return NextResponse.json({ profile })
   } catch (error) {
     console.error('Unexpected error in PUT /api/profile:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json(
+      { error: MESSAGES.INTERNAL_SERVER_ERROR },
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
+    )
   }
 }
