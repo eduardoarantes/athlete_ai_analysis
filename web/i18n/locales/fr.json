@@ -76,7 +76,7 @@
     "welcomeWithName": "Bon retour, {name} !",
     "welcomeNew": "Bienvenue sur Cycling AI !",
     "subtitle": "Voici un aperçu de vos performances cyclistes.",
-    "completeProfile": "Complétez votre profil pour commencer",
+    "completeProfile": "Complétez votre profil",
     "completeProfilePrompt": "Complétez votre profil d'athlète pour obtenir des analyses personnalisées par IA.",
     "setupProfile": "Configurer votre profil",
     "setupProfilePrompt": "Configurez votre profil pour des analyses personnalisées",
@@ -142,6 +142,8 @@
       "heart_rate": "TSS basé sur la fréquence cardiaque",
       "estimated": "TSS estimé"
     },
+    "source": "Source",
+    "viewOnStrava": "Voir sur Strava",
     "previous": "Précédent",
     "next": "Suivant",
     "pageOf": "Page {current} sur {total}"
@@ -504,6 +506,81 @@
       "insightFtpDays": "L'amélioration du FTP nécessite généralement 4-5 jours d'entraînement par semaine. Envisagez d'augmenter la fréquence d'entraînement pour des résultats optimaux.",
       "insightFtpWeeks": "Les gains de FTP nécessitent généralement 8-12 semaines. Envisagez d'étendre la durée de votre plan.",
       "insightGreatTimeline": "Excellent calendrier ! Cela nous donne suffisamment de temps pour une périodisation appropriée."
+    }
+  },
+  "aboutPage": {
+    "backToHome": "Retour à l'accueil",
+    "hero": {
+      "badge": "Coach Cyclisme propulsé par l'IA",
+      "title": {
+        "part1": "Votre",
+        "highlight": "Coach IA",
+        "part2": "Personnel pour l'Excellence Cycliste"
+      },
+      "subtitle": "Nous croyons que chaque cycliste mérite un entraîneur de classe mondiale. C'est pourquoi nous avons créé une IA qui comprend vos données, connaît vos objectifs et vous aide à rouler plus vite, plus fort et plus intelligemment que jamais.",
+      "cta": {
+        "primary": "Commencez Votre Aventure",
+        "secondary": "Déjà membre ? Connectez-vous"
+      }
+    },
+    "mission": {
+      "title": "Notre Mission : Vous Rendre Inarrêtable",
+      "description": "Nous ne sommes pas qu'une simple appli d'entraînement. Nous sommes votre partenaire d'entraînement infatigable qui analyse chaque coup de pédale, comprend votre physiologie et crée des plans personnalisés qui évoluent avec vous. Que vous visiez votre première sortie de 100km ou que vous chassiez ce podium, nous sommes avec vous (et vos watts)."
+    },
+    "stats": {
+      "availability": "Toujours prêt à entraîner",
+      "possibilities": "Possibilités d'entraînement",
+      "dedication": "Dédié à votre succès"
+    },
+    "features": {
+      "title": "Tout Ce Dont Vous Avez Besoin Pour Progresser",
+      "subtitle": "De l'analyse de données aux plans d'entraînement personnalisés, nous avons réuni tout ce dont un cycliste sérieux a besoin dans une plateforme puissante.",
+      "aiCoach": {
+        "title": "Coaching par IA",
+        "description": "Obtenez des insights intelligents et des recommandations basées sur vos données de performance uniques. C'est comme avoir un entraîneur pro dans votre poche."
+      },
+      "performanceAnalysis": {
+        "title": "Analyse de Performance Approfondie",
+        "description": "Plongez dans vos courbes de puissance, tendances de fréquence cardiaque et patterns d'entraînement. Comprenez ce qui vous fait avancer (et ce qui vous fait aller plus vite)."
+      },
+      "trainingPlans": {
+        "title": "Plans d'Entraînement Intelligents",
+        "description": "Plans générés automatiquement qui s'adaptent à vos objectifs, disponibilités et niveau de forme. Pas d'entraînements génériques ici."
+      },
+      "powerZones": {
+        "title": "Zones de Puissance Précises",
+        "description": "Entraînez-vous dans les bonnes zones au bon moment. Notre IA calcule vos zones et vous dit exactement quand pousser et quand récupérer."
+      },
+      "tss": {
+        "title": "Suivi de Charge d'Entraînement",
+        "description": "Surveillez votre charge d'entraînement avec les calculs de TSS. Sachez quand vous construisez votre forme et quand vous avez besoin de repos avant l'épuisement."
+      },
+      "progress": {
+        "title": "Suivez Vos Progrès",
+        "description": "Regardez votre FTP grimper, votre endurance grandir et vos temps chuter. Rien ne motive plus que de voir des progrès réels."
+      }
+    },
+    "philosophy": {
+      "title": "Créé par des Cyclistes, pour des Cyclistes",
+      "paragraph1": "Nous savons ce que c'est de regarder un fichier de puissance sans comprendre ce que tout cela signifie. Nous avons ressenti la frustration des plateaux et la joie des percées. C'est pourquoi nous avons construit quelque chose de différent.",
+      "paragraph2": "Notre IA ne fait pas que traiter des chiffres—elle comprend l'art et la science du cyclisme. Elle sait qu'une sortie d'endurance de 5 heures raconte une histoire différente que des intervalles 5x5 VO2max. Elle comprend la périodisation, la récupération et ce qu'il faut pour atteindre votre pic pour votre grand événement.",
+      "paragraph3": "Ce n'est pas de l'intelligence artificielle pour suivre la mode. C'est un véritable partenaire d'entraînement qui devient plus intelligent à chaque fois que vous roulez.",
+      "quote": "Roulez. Analysez. Améliorez. Répétez.",
+      "quoteAuthor": "— La Philosophie Cycling AI"
+    },
+    "team": {
+      "title": "Une Équipe Qui Vit Sur Deux Roues",
+      "description": "Derrière chaque algorithme se trouve un cycliste qui a ressenti la brûlure d'un test de seuil, la liberté d'une descente en montagne et la satisfaction d'un bloc d'entraînement parfaitement exécuté. Nous construisons ce que nous aurions aimé avoir."
+    },
+    "cta": {
+      "title": "Prêt à Transformer Votre Pédalage ?",
+      "subtitle": "Rejoignez des milliers de cyclistes qui s'entraînent déjà plus intelligemment, récupèrent mieux et atteignent des objectifs qu'ils n'auraient jamais cru possibles.",
+      "button": "Allons Rouler"
+    },
+    "footer": {
+      "copyright": "© {year} Cycling AI. Tous droits réservés.",
+      "madeWith": "Fait avec",
+      "forCyclists": "pour les cyclistes partout"
     }
   }
 }

@@ -6,6 +6,7 @@ import { toast } from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useSyncPolling } from '@/lib/hooks/use-sync-polling'
 
 interface StravaStatus {
   connected: boolean
@@ -36,10 +37,38 @@ export function StravaConnection() {
   const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null)
   const [ftpEstimate, setFtpEstimate] = useState<FTPEstimate | null>(null)
   const [loading, setLoading] = useState(true)
-  const [syncing, setSyncing] = useState(false)
   const [detectingFTP, setDetectingFTP] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [currentJobId, setCurrentJobId] = useState<string | null>(null)
+
+  // Use polling hook for background job status
+  const { status: jobStatus, isPolling, startPolling, reset: resetPolling } = useSyncPolling(
+    currentJobId,
+    {
+      onComplete: (completedJob) => {
+        if (completedJob.status === 'completed' && completedJob.result) {
+          const message = t('syncedActivities', { count: completedJob.result.activitiesSynced })
+          setSuccessMessage(message)
+          toast.success(message, {
+            duration: 5000,
+            icon: '✅',
+          })
+          loadStatus() // Reload status to get updated counts
+        } else if (completedJob.status === 'failed') {
+          const errorMsg = completedJob.error || t('failedToSync')
+          setError(errorMsg)
+          toast.error(errorMsg)
+        }
+        setCurrentJobId(null)
+      },
+      onError: (errorMsg) => {
+        setError(errorMsg)
+        toast.error(errorMsg)
+        setCurrentJobId(null)
+      },
+    }
+  )
 
   useEffect(() => {
     loadStatus()
@@ -97,24 +126,23 @@ export function StravaConnection() {
 
   const handleSync = async () => {
     try {
-      setSyncing(true)
       setError(null)
       setSuccessMessage(null)
+      resetPolling()
 
       const res = await fetch('/api/strava/sync', {
         method: 'POST',
       })
 
-      if (res.ok) {
+      if (res.status === 202) {
+        // Background job started successfully
         const data = await res.json()
-        const message = t('syncedActivities', { count: data.activitiesSynced })
-        setSuccessMessage(message)
-        toast.success(message, {
-          duration: 5000,
-          icon: '✅',
+        setCurrentJobId(data.jobId)
+        startPolling()
+        toast.loading(t('syncStarted') || 'Sync started in background...', {
+          duration: 3000,
         })
-        loadStatus() // Reload status to get updated counts
-      } else {
+      } else if (!res.ok) {
         const errorData = await res.json()
         const error = errorData.error || t('failedToSync')
         setError(error)
@@ -124,8 +152,6 @@ export function StravaConnection() {
       const error = t('failedToSync')
       setError(error)
       toast.error(error)
-    } finally {
-      setSyncing(false)
     }
   }
 
@@ -222,15 +248,25 @@ export function StravaConnection() {
           <div className="flex gap-2">
             <Button
               onClick={handleSync}
-              disabled={syncing || status.token_expired}
+              disabled={isPolling || status.token_expired}
               variant="default"
             >
-              {syncing ? t('syncing') : t('syncActivities')}
+              {isPolling ? t('syncing') : t('syncActivities')}
             </Button>
             <Button onClick={handleDisconnect} variant="outline">
               {t('disconnect')}
             </Button>
           </div>
+
+          {/* Show sync progress if polling */}
+          {isPolling && jobStatus && (
+            <Alert>
+              <AlertDescription>
+                {jobStatus.status === 'pending' && (t('syncPending') || 'Sync pending...')}
+                {jobStatus.status === 'running' && (t('syncRunning') || 'Sync in progress...')}
+              </AlertDescription>
+            </Alert>
+          )}
 
           {status.token_expired && (
             <Alert variant="destructive">

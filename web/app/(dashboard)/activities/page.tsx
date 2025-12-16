@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { ActivitiesCalendar } from '@/components/activities/activities-calendar'
-import { Calendar, Table, Search } from 'lucide-react'
+import { Calendar, Table, Search, ExternalLink } from 'lucide-react'
 
 interface Activity {
   id: string
@@ -259,6 +259,9 @@ export default function ActivitiesPage() {
                     <th className="px-4 py-3 text-right text-sm font-medium">
                       {t('tss')}
                     </th>
+                    <th className="px-4 py-3 text-center text-sm font-medium">
+                      {t('source')}
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -302,6 +305,20 @@ export default function ActivitiesPage() {
                           </span>
                         ) : (
                           '-'
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-center">
+                        {activity.strava_activity_id && (
+                          <a
+                            href={`https://www.strava.com/activities/${activity.strava_activity_id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-[#FC4C02] hover:text-[#FC4C02]/80 transition-colors"
+                            title={t('viewOnStrava')}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
                         )}
                       </td>
                     </tr>

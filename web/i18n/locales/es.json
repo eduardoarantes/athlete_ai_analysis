@@ -76,7 +76,7 @@
     "welcomeWithName": "¡Bienvenido de nuevo, {name}!",
     "welcomeNew": "¡Bienvenido a Cycling AI!",
     "subtitle": "Aquí tienes un resumen de tu rendimiento ciclista.",
-    "completeProfile": "Completa tu perfil para comenzar",
+    "completeProfile": "Completa tu perfil",
     "completeProfilePrompt": "Completa tu perfil de atleta para obtener análisis personalizados con IA.",
     "setupProfile": "Configurar tu perfil",
     "setupProfilePrompt": "Configura tu perfil para análisis personalizados",
@@ -142,6 +142,8 @@
       "heart_rate": "TSS basado en frecuencia cardíaca",
       "estimated": "TSS estimado"
     },
+    "source": "Fuente",
+    "viewOnStrava": "Ver en Strava",
     "previous": "Anterior",
     "next": "Siguiente",
     "pageOf": "Página {current} de {total}"
@@ -504,6 +506,81 @@
       "insightFtpDays": "La mejora del FTP típicamente requiere 4-5 días de entrenamiento por semana. Considera aumentar la frecuencia de entrenamiento para resultados óptimos.",
       "insightFtpWeeks": "Las ganancias de FTP típicamente requieren 8-12 semanas. Considera extender la duración de tu plan.",
       "insightGreatTimeline": "¡Gran cronograma! Esto nos da suficiente tiempo para una periodización adecuada."
+    }
+  },
+  "aboutPage": {
+    "backToHome": "Volver al Inicio",
+    "hero": {
+      "badge": "Entrenador de Ciclismo con IA",
+      "title": {
+        "part1": "Tu",
+        "highlight": "Coach IA",
+        "part2": "Personal para la Excelencia Ciclista"
+      },
+      "subtitle": "Creemos que todo ciclista merece un entrenador de clase mundial. Por eso construimos una IA que entiende tus datos, conoce tus objetivos y te ayuda a pedalear más rápido, más fuerte y más inteligente que nunca.",
+      "cta": {
+        "primary": "Comienza Tu Viaje",
+        "secondary": "¿Ya eres miembro? Inicia sesión"
+      }
+    },
+    "mission": {
+      "title": "Nuestra Misión: Hacerte Imparable",
+      "description": "No somos solo otra app de entrenamiento. Somos tu compañero de entrenamiento incansable que analiza cada pedalada, entiende tu fisiología y crea planes personalizados que evolucionan contigo. Ya sea que busques tu primera prueba de 100km o persigas ese podio, estamos contigo (y tus vatios)."
+    },
+    "stats": {
+      "availability": "Siempre listo para entrenar",
+      "possibilities": "Posibilidades de entrenamiento",
+      "dedication": "Dedicado a tu éxito"
+    },
+    "features": {
+      "title": "Todo Lo Que Necesitas Para Subir de Nivel",
+      "subtitle": "Desde análisis de datos hasta planes de entrenamiento personalizados, hemos reunido todo lo que un ciclista serio necesita en una plataforma poderosa.",
+      "aiCoach": {
+        "title": "Coaching con IA",
+        "description": "Obtén insights inteligentes y recomendaciones basadas en tus datos únicos de rendimiento. Es como tener un entrenador profesional en tu bolsillo."
+      },
+      "performanceAnalysis": {
+        "title": "Análisis Profundo de Rendimiento",
+        "description": "Sumérgete en tus curvas de potencia, tendencias de frecuencia cardíaca y patrones de entrenamiento. Entiende qué te hace funcionar (y qué te hace ir más rápido)."
+      },
+      "trainingPlans": {
+        "title": "Planes de Entrenamiento Inteligentes",
+        "description": "Planes generados automáticamente que se adaptan a tus objetivos, disponibilidad y nivel de condición física. Nada de entrenamientos genéricos aquí."
+      },
+      "powerZones": {
+        "title": "Zonas de Potencia Precisas",
+        "description": "Entrena en las zonas correctas en el momento correcto. Nuestra IA calcula tus zonas y te dice exactamente cuándo empujar y cuándo recuperar."
+      },
+      "tss": {
+        "title": "Seguimiento de Carga de Entrenamiento",
+        "description": "Monitorea tu carga de entrenamiento con cálculos de TSS. Sabe cuándo estás construyendo fitness y cuándo necesitas descansar antes de agotarte."
+      },
+      "progress": {
+        "title": "Sigue Tu Progreso",
+        "description": "Observa cómo sube tu FTP, crece tu resistencia y bajan tus tiempos. Nada motiva más que ver progreso real."
+      }
+    },
+    "philosophy": {
+      "title": "Hecho por Ciclistas, para Ciclistas",
+      "paragraph1": "Sabemos lo que es mirar un archivo de potencia sin saber qué significa todo eso. Hemos sentido la frustración de los estancamientos y la alegría de las superaciones. Por eso construimos algo diferente.",
+      "paragraph2": "Nuestra IA no solo procesa números—entiende el arte y la ciencia del ciclismo. Sabe que una salida de 5 horas de resistencia cuenta una historia diferente que intervalos 5x5 de VO2max. Entiende periodización, recuperación y lo que se necesita para llegar al pico en tu gran evento.",
+      "paragraph3": "Esto no es inteligencia artificial por moda. Este es un compañero de entrenamiento genuino que se vuelve más inteligente cada vez que pedaleas.",
+      "quote": "Pedalea. Analiza. Mejora. Repite.",
+      "quoteAuthor": "— La Filosofía Cycling AI"
+    },
+    "team": {
+      "title": "Un Equipo Que Vive Sobre Dos Ruedas",
+      "description": "Detrás de cada algoritmo hay un ciclista que ha sentido la quemazón de un test de umbral, la libertad de un descenso en montaña y la satisfacción de un bloque de entrenamiento perfectamente ejecutado. Construimos lo que nos gustaría tener."
+    },
+    "cta": {
+      "title": "¿Listo Para Transformar Tu Pedaleo?",
+      "subtitle": "Únete a miles de ciclistas que ya entrenan más inteligente, recuperan mejor y alcanzan objetivos que nunca creyeron posibles.",
+      "button": "Vamos a Pedalear"
+    },
+    "footer": {
+      "copyright": "© {year} Cycling AI. Todos los derechos reservados.",
+      "madeWith": "Hecho con",
+      "forCyclists": "para ciclistas en todas partes"
     }
   }
 }

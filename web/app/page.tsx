@@ -13,6 +13,9 @@ export default function Home() {
           <Link href="/login">
             <Button>Get Started</Button>
           </Link>
+          <Link href="/about">
+            <Button variant="outline">Learn More</Button>
+          </Link>
         </div>
       </div>
     </main>

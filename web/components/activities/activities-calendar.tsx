@@ -22,7 +22,8 @@ import {
   Trophy,
   Target,
   Flag,
-  User
+  User,
+  ExternalLink,
 } from 'lucide-react'
 
 interface Activity {
@@ -486,7 +487,7 @@ export function ActivitiesCalendar({ sportTypeFilter }: ActivitiesCalendarProps)
           ))}
 
           {/* Calendar Days */}
-          {calendarDays.map((date, index) => {
+          {calendarDays.map((date) => {
             const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
             const dayActivities = activitiesByDate.get(dateKey) || []
 
@@ -514,19 +515,23 @@ export function ActivitiesCalendar({ sportTypeFilter }: ActivitiesCalendarProps)
                   </div>
                   <div className="space-y-1 flex-1 overflow-y-auto">
                     {dayActivities.map((activity) => (
-                      <div
+                      <a
                         key={activity.id}
-                        className={`text-xs p-1 rounded cursor-pointer transition-colors border ${getActivityColors(activity.sport_type)}`}
-                        title={`${activity.name}\n${formatDistance(activity.distance)} • ${formatDuration(activity.moving_time)}`}
+                        href={`https://www.strava.com/activities/${activity.strava_activity_id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`block text-xs p-1 rounded cursor-pointer transition-colors border group ${getActivityColors(activity.sport_type)}`}
+                        title={`${activity.name}\n${formatDistance(activity.distance)} • ${formatDuration(activity.moving_time)}\nClick to view on Strava`}
                       >
                         <div className="font-medium flex items-center gap-1 min-w-0">
                           {getActivityIcon(activity.sport_type)}
                           <span className="truncate flex-1">{activity.name}</span>
+                          <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-[#FC4C02] flex-shrink-0" />
                         </div>
                         <div className="text-muted-foreground">
                           {formatDistance(activity.distance)}
                         </div>
-                      </div>
+                      </a>
                     ))}
                   </div>
                 </div>

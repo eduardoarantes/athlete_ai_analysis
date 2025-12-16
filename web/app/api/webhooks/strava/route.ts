@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
-const WEBHOOK_VERIFY_TOKEN = process.env.STRAVA_WEBHOOK_VERIFY_TOKEN || 'CYCLING_AI'
+// Webhook verify token - MUST be set in environment variables
+const WEBHOOK_VERIFY_TOKEN = process.env.STRAVA_WEBHOOK_VERIFY_TOKEN
+
+if (!WEBHOOK_VERIFY_TOKEN) {
+  throw new Error(
+    'STRAVA_WEBHOOK_VERIFY_TOKEN environment variable is required. ' +
+    'This token is used to verify webhook requests from Strava. ' +
+    'Set it in your .env.local file for development or in your deployment environment variables. ' +
+    'Example: STRAVA_WEBHOOK_VERIFY_TOKEN=your_random_secure_token'
+  )
+}
 
 interface StravaWebhookEvent {
   object_type: 'activity' | 'athlete'
@@ -65,28 +75,21 @@ export async function POST(request: NextRequest) {
     // Store event in database for processing
     const supabase = await createClient()
 
-    // Generate a unique event_id (Strava doesn't provide one)
-    // We use a combination of subscription_id, object_id, and event_time
-    const eventId = parseInt(
-      `${event.subscription_id}${event.object_id}${event.event_time}`.slice(-15)
-    )
-
     const { error } = await supabase
       .from('strava_webhook_events')
       .insert({
-        event_id: eventId,
+        subscription_id: event.subscription_id,
+        object_id: event.object_id,
+        event_time: new Date(event.event_time * 1000).toISOString(),
         object_type: event.object_type,
         aspect_type: event.aspect_type,
-        object_id: event.object_id,
         owner_id: event.owner_id,
-        subscription_id: event.subscription_id,
-        event_time: new Date(event.event_time * 1000).toISOString(),
         raw_data: event as never,
         processed: false,
       } as never)
 
     if (error) {
-      // If it's a duplicate, that's okay (unique constraint on event_id + object_id)
+      // If it's a duplicate, that's okay (composite primary key prevents duplicates)
       if (error.code === '23505') {
         console.log('[Webhook] Duplicate event, skipping')
         return NextResponse.json({ success: true })
@@ -193,25 +196,21 @@ async function processWebhookEvent(event: StravaWebhookEvent): Promise<void> {
     }
 
     // Mark event as processed
-    const eventId = parseInt(
-      `${event.subscription_id}${event.object_id}${event.event_time}`.slice(-15)
-    )
-
     await supabase
       .from('strava_webhook_events')
       .update({
         processed: true,
         processed_at: new Date().toISOString(),
       } as never)
-      .eq('event_id', eventId)
+      .match({
+        subscription_id: event.subscription_id,
+        object_id: event.object_id,
+        event_time: new Date(event.event_time * 1000).toISOString(),
+      } as never)
   } catch (error) {
     console.error('[Webhook] Processing failed:', error)
 
     // Mark event as failed
-    const eventId = parseInt(
-      `${event.subscription_id}${event.object_id}${event.event_time}`.slice(-15)
-    )
-
     await supabase
       .from('strava_webhook_events')
       .update({
@@ -219,6 +218,10 @@ async function processWebhookEvent(event: StravaWebhookEvent): Promise<void> {
         processed_at: new Date().toISOString(),
         error: error instanceof Error ? error.message : 'Unknown error',
       } as never)
-      .eq('event_id', eventId)
+      .match({
+        subscription_id: event.subscription_id,
+        object_id: event.object_id,
+        event_time: new Date(event.event_time * 1000).toISOString(),
+      } as never)
   }
 }

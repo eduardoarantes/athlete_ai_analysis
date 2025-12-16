@@ -19,7 +19,8 @@ import {
   Trophy,
   Target,
   Flag,
-  User
+  User,
+  ExternalLink,
 } from 'lucide-react'
 
 interface Activity {
@@ -247,16 +248,22 @@ export function RecentActivitiesList({ activities, stravaConnected }: RecentActi
         const minutes = duration % 60
 
         return (
-          <div
+          <a
             key={activity.id}
-            className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${getActivityColors(activity.sport_type)}`}
+            href={`https://www.strava.com/activities/${activity.strava_activity_id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`flex items-center justify-between p-3 rounded-lg border transition-colors group ${getActivityColors(activity.sport_type)}`}
           >
             <div className="flex items-center gap-3 flex-1 min-w-0">
               <div className="flex-shrink-0">
                 {getActivityIcon(activity.sport_type)}
               </div>
               <div className="flex-1 min-w-0">
-                <h4 className="font-medium truncate">{activity.name}</h4>
+                <h4 className="font-medium truncate flex items-center gap-2">
+                  {activity.name}
+                  <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-[#FC4C02] flex-shrink-0" />
+                </h4>
                 <p className="text-sm text-muted-foreground">
                   {date.toLocaleDateString('en-US', {
                     month: 'short',
@@ -274,7 +281,7 @@ export function RecentActivitiesList({ activities, stravaConnected }: RecentActi
                 {hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`}
               </p>
             </div>
-          </div>
+          </a>
         )
       })}
     </div>

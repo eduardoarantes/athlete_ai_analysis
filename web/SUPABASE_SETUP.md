@@ -125,12 +125,23 @@ Create `.env.local` in the `web/` directory:
 NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbG...
 SUPABASE_SERVICE_ROLE_KEY=eyJhbG...
+
+# Strava Webhook Configuration
+# Generate a random secure token for webhook verification
+STRAVA_WEBHOOK_VERIFY_TOKEN=your-random-secure-token-here
 ```
 
 **IMPORTANT:**
 - Replace `xxx.supabase.co` with your actual project URL
 - Replace the keys with your actual keys from Supabase dashboard
+- **Generate a secure random token** for `STRAVA_WEBHOOK_VERIFY_TOKEN`:
+  ```bash
+  # Generate a secure random token (macOS/Linux):
+  openssl rand -hex 32
+  # Example output: cf031f4409e9e275d19262ae5c92dd611630109665acd46ab19926b96c19a3ab
+  ```
 - **NEVER commit `.env.local` to git** (already in `.gitignore`)
+- The webhook verify token is required for Strava webhook functionality
 
 ## Step 7: Generate TypeScript Types
 

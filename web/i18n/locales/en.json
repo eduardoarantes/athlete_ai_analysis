@@ -76,7 +76,7 @@
     "welcomeWithName": "Welcome back, {name}!",
     "welcomeNew": "Welcome to Cycling AI!",
     "subtitle": "Here's an overview of your cycling performance.",
-    "completeProfile": "Complete your profile to get started",
+    "completeProfile": "Get started",
     "completeProfilePrompt": "Complete your athlete profile to get personalized AI analysis.",
     "setupProfile": "Set up your profile",
     "setupProfilePrompt": "Set up your profile for personalized analysis",
@@ -142,6 +142,8 @@
       "heart_rate": "Heart rate-based TSS",
       "estimated": "Estimated TSS"
     },
+    "source": "Source",
+    "viewOnStrava": "View on Strava",
     "previous": "Previous",
     "next": "Next",
     "pageOf": "Page {current} of {total}"
@@ -504,6 +506,81 @@
       "insightFtpDays": "FTP improvement typically requires 4-5 training days per week. Consider increasing training frequency for optimal results.",
       "insightFtpWeeks": "FTP gains typically require 8-12 weeks. Consider extending your plan duration.",
       "insightGreatTimeline": "Great timeline! This gives us plenty of time for proper periodization."
+    }
+  },
+  "aboutPage": {
+    "backToHome": "Back to Home",
+    "hero": {
+      "badge": "AI-Powered Cycling Coach",
+      "title": {
+        "part1": "Your Personal",
+        "highlight": "AI Coach",
+        "part2": "for Cycling Excellence"
+      },
+      "subtitle": "We believe every cyclist deserves a world-class coach. That's why we built an AI that understands your data, knows your goals, and helps you ride faster, stronger, and smarter than ever before.",
+      "cta": {
+        "primary": "Start Your Journey",
+        "secondary": "Already a member? Log in"
+      }
+    },
+    "mission": {
+      "title": "Our Mission: Make You Unstoppable",
+      "description": "We're not just another training app. We're your tireless training partner that analyzes every pedal stroke, understands your physiology, and crafts personalized plans that evolve with you. Whether you're chasing your first century ride or hunting for that podium finish, we've got your back (and your watts)."
+    },
+    "stats": {
+      "availability": "Always ready to coach",
+      "possibilities": "Training possibilities",
+      "dedication": "Dedicated to your success"
+    },
+    "features": {
+      "title": "Everything You Need to Level Up",
+      "subtitle": "From data analysis to personalized training plans, we've packed everything a serious cyclist needs into one powerful platform.",
+      "aiCoach": {
+        "title": "AI-Powered Coaching",
+        "description": "Get intelligent insights and recommendations based on your unique performance data. It's like having a pro coach in your pocket."
+      },
+      "performanceAnalysis": {
+        "title": "Deep Performance Analysis",
+        "description": "Dive into your power curves, heart rate trends, and training patterns. Understand what makes you tick (and what makes you tick faster)."
+      },
+      "trainingPlans": {
+        "title": "Smart Training Plans",
+        "description": "Automatically generated plans that adapt to your goals, availability, and fitness level. No cookie-cutter workouts here."
+      },
+      "powerZones": {
+        "title": "Precision Power Zones",
+        "description": "Train in the right zones at the right time. Our AI calculates your zones and tells you exactly when to push and when to recover."
+      },
+      "tss": {
+        "title": "Training Stress Tracking",
+        "description": "Monitor your training load with TSS calculations. Know when you're building fitness and when you need rest before you burn out."
+      },
+      "progress": {
+        "title": "Track Your Progress",
+        "description": "Watch your FTP climb, your endurance grow, and your times drop. Nothing motivates like seeing real progress."
+      }
+    },
+    "philosophy": {
+      "title": "Built by Cyclists, for Cyclists",
+      "paragraph1": "We know what it's like to stare at a power file wondering what it all means. We've felt the frustration of plateaus and the joy of breakthroughs. That's why we built something different.",
+      "paragraph2": "Our AI doesn't just crunch numbers—it understands the art and science of cycling. It knows that a 5-hour endurance ride tells a different story than 5x5 VO2max intervals. It understands periodization, recovery, and what it takes to peak for your big event.",
+      "paragraph3": "This isn't artificial intelligence for the sake of buzzwords. This is a genuine training partner that gets smarter every time you ride.",
+      "quote": "Ride. Analyze. Improve. Repeat.",
+      "quoteAuthor": "— The Cycling AI Philosophy"
+    },
+    "team": {
+      "title": "A Team That Lives on Two Wheels",
+      "description": "Behind every algorithm is a cyclist who's felt the burn of a threshold test, the freedom of a mountain descent, and the satisfaction of a perfectly executed training block. We build what we wish we had."
+    },
+    "cta": {
+      "title": "Ready to Transform Your Riding?",
+      "subtitle": "Join thousands of cyclists who are already training smarter, recovering better, and achieving goals they never thought possible.",
+      "button": "Let's Ride"
+    },
+    "footer": {
+      "copyright": "© {year} Cycling AI. All rights reserved.",
+      "madeWith": "Made with",
+      "forCyclists": "for cyclists everywhere"
     }
   }
 }
