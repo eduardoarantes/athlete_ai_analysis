@@ -471,7 +471,10 @@ class TestFitWorkoutParser:
         """Path to sample FIT files."""
         from pathlib import Path
 
-        return Path(".claude/fit_samples")
+        fit_dir = Path(".claude/fit_samples")
+        if not fit_dir.exists():
+            pytest.skip("FIT sample files not available at .claude/fit_samples")
+        return fit_dir
 
     def test_init(self, parser):
         """Test parser initialization."""

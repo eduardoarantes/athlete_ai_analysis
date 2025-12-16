@@ -107,6 +107,14 @@ class ToolExecutionResult:
         if not self.success and not self.errors:
             raise ValueError("Failed execution must include error messages")
 
+    @property
+    def error(self) -> str | None:
+        """Return first error message or None if no errors.
+
+        Provides backward compatibility for code expecting a single error string.
+        """
+        return self.errors[0] if self.errors else None
+
     def to_dict(self) -> dict[str, Any]:
         """Convert result to dictionary for serialization."""
         return {

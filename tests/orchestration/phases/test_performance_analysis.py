@@ -536,6 +536,7 @@ class TestExecutePhaseIntegration:
         """Test successful phase execution."""
         # Mock session
         mock_session = Mock(spec=ConversationSession)
+        mock_session.session_id = "test-session-id"  # Required by base_phase logging
         mock_session.messages = [
             Mock(
                 role="tool",
@@ -569,6 +570,7 @@ class TestExecutePhaseIntegration:
 
         # Mock session and agent
         mock_session = Mock(spec=ConversationSession)
+        mock_session.session_id = "test-session-id"  # Required by base_phase logging
         mock_session.messages = [
             Mock(
                 role="tool",

@@ -64,6 +64,7 @@ def mock_provider() -> Mock:
     """Create mock LLM provider."""
     provider = Mock()
     provider.name = "test_provider"
+    provider.config.provider_name = "test_provider"  # Code uses provider.config.provider_name
     provider.complete.return_value = "Test response from LLM"
     return provider
 

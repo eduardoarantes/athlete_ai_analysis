@@ -100,11 +100,11 @@ class TestGenerateTrainingPlanToolExecution:
         )
 
         with patch(
-            "cycling_ai.tools.wrappers.generate_training_plan_tool.MultiAgentOrchestrator"
+            "cycling_ai.orchestration.multi_agent.MultiAgentOrchestrator"
         ) as mock_orchestrator_class, patch(
-            "cycling_ai.tools.wrappers.generate_training_plan_tool.AgentPromptsManager"
+            "cycling_ai.orchestration.prompts.AgentPromptsManager"
         ) as mock_prompts_class, patch(
-            "cycling_ai.tools.wrappers.generate_training_plan_tool.SessionManager"
+            "cycling_ai.orchestration.session.SessionManager"
         ) as mock_session_class:
             mock_orchestrator = Mock()
             mock_orchestrator.execute_workflow.return_value = mock_result
@@ -173,11 +173,11 @@ class TestGenerateTrainingPlanToolExecution:
         )
 
         with patch(
-            "cycling_ai.tools.wrappers.generate_training_plan_tool.MultiAgentOrchestrator"
+            "cycling_ai.orchestration.multi_agent.MultiAgentOrchestrator"
         ) as mock_orchestrator_class, patch(
-            "cycling_ai.tools.wrappers.generate_training_plan_tool.AgentPromptsManager"
+            "cycling_ai.orchestration.prompts.AgentPromptsManager"
         ), patch(
-            "cycling_ai.tools.wrappers.generate_training_plan_tool.SessionManager"
+            "cycling_ai.orchestration.session.SessionManager"
         ):
             mock_orchestrator = Mock()
             mock_orchestrator.execute_workflow.return_value = mock_result
@@ -269,7 +269,7 @@ class TestGenerateTrainingPlanToolExecution:
         )
 
         with patch(
-            "cycling_ai.tools.wrappers.generate_training_plan_tool.MultiAgentOrchestrator"
+            "cycling_ai.orchestration.multi_agent.MultiAgentOrchestrator"
         ) as mock_orchestrator_class:
             mock_orchestrator = Mock()
             mock_orchestrator.execute_workflow.return_value = mock_result
@@ -314,11 +314,11 @@ class TestGenerateTrainingPlanToolExecution:
         )
 
         with patch(
-            "cycling_ai.tools.wrappers.generate_training_plan_tool.MultiAgentOrchestrator"
+            "cycling_ai.orchestration.multi_agent.MultiAgentOrchestrator"
         ) as mock_orchestrator_class, patch(
-            "cycling_ai.tools.wrappers.generate_training_plan_tool.AgentPromptsManager"
+            "cycling_ai.orchestration.prompts.AgentPromptsManager"
         ), patch(
-            "cycling_ai.tools.wrappers.generate_training_plan_tool.SessionManager"
+            "cycling_ai.orchestration.session.SessionManager"
         ):
             mock_orchestrator = Mock()
             mock_orchestrator.execute_workflow.return_value = mock_result
@@ -362,11 +362,11 @@ class TestGenerateTrainingPlanToolExecution:
         )
 
         with patch(
-            "cycling_ai.tools.wrappers.generate_training_plan_tool.MultiAgentOrchestrator"
+            "cycling_ai.orchestration.multi_agent.MultiAgentOrchestrator"
         ) as mock_orchestrator_class, patch(
-            "cycling_ai.tools.wrappers.generate_training_plan_tool.AgentPromptsManager"
+            "cycling_ai.orchestration.prompts.AgentPromptsManager"
         ), patch(
-            "cycling_ai.tools.wrappers.generate_training_plan_tool.SessionManager"
+            "cycling_ai.orchestration.session.SessionManager"
         ):
             mock_orchestrator = Mock()
             mock_orchestrator.execute_workflow.return_value = mock_result
@@ -414,11 +414,11 @@ class TestGenerateTrainingPlanToolIntegration:
         )
 
         with patch(
-            "cycling_ai.tools.wrappers.generate_training_plan_tool.MultiAgentOrchestrator"
+            "cycling_ai.orchestration.multi_agent.MultiAgentOrchestrator"
         ) as mock_orchestrator_class, patch(
-            "cycling_ai.tools.wrappers.generate_training_plan_tool.AgentPromptsManager"
+            "cycling_ai.orchestration.prompts.AgentPromptsManager"
         ), patch(
-            "cycling_ai.tools.wrappers.generate_training_plan_tool.SessionManager"
+            "cycling_ai.orchestration.session.SessionManager"
         ):
             mock_orchestrator = Mock()
             mock_orchestrator.execute_workflow.return_value = mock_result
