@@ -18,6 +18,7 @@ const PROJECT_ROOT = process.env.PROJECT_ROOT || '/Users/eduardo/Documents/proje
 
 export interface TrainingPlanParams {
   goal: string
+  customGoal?: string
   timeline: {
     hasEvent: boolean
     eventDate?: string
@@ -30,11 +31,7 @@ export interface TrainingPlanParams {
     maxHR: number
     weeklyHours: string
     experienceLevel: string
-  }
-  preferences: {
     daysPerWeek: number
-    workoutTypes: string[]
-    indoorOnly: boolean
   }
 }
 
@@ -306,12 +303,10 @@ export class CyclingCoachService {
       weight_kg: params.profile.weight,
       max_hr: params.profile.maxHR,
       age: profile?.age || 35,
-      goals: [params.goal],
+      goals: params.customGoal ? [params.goal, params.customGoal] : [params.goal],
       experience_level: params.profile.experienceLevel,
       weekly_hours_available: params.profile.weeklyHours,
-      training_days_per_week: params.preferences.daysPerWeek,
-      preferred_workout_types: params.preferences.workoutTypes,
-      indoor_only: params.preferences.indoorOnly,
+      training_days_per_week: params.profile.daysPerWeek,
     }
 
     const profilePath = join(outputDir, 'athlete_profile.json')
