@@ -1,0 +1,586 @@
+{
+  "common": {
+    "next": "Suivant",
+    "back": "Retour",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "submit": "Soumettre",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "close": "Fermer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "add": "Ajouter",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "reset": "Réinitialiser",
+    "confirm": "Confirmer",
+    "skip": "Passer"
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "profile": "Profil",
+    "settings": "Paramètres",
+    "activities": "Activités",
+    "reports": "Rapports",
+    "training": "Entraînement",
+    "trainingPlans": "Plans d'Entraînement",
+    "logout": "Déconnexion"
+  },
+  "userMenu": {
+    "myAccount": "Mon Compte",
+    "profile": "Profil",
+    "settings": "Paramètres",
+    "logout": "Déconnexion"
+  },
+  "auth": {
+    "login": "Connexion",
+    "signup": "S'inscrire",
+    "logout": "Déconnexion",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "forgotPassword": "Mot de passe oublié ?",
+    "resetPassword": "Réinitialiser le mot de passe",
+    "dontHaveAccount": "Vous n'avez pas de compte ?",
+    "alreadyHaveAccount": "Vous avez déjà un compte ?",
+    "signInWithEmail": "Se connecter avec e-mail",
+    "signUpWithEmail": "S'inscrire avec e-mail",
+    "sendResetLink": "Envoyer le lien de réinitialisation",
+    "backToLogin": "Retour à la connexion",
+    "checkEmail": "Vérifiez votre e-mail",
+    "resetLinkSent": "Nous vous avons envoyé un lien de réinitialisation de mot de passe. Veuillez vérifier votre e-mail.",
+    "passwordResetSuccess": "Réinitialisation du mot de passe réussie. Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.",
+    "invalidCredentials": "E-mail ou mot de passe invalide",
+    "emailAlreadyExists": "Un compte avec cet e-mail existe déjà",
+    "weakPassword": "Le mot de passe doit contenir au moins 8 caractères",
+    "verifyEmail": "Vérifier l'e-mail",
+    "verificationSent": "E-mail de vérification envoyé. Veuillez vérifier votre boîte de réception.",
+    "emailVerified": "E-mail vérifié avec succès !"
+  },
+  "validation": {
+    "required": "Ce champ est obligatoire",
+    "invalidEmail": "Veuillez entrer une adresse e-mail valide",
+    "passwordTooShort": "Le mot de passe doit contenir au moins 8 caractères",
+    "passwordsDoNotMatch": "Les mots de passe ne correspondent pas",
+    "invalidNumber": "Veuillez entrer un nombre valide",
+    "minValue": "La valeur doit être au moins {min}",
+    "maxValue": "La valeur doit être au maximum {max}",
+    "minLength": "Doit contenir au moins {min} caractères",
+    "maxLength": "Doit contenir au maximum {max} caractères",
+    "selectAtLeastOne": "Veuillez sélectionner au moins une option"
+  },
+  "dashboard": {
+    "welcome": "Bon retour !",
+    "welcomeWithName": "Bon retour, {name} !",
+    "welcomeNew": "Bienvenue sur Cycling AI !",
+    "subtitle": "Voici un aperçu de vos performances cyclistes.",
+    "completeProfile": "Complétez votre profil",
+    "completeProfilePrompt": "Complétez votre profil d'athlète pour obtenir des analyses personnalisées par IA.",
+    "setupProfile": "Configurer votre profil",
+    "setupProfilePrompt": "Configurez votre profil pour des analyses personnalisées",
+    "recentActivities": "Activités Récentes",
+    "recentActivitiesDescription": "Vos dernières activités cyclistes",
+    "trainingOverview": "Aperçu de l'Entraînement",
+    "performanceMetrics": "Métriques de Performance",
+    "noActivities": "Pas encore d'activités",
+    "connectStrava": "Connectez Strava pour importer vos activités",
+    "generateReport": "Générer un Rapport",
+    "createTrainingPlan": "Créer un Plan d'Entraînement",
+    "viewAll": "Voir Tout",
+    "athlete": "Athlète",
+    "totalActivities": "Total d'Activités",
+    "syncedFromStrava": "Synchronisé depuis Strava",
+    "connectStravaToSync": "Connectez Strava pour synchroniser",
+    "thisWeek": "Cette Semaine",
+    "thisMonth": "Ce Mois",
+    "riding": "en selle",
+    "ftp": "FTP",
+    "maxHr": "FC Max",
+    "weight": "Poids",
+    "wkg": "W/kg"
+  },
+  "activities": {
+    "title": "Activités",
+    "noActivities": "Pas encore d'activités",
+    "activitiesWillAppear": "Vos activités apparaîtront ici après la synchronisation",
+    "connectStravaPrompt": "Connectez votre compte Strava pour synchroniser automatiquement vos sorties",
+    "syncActivities": "Synchroniser les Activités",
+    "connectStrava": "Connecter Strava"
+  },
+  "activitiesPage": {
+    "title": "Activités",
+    "subtitle": "Parcourez et analysez vos activités synchronisées depuis Strava",
+    "tableView": "Tableau",
+    "calendarView": "Calendrier",
+    "searchPlaceholder": "Rechercher des activités...",
+    "sportType": "Type de Sport",
+    "all": "Tous",
+    "ride": "Sortie",
+    "virtualRide": "Sortie Virtuelle",
+    "run": "Course",
+    "swim": "Natation",
+    "sortBy": "Trier Par",
+    "order": "Ordre",
+    "date": "Date",
+    "distance": "Distance",
+    "duration": "Durée",
+    "power": "Puissance",
+    "descending": "Décroissant",
+    "ascending": "Croissant",
+    "totalActivities": "{count} activités au total",
+    "loading": "Chargement des activités...",
+    "noActivities": "Aucune activité trouvée. Synchronisez votre compte Strava pour voir les activités.",
+    "activity": "Activité",
+    "type": "Type",
+    "elevation": "Dénivelé",
+    "hr": "FC",
+    "tss": "TSS",
+    "tssMethod": {
+      "power": "TSS basé sur la puissance",
+      "heart_rate": "TSS basé sur la fréquence cardiaque",
+      "estimated": "TSS estimé"
+    },
+    "source": "Source",
+    "viewOnStrava": "Voir sur Strava",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "pageOf": "Page {current} sur {total}"
+  },
+  "strava": {
+    "loading": "Chargement de la connexion Strava...",
+    "connectTitle": "Connecter à Strava",
+    "connectDescription": "Connectez votre compte Strava pour synchroniser les activités et analyser vos performances",
+    "connectButton": "Connecter avec Strava",
+    "connectionTitle": "Connexion Strava",
+    "athleteId": "ID Athlète",
+    "syncActivities": "Synchroniser les Activités",
+    "syncing": "Synchronisation...",
+    "disconnect": "Déconnecter",
+    "tokenExpired": "Token expiré. Veuillez vous déconnecter et reconnecter.",
+    "disconnectedSuccess": "Strava déconnecté avec succès",
+    "failedToDisconnect": "Échec de la déconnexion de Strava",
+    "failedToLoadStatus": "Échec du chargement du statut Strava",
+    "failedToSync": "Échec de la synchronisation des activités",
+    "syncedActivities": "{count} activités synchronisées avec succès",
+    "activitySync": "Synchronisation des Activités",
+    "totalActivities": "Total d'Activités",
+    "syncStatus": "Statut de Synchronisation",
+    "lastSynced": "Dernière synchronisation",
+    "ftpDetection": "Détection Automatique du FTP",
+    "ftpDetectionDescription": "Analysez vos données de puissance pour estimer votre FTP",
+    "detectFtp": "Détecter FTP",
+    "detecting": "Détection...",
+    "detectAndUpdate": "Détecter et Mettre à Jour le Profil",
+    "ftpDetected": "FTP détecté : {ftp}W et mis à jour dans le profil",
+    "ftpDetectedConfidence": "FTP détecté : {ftp}W (confiance {confidence})",
+    "failedToDetectFtp": "Échec de la détection du FTP",
+    "watts": "watts",
+    "confidence": "confiance",
+    "basedOnActivities": "Basé sur {count} activités",
+    "connectionSuccess": "Strava connecté avec succès !",
+    "connectionSuccessDescription": "Vos activités sont en cours de synchronisation.",
+    "connectionError": "Échec de la connexion",
+    "connectionErrorDescription": "Impossible de se connecter à Strava. Veuillez réessayer.",
+    "errorAccessDenied": "Accès refusé. Veuillez réessayer et autoriser la connexion.",
+    "errorInvalidScope": "Permissions manquantes. Veuillez réessayer et accorder toutes les permissions demandées.",
+    "errorDefault": "Une erreur s'est produite. Veuillez réessayer."
+  },
+  "onboarding": {
+    "title": "Bienvenue ! Configurons votre profil",
+    "subtitle": "Cela ne prendra que quelques minutes",
+    "stepProgress": "Étape {current} sur {total}",
+    "completeSetup": "Terminer la configuration",
+    "step": "Étape {number}",
+    "step1": {
+      "title": "Informations de base",
+      "subtitle": "Parlez-nous un peu de vous",
+      "firstName": "Prénom",
+      "firstNamePlaceholder": "Entrez votre prénom",
+      "lastName": "Nom",
+      "lastNamePlaceholder": "Entrez votre nom",
+      "age": "Âge",
+      "agePlaceholder": "Entrez votre âge",
+      "gender": "Genre",
+      "genderPlaceholder": "Sélectionnez votre genre",
+      "male": "Homme",
+      "female": "Femme",
+      "other": "Autre",
+      "preferNotToSay": "Je préfère ne pas dire"
+    },
+    "step2": {
+      "title": "Métriques de performance",
+      "subtitle": "Aidez-nous à comprendre votre niveau de forme physique",
+      "ftp": "FTP (Functional Threshold Power)",
+      "ftpPlaceholder": "Entrez votre FTP en watts",
+      "ftpTooltip": "Le FTP est la puissance moyenne la plus élevée que vous pouvez maintenir pendant environ une heure. Si vous ne connaissez pas votre FTP, vous pouvez passer cette étape pour l'instant.",
+      "maxHr": "Fréquence cardiaque maximale",
+      "maxHrPlaceholder": "Entrez votre FC max en bpm",
+      "maxHrTooltip": "Votre fréquence cardiaque maximale est la FC la plus élevée que vous pouvez atteindre. Si vous ne la connaissez pas, une estimation approximative est 220 moins votre âge.",
+      "maxHrDescription": "Utilisée pour les zones de fréquence cardiaque et les calculs de charge d'entraînement",
+      "restingHr": "Fréquence Cardiaque au Repos",
+      "restingHrPlaceholder": "Entrez votre FC au repos en bpm",
+      "restingHrDescription": "Utilisée pour le calcul hrTSS. Mesurez au réveil.",
+      "weight": "Poids",
+      "weightPlaceholder": "Entrez votre poids",
+      "weightTooltip": "Votre poids actuel aide à calculer le rapport puissance/poids et d'autres métriques.",
+      "metric": "Métrique (kg)",
+      "imperial": "Impérial (lbs)",
+      "autoDetectFromStrava": "Détecter automatiquement depuis Strava",
+      "autoDetectDisabled": "Disponible après connexion Strava",
+      "skipAll": "Vous pouvez passer ces étapes pour l'instant et les ajouter plus tard"
+    },
+    "step3": {
+      "title": "Objectifs d'entraînement",
+      "subtitle": "Que voulez-vous accomplir ?",
+      "selectGoals": "Sélectionnez un ou plusieurs objectifs",
+      "improveFtp": "Améliorer le FTP",
+      "completeCentury": "Compléter une sortie de 100km",
+      "trainForRace": "S'entraîner pour une course",
+      "buildEndurance": "Développer l'endurance",
+      "weightLoss": "Perte de poids",
+      "maintainFitness": "Maintenir la forme",
+      "customGoal": "Objectif personnalisé",
+      "customGoalPlaceholder": "Entrez votre objectif personnalisé",
+      "addCustomGoal": "Ajouter un objectif personnalisé",
+      "atLeastOneGoal": "Veuillez sélectionner au moins un objectif"
+    },
+    "step4": {
+      "title": "Préférences",
+      "subtitle": "Personnalisez votre expérience",
+      "language": "Langue",
+      "languageDescription": "Choisissez votre langue préférée",
+      "unitsSystem": "Système d'unités",
+      "unitsDescription": "Choisissez votre système de mesure préféré",
+      "metric": "Métrique (kg, km, °C)",
+      "imperial": "Impérial (lbs, mi, °F)",
+      "timezone": "Fuseau horaire",
+      "timezoneDescription": "Votre fuseau horaire pour le suivi des activités",
+      "autoDetected": "Détecté automatiquement depuis le navigateur"
+    }
+  },
+  "profile": {
+    "title": "Profil",
+    "subtitle": "Gérez votre profil d'athlète",
+    "personalInfo": "Informations personnelles",
+    "performanceMetrics": "Métriques de performance",
+    "goals": "Objectifs",
+    "preferences": "Préférences",
+    "saving": "Enregistrement...",
+    "saved": "Enregistré",
+    "errorSaving": "Erreur lors de l'enregistrement des modifications",
+    "autoSave": "Les modifications sont enregistrées automatiquement",
+    "profileComplete": "Votre profil est complet",
+    "profileIncomplete": "Complétez votre profil",
+    "missingFields": "Manquant",
+    "errorLoading": "Échec du chargement du profil",
+    "errorTitle": "Erreur",
+    "profileNotFound": "Profil non trouvé",
+    "setupRequired": "Configuration du Profil Requise",
+    "setupRequiredDescription": "Vous n'avez pas encore configuré votre profil d'athlète. Complétez la configuration pour commencer à suivre vos performances cyclistes.",
+    "startSetup": "Configurer le Profil"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "subtitle": "Gérez les paramètres de votre compte",
+    "nav": {
+      "appearance": "Apparence",
+      "integrations": "Intégrations"
+    },
+    "account": "Compte",
+    "profile": "Profil",
+    "notifications": "Notifications",
+    "privacy": "Confidentialité",
+    "danger": "Zone dangereuse",
+    "appearance": "Apparence",
+    "appearanceDescription": "Personnalisez l'apparence de votre application",
+    "theme": "Thème",
+    "themeLight": "Clair",
+    "themeDark": "Sombre",
+    "themeSystem": "Système",
+    "themeDescription": "Sélectionnez votre thème de couleurs préféré",
+    "language": "Langue",
+    "languageDescription": "Sélectionnez votre langue préférée",
+    "integrations": {
+      "strava": "Strava",
+      "stravaDescription": "Synchronisez les activités, analysez les performances et détectez automatiquement le FTP depuis votre compte Strava",
+      "garmin": "Garmin Connect",
+      "garminDescription": "Importez les activités et les données de santé directement depuis Garmin Connect",
+      "wahoo": "Wahoo Cloud",
+      "wahooDescription": "Synchronisez les entraînements et les activités depuis les appareils Wahoo ELEMNT",
+      "trainingpeaks": "TrainingPeaks",
+      "trainingpeaksDescription": "Importez des entraînements structurés et des plans d'entraînement",
+      "categories": {
+        "trainingPlatforms": "Plateformes d'Entraînement",
+        "devices": "Appareils et Capteurs"
+      },
+      "status": {
+        "connected": "Connecté",
+        "comingSoon": "Bientôt disponible"
+      },
+      "configure": "Configurer",
+      "hide": "Masquer",
+      "comingSoonMessage": "Cette intégration est actuellement en développement. Revenez bientôt pour les mises à jour.",
+      "needDifferent": "Besoin d'une intégration différente ?",
+      "needDifferentDescription": "Nous ajoutons constamment de nouvelles intégrations pour vous aider à tirer le meilleur parti de vos données d'entraînement. Si vous souhaitez voir une plateforme ou un appareil spécifique pris en charge, faites-le nous savoir !"
+    }
+  },
+  "createPlan": {
+    "title": "Créez Votre Plan d'Entraînement",
+    "subtitle": "Construisons un plan d'entraînement personnalisé avec des insights alimentés par l'IA",
+    "loading": "Chargement de votre assistant d'entraînement...",
+    "stepTitle": "Étape {step} : {name}",
+    "back": "Retour",
+    "next": "Suivant",
+    "processing": "Traitement...",
+    "generatePlan": "Générer le Plan",
+    "steps": {
+      "goal": "Objectif",
+      "timeline": "Calendrier",
+      "profile": "Profil",
+      "preferences": "Préférences",
+      "review": "Révision"
+    },
+    "goalStep": {
+      "title": "Quel est votre objectif principal d'entraînement ?",
+      "description": "Choisissez l'objectif principal de votre plan d'entraînement. Cela nous aidera à adapter les séances et la progression à vos besoins spécifiques.",
+      "customGoalLabel": "Ou décrivez votre propre objectif (optionnel)",
+      "customGoalPlaceholder": "Ex., 'Je veux compléter une sortie de 160km en moins de 5 heures' ou 'Améliorer ma capacité d'escalade pour les étapes de montagne'",
+      "customGoalHint": "Notre IA analysera votre objectif personnalisé et créera un plan sur mesure.",
+      "goals": {
+        "improve-ftp": {
+          "label": "Améliorer le FTP",
+          "description": "Augmenter la puissance au seuil fonctionnel par des intervalles structurés"
+        },
+        "build-endurance": {
+          "label": "Développer l'Endurance",
+          "description": "Développer la base aérobie pour des sorties et événements plus longs"
+        },
+        "race-prep": {
+          "label": "Préparation Course",
+          "description": "Atteindre le pic de forme pour un événement spécifique avec un entraînement ciblé"
+        },
+        "weight-loss": {
+          "label": "Perte de Poids",
+          "description": "Plan axé sur la combustion des graisses avec emphase sur la zone 2"
+        },
+        "general-fitness": {
+          "label": "Condition Physique Générale",
+          "description": "Approche équilibrée pour la condition physique cycliste globale"
+        }
+      }
+    },
+    "timelineStep": {
+      "title": "Quel est votre calendrier ?",
+      "description": "Avez-vous un événement spécifique pour lequel vous entraîner, ou juste un délai général ?",
+      "hasEventQuestion": "Avez-vous un événement cible ?",
+      "yesHaveEvent": "Oui, j'ai un événement",
+      "noJustDuration": "Non, juste la durée d'entraînement",
+      "eventType": "Type d'Événement",
+      "selectEventType": "Sélectionner le type d'événement",
+      "eventDate": "Date de l'Événement",
+      "weeksUntilEvent": "{weeks} semaines jusqu'à votre événement",
+      "trainingDuration": "Durée d'Entraînement (semaines)",
+      "weeksMin": "4 semaines",
+      "weeksMax": "24 semaines",
+      "weeksValue": "{weeks} semaines",
+      "eventTypes": {
+        "centuryRide": "Sortie de 160km (100 miles)",
+        "granFondo": "Gran Fondo",
+        "criterium": "Critérium",
+        "roadRace": "Course sur Route",
+        "timeTrial": "Contre-la-Montre",
+        "mtbRace": "Course VTT",
+        "gravelEvent": "Événement Gravel",
+        "multiDayTour": "Tour Multi-Jours",
+        "other": "Autre"
+      }
+    },
+    "profileStep": {
+      "title": "Votre Profil d'Athlète",
+      "description": "Nous avons pré-rempli certaines informations de votre profil. Veuillez vérifier et mettre à jour si nécessaire.",
+      "ftp": "Puissance au Seuil Fonctionnel (FTP)",
+      "watts": "watts",
+      "ftpSuggestion": "Basé sur vos activités récentes, nous suggérons un FTP de {ftp}W.",
+      "applySuggestion": "Appliquer la suggestion",
+      "weight": "Poids",
+      "kg": "kg",
+      "powerToWeight": "Rapport Puissance-Poids",
+      "wkgExcellent": "Excellent ! Vous avez un rapport puissance-poids compétitif.",
+      "wkgGood": "Bon rapport puissance-poids avec une marge d'amélioration.",
+      "wkgImprove": "Concentrez-vous sur le développement de la puissance et l'optimisation du poids pour de meilleurs résultats.",
+      "maxHr": "Fréquence Cardiaque Maximale",
+      "bpm": "bpm",
+      "maxHrHint": "Si inconnue, estimez : 220 - votre âge = FC max",
+      "weeklyHours": "Temps d'Entraînement Hebdomadaire Disponible",
+      "selectWeeklyHours": "Sélectionner les heures hebdomadaires",
+      "hours3to5": "3-5 heures/semaine",
+      "hours5to8": "5-8 heures/semaine",
+      "hours8to12": "8-12 heures/semaine",
+      "hours12plus": "12+ heures/semaine",
+      "experience": "Expérience Cycliste",
+      "selectExperience": "Sélectionner le niveau d'expérience",
+      "beginner": "Débutant (< 6 mois)",
+      "intermediate": "Intermédiaire (6-24 mois)",
+      "advanced": "Avancé (2+ ans)",
+      "expert": "Expert/Compétitif (5+ ans)"
+    },
+    "preferencesStep": {
+      "title": "Préférences d'Entraînement",
+      "description": "Personnalisez votre plan selon vos préférences et disponibilités",
+      "daysPerWeek": "Jours d'Entraînement par Semaine",
+      "daysMin": "3 jours",
+      "daysMax": "7 jours",
+      "daysValue": "{days} jours",
+      "workoutTypes": "Types de Séances Préférés (sélectionnez tous ceux qui s'appliquent)",
+      "workoutTypeOptions": {
+        "intervals": {
+          "label": "Intervalles Structurés",
+          "description": "Entraînement par intervalles à haute intensité"
+        },
+        "endurance": {
+          "label": "Longues Sorties d'Endurance",
+          "description": "Développer la base aérobie"
+        },
+        "recovery": {
+          "label": "Sorties de Récupération",
+          "description": "Séances de récupération active"
+        },
+        "tempo": {
+          "label": "Séances Tempo",
+          "description": "Efforts soutenus au seuil"
+        },
+        "sweet-spot": {
+          "label": "Entraînement Sweet Spot",
+          "description": "88-94% du FTP"
+        },
+        "vo2max": {
+          "label": "Intervalles VO2 Max",
+          "description": "Travail de capacité aérobie maximale"
+        }
+      },
+      "indoorOnly": "Entraînement Indoor Uniquement",
+      "indoorOnlyDescription": "Le plan comprendra uniquement des séances sur home-trainer"
+    },
+    "reviewStep": {
+      "title": "Révisez Votre Plan d'Entraînement",
+      "description": "Veuillez vérifier tous les détails avant de générer votre plan d'entraînement personnalisé",
+      "trainingGoal": "Objectif d'Entraînement",
+      "customGoal": "Objectif personnalisé : \"{goal}\"",
+      "timeline": "Calendrier",
+      "eventType": "Type d'Événement",
+      "eventDate": "Date de l'Événement",
+      "weeksUntilEvent": "Semaines jusqu'à l'événement",
+      "weeksValue": "{weeks} semaines",
+      "trainingDuration": "Durée d'Entraînement",
+      "athleteProfile": "Profil d'Athlète",
+      "ftp": "FTP",
+      "weight": "Poids",
+      "wkg": "W/kg",
+      "weeklyTrainingTime": "Temps d'Entraînement Hebdomadaire",
+      "experienceLevel": "Niveau d'Expérience",
+      "trainingPreferences": "Préférences d'Entraînement",
+      "trainingDaysPerWeek": "Jours d'Entraînement par Semaine",
+      "daysValue": "{days} jours",
+      "workoutTypes": "Types de Séances",
+      "indoorTrainingOnly": "Entraînement Indoor Uniquement",
+      "planWillInclude": "Votre plan comprendra :",
+      "planItem1": "Structure d'entraînement personnalisée basée sur votre niveau {level}",
+      "planItem2": "Surcharge progressive ciblant votre objectif de {goal}",
+      "planItem3": "{days} séances par semaine avec récupération optimale",
+      "planItem4": "Zones de puissance calculées à partir de votre FTP de {ftp}W",
+      "planItem5": "Périodisation culminant pour votre {eventType}"
+    },
+    "aiAssistant": {
+      "title": "Coach IA",
+      "description": "Conseils personnalisés pour votre plan d'entraînement",
+      "noSuggestion": "Complétez les étapes de l'assistant pour recevoir des recommandations personnalisées...",
+      "quickInsights": "Aperçus Rapides",
+      "yourStats": "Vos Statistiques",
+      "currentFtp": "FTP Actuel",
+      "weight": "Poids",
+      "wkg": "W/kg",
+      "insightWkgExcellent": "Excellent rapport puissance-poids ! Votre {wkg} W/kg vous place dans la catégorie avancée.",
+      "insightWkgImprove": "Votre rapport W/kg a une grande marge d'amélioration. Un plan structuré peut vous aider à atteindre de nouveaux niveaux !",
+      "insightFtpDays": "L'amélioration du FTP nécessite généralement 4-5 jours d'entraînement par semaine. Envisagez d'augmenter la fréquence d'entraînement pour des résultats optimaux.",
+      "insightFtpWeeks": "Les gains de FTP nécessitent généralement 8-12 semaines. Envisagez d'étendre la durée de votre plan.",
+      "insightGreatTimeline": "Excellent calendrier ! Cela nous donne suffisamment de temps pour une périodisation appropriée."
+    }
+  },
+  "aboutPage": {
+    "backToHome": "Retour à l'accueil",
+    "hero": {
+      "badge": "Coach Cyclisme propulsé par l'IA",
+      "title": {
+        "part1": "Votre",
+        "highlight": "Coach IA",
+        "part2": "Personnel pour l'Excellence Cycliste"
+      },
+      "subtitle": "Nous croyons que chaque cycliste mérite un entraîneur de classe mondiale. C'est pourquoi nous avons créé une IA qui comprend vos données, connaît vos objectifs et vous aide à rouler plus vite, plus fort et plus intelligemment que jamais.",
+      "cta": {
+        "primary": "Commencez Votre Aventure",
+        "secondary": "Déjà membre ? Connectez-vous"
+      }
+    },
+    "mission": {
+      "title": "Notre Mission : Vous Rendre Inarrêtable",
+      "description": "Nous ne sommes pas qu'une simple appli d'entraînement. Nous sommes votre partenaire d'entraînement infatigable qui analyse chaque coup de pédale, comprend votre physiologie et crée des plans personnalisés qui évoluent avec vous. Que vous visiez votre première sortie de 100km ou que vous chassiez ce podium, nous sommes avec vous (et vos watts)."
+    },
+    "stats": {
+      "availability": "Toujours prêt à entraîner",
+      "possibilities": "Possibilités d'entraînement",
+      "dedication": "Dédié à votre succès"
+    },
+    "features": {
+      "title": "Tout Ce Dont Vous Avez Besoin Pour Progresser",
+      "subtitle": "De l'analyse de données aux plans d'entraînement personnalisés, nous avons réuni tout ce dont un cycliste sérieux a besoin dans une plateforme puissante.",
+      "aiCoach": {
+        "title": "Coaching par IA",
+        "description": "Obtenez des insights intelligents et des recommandations basées sur vos données de performance uniques. C'est comme avoir un entraîneur pro dans votre poche."
+      },
+      "performanceAnalysis": {
+        "title": "Analyse de Performance Approfondie",
+        "description": "Plongez dans vos courbes de puissance, tendances de fréquence cardiaque et patterns d'entraînement. Comprenez ce qui vous fait avancer (et ce qui vous fait aller plus vite)."
+      },
+      "trainingPlans": {
+        "title": "Plans d'Entraînement Intelligents",
+        "description": "Plans générés automatiquement qui s'adaptent à vos objectifs, disponibilités et niveau de forme. Pas d'entraînements génériques ici."
+      },
+      "powerZones": {
+        "title": "Zones de Puissance Précises",
+        "description": "Entraînez-vous dans les bonnes zones au bon moment. Notre IA calcule vos zones et vous dit exactement quand pousser et quand récupérer."
+      },
+      "tss": {
+        "title": "Suivi de Charge d'Entraînement",
+        "description": "Surveillez votre charge d'entraînement avec les calculs de TSS. Sachez quand vous construisez votre forme et quand vous avez besoin de repos avant l'épuisement."
+      },
+      "progress": {
+        "title": "Suivez Vos Progrès",
+        "description": "Regardez votre FTP grimper, votre endurance grandir et vos temps chuter. Rien ne motive plus que de voir des progrès réels."
+      }
+    },
+    "philosophy": {
+      "title": "Créé par des Cyclistes, pour des Cyclistes",
+      "paragraph1": "Nous savons ce que c'est de regarder un fichier de puissance sans comprendre ce que tout cela signifie. Nous avons ressenti la frustration des plateaux et la joie des percées. C'est pourquoi nous avons construit quelque chose de différent.",
+      "paragraph2": "Notre IA ne fait pas que traiter des chiffres—elle comprend l'art et la science du cyclisme. Elle sait qu'une sortie d'endurance de 5 heures raconte une histoire différente que des intervalles 5x5 VO2max. Elle comprend la périodisation, la récupération et ce qu'il faut pour atteindre votre pic pour votre grand événement.",
+      "paragraph3": "Ce n'est pas de l'intelligence artificielle pour suivre la mode. C'est un véritable partenaire d'entraînement qui devient plus intelligent à chaque fois que vous roulez.",
+      "quote": "Roulez. Analysez. Améliorez. Répétez.",
+      "quoteAuthor": "— La Philosophie Cycling AI"
+    },
+    "team": {
+      "title": "Une Équipe Qui Vit Sur Deux Roues",
+      "description": "Derrière chaque algorithme se trouve un cycliste qui a ressenti la brûlure d'un test de seuil, la liberté d'une descente en montagne et la satisfaction d'un bloc d'entraînement parfaitement exécuté. Nous construisons ce que nous aurions aimé avoir."
+    },
+    "cta": {
+      "title": "Prêt à Transformer Votre Pédalage ?",
+      "subtitle": "Rejoignez des milliers de cyclistes qui s'entraînent déjà plus intelligemment, récupèrent mieux et atteignent des objectifs qu'ils n'auraient jamais cru possibles.",
+      "button": "Allons Rouler"
+    },
+    "footer": {
+      "copyright": "© {year} Cycling AI. Tous droits réservés.",
+      "madeWith": "Fait avec",
+      "forCyclists": "pour les cyclistes partout"
+    }
+  }
+}
