@@ -44,7 +44,7 @@ export class StravaSyncService {
     }
   ): Promise<SyncResult> {
     try {
-      // NOTE: sync_status is already set to 'in_progress' atomically by the API endpoint
+      // NOTE: sync_status is already set to 'syncing' atomically by the API endpoint
       // to prevent race conditions. We don't set it here.
 
       const perPage = options?.perPage || 30
@@ -229,7 +229,7 @@ export class StravaSyncService {
    */
   private async updateSyncStatus(
     userId: string,
-    status: 'pending' | 'in_progress' | 'success' | 'error',
+    status: 'pending' | 'syncing' | 'success' | 'error',
     error: string | null
   ): Promise<void> {
     const supabase = await createClient()

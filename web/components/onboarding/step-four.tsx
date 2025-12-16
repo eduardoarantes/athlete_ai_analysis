@@ -13,7 +13,6 @@ import {
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
   FormDescription,
 } from '@/components/ui/form'
 import {
@@ -58,7 +57,7 @@ export function StepFour({ initialData, onSubmit }: StepFourProps) {
   const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
 
   // Auto-detect language from browser
-  const browserLanguage = navigator.language.split('-')[0] // Gets 'en' from 'en-US'
+  const browserLanguage = navigator.language.split('-')[0] ?? 'en' // Gets 'en' from 'en-US'
   const supportedLanguages = ['en', 'pt', 'es', 'fr']
   const detectedLanguage = supportedLanguages.includes(browserLanguage) ? browserLanguage : 'en'
 

@@ -21,9 +21,9 @@ describe('mapProfileUpdates', () => {
   })
 
   it('should only include defined fields', () => {
+    // Only pass the fields we want to update, omitting ftp
     const updates = {
       firstName: 'John',
-      ftp: undefined,
     }
 
     const result = mapProfileUpdates(updates)

@@ -12,7 +12,7 @@ import { cyclingCoachService } from '@/lib/services/cycling-coach-service'
  * - result: { plan_id, plan_data } (when completed)
  */
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ jobId: string }> }
 ) {
   try {

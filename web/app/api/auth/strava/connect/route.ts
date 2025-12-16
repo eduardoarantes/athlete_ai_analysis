@@ -7,7 +7,7 @@ import { randomBytes } from 'crypto'
  * Initiate Strava OAuth flow
  * GET /api/auth/strava/connect
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Check if user is authenticated
     const supabase = await createClient()
