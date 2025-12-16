@@ -98,7 +98,6 @@ export async function PUT(request: NextRequest) {
     // Update profile
     const { data: profile, error: updateError } = await supabase
       .from('athlete_profiles')
-      // @ts-ignore - Supabase typing issue with partial updates
       .update(updateData)
       .eq('user_id', user.id)
       .select()

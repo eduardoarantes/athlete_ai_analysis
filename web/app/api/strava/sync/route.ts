@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
       const jobId = await jobService.createJob({
         userId: user.id,
         type: 'strava_sync',
-        payload: payload as unknown as Record<string, unknown>,
+        payload: payload as Record<string, unknown>,
         maxAttempts: 3,
       })
 
