@@ -30,7 +30,7 @@ test.describe('Activities Calendar', () => {
     if (authError) throw authError
     testUserId = authData.user.id
 
-    // Create profile
+    // Create profile (using 'as never' for test data compatibility)
     const { error: profileError } = await supabase.from('athlete_profiles').insert({
       user_id: testUserId,
       first_name: 'Test',
@@ -38,7 +38,7 @@ test.describe('Activities Calendar', () => {
       ftp: 250,
       max_hr: 180,
       weight_kg: 70,
-    })
+    } as never)
 
     if (profileError) throw profileError
 
@@ -98,7 +98,7 @@ test.describe('Activities Calendar', () => {
 
     const { error: activitiesError } = await supabase
       .from('strava_activities')
-      .insert(activities)
+      .insert(activities as never)
 
     if (activitiesError) throw activitiesError
 

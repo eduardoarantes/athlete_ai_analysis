@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import type { Database } from '@/lib/types/database'
 import { RecentActivitiesList } from '@/components/dashboard/recent-activities-list'
 import { StravaConnectionToast } from '@/components/dashboard/strava-connection-toast'
+import { StravaSyncStatus } from '@/components/dashboard/strava-sync-status'
 import { User, Zap, Heart, Scale, TrendingUp, Calendar, Activity } from 'lucide-react'
 
 type AthleteProfile = Database['public']['Tables']['athlete_profiles']['Row']
@@ -249,6 +250,9 @@ export default async function DashboardPage() {
             </AlertDescription>
           </Alert>
         )}
+
+        {/* Strava Sync Status - Only shows if connected */}
+        <StravaSyncStatus />
 
         {/* Activity Stats */}
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
