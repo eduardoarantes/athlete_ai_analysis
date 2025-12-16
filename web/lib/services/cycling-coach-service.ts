@@ -14,7 +14,21 @@ const execAsync = promisify(exec)
 // Configuration
 const PYTHON_CLI_PATH = process.env.CYCLING_AI_CLI_PATH || 'cycling-ai'
 const TEMP_DATA_DIR = process.env.TEMP_DATA_DIR || '/tmp/cycling-ai-jobs'
-const PROJECT_ROOT = process.env.PROJECT_ROOT || '/Users/eduardo/Documents/projects/cycling-ai-analysis'
+
+/**
+ * Get project root path from environment variable.
+ * Falls back to parent of current working directory (assumes running from web/).
+ */
+function getProjectRoot(): string {
+  if (process.env.PROJECT_ROOT) {
+    return process.env.PROJECT_ROOT
+  }
+  // In development, Next.js runs from web/ directory, so go up one level
+  // In production, this should be set via environment variable
+  return join(process.cwd(), '..')
+}
+
+const PROJECT_ROOT = getProjectRoot()
 
 export interface TrainingPlanParams {
   goal: string
