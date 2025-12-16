@@ -5,6 +5,7 @@
 
 import { StravaSyncService } from '@/lib/services/strava-sync-service'
 import { jobService } from '@/lib/services/job-service'
+import { errorLogger } from '@/lib/monitoring/error-logger'
 import type { StravaSyncJobPayload, StravaSyncJobResult } from '@/lib/types/jobs'
 
 /**
@@ -22,7 +23,10 @@ export async function executeStravaSyncJob(
   const startTime = new Date().toISOString()
   const syncService = new StravaSyncService()
 
-  console.log(`[StravaSyncJob] Starting job ${jobId} for user ${payload.userId}`)
+  errorLogger.logInfo(`Starting Strava sync job ${jobId}`, {
+    userId: payload.userId,
+    metadata: { jobId },
+  })
 
   try {
     // Mark job as running
@@ -52,26 +56,30 @@ export async function executeStravaSyncJob(
     // Mark job as completed
     await jobService.markJobAsCompleted(jobId, jobResult as unknown as Record<string, unknown>)
 
-    console.log(
-      `[StravaSyncJob] Job ${jobId} completed successfully:`,
-      `${result.activitiesSynced} activities synced`
-    )
+    errorLogger.logInfo(`Strava sync job ${jobId} completed`, {
+      userId: payload.userId,
+      metadata: { jobId, activitiesSynced: result.activitiesSynced },
+    })
 
     return jobResult
   } catch (error) {
     const endTime = new Date().toISOString()
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
 
-    console.error(`[StravaSyncJob] Job ${jobId} failed:`, errorMessage)
+    errorLogger.logError(new Error(`Strava sync job ${jobId} failed: ${errorMessage}`), {
+      userId: payload.userId,
+      metadata: { jobId },
+    })
 
     // Check if we should retry
     const shouldRetry = await jobService.shouldRetry(jobId)
 
     if (shouldRetry) {
       const attempts = await jobService.incrementAttempts(jobId)
-      console.log(
-        `[StravaSyncJob] Will retry job ${jobId} (attempt ${attempts})`
-      )
+      errorLogger.logInfo(`Will retry Strava sync job ${jobId} (attempt ${attempts})`, {
+        userId: payload.userId,
+        metadata: { jobId, attempts },
+      })
 
       // Update job as pending for retry
       await jobService.updateJob({

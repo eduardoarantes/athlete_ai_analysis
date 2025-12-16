@@ -159,6 +159,102 @@ export async function POST(request: NextRequest) {
 
 ---
 
+## Logging Guidelines
+
+**NEVER use `console.log` or `console.error` in production code.** Always use the structured `errorLogger` from `@/lib/monitoring/error-logger`.
+
+### Import the Logger
+
+```typescript
+import { errorLogger } from '@/lib/monitoring/error-logger'
+```
+
+### Logging Methods
+
+The errorLogger provides three severity levels:
+
+```typescript
+// For informational messages (successful operations, status updates)
+errorLogger.logInfo('Webhook event received', {
+  userId: user.id,          // Optional: Associate with user
+  metadata: {               // Optional: Additional context
+    objectType: event.type,
+    objectId: event.id,
+  },
+})
+
+// For warnings (non-critical issues, recoverable errors)
+errorLogger.logWarning('User not found for athlete', {
+  path: '/api/webhooks/strava',
+  metadata: { athleteId: event.owner_id },
+})
+
+// For errors (exceptions, failures that need attention)
+errorLogger.logError(error as Error, {
+  userId: user.id,
+  path: '/api/profile/create',
+  method: 'POST',
+  metadata: { additionalContext: 'value' },
+})
+```
+
+### Common Patterns
+
+**API Route Error Handling:**
+```typescript
+export async function POST(request: NextRequest) {
+  try {
+    // ... operation logic
+
+    errorLogger.logInfo('Operation completed', {
+      userId: user.id,
+      metadata: { operationType: 'create' },
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    errorLogger.logError(error as Error, {
+      path: '/api/your-endpoint',
+      method: 'POST',
+    })
+    return NextResponse.json({ error: 'Failed' }, { status: 500 })
+  }
+}
+```
+
+**Service Layer Logging:**
+```typescript
+async function processWebhookEvent(event: WebhookEvent): Promise<void> {
+  errorLogger.logInfo('Processing webhook event', {
+    metadata: { eventId: event.id, type: event.type },
+  })
+
+  try {
+    // ... processing logic
+
+    errorLogger.logInfo('Webhook processed successfully', {
+      metadata: { eventId: event.id },
+    })
+  } catch (error) {
+    errorLogger.logError(error as Error, {
+      path: '/api/webhooks',
+      metadata: { eventId: event.id, phase: 'processing' },
+    })
+    throw error
+  }
+}
+```
+
+### Key Principles
+
+1. **Never log sensitive data** - Don't log passwords, tokens, full emails, or PII
+2. **Include context** - Always include relevant IDs (userId, objectId, etc.)
+3. **Use appropriate severity** - Info for success, Warning for recoverable issues, Error for failures
+4. **Include path/method** - For API routes, always include the endpoint path
+5. **Structure metadata** - Use the metadata object for additional context
+
+---
+
 ## Project Structure
 
 ```

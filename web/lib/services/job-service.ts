@@ -4,6 +4,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server'
+import { errorLogger } from '@/lib/monitoring/error-logger'
 import type {
   CreateJobParams,
   UpdateJobParams,
@@ -32,7 +33,10 @@ export class JobService {
       .single<{ id: string }>()
 
     if (error) {
-      console.error('[JobService] Failed to create job:', error)
+      errorLogger.logError(new Error(`Failed to create job: ${error.message}`), {
+        userId: params.userId,
+        metadata: { type: params.type },
+      })
       throw new Error(`Failed to create job: ${error.message}`)
     }
 
@@ -40,7 +44,10 @@ export class JobService {
       throw new Error('No job ID returned from database')
     }
 
-    console.log(`[JobService] Created job ${data.id} for user ${params.userId}`)
+    errorLogger.logInfo(`Created job ${data.id}`, {
+      userId: params.userId,
+      metadata: { jobId: data.id, type: params.type },
+    })
     return data.id
   }
 
@@ -65,13 +72,14 @@ export class JobService {
       .eq('id', params.id)
 
     if (error) {
-      console.error(`[JobService] Failed to update job ${params.id}:`, error)
+      errorLogger.logError(new Error(`Failed to update job: ${error.message}`), {
+        metadata: { jobId: params.id },
+      })
       throw new Error(`Failed to update job: ${error.message}`)
     }
 
-    console.log(`[JobService] Updated job ${params.id}:`, {
-      status: params.status,
-      error: params.error ? 'has error' : 'no error',
+    errorLogger.logInfo(`Updated job ${params.id}`, {
+      metadata: { jobId: params.id, status: params.status, hasError: !!params.error },
     })
   }
 
@@ -92,7 +100,9 @@ export class JobService {
         // Job not found
         return null
       }
-      console.error(`[JobService] Failed to get job ${jobId}:`, error)
+      errorLogger.logError(new Error(`Failed to get job: ${error.message}`), {
+        metadata: { jobId },
+      })
       throw new Error(`Failed to get job: ${error.message}`)
     }
 

@@ -62,7 +62,6 @@ export default function CreateTrainingPlanPage() {
 
         if (sessionData.session) {
           // Resume from saved session
-          console.log('Resuming from saved session:', sessionData.session)
           setWizardData(sessionData.session.wizardData)
           setCurrentStep(sessionData.session.currentStep)
         } else {
