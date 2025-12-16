@@ -72,11 +72,12 @@ export async function POST(request: NextRequest) {
     const profileData = validationResult.data
 
     // Create profile with snake_case field names for database
+    // Convert undefined to null for optional fields (database expects null, not undefined)
     const insertData: Database['public']['Tables']['athlete_profiles']['Insert'] = {
       user_id: user.id,
       first_name: profileData.firstName,
       last_name: profileData.lastName,
-      age: profileData.age,
+      age: profileData.age ?? null,
       gender: profileData.gender,
       ftp: profileData.ftp,
       max_hr: profileData.maxHr,

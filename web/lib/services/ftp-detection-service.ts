@@ -142,7 +142,7 @@ export class FTPDetectionService {
     activityCount: number,
     periodDays: number
   ): FTPEstimate {
-    const { maxWeightedAverage, maxAverage, maxPeak } = maxPowers
+    const { maxWeightedAverage, maxAverage, maxPeak: _maxPeak } = maxPowers
 
     // Method 1: Use weighted average watts (most reliable for Strava data)
     // Weighted average watts is typically 85-95% of FTP for hard efforts
@@ -209,7 +209,7 @@ export class FTPDetectionService {
       const supabase = await createClient()
 
       const { error } = await supabase
-        .from('profiles')
+        .from('athlete_profiles')
         .update({ ftp } as never)
         .eq('user_id', userId)
 
@@ -237,7 +237,7 @@ export class FTPDetectionService {
       const supabase = await createClient()
 
       const { data, error } = await supabase
-        .from('profiles')
+        .from('athlete_profiles')
         .select('ftp')
         .eq('user_id', userId)
         .single<{ ftp: number | null }>()

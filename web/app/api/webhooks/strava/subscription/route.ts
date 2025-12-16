@@ -12,7 +12,7 @@ const CALLBACK_URL = `${APP_URL}/api/webhooks/strava`
  * POST /api/webhooks/strava/subscription - Create subscription
  * GET /api/webhooks/strava/subscription - View current subscription
  */
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     // Check if user is admin (in production, add proper auth check)
     const supabase = await createClient()

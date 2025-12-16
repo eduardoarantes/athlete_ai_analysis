@@ -168,7 +168,7 @@ export async function POST(request: NextRequest) {
       const jobId = await jobService.createJob({
         userId: user.id,
         type: 'strava_sync',
-        payload: payload as Record<string, unknown>,
+        payload: payload as unknown as Record<string, unknown>,
         maxAttempts: 3,
       })
 
@@ -263,14 +263,17 @@ export async function GET() {
       )
     }
 
-    const syncService = new StravaSyncService()
-    const activityCount = await syncService.getActivityCount(user.id)
+    // Get activity count directly from database
+    const { count: activityCount } = await supabase
+      .from('strava_activities')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
 
     return NextResponse.json({
       syncStatus: connection.sync_status,
       syncError: connection.sync_error,
       lastSyncAt: connection.last_sync_at,
-      activityCount,
+      activityCount: activityCount ?? 0,
     })
   } catch (error) {
     console.error('Get sync status error:', error)

@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
  * Get Strava connection status
  * GET /api/auth/strava/status
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const supabase = await createClient()
     const {

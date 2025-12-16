@@ -101,10 +101,8 @@ export default function OnboardingPage() {
       // Show success message
       toast.success('Profile created successfully!')
 
-      // Redirect to dashboard
-      setTimeout(() => {
-        router.push('/dashboard')
-      }, 1000)
+      // Redirect to dashboard immediately
+      router.push('/dashboard')
     } catch (error) {
       console.error('Error creating profile:', error)
       toast.error(error instanceof Error ? error.message : 'Failed to create profile')

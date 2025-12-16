@@ -40,6 +40,7 @@ export function StravaConnectionToast() {
       }, 100)
       return () => clearTimeout(timer)
     }
+    return undefined
   }, [stravaConnected, stravaError, router])
 
   // Auto-dismiss after 5 seconds for success
@@ -50,6 +51,7 @@ export function StravaConnectionToast() {
       }, 5000)
       return () => clearTimeout(timer)
     }
+    return undefined
   }, [shouldShow, isSuccess])
 
   if (!shouldShow) return null
