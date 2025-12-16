@@ -526,7 +526,7 @@ export function ActivitiesCalendar({ sportTypeFilter }: ActivitiesCalendarProps)
                         <div className="font-medium flex items-center gap-1 min-w-0">
                           {getActivityIcon(activity.sport_type)}
                           <span className="truncate flex-1">{activity.name}</span>
-                          <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-[#FC4C02] flex-shrink-0" />
+                          <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground flex-shrink-0" />
                         </div>
                         <div className="text-muted-foreground">
                           {formatDistance(activity.distance)}

@@ -262,7 +262,7 @@ export function RecentActivitiesList({ activities, stravaConnected }: RecentActi
               <div className="flex-1 min-w-0">
                 <h4 className="font-medium truncate flex items-center gap-2">
                   {activity.name}
-                  <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-[#FC4C02] flex-shrink-0" />
+                  <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground flex-shrink-0" />
                 </h4>
                 <p className="text-sm text-muted-foreground">
                   {date.toLocaleDateString('en-US', {
