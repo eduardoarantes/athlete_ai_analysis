@@ -44,8 +44,8 @@ export class StravaSyncService {
     }
   ): Promise<SyncResult> {
     try {
-      // Update sync status to 'in_progress'
-      await this.updateSyncStatus(userId, 'in_progress', null)
+      // NOTE: sync_status is already set to 'in_progress' atomically by the API endpoint
+      // to prevent race conditions. We don't set it here.
 
       const perPage = options?.perPage || 30
       const maxPages = options?.maxPages || Infinity
