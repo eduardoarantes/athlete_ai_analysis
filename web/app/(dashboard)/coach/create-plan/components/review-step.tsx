@@ -142,10 +142,16 @@ export function ReviewStep({ data }: ReviewStepProps) {
                   <Badge variant="outline">{formatExperience(profile.experienceLevel)}</Badge>
                 </div>
               )}
-              {profile.daysPerWeek && (
+              {profile.trainingDays && profile.trainingDays.length > 0 && (
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">{t('trainingDaysPerWeek')}</span>
-                  <Badge variant="outline">{t('daysValue', { days: profile.daysPerWeek })}</Badge>
+                  <span className="text-sm text-muted-foreground">{t('trainingDays')}</span>
+                  <div className="flex flex-wrap gap-1 justify-end">
+                    {profile.trainingDays.map((day: string) => (
+                      <Badge key={day} variant="outline" className="text-xs">
+                        {day.charAt(0).toUpperCase() + day.slice(1, 3)}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -161,7 +167,7 @@ export function ReviewStep({ data }: ReviewStepProps) {
           <ul className="space-y-1 text-sm">
             <li>• {t('planItem1', { level: formatExperience(profile?.experienceLevel || '') })}</li>
             <li>• {t('planItem2', { goal: formatGoal(goal) })}</li>
-            <li>• {t('planItem3', { days: profile?.daysPerWeek })}</li>
+            <li>• {t('planItem3', { days: profile?.trainingDays?.length || 0 })}</li>
             <li>• {t('planItem4', { ftp: profile?.ftp })}</li>
             {timeline?.hasEvent && <li>• {t('planItem5', { eventType: timeline.eventType })}</li>}
           </ul>

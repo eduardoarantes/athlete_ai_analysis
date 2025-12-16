@@ -428,7 +428,19 @@
       "beginner": "Beginner (< 6 months)",
       "intermediate": "Intermediate (6-24 months)",
       "advanced": "Advanced (2+ years)",
-      "expert": "Expert/Competitive (5+ years)"
+      "expert": "Expert/Competitive (5+ years)",
+      "trainingDays": "Training Days",
+      "trainingDaysDescription": "Select which days you're available to train",
+      "selectedDays": "{count, plural, =0 {No days selected} =1 {1 day selected} other {# days selected}}",
+      "days": {
+        "monday": "Mon",
+        "tuesday": "Tue",
+        "wednesday": "Wed",
+        "thursday": "Thu",
+        "friday": "Fri",
+        "saturday": "Sat",
+        "sunday": "Sun"
+      }
     },
     "preferencesStep": {
       "daysPerWeek": "Training Days per Week",
@@ -453,8 +465,7 @@
       "wkg": "W/kg",
       "weeklyTrainingTime": "Weekly Training Time",
       "experienceLevel": "Experience Level",
-      "trainingDaysPerWeek": "Training Days per Week",
-      "daysValue": "{days} days",
+      "trainingDays": "Training Days",
       "planWillInclude": "Your plan will include:",
       "planItem1": "Personalized workout structure based on your {level} level",
       "planItem2": "Progressive overload targeting your {goal} goal",

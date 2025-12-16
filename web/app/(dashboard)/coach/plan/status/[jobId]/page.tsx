@@ -39,7 +39,9 @@ export default function PlanStatusPage() {
 
     const pollStatus = async () => {
       try {
-        const response = await fetch(`/api/coach/plan/status/${jobId}`)
+        const response = await fetch(`/api/coach/plan/status/${jobId}`, {
+          credentials: 'include',
+        })
 
         if (!isMounted) return
 

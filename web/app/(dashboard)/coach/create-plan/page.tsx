@@ -28,7 +28,7 @@ interface WizardData {
     maxHR: number
     weeklyHours: string
     experienceLevel: string
-    daysPerWeek: number
+    trainingDays: string[]
   }
 }
 
@@ -73,7 +73,7 @@ export default function CreateTrainingPlanPage() {
               maxHR: initData.profile.maxHR || 0,
               weeklyHours: '',
               experienceLevel: initData.experienceLevel || 'intermediate',
-              daysPerWeek: 4,
+              trainingDays: ['monday', 'wednesday', 'friday', 'saturday'],
             },
           })
         }

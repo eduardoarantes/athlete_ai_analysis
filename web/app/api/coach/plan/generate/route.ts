@@ -42,8 +42,8 @@ export async function POST(request: NextRequest) {
       if (!wizardData.profile.weight || wizardData.profile.weight <= 0) {
         validationErrors.push('Weight must be a positive number')
       }
-      if (!wizardData.profile.daysPerWeek || wizardData.profile.daysPerWeek < 3 || wizardData.profile.daysPerWeek > 7) {
-        validationErrors.push('Days per week must be between 3 and 7')
+      if (!wizardData.profile.trainingDays || wizardData.profile.trainingDays.length === 0) {
+        validationErrors.push('At least one training day must be selected')
       }
     }
 

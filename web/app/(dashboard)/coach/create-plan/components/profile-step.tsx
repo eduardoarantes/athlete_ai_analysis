@@ -5,9 +5,20 @@ import { useTranslations } from 'next-intl'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Sparkles } from 'lucide-react'
+
+const WEEKDAYS = [
+  { id: 'monday', label: 'Monday' },
+  { id: 'tuesday', label: 'Tuesday' },
+  { id: 'wednesday', label: 'Wednesday' },
+  { id: 'thursday', label: 'Thursday' },
+  { id: 'friday', label: 'Friday' },
+  { id: 'saturday', label: 'Saturday' },
+  { id: 'sunday', label: 'Sunday' },
+] as const
 
 interface ProfileStepProps {
   data: {
@@ -17,7 +28,7 @@ interface ProfileStepProps {
       maxHR: number
       weeklyHours: string
       experienceLevel: string
-      daysPerWeek: number
+      trainingDays: string[]
     }
   }
   onUpdate: (data: any) => void
@@ -25,24 +36,45 @@ interface ProfileStepProps {
 
 export function ProfileStep({ data, onUpdate }: ProfileStepProps) {
   const t = useTranslations('createPlan.profileStep')
-  const t2 = useTranslations('createPlan.preferencesStep')
   const profile = data.profile || {
     ftp: 0,
     weight: 0,
     maxHR: 0,
     weeklyHours: '',
     experienceLevel: 'intermediate',
-    daysPerWeek: 4,
+    trainingDays: ['monday', 'wednesday', 'friday', 'saturday'],
   }
 
   const [suggestedFTP] = useState(275) // This would come from API
   const showFTPSuggestion = profile.ftp > 0 && Math.abs(profile.ftp - suggestedFTP) > 10
 
-  const handleFieldChange = (field: string, value: string | number) => {
+  const handleFieldChange = (field: string, value: string | number | string[]) => {
     onUpdate({
       profile: {
         ...profile,
         [field]: value,
+      },
+    })
+  }
+
+  const handleDayToggle = (dayId: string, checked: boolean) => {
+    const currentDays = profile.trainingDays || []
+    let newDays: string[]
+
+    if (checked) {
+      newDays = [...currentDays, dayId]
+    } else {
+      newDays = currentDays.filter((d) => d !== dayId)
+    }
+
+    // Sort days in week order
+    const dayOrder: string[] = WEEKDAYS.map((d) => d.id)
+    newDays.sort((a, b) => dayOrder.indexOf(a) - dayOrder.indexOf(b))
+
+    onUpdate({
+      profile: {
+        ...profile,
+        trainingDays: newDays,
       },
     })
   }
@@ -177,26 +209,38 @@ export function ProfileStep({ data, onUpdate }: ProfileStepProps) {
         </Select>
       </div>
 
-      {/* Days per week */}
-      <div className="space-y-2">
-        <Label htmlFor="daysPerWeek">{t2('daysPerWeek')}</Label>
-        <div className="space-y-4">
-          <Input
-            id="daysPerWeek"
-            type="range"
-            min="3"
-            max="7"
-            step="1"
-            value={profile.daysPerWeek}
-            onChange={(e) => handleFieldChange('daysPerWeek', parseInt(e.target.value))}
-            className="w-full"
-          />
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">{t2('daysMin')}</span>
-            <span className="font-semibold text-primary">{t2('daysValue', { days: profile.daysPerWeek })}</span>
-            <span className="text-muted-foreground">{t2('daysMax')}</span>
-          </div>
+      {/* Training Days Selection */}
+      <div className="space-y-3">
+        <Label>{t('trainingDays')}</Label>
+        <p className="text-sm text-muted-foreground">{t('trainingDaysDescription')}</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {WEEKDAYS.map((day) => {
+            const isSelected = (profile.trainingDays || []).includes(day.id)
+            return (
+              <label
+                key={day.id}
+                htmlFor={`day-${day.id}`}
+                className={`flex items-center space-x-2 p-3 rounded-lg border cursor-pointer transition-colors ${
+                  isSelected
+                    ? 'bg-primary/10 border-primary'
+                    : 'bg-background border-input hover:bg-muted'
+                }`}
+              >
+                <Checkbox
+                  id={`day-${day.id}`}
+                  checked={isSelected}
+                  onCheckedChange={(checked) => handleDayToggle(day.id, !!checked)}
+                />
+                <span className="text-sm font-medium select-none">
+                  {t(`days.${day.id}`)}
+                </span>
+              </label>
+            )
+          })}
         </div>
+        <p className="text-sm text-muted-foreground">
+          {t('selectedDays', { count: (profile.trainingDays || []).length })}
+        </p>
       </div>
     </div>
   )
