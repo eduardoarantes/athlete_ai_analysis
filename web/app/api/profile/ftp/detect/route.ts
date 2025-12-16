@@ -23,10 +23,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Parse query parameters
+    // Parse and validate query parameters
     const { searchParams } = new URL(request.url)
-    const periodDays = parseInt(searchParams.get('periodDays') || '90')
-    const minActivities = parseInt(searchParams.get('minActivities') || '5')
+
+    const periodDaysParam = searchParams.get('periodDays')
+    const periodDays = periodDaysParam ? parseInt(periodDaysParam, 10) : 90
+    if (isNaN(periodDays) || periodDays < 1 || periodDays > 365) {
+      return NextResponse.json(
+        { error: 'periodDays must be between 1 and 365' },
+        { status: 400 }
+      )
+    }
+
+    const minActivitiesParam = searchParams.get('minActivities')
+    const minActivities = minActivitiesParam ? parseInt(minActivitiesParam, 10) : 5
+    if (isNaN(minActivities) || minActivities < 1 || minActivities > 100) {
+      return NextResponse.json(
+        { error: 'minActivities must be between 1 and 100' },
+        { status: 400 }
+      )
+    }
+
     const updateProfile = searchParams.get('updateProfile') === 'true'
 
     // Detect FTP

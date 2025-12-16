@@ -72,11 +72,8 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      // Parse query parameters
+      // Parse and validate query parameters
       const { searchParams } = new URL(request.url)
-      const afterParam = searchParams.get('after')
-      const perPageParam = searchParams.get('perPage')
-      const maxPagesParam = searchParams.get('maxPages')
 
       const syncOptions: {
         after?: number
@@ -84,16 +81,42 @@ export async function POST(request: NextRequest) {
         maxPages?: number
       } = {}
 
+      const afterParam = searchParams.get('after')
       if (afterParam) {
-        syncOptions.after = parseInt(afterParam)
+        const after = parseInt(afterParam, 10)
+        if (isNaN(after) || after < 0) {
+          return NextResponse.json(
+            { error: 'after must be a positive Unix timestamp' },
+            { status: 400 }
+          )
+        }
+        syncOptions.after = after
       }
+
+      const perPageParam = searchParams.get('perPage')
       if (perPageParam) {
-        syncOptions.perPage = Math.min(parseInt(perPageParam), 200)
+        const perPage = parseInt(perPageParam, 10)
+        if (isNaN(perPage) || perPage < 1 || perPage > 200) {
+          return NextResponse.json(
+            { error: 'perPage must be between 1 and 200' },
+            { status: 400 }
+          )
+        }
+        syncOptions.perPage = perPage
       } else {
         syncOptions.perPage = 30
       }
+
+      const maxPagesParam = searchParams.get('maxPages')
       if (maxPagesParam) {
-        syncOptions.maxPages = parseInt(maxPagesParam)
+        const maxPages = parseInt(maxPagesParam, 10)
+        if (isNaN(maxPages) || maxPages < 1 || maxPages > 100) {
+          return NextResponse.json(
+            { error: 'maxPages must be between 1 and 100' },
+            { status: 400 }
+          )
+        }
+        syncOptions.maxPages = maxPages
       }
 
       // Create job record
