@@ -9,7 +9,7 @@ import type { Database } from '@/lib/types/database'
 import { RecentActivitiesList } from '@/components/dashboard/recent-activities-list'
 import { StravaConnectionToast } from '@/components/dashboard/strava-connection-toast'
 import { StravaSyncStatus } from '@/components/dashboard/strava-sync-status'
-import { User, Zap, Heart, Scale, TrendingUp, Calendar, Activity } from 'lucide-react'
+import { User, Zap, Heart, Scale, TrendingUp, Mountain } from 'lucide-react'
 
 type AthleteProfile = Database['public']['Tables']['athlete_profiles']['Row']
 
@@ -34,10 +34,10 @@ export default async function DashboardPage() {
   }
 
   // Fetch activity statistics
-  let activityCount = 0
   let recentActivities: any[] = []
-  let weeklyStats = { distance: 0, time: 0 }
-  let monthlyStats = { distance: 0, time: 0 }
+  let lastWeekStats = { distance: 0, time: 0, elevation: 0, count: 0 }
+  let monthlyStats = { distance: 0, time: 0, elevation: 0, count: 0 }
+  let yearlyStats = { distance: 0, time: 0, elevation: 0, count: 0 }
   let stravaConnected = false
 
   if (user?.id) {
@@ -50,13 +50,6 @@ export default async function DashboardPage() {
     stravaConnected = !!connection
 
     if (stravaConnected) {
-      // Get total activity count
-      const { count } = await supabase
-        .from('strava_activities')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-      activityCount = count || 0
-
       // Get recent activities (last 5)
       const { data: activities } = await supabase
         .from('strava_activities')
@@ -69,7 +62,7 @@ export default async function DashboardPage() {
       // Get user's timezone from profile, default to UTC
       const userTimezone = profile?.timezone || 'UTC'
 
-      // Calculate start of current week (Monday 00:00:00) in user's timezone
+      // Calculate date ranges in user's timezone
       const now = new Date()
       const formatter = new Intl.DateTimeFormat('en-CA', {
         timeZone: userTimezone,
@@ -85,34 +78,46 @@ export default async function DashboardPage() {
       const dayOfWeek = todayInUserTz.getDay()
       const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1
 
+      // Start of current week (Monday)
       const startOfWeek = new Date(todayInUserTz)
       startOfWeek.setDate(todayInUserTz.getDate() - daysFromMonday)
 
-      // Calculate start of current month (1st 00:00:00) in user's timezone
+      // Start of last week (previous Monday)
+      const startOfLastWeek = new Date(startOfWeek)
+      startOfLastWeek.setDate(startOfWeek.getDate() - 7)
+      const endOfLastWeek = new Date(startOfWeek) // End of last week = start of this week
+
+      // Start of current month (1st)
       const startOfMonth = new Date(todayInUserTz)
       startOfMonth.setDate(1)
 
-      // Get weekly stats (current calendar week: Monday to Sunday)
-      const { data: weekActivities } = await supabase
-        .from('strava_activities')
-        .select('distance, moving_time')
-        .eq('user_id', user.id)
-        .gte('start_date', startOfWeek.toISOString())
+      // Start of current year (Jan 1st)
+      const startOfYear = new Date(todayInUserTz.getFullYear(), 0, 1)
 
-      if (weekActivities) {
-        weeklyStats = weekActivities.reduce(
+      // Get last week stats
+      const { data: lastWeekActivities } = await supabase
+        .from('strava_activities')
+        .select('distance, moving_time, total_elevation_gain')
+        .eq('user_id', user.id)
+        .gte('start_date', startOfLastWeek.toISOString())
+        .lt('start_date', endOfLastWeek.toISOString())
+
+      if (lastWeekActivities) {
+        lastWeekStats = lastWeekActivities.reduce(
           (acc, activity) => ({
             distance: acc.distance + (activity.distance || 0),
             time: acc.time + (activity.moving_time || 0),
+            elevation: acc.elevation + (activity.total_elevation_gain || 0),
+            count: acc.count + 1,
           }),
-          { distance: 0, time: 0 }
+          { distance: 0, time: 0, elevation: 0, count: 0 }
         )
       }
 
-      // Get monthly stats (current calendar month)
+      // Get monthly stats
       const { data: monthActivities } = await supabase
         .from('strava_activities')
-        .select('distance, moving_time')
+        .select('distance, moving_time, total_elevation_gain')
         .eq('user_id', user.id)
         .gte('start_date', startOfMonth.toISOString())
 
@@ -121,8 +126,29 @@ export default async function DashboardPage() {
           (acc, activity) => ({
             distance: acc.distance + (activity.distance || 0),
             time: acc.time + (activity.moving_time || 0),
+            elevation: acc.elevation + (activity.total_elevation_gain || 0),
+            count: acc.count + 1,
           }),
-          { distance: 0, time: 0 }
+          { distance: 0, time: 0, elevation: 0, count: 0 }
+        )
+      }
+
+      // Get yearly stats
+      const { data: yearActivities } = await supabase
+        .from('strava_activities')
+        .select('distance, moving_time, total_elevation_gain')
+        .eq('user_id', user.id)
+        .gte('start_date', startOfYear.toISOString())
+
+      if (yearActivities) {
+        yearlyStats = yearActivities.reduce(
+          (acc, activity) => ({
+            distance: acc.distance + (activity.distance || 0),
+            time: acc.time + (activity.moving_time || 0),
+            elevation: acc.elevation + (activity.total_elevation_gain || 0),
+            count: acc.count + 1,
+          }),
+          { distance: 0, time: 0, elevation: 0, count: 0 }
         )
       }
     }
@@ -141,8 +167,9 @@ export default async function DashboardPage() {
       </Suspense>
 
       <div className="flex flex-col lg:flex-row gap-6">
-      {/* Side Panel - Athlete Profile */}
-      <aside className="lg:w-64 flex-shrink-0">
+      {/* Side Panel - Athlete Profile & Stats */}
+      <aside className="lg:w-72 flex-shrink-0 space-y-4">
+        {/* Profile Card */}
         <Card className="sticky top-20">
           <CardHeader className="pb-3">
             <Link href="/profile" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
@@ -168,62 +195,136 @@ export default async function DashboardPage() {
                 </Button>
               </div>
             ) : (
-              <>
+              <div className="grid grid-cols-2 gap-3">
                 {/* FTP */}
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-md bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
-                    <Zap className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                <div className="flex items-center gap-2">
+                  <div className="h-7 w-7 rounded-md bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
+                    <Zap className="h-3.5 w-3.5 text-orange-600 dark:text-orange-400" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-muted-foreground">{t('ftp')}</p>
-                    <p className="text-sm font-semibold">
-                      {profile.ftp ? `${profile.ftp} W` : '—'}
+                  <div className="min-w-0">
+                    <p className="text-[10px] text-muted-foreground leading-tight">{t('ftp')}</p>
+                    <p className="text-xs font-semibold">
+                      {profile.ftp ? `${profile.ftp}W` : '—'}
                     </p>
                   </div>
                 </div>
 
                 {/* Max HR */}
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-md bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-                    <Heart className="h-4 w-4 text-red-600 dark:text-red-400" />
+                <div className="flex items-center gap-2">
+                  <div className="h-7 w-7 rounded-md bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+                    <Heart className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-muted-foreground">{t('maxHr')}</p>
-                    <p className="text-sm font-semibold">
-                      {profile.max_hr ? `${profile.max_hr} bpm` : '—'}
+                  <div className="min-w-0">
+                    <p className="text-[10px] text-muted-foreground leading-tight">{t('maxHr')}</p>
+                    <p className="text-xs font-semibold">
+                      {profile.max_hr ? `${profile.max_hr}` : '—'}
                     </p>
                   </div>
                 </div>
 
                 {/* Weight */}
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-md bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                    <Scale className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <div className="flex items-center gap-2">
+                  <div className="h-7 w-7 rounded-md bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+                    <Scale className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-muted-foreground">{t('weight')}</p>
-                    <p className="text-sm font-semibold">
-                      {profile.weight_kg ? `${profile.weight_kg} kg` : '—'}
+                  <div className="min-w-0">
+                    <p className="text-[10px] text-muted-foreground leading-tight">{t('weight')}</p>
+                    <p className="text-xs font-semibold">
+                      {profile.weight_kg ? `${profile.weight_kg}kg` : '—'}
                     </p>
                   </div>
                 </div>
 
                 {/* W/kg */}
-                {wattsPerKg && (
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-md bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                      <TrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-muted-foreground">{t('wkg')}</p>
-                      <p className="text-sm font-semibold">{wattsPerKg}</p>
-                    </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-7 w-7 rounded-md bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
+                    <TrendingUp className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
                   </div>
-                )}
-              </>
+                  <div className="min-w-0">
+                    <p className="text-[10px] text-muted-foreground leading-tight">{t('wkg')}</p>
+                    <p className="text-xs font-semibold">{wattsPerKg || '—'}</p>
+                  </div>
+                </div>
+              </div>
             )}
           </CardContent>
         </Card>
+
+        {/* Stats Card */}
+        {stravaConnected && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">{t('stats')}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* This Year */}
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground">{t('thisYear')}</p>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div>
+                    <p className="text-lg font-bold">{yearlyStats.count}</p>
+                    <p className="text-[10px] text-muted-foreground">activities</p>
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold">{(yearlyStats.distance / 1000).toFixed(0)}</p>
+                    <p className="text-[10px] text-muted-foreground">km</p>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <div className="flex items-center gap-0.5">
+                      <Mountain className="h-3 w-3 text-muted-foreground" />
+                      <p className="text-lg font-bold">{yearlyStats.elevation.toFixed(0)}</p>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">m</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* This Month */}
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground">{t('thisMonth')}</p>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div>
+                    <p className="text-lg font-bold">{monthlyStats.count}</p>
+                    <p className="text-[10px] text-muted-foreground">activities</p>
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold">{(monthlyStats.distance / 1000).toFixed(0)}</p>
+                    <p className="text-[10px] text-muted-foreground">km</p>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <div className="flex items-center gap-0.5">
+                      <Mountain className="h-3 w-3 text-muted-foreground" />
+                      <p className="text-lg font-bold">{monthlyStats.elevation.toFixed(0)}</p>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">m</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Last Week */}
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground">{t('lastWeek')}</p>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div>
+                    <p className="text-lg font-bold">{lastWeekStats.count}</p>
+                    <p className="text-[10px] text-muted-foreground">activities</p>
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold">{(lastWeekStats.distance / 1000).toFixed(0)}</p>
+                    <p className="text-[10px] text-muted-foreground">km</p>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <div className="flex items-center gap-0.5">
+                      <Mountain className="h-3 w-3 text-muted-foreground" />
+                      <p className="text-lg font-bold">{lastWeekStats.elevation.toFixed(0)}</p>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">m</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </aside>
 
       {/* Main Content */}
@@ -253,48 +354,6 @@ export default async function DashboardPage() {
 
         {/* Strava Sync Status - Only shows when connected */}
         <StravaSyncStatus />
-
-        {/* Activity Stats */}
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">{t('totalActivities')}</CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{activityCount}</div>
-              <p className="text-xs text-muted-foreground">
-                {stravaConnected ? t('syncedFromStrava') : t('connectStravaToSync')}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">{t('thisWeek')}</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{(weeklyStats.distance / 1000).toFixed(0)} km</div>
-              <p className="text-xs text-muted-foreground">
-                {Math.floor(weeklyStats.time / 3600)}h {Math.floor((weeklyStats.time % 3600) / 60)}m {t('riding')}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">{t('thisMonth')}</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{(monthlyStats.distance / 1000).toFixed(0)} km</div>
-              <p className="text-xs text-muted-foreground">
-                {Math.floor(monthlyStats.time / 3600)}h {Math.floor((monthlyStats.time % 3600) / 60)}m {t('riding')}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Recent Activities */}
         <Card>
