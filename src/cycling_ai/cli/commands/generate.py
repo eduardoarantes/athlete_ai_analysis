@@ -243,13 +243,31 @@ def create_rag_config(
 )
 @click.option(
     "--provider",
-    type=click.Choice(["openai", "anthropic", "gemini", "ollama"]),
+    type=click.Choice(["openai", "anthropic", "gemini", "ollama", "bedrock"]),
     default="anthropic",
     help="LLM provider to use",
 )
 @click.option(
     "--model",
     help="Specific model to use (e.g., gpt-4, claude-3-5-sonnet)",
+)
+@click.option(
+    "--aws-region",
+    default="us-east-1",
+    help="AWS region for Bedrock (default: us-east-1)",
+)
+@click.option(
+    "--aws-profile",
+    help="AWS profile name for Bedrock (optional)",
+)
+@click.option(
+    "--guardrail-id",
+    help="AWS Bedrock Guardrail ID (optional, for content filtering)",
+)
+@click.option(
+    "--guardrail-version",
+    default="DRAFT",
+    help="AWS Bedrock Guardrail version (default: DRAFT)",
 )
 @click.option(
     "--prompts-dir",
@@ -303,6 +321,10 @@ def generate(
     cross_training: bool | None,
     provider: str,
     model: str | None,
+    aws_region: str,
+    aws_profile: str | None,
+    guardrail_id: str | None,
+    guardrail_version: str,
     prompts_dir: Path | None,
     prompt_model: str,
     prompt_version: str | None,
@@ -340,7 +362,7 @@ def generate(
         # Load athlete profile early to check for raw_training_data_path
         try:
             import json
-            with open(profile_file, 'r') as f:
+            with open(profile_file) as f:
                 athlete_profile = json.load(f)
         except Exception as e:
             console.print(f"[red]Error loading athlete profile: {str(e)}[/red]")
@@ -435,7 +457,9 @@ def generate(
         # Initialize provider
         console.print("[cyan]Initializing LLM provider...[/cyan]")
         try:
-            provider_instance = _initialize_provider(provider, model, config)
+            provider_instance = _initialize_provider(
+                provider, model, config, aws_region, aws_profile, guardrail_id, guardrail_version
+            )
             console.print(
                 f"[green]✓ Provider initialized: {provider} ({provider_instance.config.model})[/green]"
             )
@@ -593,8 +617,9 @@ def _generate_html_report(output_dir: Path, result: WorkflowResult) -> Path | No
     Raises:
         Exception: If HTML generation fails
     """
-    from cycling_ai.tools.performance_report_generator import generate_performance_html_from_json
     import json
+
+    from cycling_ai.tools.performance_report_generator import generate_performance_html_from_json
 
     # Find report_data.json path from Phase 4 result
     phase4_result = next(
@@ -632,14 +657,22 @@ def _initialize_provider(
     provider_name: str,
     model: str | None,
     config: Any,
+    aws_region: str = "us-east-1",
+    aws_profile: str | None = None,
+    guardrail_id: str | None = None,
+    guardrail_version: str = "DRAFT",
 ) -> BaseProvider:
     """
     Initialize LLM provider from configuration.
 
     Args:
-        provider_name: Name of provider (openai, anthropic, gemini, ollama)
+        provider_name: Name of provider (openai, anthropic, gemini, ollama, bedrock)
         model: Optional specific model name
         config: Configuration object
+        aws_region: AWS region for Bedrock (default: us-east-1)
+        aws_profile: AWS profile name for Bedrock (optional)
+        guardrail_id: AWS Bedrock Guardrail ID (optional)
+        guardrail_version: AWS Bedrock Guardrail version (default: DRAFT)
 
     Returns:
         Initialized provider instance
@@ -671,7 +704,8 @@ def _initialize_provider(
                 f"  - OpenAI: gpt-4o, gpt-4-turbo\n"
                 f"  - Anthropic: claude-sonnet-4, claude-3-5-sonnet-20241022\n"
                 f"  - Gemini: gemini-2.0-flash-exp, gemini-1.5-pro\n"
-                f"  - Ollama: llama3.2:3b, llama3.1:8b"
+                f"  - Ollama: llama3.2:3b, llama3.1:8b\n"
+                f"  - Bedrock: anthropic.claude-3-5-sonnet-20241022-v2:0"
             )
 
     # Get API key from config or environment
@@ -688,18 +722,20 @@ def _initialize_provider(
             "anthropic": "ANTHROPIC_API_KEY",
             "gemini": "GOOGLE_API_KEY",
             "ollama": "",  # Local, no key needed
+            "bedrock": "",  # AWS credentials, no key needed
         }
         env_var = env_var_map.get(provider_name, "")
         if env_var:
             api_key = os.getenv(env_var, "")
 
-    # Validate API key for non-local providers
-    if not api_key and provider_name != "ollama":
+    # Validate API key for non-local providers (bedrock uses AWS credentials)
+    if not api_key and provider_name not in ["ollama", "bedrock"]:
         env_var_map = {
             "openai": "OPENAI_API_KEY",
             "anthropic": "ANTHROPIC_API_KEY",
             "gemini": "GOOGLE_API_KEY",
             "ollama": "",
+            "bedrock": "",
         }
         env_var = env_var_map.get(provider_name, "")
         raise ValueError(
@@ -707,13 +743,23 @@ def _initialize_provider(
             f"Please set {env_var} environment variable or configure in config file."
         )
 
-    # Create ProviderConfig
+    # Create ProviderConfig with AWS parameters for Bedrock
+    additional_params: dict[str, Any] = {}
+    if provider_name == "bedrock":
+        additional_params["region"] = aws_region
+        if aws_profile:
+            additional_params["profile_name"] = aws_profile
+        if guardrail_id:
+            additional_params["guardrail_id"] = guardrail_id
+            additional_params["guardrail_version"] = guardrail_version
+
     provider_config = ProviderConfig(
         provider_name=provider_name,
         api_key=api_key,
         model=model,
         temperature=0.7,
         max_tokens=4096,
+        additional_params=additional_params,
     )
 
     # Create provider instance
@@ -889,6 +935,16 @@ def _print_provider_help(provider_name: str) -> None:
         console.print("  1. Make sure Ollama is running: ollama serve")
         console.print("  2. Install Ollama from: https://ollama.ai/")
         console.print("  3. Pull a model: ollama pull llama3.2:3b")
+    elif provider_name == "bedrock":
+        console.print("  1. Configure AWS credentials (5 methods available):")
+        console.print("     a. AWS CLI: aws configure")
+        console.print("     b. Environment: export AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=...")
+        console.print("     c. Profile: Use --aws-profile <profile-name>")
+        console.print("     d. Credentials file: ~/.aws/credentials")
+        console.print("     e. IAM role (when running on AWS)")
+        console.print("  2. Ensure Bedrock model access is enabled in AWS console")
+        console.print("  3. Specify region with --aws-region (default: us-east-1)")
+        console.print("  4. Example model: anthropic.claude-3-5-sonnet-20241022-v2:0")
 
     console.print()
 
