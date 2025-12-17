@@ -5,6 +5,8 @@ Tests the _detect_existing_profile() function that determines if an athlete
 profile exists and should be used, or if onboarding is needed.
 """
 
+import os
+import time
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -77,12 +79,19 @@ class TestProfileDetection:
         profile1 = athlete1_dir / "athlete_profile.json"
         profile1.write_text('{"ftp": 265}')
 
-        # Athlete 2 (newer - touch to update mtime)
+        # Athlete 2 (newer)
         athlete2_dir = data_dir / "Athlete2"
         athlete2_dir.mkdir()
         profile2 = athlete2_dir / "athlete_profile.json"
         profile2.write_text('{"ftp": 280}')
-        profile2.touch()  # Make it more recent
+
+        # Explicitly set modification times to ensure reliable ordering
+        # Set profile1 to be older (1 hour ago)
+        old_time = time.time() - 3600
+        os.utime(profile1, (old_time, old_time))
+        # Set profile2 to be newer (current time)
+        new_time = time.time()
+        os.utime(profile2, (new_time, new_time))
 
         with patch("cycling_ai.cli.commands.chat.Path.cwd", return_value=tmp_path):
             result = _detect_existing_profile(None)

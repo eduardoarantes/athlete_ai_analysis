@@ -48,6 +48,9 @@ htmlcov/
 *.csv
 *.fit
 *.fit.gz
+
+# But allow test fixture files
+!tests/fixtures/**/*.csv
 cache/
 reports/
 logs/
