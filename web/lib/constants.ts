@@ -35,6 +35,16 @@ export const FTP_DETECTION = {
   MIN_MIN_ACTIVITIES: 1,
 } as const
 
+// Admin API Configuration
+export const ADMIN_API = {
+  /** Default users per page */
+  DEFAULT_USERS_PER_PAGE: 20,
+  /** Maximum users per page */
+  MAX_USERS_PER_PAGE: 100,
+  /** Minimum users per page */
+  MIN_USERS_PER_PAGE: 1,
+} as const
+
 // HTTP Status Codes (for clarity and consistency)
 export const HTTP_STATUS = {
   OK: 200,
@@ -65,4 +75,11 @@ export const MESSAGES = {
   FAILED_TO_GET_FTP: 'Failed to get FTP',
   FAILED_TO_START_SYNC: 'Failed to start sync',
   INTERNAL_SERVER_ERROR: 'Internal server error',
+
+  // Admin messages
+  ADMIN_ACCESS_REQUIRED: 'Admin access required',
+  ADMIN_USERS_FETCH_FAILED: 'Failed to fetch users',
+  ADMIN_USER_NOT_FOUND: 'User not found',
+  ADMIN_UPDATE_FAILED: 'Failed to update user',
+  ADMIN_STATS_FETCH_FAILED: 'Failed to fetch statistics',
 } as const
