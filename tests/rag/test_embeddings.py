@@ -15,6 +15,7 @@ from unittest.mock import patch
 
 import pytest
 from langchain_core.embeddings import Embeddings
+from pydantic import SecretStr
 
 from cycling_ai.rag.embeddings import EmbeddingFactory
 
@@ -80,9 +81,9 @@ class TestEmbeddingFactoryOpenAI:
 
             embeddings = EmbeddingFactory.create_openai(api_key="sk-test-key")
 
-            # Verify factory called LangChain constructor
+            # Verify factory called LangChain constructor with SecretStr
             mock_class.assert_called_once_with(
-                api_key="sk-test-key",
+                api_key=SecretStr("sk-test-key"),
                 model="text-embedding-3-small"
             )
             assert embeddings == mock_instance
@@ -96,7 +97,7 @@ class TestEmbeddingFactoryOpenAI:
                 embeddings = EmbeddingFactory.create_openai()
 
                 mock_class.assert_called_once_with(
-                    api_key="sk-env-key",
+                    api_key=SecretStr("sk-env-key"),
                     model="text-embedding-3-small"
                 )
                 assert embeddings == mock_instance
@@ -112,7 +113,7 @@ class TestEmbeddingFactoryOpenAI:
             )
 
             mock_class.assert_called_once_with(
-                api_key="sk-test",
+                api_key=SecretStr("sk-test"),
                 model="text-embedding-3-large"
             )
             assert embeddings == mock_instance

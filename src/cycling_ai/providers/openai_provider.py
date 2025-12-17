@@ -263,9 +263,9 @@ class OpenAIProvider(BaseProvider):
         """
         try:
             # Convert messages to OpenAI format
-            openai_messages = []
+            openai_messages: list[dict[str, Any]] = []
             for m in messages:
-                msg = {"role": m.role, "content": m.content}
+                msg: dict[str, Any] = {"role": m.role, "content": m.content}
 
                 # If assistant message has tool_calls, include them
                 if m.role == "assistant" and m.tool_calls:

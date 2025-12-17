@@ -73,7 +73,7 @@ def extract_tool_result_from_jsonl(
                 # Check if content contains the expected key (if provided)
                 if result_key and result_key in content:
                     try:
-                        tool_data = json.loads(content)
+                        tool_data: dict[str, Any] = json.loads(content)
                         return tool_data
                     except json.JSONDecodeError:
                         pass  # Fall through to check next interaction
@@ -88,8 +88,8 @@ def extract_tool_result_from_jsonl(
                     content = interaction["output"]["content"]
                     if result_key and result_key in content:
                         try:
-                            tool_data = json.loads(content)
-                            return tool_data
+                            inner_tool_data: dict[str, Any] = json.loads(content)
+                            return inner_tool_data
                         except json.JSONDecodeError:
                             pass  # Fall through to check input messages
 
@@ -136,7 +136,7 @@ def extract_performance_analysis_from_jsonl(jsonl_path: Path) -> dict[str, Any] 
     return extract_tool_result_from_jsonl(jsonl_path, "analyze_performance", "key_trends")
 
 
-def _parse_tool_output(interaction: dict[str, Any], source_path: Path, result_key: str | None = None) -> dict[str, Any]:
+def _parse_tool_output(interaction: dict[str, Any], source_path: Path, result_key: str | None = None) -> dict[str, Any] | None:
     """
     Parse tool output from interaction.
 
@@ -165,7 +165,7 @@ def _parse_tool_output(interaction: dict[str, Any], source_path: Path, result_ke
 
                 try:
                     # Parse the JSON from content
-                    tool_data = json.loads(content)
+                    tool_data: dict[str, Any] = json.loads(content)
 
                     # Add metadata
                     tool_data["metadata"] = {

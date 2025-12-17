@@ -71,7 +71,7 @@ def configure_logging(
         console_handler.setFormatter(simple_formatter)
 
     # Build handlers list
-    handlers = [console_handler]
+    handlers: list[logging.Handler] = [console_handler]
 
     # File handler (optional)
     if log_file:

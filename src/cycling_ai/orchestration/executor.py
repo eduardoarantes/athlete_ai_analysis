@@ -10,7 +10,7 @@ import inspect
 from typing import TYPE_CHECKING, Any
 
 import cycling_ai.tools  # Trigger tool registration via load_all_tools()
-from cycling_ai.tools.base import ToolExecutionResult
+from cycling_ai.tools.base import ToolDefinition, ToolExecutionResult
 from cycling_ai.tools.registry import get_global_registry
 
 if TYPE_CHECKING:
@@ -116,7 +116,7 @@ class ToolExecutor:
                 errors=[f"Execution error: {str(e)}"],
             )
 
-    def list_available_tools(self) -> list:
+    def list_available_tools(self) -> list[ToolDefinition]:
         """
         List available tool definitions.
 

@@ -117,6 +117,7 @@ class OllamaProvider(BaseProvider):
         self,
         messages: list[ProviderMessage],
         tools: list[ToolDefinition] | None = None,
+        force_tool_call: bool = False,  # Not used by Ollama but needed for interface compatibility
     ) -> CompletionResponse:
         """
         Create completion using Ollama API.

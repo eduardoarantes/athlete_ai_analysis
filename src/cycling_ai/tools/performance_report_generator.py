@@ -163,7 +163,7 @@ def _build_body(analysis: PerformanceAnalysis) -> str:
     return "\n".join(sections)
 
 
-def _build_athlete_profile(profile) -> str:
+def _build_athlete_profile(profile: Any) -> str:
     """Build athlete profile section."""
     html = '<div class="section-athlete_profile" id="athlete_profile">\n'
     html += "<h2>Athlete Profile</h2>\n"
@@ -194,7 +194,7 @@ def _build_athlete_profile(profile) -> str:
     return html
 
 
-def _build_performance_comparison(metrics) -> str:
+def _build_performance_comparison(metrics: Any) -> str:
     """Build performance comparison table."""
     html = '<div class="section-performance_comparison" id="performance_comparison">\n'
     html += "<h2>Performance Comparison</h2>\n"
@@ -226,7 +226,7 @@ def _build_performance_comparison(metrics) -> str:
     return html
 
 
-def _build_time_in_zones(zones) -> str:
+def _build_time_in_zones(zones: Any) -> str:
     """Build time in zones section."""
     html = '<div class="section-time_in_zones" id="time_in_zones">\n'
     html += "<h2>Time In Zones</h2>\n"
@@ -252,7 +252,7 @@ def _build_time_in_zones(zones) -> str:
     return html
 
 
-def _build_key_trends(trends) -> str:
+def _build_key_trends(trends: Any) -> str:
     """Build key trends section."""
     html = '<div class="section-key_trends" id="key_trends">\n'
     html += "<h2>Key Trends</h2>\n"
@@ -268,7 +268,7 @@ def _build_key_trends(trends) -> str:
     return html
 
 
-def _build_insights(insights) -> str:
+def _build_insights(insights: Any) -> str:
     """Build insights section."""
     html = '<div class="section-insights" id="insights">\n'
     html += "<h2>Insights</h2>\n"
@@ -284,7 +284,7 @@ def _build_insights(insights) -> str:
     return html
 
 
-def _build_recommendations(recs) -> str:
+def _build_recommendations(recs: Any) -> str:
     """Build recommendations section."""
     html = '<div class="section-recommendations" id="recommendations">\n'
     html += "<h2>Recommendations</h2>\n"
@@ -314,7 +314,7 @@ def _build_recommendations(recs) -> str:
     return html
 
 
-def _build_cross_training(ct) -> str:
+def _build_cross_training(ct: Any) -> str:
     """Build cross-training analysis section."""
     html = '<div class="section-cross_training" id="cross_training">\n'
     html += "<h2>Cross-Training Analysis</h2>\n"

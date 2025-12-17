@@ -113,6 +113,13 @@ class CachePreparationTool(BaseTool):
             cache_dir = Path(output_dir_path) / "cache"
         else:
             # CSV mode: use CSV parent dir / cache
+            if csv_path is None:
+                return ToolExecutionResult(
+                    success=False,
+                    data={"success": False, "error": "csv_path is required in non-FIT-only mode"},
+                    format="json",
+                    errors=["csv_path is required when not in FIT-only mode"],
+                )
             cache_dir = csv_path.parent / "cache"
 
         cache_dir.mkdir(parents=True, exist_ok=True)
@@ -152,6 +159,7 @@ class CachePreparationTool(BaseTool):
                 original_size = 0  # No CSV file to measure
             else:
                 # CSV mode: read from CSV
+                assert csv_path is not None  # Checked above at line 116-122
                 df = pd.read_csv(csv_path)
                 original_count = len(df)
                 original_size = csv_path.stat().st_size

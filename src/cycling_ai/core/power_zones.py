@@ -5,8 +5,10 @@ Provides centralized, consistent power zone calculations based on FTP.
 All zone calculations should use these functions to ensure consistency across the codebase.
 """
 
+from typing import Any
 
-def calculate_power_zones(ftp: float) -> dict[str, dict[str, float]]:
+
+def calculate_power_zones(ftp: float) -> dict[str, dict[str, Any]]:
     """
     Calculate standard cycling power zones based on FTP.
 
@@ -130,7 +132,7 @@ def get_zone_for_power(power: float, ftp: float) -> str:
     return "Z5 (VO2 Max)"
 
 
-def get_workout_power_targets(ftp: float) -> dict[str, int]:
+def get_workout_power_targets(ftp: float) -> dict[str, Any]:
     """
     Get common power targets for workout building.
 

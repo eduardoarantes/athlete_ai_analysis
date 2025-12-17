@@ -350,7 +350,8 @@ def validate_field(field_name: str, value: Any) -> tuple[bool, str]:
         raise ValueError(f"No validator registered for field: {field_name}")
 
     validator = VALIDATORS[field_name]
-    return validator(value)
+    result: tuple[bool, str] = validator(value)
+    return result
 
 
 def get_field_constraints(field_name: str) -> dict[str, Any]:
@@ -391,4 +392,5 @@ def get_field_constraints(field_name: str) -> dict[str, Any]:
     if field_name not in constraints_map:
         raise ValueError(f"No constraints defined for field: {field_name}")
 
-    return constraints_map[field_name]
+    result: dict[str, Any] = dict(constraints_map[field_name])  # type: ignore[call-overload]
+    return result

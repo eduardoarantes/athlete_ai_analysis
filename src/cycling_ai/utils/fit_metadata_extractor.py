@@ -105,10 +105,11 @@ def extract_fit_metadata(fit_file_path: str | Path) -> dict[str, Any] | None:
         )
 
         # Convert sub_sport enum to string if needed
+        sub_sport: str | None
         if sub_sport_raw and not isinstance(sub_sport_raw, str):
             sub_sport = str(sub_sport_raw).lower()
         else:
-            sub_sport = sub_sport_raw if sub_sport_raw else None
+            sub_sport = str(sub_sport_raw) if sub_sport_raw else None
 
         # Determine Activity Type for display (like Strava CSV format)
         # Map sport to Strava-style activity type names
@@ -220,7 +221,7 @@ def scan_fit_directory(fit_dir: str | Path) -> list[dict[str, Any]]:
         return []
 
     # Find all FIT files recursively
-    fit_files = []
+    fit_files: list[Path] = []
     for pattern in ["**/*.fit", "**/*.fit.gz"]:
         fit_files.extend(fit_dir_path.glob(pattern))
 

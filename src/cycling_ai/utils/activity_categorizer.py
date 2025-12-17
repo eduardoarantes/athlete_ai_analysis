@@ -167,7 +167,7 @@ def estimate_tss_from_activity(
         elif category.fatigue_impact == "Low":
             tss *= 0.7  # Low-fatigue activities reduced
 
-        return round(tss, 1)
+        return float(round(tss, 1))
 
     # Method 2: Duration-based TSS (fallback when no HR data)
     # Assume moderate intensity (similar to Z2 cycling = ~50 TSS/hour)
@@ -178,7 +178,7 @@ def estimate_tss_from_activity(
         "Other": 30,  # Recovery/flexibility lowest
     }
 
-    tss_rate = base_tss_per_hour.get(category.category, 40)
+    tss_rate: float = float(base_tss_per_hour.get(category.category, 40))
 
     # Adjust for fatigue impact
     if category.fatigue_impact == "High":
@@ -186,4 +186,4 @@ def estimate_tss_from_activity(
     elif category.fatigue_impact == "Low":
         tss_rate *= 0.7
 
-    return round(duration_hours * tss_rate, 1)
+    return float(round(duration_hours * tss_rate, 1))

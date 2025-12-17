@@ -197,7 +197,8 @@ class CrossTrainingTool(BaseTool):
                     )
             else:
                 # CSV mode: load and categorize from CSV
-                csv_path = Path(csv_file_path)
+                assert csv_file_path is not None  # Checked above at line 127-133
+                csv_path = Path(str(csv_file_path))
                 if not csv_path.exists():
                     return ToolExecutionResult(
                         success=False,

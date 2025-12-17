@@ -19,6 +19,8 @@ from __future__ import annotations
 import os
 from typing import TYPE_CHECKING
 
+from pydantic import SecretStr
+
 if TYPE_CHECKING:
     from langchain_core.embeddings import Embeddings
 
@@ -105,6 +107,6 @@ class EmbeddingFactory:
             )
 
         return OpenAIEmbeddings(
-            api_key=effective_api_key,
+            api_key=SecretStr(effective_api_key),
             model=model,
         )

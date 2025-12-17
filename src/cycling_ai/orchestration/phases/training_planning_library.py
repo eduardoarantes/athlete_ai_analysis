@@ -221,7 +221,7 @@ class LibraryBasedTrainingPlanningWeeks:
         # Use explicit workout_type if available (prevents mis-classification)
         workout_type = workout.get("workout_type")
         if workout_type:
-            return workout_type == "strength"
+            return bool(workout_type == "strength")
 
         # Fallback: keyword matching (old behavior)
         description = workout.get("description", "").lower()

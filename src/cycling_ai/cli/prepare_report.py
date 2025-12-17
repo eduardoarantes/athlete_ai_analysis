@@ -10,13 +10,14 @@ import json
 import logging
 import sys
 from pathlib import Path
+from typing import Any
 
 from cycling_ai.tools.report_data_extractor import create_report_data, extract_from_session_file
 
 logger = logging.getLogger(__name__)
 
 
-def setup_logging(verbose: bool = False):
+def setup_logging(verbose: bool = False) -> None:
     """Configure logging."""
     level = logging.DEBUG if verbose else logging.INFO
     logging.basicConfig(level=level, format="%(levelname)s: %(message)s")
@@ -180,7 +181,7 @@ def prepare_report(
     return True
 
 
-def validate_report_data(data: dict) -> bool:
+def validate_report_data(data: dict[str, Any]) -> bool:
     """
     Validate report data against schema.
 
@@ -191,7 +192,7 @@ def validate_report_data(data: dict) -> bool:
         True if valid
     """
     try:
-        import jsonschema
+        import jsonschema  # type: ignore[import-untyped]
 
         # Load schema
         schema_path = Path(__file__).parent.parent.parent.parent / "schemas" / "report_data_schema.json"
@@ -219,7 +220,7 @@ def validate_report_data(data: dict) -> bool:
         return False
 
 
-def main():
+def main() -> None:
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description="Prepare training plan report data from interaction logs",

@@ -100,7 +100,8 @@ class WorkoutSelector:
         with open(self.library_path) as f:
             library = json.load(f)
 
-        return library.get("workouts", [])
+        workouts: list[dict[str, Any]] = library.get("workouts", [])
+        return workouts
 
     def select_workout(self, requirements: WorkoutRequirements) -> SelectedWorkout | None:
         """
@@ -344,7 +345,8 @@ class WorkoutSelector:
             # Find the interval segment and get its sets
             for segment in workout["segments"]:
                 if segment.get("type") == "interval":
-                    return segment.get("sets", 1)
+                    sets_value: int = int(segment.get("sets", 1))
+                    return sets_value
             return 1  # Default if no interval segment found
 
         elif adjustable_field == "duration":

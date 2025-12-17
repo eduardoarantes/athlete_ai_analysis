@@ -87,7 +87,7 @@ def analyze_performance(
 
         # Calculate month-by-month breakdown for the recent period
         # This provides granular insight into training patterns and trends over time
-        monthly_stats = []
+        monthly_stats: list[dict[str, Any]] = []
         for i in range(int(period_months)):
             # Create rolling 30-day windows going backwards from today
             month_start = today - timedelta(days=30 * (i + 1))

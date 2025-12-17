@@ -40,7 +40,7 @@ class AthleteProfile:
         self.current_training_status = current_training_status
         self.raw_training_data_path = raw_training_data_path
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"AthleteProfile(name='{self.name}', age={self.age}, weight={self.weight_kg}kg, FTP={self.ftp}W, max_hr={self.max_hr})"
 
     def to_dict(self) -> dict[str, Any]:
@@ -70,7 +70,9 @@ class AthleteProfile:
             days_str = self.training_availability["week_days"]
             if isinstance(days_str, str):
                 return [day.strip() for day in days_str.split(",")]
-            return days_str
+            if isinstance(days_str, list):
+                return list(days_str)
+            return []
         return []  # Default to empty
 
     def get_training_days_count(self) -> int:

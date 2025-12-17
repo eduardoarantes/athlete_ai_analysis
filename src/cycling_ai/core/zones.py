@@ -21,7 +21,7 @@ from .power_zones import get_zone_bounds_for_analysis
 from .utils import convert_to_json_serializable
 
 
-def save_time_in_zones_cache(activities_dir: str, athlete_ftp: int, activities_data: list[dict]) -> Path:
+def save_time_in_zones_cache(activities_dir: str, athlete_ftp: int, activities_data: list[dict[str, Any]]) -> Path:
     """
     Save per-activity time-in-zones data to cache.
 
@@ -58,7 +58,7 @@ def save_time_in_zones_cache(activities_dir: str, athlete_ftp: int, activities_d
     return cache_file
 
 
-def load_time_in_zones_cache(activities_dir: str, athlete_ftp: int) -> dict | None:
+def load_time_in_zones_cache(activities_dir: str, athlete_ftp: int) -> dict[str, Any] | None:
     """
     Load cached time-in-zones data.
 
@@ -88,7 +88,8 @@ def load_time_in_zones_cache(activities_dir: str, athlete_ftp: int) -> dict | No
         if cache_data.get("athlete_ftp") != athlete_ftp:
             return None
 
-        return cache_data
+        result: dict[str, Any] = dict(cache_data)
+        return result
 
     except (json.JSONDecodeError, KeyError):
         return None
@@ -188,11 +189,11 @@ def analyze_time_in_zones(
                 "total_hours": float(total_time / 3600),
                 "source": "cached",
                 "zones": zone_data,
-                "z1_percent": float(zone_data["Z1 (Active Recovery)"]["percentage"]),
-                "z2_percent": float(zone_data["Z2 (Endurance)"]["percentage"]),
-                "z3_percent": float(zone_data["Z3 (Tempo)"]["percentage"]),
-                "z4_percent": float(zone_data["Z4 (Threshold)"]["percentage"]),
-                "z5_percent": float(zone_data["Z5 (VO2 Max)"]["percentage"]),
+                "z1_percent": zone_data["Z1 (Active Recovery)"]["percentage"],
+                "z2_percent": zone_data["Z2 (Endurance)"]["percentage"],
+                "z3_percent": zone_data["Z3 (Tempo)"]["percentage"],
+                "z4_percent": zone_data["Z4 (Threshold)"]["percentage"],
+                "z5_percent": zone_data["Z5 (VO2 Max)"]["percentage"],
                 "easy_percent": float(easy_pct),
                 "moderate_percent": float(moderate_pct),
                 "hard_percent": float(hard_pct),
@@ -325,9 +326,11 @@ def analyze_time_in_zones(
 
                 # Calculate percentages for this activity
                 if file_total_time > 0:
+                    zone_pcts: dict[str, float] = {}
                     for zone_name in zones_definitions:
                         pct = (file_zone_times[zone_name] / file_total_time) * 100
-                        activity_data["zone_percentages"][zone_name] = round(pct, 2)
+                        zone_pcts[zone_name] = round(pct, 2)
+                    activity_data["zone_percentages"] = zone_pcts
 
                 activities_data.append(activity_data)
 
@@ -393,7 +396,7 @@ def analyze_time_in_zones(
     hard_pct = (hard_time / total_time * 100) if total_time > 0 else 0
 
     # Build athlete profile data for LLM context
-    athlete_profile_data = {"ftp": float(athlete_ftp)}
+    athlete_profile_data: dict[str, Any] = {"ftp": float(athlete_ftp)}
 
     # Add extended profile data if available
     if athlete_profile:
@@ -461,11 +464,11 @@ def analyze_time_in_zones(
         "source": "fit_files",
         "cache_saved": str(cache_file) if cache_file else None,
         "zones": zone_data,
-        "z1_percent": float(zone_data["Z1 (Active Recovery)"]["percentage"]),
-        "z2_percent": float(zone_data["Z2 (Endurance)"]["percentage"]),
-        "z3_percent": float(zone_data["Z3 (Tempo)"]["percentage"]),
-        "z4_percent": float(zone_data["Z4 (Threshold)"]["percentage"]),
-        "z5_percent": float(zone_data["Z5 (VO2 Max)"]["percentage"]),
+        "z1_percent": zone_data["Z1 (Active Recovery)"]["percentage"],
+        "z2_percent": zone_data["Z2 (Endurance)"]["percentage"],
+        "z3_percent": zone_data["Z3 (Tempo)"]["percentage"],
+        "z4_percent": zone_data["Z4 (Threshold)"]["percentage"],
+        "z5_percent": zone_data["Z5 (VO2 Max)"]["percentage"],
         "easy_percent": float(easy_pct),
         "moderate_percent": float(moderate_pct),
         "hard_percent": float(hard_pct),

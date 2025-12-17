@@ -8,6 +8,7 @@ performance correlations.
 
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -107,8 +108,10 @@ def calculate_weekly_load_distribution(df: pd.DataFrame) -> list[WeeklyLoadMetri
         cardio_tss = cardio_data["tss"].sum()
         cardio_percent = (cardio_tss / total_tss * 100) if total_tss > 0 else 0
 
+        # Convert pandas timestamp to Python datetime
+        week_start_dt = pd.Timestamp(str(week_start)).to_pydatetime()
         metrics = WeeklyLoadMetrics(
-            week_start=week_start,
+            week_start=week_start_dt,
             week_number=week_num,
             total_hours=round(total_hours, 1),
             total_tss=round(total_tss, 1),
@@ -328,7 +331,7 @@ def analyze_cross_training_impact(df: pd.DataFrame, analysis_period_weeks: int =
     _performance_windows = calculate_performance_windows(df_period)  # Reserved for future use
 
     # Build JSON response
-    response_data = {
+    response_data: dict[str, Any] = {
         "analysis_period": {
             "weeks": analysis_period_weeks,
             "start_date": df_period["date"].min().strftime("%Y-%m-%d"),

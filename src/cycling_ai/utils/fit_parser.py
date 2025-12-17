@@ -79,10 +79,10 @@ def parse_fit_zones(fit_file_path: str | Path, ftp: float) -> dict[str, Any]:
             "z6_anaerobic": 0,
         }
 
-        power_values = []
-        avg_power_from_session = 0
-        normalized_power_from_session = 0
-        max_power = 0
+        power_values: list[float] = []
+        avg_power_from_session: float = 0.0
+        normalized_power_from_session: float = 0.0
+        max_power: int = 0
 
         # Parse FIT file with lenient settings
         fit_reader = fitdecode.FitReader(
@@ -170,4 +170,5 @@ def has_power_data(zone_data: dict[str, Any]) -> bool:
     Returns:
         True if file had power data, False otherwise
     """
-    return zone_data.get("success", False) and zone_data.get("total_power_seconds", 0) > 0
+    total_seconds = zone_data.get("total_power_seconds", 0)
+    return bool(zone_data.get("success", False)) and isinstance(total_seconds, int) and total_seconds > 0

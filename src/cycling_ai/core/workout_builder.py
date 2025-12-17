@@ -4,6 +4,8 @@ Workout Builder Module
 Generates detailed workout structures with warm-up, main sets, and cool-down.
 """
 
+from typing import Any
+
 from .power_zones import get_workout_power_targets
 from .tss import calculate_workout_tss
 
@@ -15,7 +17,7 @@ class WorkoutSegment:
         self,
         duration_min: int,
         power_low: int,
-        power_high: int = None,
+        power_high: int | None = None,
         description: str = "",
         segment_type: str = "steady",
     ):
@@ -33,7 +35,7 @@ class WorkoutSegment:
         self.description = description
         self.segment_type = segment_type
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "duration_min": self.duration_min,
             "power_low": self.power_low,
@@ -59,11 +61,11 @@ class Workout:
         self.detailed_description = detailed_description
         self.segments: list[WorkoutSegment] = []
 
-    def add_segment(self, segment: WorkoutSegment):
+    def add_segment(self, segment: WorkoutSegment) -> None:
         """Add a segment to the workout"""
         self.segments.append(segment)
 
-    def add_warmup(self, duration_min: int, power_low: int, power_high: int):
+    def add_warmup(self, duration_min: int, power_low: int, power_high: int) -> None:
         """Add a progressive warm-up segment"""
         self.segments.append(
             WorkoutSegment(
@@ -75,7 +77,7 @@ class Workout:
             )
         )
 
-    def add_cooldown(self, duration_min: int, power_low: int, power_high: int):
+    def add_cooldown(self, duration_min: int, power_low: int, power_high: int) -> None:
         """Add a progressive cool-down segment"""
         self.segments.append(
             WorkoutSegment(
@@ -87,18 +89,18 @@ class Workout:
             )
         )
 
-    def add_interval(self, duration_min: int, power_low: int, power_high: int, description: str = ""):
+    def add_interval(self, duration_min: int, power_low: int, power_high: int, description: str = "") -> None:
         """Add a work interval"""
         desc = description or f"Interval {duration_min} min @ {power_low}-{power_high}W"
         self.segments.append(WorkoutSegment(duration_min, power_low, power_high, desc, "interval"))
 
-    def add_recovery(self, duration_min: int, power: int):
+    def add_recovery(self, duration_min: int, power: int) -> None:
         """Add a recovery segment"""
         self.segments.append(
             WorkoutSegment(duration_min, power, power, f"Recovery {duration_min} min @ {power}W", "recovery")
         )
 
-    def add_steady(self, duration_min: int, power_low: int, power_high: int, description: str = ""):
+    def add_steady(self, duration_min: int, power_low: int, power_high: int, description: str = "") -> None:
         """Add a steady state segment"""
         desc = description or f"Steady {duration_min} min @ {power_low}-{power_high}W"
         self.segments.append(WorkoutSegment(duration_min, power_low, power_high, desc, "steady"))
@@ -128,7 +130,7 @@ class Workout:
             seg["power_high_pct"] = (seg["power_high"] / ftp) * 100
         return calculate_workout_tss(segments_data, ftp)
 
-    def to_dict(self, ftp: float | None = None) -> dict:
+    def to_dict(self, ftp: float | None = None) -> dict[str, Any]:
         """
         Convert workout to dictionary.
 
@@ -179,9 +181,9 @@ def build_threshold_workout(ftp: int, weekday: str, intervals: str = "2x20", wee
     workout = Workout(weekday, name=name, detailed_description=detailed_description)
 
     # Parse intervals
-    sets, duration = intervals.split("x")
-    sets = int(sets)
-    duration = int(duration)
+    sets_str, duration_str = intervals.split("x")
+    sets = int(sets_str)
+    duration = int(duration_str)
 
     # Get power targets using centralized helper
     targets = get_workout_power_targets(ftp)
@@ -219,9 +221,9 @@ def build_vo2max_workout(ftp: int, weekday: str, intervals: str = "5x5", week: i
     )
     workout = Workout(weekday, name=name, detailed_description=detailed_description)
 
-    sets, duration = intervals.split("x")
-    sets = int(sets)
-    duration = int(duration)
+    sets_str, duration_str = intervals.split("x")
+    sets = int(sets_str)
+    duration = int(duration_str)
 
     # Get power targets using centralized helper
     targets = get_workout_power_targets(ftp)
@@ -264,9 +266,9 @@ def build_sweetspot_workout(ftp: int, weekday: str, intervals: str = "3x15") -> 
     )
     workout = Workout(weekday, name=name, detailed_description=detailed_description)
 
-    sets, duration = intervals.split("x")
-    sets = int(sets)
-    duration = int(duration)
+    sets_str, duration_str = intervals.split("x")
+    sets = int(sets_str)
+    duration = int(duration_str)
 
     # Get power targets using centralized helper
     targets = get_workout_power_targets(ftp)
@@ -302,9 +304,9 @@ def build_tempo_workout(ftp: int, weekday: str, intervals: str = "3x15") -> Work
     )
     workout = Workout(weekday, name=name, detailed_description=detailed_description)
 
-    sets, duration = intervals.split("x")
-    sets = int(sets)
-    duration = int(duration)
+    sets_str, duration_str = intervals.split("x")
+    sets = int(sets_str)
+    duration = int(duration_str)
 
     # Get power targets using centralized helper
     targets = get_workout_power_targets(ftp)

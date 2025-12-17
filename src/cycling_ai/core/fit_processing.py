@@ -13,11 +13,12 @@ import statistics
 import tempfile
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import fitdecode
 
 
-def parse_fit_file_metrics(filepath: Path) -> dict | None:
+def parse_fit_file_metrics(filepath: Path) -> dict[str, Any] | None:
     """
     Extract key metrics from a FIT file for analysis.
 
@@ -105,7 +106,7 @@ def parse_fit_file_metrics(filepath: Path) -> dict | None:
         return None
 
 
-def calculate_activity_stats(activities: list[dict]) -> dict:
+def calculate_activity_stats(activities: list[dict[str, Any]]) -> dict[str, Any]:
     """
     Calculate aggregate statistics from a list of activities.
 

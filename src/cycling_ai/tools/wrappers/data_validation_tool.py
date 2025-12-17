@@ -79,8 +79,8 @@ class DataValidationTool(BaseTool):
         profile_path = Path(kwargs["athlete_profile_path"])
         fit_dir = Path(kwargs.get("fit_dir_path", "")) if kwargs.get("fit_dir_path") else None
 
-        issues = []
-        warnings = []
+        issues: list[str] = []
+        warnings: list[str] = []
 
         # Check that we have at least one data source
         if csv_path is None and fit_dir is None:
