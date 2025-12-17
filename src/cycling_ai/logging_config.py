@@ -12,9 +12,7 @@ from pathlib import Path
 
 # Context variable to track current session ID across the call stack
 # Default is "in-progress" for logs outside of a session context
-session_id_context: contextvars.ContextVar[str] = contextvars.ContextVar(
-    "session_id", default="in-progress"
-)
+session_id_context: contextvars.ContextVar[str] = contextvars.ContextVar("session_id", default="in-progress")
 
 
 class SessionLogFilter(logging.Filter):

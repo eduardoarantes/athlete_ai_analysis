@@ -15,9 +15,7 @@ class AthleteProfile(BaseModel):
     weight: float = Field(..., description="Weight in kilograms")
     w_kg: float = Field(..., description="Watts per kilogram (FTP/weight)")
     age: int | None = Field(None, description="Athlete's age")
-    experience_level: str | None = Field(
-        None, description="Experience level (e.g., Beginner, Intermediate, Advanced)"
-    )
+    experience_level: str | None = Field(None, description="Experience level (e.g., Beginner, Intermediate, Advanced)")
 
 
 class PerformanceMetric(BaseModel):
@@ -65,9 +63,7 @@ class RecommendationCategories(BaseModel):
     short_term: list[Recommendation] = Field(
         default_factory=list, description="Short-term focus recommendations (next 4 weeks)"
     )
-    long_term: list[Recommendation] = Field(
-        default_factory=list, description="Long-term goals (3-6 months)"
-    )
+    long_term: list[Recommendation] = Field(default_factory=list, description="Long-term goals (3-6 months)")
     recovery_nutrition: list[Recommendation] = Field(
         default_factory=list, description="Recovery and nutrition recommendations"
     )
@@ -85,17 +81,11 @@ class LoadBalance(BaseModel):
     """Training load balance across activity categories."""
 
     cycling_percent: float = Field(..., ge=0, le=100, description="Percentage of load from cycling")
-    strength_percent: float = Field(
-        ..., ge=0, le=100, description="Percentage of load from strength training"
-    )
-    cardio_percent: float = Field(
-        ..., ge=0, le=100, description="Percentage of load from cardio activities"
-    )
+    strength_percent: float = Field(..., ge=0, le=100, description="Percentage of load from strength training")
+    cardio_percent: float = Field(..., ge=0, le=100, description="Percentage of load from cardio activities")
     assessment: str | None = Field(None, description="Assessment of load balance appropriateness")
     is_optimal: bool | None = Field(None, description="Whether load balance is optimal")
-    recommendation: str | None = Field(
-        None, description="Recommendation for load balance adjustment"
-    )
+    recommendation: str | None = Field(None, description="Recommendation for load balance adjustment")
 
 
 class InterferenceEvent(BaseModel):
@@ -105,24 +95,18 @@ class InterferenceEvent(BaseModel):
     activity1: str = Field(..., description="First activity name")
     activity2: str = Field(..., description="Second activity name")
     hours_between: float = Field(..., ge=0, description="Hours between activities")
-    score: int | None = Field(
-        None, ge=0, le=10, description="Interference severity score (0-10, optional)"
-    )
+    score: int | None = Field(None, ge=0, le=10, description="Interference severity score (0-10, optional)")
     explanation: str = Field(..., description="Explanation of why this is an interference")
 
 
 class CrossTrainingAnalysis(BaseModel):
     """Cross-training impact analysis data."""
 
-    analyzed: bool = Field(
-        default=True, description="Whether cross-training analysis was performed"
-    )
+    analyzed: bool = Field(default=True, description="Whether cross-training analysis was performed")
     activity_distribution: list[ActivityDistribution] = Field(
         default_factory=list, description="Distribution of activities by category"
     )
-    load_balance: LoadBalance | None = Field(
-        None, description="Training load balance across categories"
-    )
+    load_balance: LoadBalance | None = Field(None, description="Training load balance across categories")
     interference_events: list[InterferenceEvent] = Field(
         default_factory=list, description="Detected activity interference events"
     )
@@ -135,9 +119,7 @@ class PerformanceAnalysis(BaseModel):
     """Complete performance analysis report structure."""
 
     athlete_profile: AthleteProfile = Field(..., description="Athlete profile information")
-    performance_comparison: list[PerformanceMetric] = Field(
-        ..., description="Performance metrics comparison"
-    )
+    performance_comparison: list[PerformanceMetric] = Field(..., description="Performance metrics comparison")
     time_in_zones: list[ZoneDistribution] = Field(..., description="Training zone distribution")
     key_trends: list[KeyTrend] = Field(..., description="Key performance trends")
     insights: list[Insight] = Field(..., description="Training insights")
@@ -191,15 +173,9 @@ class PerformanceAnalysis(BaseModel):
                     }
                 ],
                 "recommendations": {
-                    "short_term": [
-                        {"text": "Maintain current Zone 2 volume to continue aerobic development"}
-                    ],
-                    "long_term": [
-                        {"text": "Target FTP increase of 10-15W through focused threshold work"}
-                    ],
-                    "recovery_nutrition": [
-                        {"text": "Prioritize 8+ hours of sleep during high-load weeks"}
-                    ],
+                    "short_term": [{"text": "Maintain current Zone 2 volume to continue aerobic development"}],
+                    "long_term": [{"text": "Target FTP increase of 10-15W through focused threshold work"}],
+                    "recovery_nutrition": [{"text": "Prioritize 8+ hours of sleep during high-load weeks"}],
                 },
                 "analysis_period_months": 6,
             }

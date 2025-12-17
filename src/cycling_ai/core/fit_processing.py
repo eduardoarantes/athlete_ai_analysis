@@ -32,7 +32,7 @@ def parse_fit_file_metrics(filepath: Path) -> dict | None:
         file_to_parse = str(filepath)
         temp_file = None
         if filepath.suffix == ".gz":
-            temp_file = tempfile.NamedTemporaryFile(suffix=".fit", delete=False)
+            temp_file = tempfile.NamedTemporaryFile(suffix=".fit", delete=False)  # noqa: SIM115
             with gzip.open(filepath, "rb") as f_in:
                 temp_file.write(f_in.read())
             temp_file.close()

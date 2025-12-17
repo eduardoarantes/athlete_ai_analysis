@@ -164,9 +164,7 @@ class FullReportWorkflow(BaseWorkflow):
 
             if phase3_result.status == PhaseStatus.FAILED:
                 logger.error("Phase 3 failed, stopping workflow")
-                return self._create_failed_workflow_result(
-                    phase_results, workflow_start, total_tokens
-                )
+                return self._create_failed_workflow_result(phase_results, workflow_start, total_tokens)
 
             # Phase 4: Report Preparation
             logger.info("Executing Phase 4: Report Preparation")
@@ -180,9 +178,7 @@ class FullReportWorkflow(BaseWorkflow):
 
             if phase4_result.status == PhaseStatus.FAILED:
                 logger.error("Phase 4 failed, stopping workflow")
-                return self._create_failed_workflow_result(
-                    phase_results, workflow_start, total_tokens
-                )
+                return self._create_failed_workflow_result(phase_results, workflow_start, total_tokens)
         else:
             logger.info("Skipping Phase 3 and 4 per config.generate_training_plan=False")
 
@@ -191,10 +187,7 @@ class FullReportWorkflow(BaseWorkflow):
         # ===================================================================
         total_time = (datetime.now() - workflow_start).total_seconds()
 
-        logger.info(
-            f"FullReportWorkflow completed successfully in {total_time:.2f}s "
-            f"({total_tokens} tokens)"
-        )
+        logger.info(f"FullReportWorkflow completed successfully in {total_time:.2f}s ({total_tokens} tokens)")
 
         return WorkflowResult(
             phase_results=phase_results,

@@ -224,19 +224,14 @@ class GeminiProvider(BaseProvider):
 
                     # DEBUG: Print what we're sending to Gemini
                     logger.info(
-                        f"[GEMINI DEBUG] Adding function response: "
-                        f"name={tool_name}, data_keys={list(tool_data.keys())}"
+                        f"[GEMINI DEBUG] Adding function response: name={tool_name}, data_keys={list(tool_data.keys())}"
                     )
 
                     contents.append(
                         types.Content(
                             role="function",
                             parts=[
-                                types.Part(
-                                    function_response=types.FunctionResponse(
-                                        name=tool_name, response=tool_data
-                                    )
-                                )
+                                types.Part(function_response=types.FunctionResponse(name=tool_name, response=tool_data))
                             ],
                         )
                     )
@@ -280,9 +275,7 @@ class GeminiProvider(BaseProvider):
             if tools:
                 config_kwargs["tools"] = self.convert_tool_schema(tools)
                 # Disable automatic function calling since we handle it manually
-                config_kwargs["automatic_function_calling"] = types.AutomaticFunctionCallingConfig(
-                    disable=True
-                )
+                config_kwargs["automatic_function_calling"] = types.AutomaticFunctionCallingConfig(disable=True)
 
             # Configure tool calling behavior
             if tools and force_tool_call:
@@ -290,9 +283,7 @@ class GeminiProvider(BaseProvider):
                 # This is crucial for phases like training_planning where the LLM
                 # must call the tool rather than just explaining what it plans to do
                 config_kwargs["tool_config"] = types.ToolConfig(
-                    function_calling_config=types.FunctionCallingConfig(
-                        mode=types.FunctionCallingConfigMode.ANY
-                    )
+                    function_calling_config=types.FunctionCallingConfig(mode=types.FunctionCallingConfigMode.ANY)
                 )
 
             generate_config = types.GenerateContentConfig(**config_kwargs)
@@ -329,11 +320,7 @@ class GeminiProvider(BaseProvider):
                             if tool_calls is None:
                                 tool_calls = []
                             # Convert args to dict, handling None case
-                            args = (
-                                part.function_call.args
-                                if part.function_call.args is not None
-                                else {}
-                            )
+                            args = part.function_call.args if part.function_call.args is not None else {}
                             tool_calls.append(
                                 {
                                     "name": part.function_call.name,
@@ -372,9 +359,7 @@ class GeminiProvider(BaseProvider):
             duration_ms = (time.time() - start_time) * 1000
 
             # Create response object
-            completion_response = CompletionResponse(
-                content=content, tool_calls=tool_calls, metadata=metadata
-            )
+            completion_response = CompletionResponse(content=content, tool_calls=tool_calls, metadata=metadata)
 
             # Log the interaction
             try:

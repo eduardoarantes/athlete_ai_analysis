@@ -75,8 +75,7 @@ class LibraryBasedTrainingPlanningWeeks:
         self.add_week_tool = AddWeekDetailsTool()
 
         logger.info(
-            f"Initialized LibraryBasedTrainingPlanningWeeks "
-            f"with {len(library.workouts)} workouts (temp={temperature})"
+            f"Initialized LibraryBasedTrainingPlanningWeeks with {len(library.workouts)} workouts (temp={temperature})"
         )
 
     def execute(self, plan_id: str) -> dict[str, Any]:
@@ -264,9 +263,7 @@ class LibraryBasedTrainingPlanningWeeks:
             raise ValueError(f"Invalid JSON in overview file {overview_path}: {e}") from e
 
         if "weekly_overview" not in data:
-            raise ValueError(
-                f"Invalid overview format: missing 'weekly_overview' key in {overview_path}"
-            )
+            raise ValueError(f"Invalid overview format: missing 'weekly_overview' key in {overview_path}")
 
         weekly_overview: list[dict[str, Any]] = data["weekly_overview"]
         return weekly_overview
@@ -373,10 +370,7 @@ class LibraryBasedTrainingPlanningWeeks:
         for day in week["training_days"]:
             workout_types = day.get("workout_types", [])
 
-            logger.info(
-                f"Week {week.get('week_number')}, {day['weekday']}: "
-                f"Processing workout_types={workout_types}"
-            )
+            logger.info(f"Week {week.get('week_number')}, {day['weekday']}: Processing workout_types={workout_types}")
 
             # Skip rest days
             if "rest" in workout_types:
@@ -439,17 +433,11 @@ class LibraryBasedTrainingPlanningWeeks:
                     # Ensure all segments have duration_min calculated (for interval sets)
                     for segment in workout_dict.get("segments", []):
                         if segment.get("duration_min") is None:
-                            if (
-                                segment.get("sets")
-                                and segment.get("work")
-                                and segment.get("recovery")
-                            ):
+                            if segment.get("sets") and segment.get("work") and segment.get("recovery"):
                                 # Calculate duration for interval sets
                                 work_duration = segment["work"].get("duration_min", 0) or 0
                                 recovery_duration = segment["recovery"].get("duration_min", 0) or 0
-                                segment["duration_min"] = segment["sets"] * (
-                                    work_duration + recovery_duration
-                                )
+                                segment["duration_min"] = segment["sets"] * (work_duration + recovery_duration)
                             else:
                                 # Fallback: set to 0 if we can't calculate
                                 segment["duration_min"] = 0
@@ -458,9 +446,7 @@ class LibraryBasedTrainingPlanningWeeks:
                         if segment.get("power_low_pct") is None and segment.get("work"):
                             segment["power_low_pct"] = segment["work"].get("power_low_pct", 50)
                             if segment.get("power_high_pct") is None:
-                                segment["power_high_pct"] = segment["work"].get(
-                                    "power_high_pct", 60
-                                )
+                                segment["power_high_pct"] = segment["work"].get("power_high_pct", 60)
 
                         # Ensure description exists
                         if not segment.get("description"):
@@ -512,14 +498,10 @@ class LibraryBasedTrainingPlanningWeeks:
 
         # Log for debugging (cycling time only, strength excluded from budget)
         actual_cycling_minutes = sum(
-            sum(seg["duration_min"] for seg in w["segments"])
-            for w in all_workouts
-            if not self._is_strength_workout(w)
+            sum(seg["duration_min"] for seg in w["segments"]) for w in all_workouts if not self._is_strength_workout(w)
         )
         actual_strength_minutes = sum(
-            sum(seg["duration_min"] for seg in w["segments"])
-            for w in all_workouts
-            if self._is_strength_workout(w)
+            sum(seg["duration_min"] for seg in w["segments"]) for w in all_workouts if self._is_strength_workout(w)
         )
         actual_total_minutes = actual_cycling_minutes + actual_strength_minutes
 

@@ -117,9 +117,7 @@ class MultiAgentOrchestrator:
             # Load cache
             cache_path = Path(cache_file_path)
             if not cache_path.exists():
-                logger.warning(
-                    f"Cache file not found for cross-training detection: {cache_file_path}"
-                )
+                logger.warning(f"Cache file not found for cross-training detection: {cache_file_path}")
                 return False
 
             df = pd.read_parquet(cache_path)
@@ -127,17 +125,13 @@ class MultiAgentOrchestrator:
             # Check minimum activity count
             if len(df) < min_activities:
                 logger.info(
-                    f"Cross-training analysis skipped: only {len(df)} activities "
-                    f"(minimum {min_activities} required)"
+                    f"Cross-training analysis skipped: only {len(df)} activities (minimum {min_activities} required)"
                 )
                 return False
 
             # Check for activity_category column (added by cache preparation)
             if "activity_category" not in df.columns:
-                logger.warning(
-                    "Cache missing 'activity_category' column - "
-                    "cross-training analysis not available"
-                )
+                logger.warning("Cache missing 'activity_category' column - cross-training analysis not available")
                 return False
 
             # Count activities by category
@@ -192,18 +186,14 @@ class MultiAgentOrchestrator:
         # Get the weekly hours guideline
         weekly_hours_guideline = plan_metadata.get("weekly_training_hours")
         if weekly_hours_guideline is None:
-            logger.debug(
-                "[HOURS VALIDATION] No weekly_training_hours guideline found, skipping validation"
-            )
+            logger.debug("[HOURS VALIDATION] No weekly_training_hours guideline found, skipping validation")
             return violations
 
         # Convert to float
         try:
             weekly_hours_guideline = float(weekly_hours_guideline)
         except (ValueError, TypeError):
-            logger.warning(
-                f"[HOURS VALIDATION] Invalid weekly_training_hours: {weekly_hours_guideline}"
-            )
+            logger.warning(f"[HOURS VALIDATION] Invalid weekly_training_hours: {weekly_hours_guideline}")
             return violations
 
         # Calculate max allowed with tolerance

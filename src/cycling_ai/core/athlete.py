@@ -160,11 +160,11 @@ def load_athlete_profile(json_file_path: str | Path) -> AthleteProfile:
         )
 
     except json.JSONDecodeError as e:
-        raise ValueError(f"Invalid JSON format: {e}")
+        raise ValueError(f"Invalid JSON format: {e}") from e
     except KeyError as e:
-        raise ValueError(f"Missing required field in JSON: {e}")
+        raise ValueError(f"Missing required field in JSON: {e}") from e
     except Exception as e:
-        raise ValueError(f"Error parsing athlete profile JSON: {e}")
+        raise ValueError(f"Error parsing athlete profile JSON: {e}") from e
 
 
 # Example usage

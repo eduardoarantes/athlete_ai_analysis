@@ -91,7 +91,7 @@ def main() -> None:
         cli()
     except Exception as e:
         console.print(f"[red]Error:[/red] {str(e)}")
-        raise SystemExit(1)
+        raise SystemExit(1) from None
 
 
 if __name__ == "__main__":

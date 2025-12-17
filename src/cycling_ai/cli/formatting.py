@@ -28,10 +28,7 @@ def format_json_as_rich(data: dict[str, Any] | str) -> Syntax:
     Returns:
         Syntax object for Rich console printing
     """
-    if isinstance(data, dict):
-        json_str = json.dumps(data, indent=2)
-    else:
-        json_str = data
+    json_str = json.dumps(data, indent=2) if isinstance(data, dict) else data
 
     return Syntax(json_str, "json", theme="monokai", line_numbers=True)
 

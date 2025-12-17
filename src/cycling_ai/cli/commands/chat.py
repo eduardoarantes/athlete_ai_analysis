@@ -202,10 +202,7 @@ def _check_onboarding_completion(session: ConversationSession) -> bool:
 
     # Profile file must exist
     profile_path = Path(profile_path_str)
-    if not profile_path.exists() or not profile_path.is_file():
-        return False
-
-    return True
+    return profile_path.exists() and profile_path.is_file()
 
 
 def _transition_to_normal_mode(session: ConversationSession) -> None:
@@ -559,9 +556,7 @@ def _initialize_provider(
         return provider
     except Exception as e:
         console.print(f"[red]Failed to initialize provider: {str(e)}[/red]")
-        console.print(
-            f"[yellow]Tip: Make sure you have set the API key for {provider_name}[/yellow]"
-        )
+        console.print(f"[yellow]Tip: Make sure you have set the API key for {provider_name}[/yellow]")
         raise click.Abort() from e
 
 
@@ -592,9 +587,7 @@ def _display_welcome(session: ConversationSession, provider: str) -> None:
         # Normal chat welcome message
         profile_info = ""
         if "athlete_profile" in session.context:
-            profile_info = (
-                f"\n[white]Profile:[/white] [dim]{session.context['athlete_profile']}[/dim]"
-            )
+            profile_info = f"\n[white]Profile:[/white] [dim]{session.context['athlete_profile']}[/dim]"
 
         welcome = Panel.fit(
             f"""[bold cyan]Welcome to Cycling AI Chat![/bold cyan]

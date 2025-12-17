@@ -198,20 +198,14 @@ class RAGManager:
         filtered_results = [(doc, score) for doc, score in results if score >= min_score]
 
         if len(filtered_results) < len(results):
-            logger.info(
-                f"RAG: Filtered to {len(filtered_results)}/{len(results)} documents "
-                f"(min_score={min_score})"
-            )
+            logger.info(f"RAG: Filtered to {len(filtered_results)}/{len(results)} documents (min_score={min_score})")
 
         documents = [doc.page_content for doc, _ in filtered_results]
         metadata = [doc.metadata for doc, _ in filtered_results]
         scores = [score for _, score in filtered_results]
 
         if documents:
-            logger.info(
-                f"RAG: Retrieved {len(documents)} documents with scores: "
-                f"{[f'{s:.3f}' for s in scores]}"
-            )
+            logger.info(f"RAG: Retrieved {len(documents)} documents with scores: {[f'{s:.3f}' for s in scores]}")
         else:
             logger.warning(f"RAG: No documents retrieved from '{collection}'")
 
@@ -245,9 +239,7 @@ class RAGManager:
             return self.user_vectorstore
         else:
             all_collections = self.PROJECT_COLLECTIONS | self.USER_COLLECTIONS
-            raise ValueError(
-                f"Unknown collection: '{collection}'. Must be one of: {sorted(all_collections)}"
-            )
+            raise ValueError(f"Unknown collection: '{collection}'. Must be one of: {sorted(all_collections)}")
 
     def _create_embedding_function(
         self, provider: str, model: str | None
@@ -266,12 +258,8 @@ class RAGManager:
             ValueError: If provider is unknown
         """
         if provider == "local":
-            return EmbeddingFactory.create_local(
-                model_name=model or "sentence-transformers/all-MiniLM-L6-v2"
-            )
+            return EmbeddingFactory.create_local(model_name=model or "sentence-transformers/all-MiniLM-L6-v2")
         elif provider == "openai":
             return EmbeddingFactory.create_openai(model=model or "text-embedding-3-small")
         else:
-            raise ValueError(
-                f"Unknown embedding provider: '{provider}'. Must be 'local' or 'openai'."
-            )
+            raise ValueError(f"Unknown embedding provider: '{provider}'. Must be 'local' or 'openai'.")

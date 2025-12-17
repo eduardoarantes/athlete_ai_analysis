@@ -56,10 +56,7 @@ class PlanService:
         # Load athlete profile to get current FTP
         try:
             athlete_profile = load_athlete_profile(athlete_profile_path)
-            logger.info(
-                f"[PLAN SERVICE] Loaded athlete profile: {athlete_profile.name}, "
-                f"FTP: {athlete_profile.ftp}"
-            )
+            logger.info(f"[PLAN SERVICE] Loaded athlete profile: {athlete_profile.name}, FTP: {athlete_profile.ftp}")
         except Exception as e:
             logger.error(f"[PLAN SERVICE] Failed to load athlete profile: {str(e)}")
             raise ValueError(f"Error loading athlete profile: {str(e)}") from e

@@ -143,9 +143,7 @@ class DataValidationTool(BaseTool):
         if fit_dir:
             if not fit_dir.exists():
                 if fit_only_mode:
-                    issues.append(
-                        f"FIT directory not found: {fit_dir} (required for FIT-only mode)"
-                    )
+                    issues.append(f"FIT directory not found: {fit_dir} (required for FIT-only mode)")
                 else:
                     warnings.append(f"FIT directory not found: {fit_dir}")
             elif not fit_dir.is_dir():
@@ -159,9 +157,7 @@ class DataValidationTool(BaseTool):
                 fit_files_count = len(fit_files)
                 if fit_files_count == 0:
                     if fit_only_mode:
-                        issues.append(
-                            f"No FIT files found in directory: {fit_dir} (required for FIT-only mode)"
-                        )
+                        issues.append(f"No FIT files found in directory: {fit_dir} (required for FIT-only mode)")
                     else:
                         warnings.append(f"No FIT files found in directory: {fit_dir}")
         elif fit_only_mode:
@@ -190,8 +186,7 @@ class DataValidationTool(BaseTool):
         if success:
             if fit_only_mode:
                 result["message"] = (
-                    f"✅ Data validation passed (FIT-only mode)! "
-                    f"Found {fit_files_count} FIT files for processing."
+                    f"✅ Data validation passed (FIT-only mode)! Found {fit_files_count} FIT files for processing."
                 )
             else:
                 result["message"] = (

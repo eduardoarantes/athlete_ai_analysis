@@ -54,7 +54,7 @@ def parse_fit_zones(fit_file_path: str | Path, ftp: float) -> dict[str, Any]:
     temp_file = None
     try:
         if fit_path.suffix == ".gz":
-            temp_file = tempfile.NamedTemporaryFile(suffix=".fit", delete=False)
+            temp_file = tempfile.NamedTemporaryFile(suffix=".fit", delete=False)  # noqa: SIM115
             with gzip.open(fit_path, "rb") as f_in:
                 temp_file.write(f_in.read())
             temp_file.close()

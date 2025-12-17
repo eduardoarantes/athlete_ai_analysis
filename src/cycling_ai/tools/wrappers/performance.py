@@ -187,9 +187,7 @@ class PerformanceAnalysisTool(BaseTool):
                     "athlete": athlete_profile.name,
                     "period_months": period_months,
                     "source": "strava_csv",
-                    "activities_analyzed": result_data.get("recent_period", {}).get(
-                        "total_rides", 0
-                    )
+                    "activities_analyzed": result_data.get("recent_period", {}).get("total_rides", 0)
                     + result_data.get("previous_period", {}).get("total_rides", 0),
                 },
             )

@@ -32,9 +32,7 @@ def extract_and_validate_performance_analysis(llm_output: str) -> PerformanceAna
     json_str = _extract_json(llm_output)
 
     if not json_str:
-        raise ValueError(
-            f"No valid JSON found in LLM output. Output preview: {llm_output[:200]}..."
-        )
+        raise ValueError(f"No valid JSON found in LLM output. Output preview: {llm_output[:200]}...")
 
     # Parse JSON
     try:

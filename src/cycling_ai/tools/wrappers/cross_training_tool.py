@@ -244,9 +244,7 @@ class CrossTrainingTool(BaseTool):
 
             # Return successful result
             total_activities = result_data.get("analysis_period", {}).get("total_activities", 0)
-            interference_events = result_data.get("interference_analysis", {}).get(
-                "total_events", 0
-            )
+            interference_events = result_data.get("interference_analysis", {}).get("total_events", 0)
 
             logger.info("Analysis completed successfully:")
             logger.info(f"  - Total activities analyzed: {total_activities}")

@@ -91,8 +91,7 @@ class FinalizePlanTool(BaseTool):
 
             if not overview_file.exists():
                 raise ValueError(
-                    f"Plan overview not found for plan_id={plan_id}. "
-                    f"You must call create_plan_overview first."
+                    f"Plan overview not found for plan_id={plan_id}. You must call create_plan_overview first."
                 )
 
             logger.info(f"Loading overview from: {overview_file}")
@@ -103,9 +102,7 @@ class FinalizePlanTool(BaseTool):
             total_weeks = int(overview_data["total_weeks"])
             weeks_completed = int(overview_data.get("weeks_completed", 0))
 
-            logger.info(
-                f"Overview loaded: {total_weeks} weeks planned, {weeks_completed} completed"
-            )
+            logger.info(f"Overview loaded: {total_weeks} weeks planned, {weeks_completed} completed")
 
             # Check if all weeks have been added
             if weeks_completed < total_weeks:
@@ -120,10 +117,7 @@ class FinalizePlanTool(BaseTool):
                 week_file = temp_dir / f"{plan_id}_week_{week_num}.json"
 
                 if not week_file.exists():
-                    raise ValueError(
-                        f"Week {week_num} details not found. "
-                        f"Call add_week_details for week {week_num}."
-                    )
+                    raise ValueError(f"Week {week_num} details not found. Call add_week_details for week {week_num}.")
 
                 logger.info(f"Loading week {week_num} from: {week_file}")
                 with open(week_file) as f:

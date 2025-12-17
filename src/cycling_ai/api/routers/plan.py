@@ -62,8 +62,7 @@ async def _execute_plan_generation(
                 "gender": "unknown",
                 "training_availability": request.athlete_profile.training_availability or {},
                 "goals": " ".join(request.athlete_profile.goals or []),
-                "current_training_status": request.athlete_profile.experience_level
-                or "intermediate",
+                "current_training_status": request.athlete_profile.experience_level or "intermediate",
                 "raw_training_data_path": "/tmp/api_data",
             }
             json.dump(profile_data, f)
@@ -146,8 +145,7 @@ async def generate_plan(
         ```
     """
     logger.info(
-        f"[PLAN ROUTER] Received plan generation request: {request.weeks} weeks, "
-        f"target FTP: {request.target_ftp}"
+        f"[PLAN ROUTER] Received plan generation request: {request.weeks} weeks, target FTP: {request.target_ftp}"
     )
 
     # Create job

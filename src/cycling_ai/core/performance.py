@@ -79,9 +79,7 @@ def analyze_performance(
         # Recent: activities from period_start to today (last N months)
         recent_period = rides[rides["date"] >= period_start]
         # Previous: activities from previous_period_start to period_start (N months prior)
-        previous_period = rides[
-            (rides["date"] >= previous_period_start) & (rides["date"] < period_start)
-        ]
+        previous_period = rides[(rides["date"] >= previous_period_start) & (rides["date"] < period_start)]
 
         # Run comprehensive analysis on both periods for comparison
         recent_stats = analyze_period(recent_period, f"Last {period_months} Months")
@@ -94,9 +92,7 @@ def analyze_performance(
             # Create rolling 30-day windows going backwards from today
             month_start = today - timedelta(days=30 * (i + 1))
             month_end = today - timedelta(days=30 * i)
-            month_data = recent_period[
-                (recent_period["date"] >= month_start) & (recent_period["date"] < month_end)
-            ]
+            month_data = recent_period[(recent_period["date"] >= month_start) & (recent_period["date"] < month_end)]
             # Calculate key metrics for this month
             month_stats = {
                 "month": month_start.strftime("%B %Y"),
@@ -129,11 +125,7 @@ def analyze_performance(
         # Format best rides for JSON (convert dates to strings)
         formatted_best_power = []
         for ride in best_power_rides:
-            date_str = (
-                ride["date"].strftime("%Y-%m-%d")
-                if hasattr(ride["date"], "strftime")
-                else str(ride["date"])
-            )
+            date_str = ride["date"].strftime("%Y-%m-%d") if hasattr(ride["date"], "strftime") else str(ride["date"])
             formatted_best_power.append(
                 {
                     "date": date_str,
@@ -146,11 +138,7 @@ def analyze_performance(
 
         formatted_longest = []
         for ride in longest_rides:
-            date_str = (
-                ride["date"].strftime("%Y-%m-%d")
-                if hasattr(ride["date"], "strftime")
-                else str(ride["date"])
-            )
+            date_str = ride["date"].strftime("%Y-%m-%d") if hasattr(ride["date"], "strftime") else str(ride["date"])
             formatted_longest.append(
                 {
                     "date": date_str,
@@ -170,9 +158,7 @@ def analyze_performance(
             "weight_kg": athlete_weight_kg,
             "ftp": athlete_ftp,
             "power_to_weight": (
-                float(athlete_ftp / athlete_weight_kg)
-                if (athlete_ftp and athlete_weight_kg)
-                else None
+                float(athlete_ftp / athlete_weight_kg) if (athlete_ftp and athlete_weight_kg) else None
             ),
             "max_hr": athlete_max_hr,
         }
@@ -216,14 +202,10 @@ def analyze_performance(
             )
 
             if prev_stats["avg_power"] > 0 and recent_stats["avg_power"] > 0:
-                trends["power_change_pct"] = float(
-                    (recent_stats["avg_power"] / prev_stats["avg_power"] - 1) * 100
-                )
+                trends["power_change_pct"] = float((recent_stats["avg_power"] / prev_stats["avg_power"] - 1) * 100)
 
             if prev_stats["avg_hr"] > 0 and recent_stats["avg_hr"] > 0:
-                trends["hr_change_pct"] = float(
-                    (recent_stats["avg_hr"] / prev_stats["avg_hr"] - 1) * 100
-                )
+                trends["hr_change_pct"] = float((recent_stats["avg_hr"] / prev_stats["avg_hr"] - 1) * 100)
 
             trends["frequency_change_pct"] = float(
                 (recent_stats["rides_per_week"] / prev_stats["rides_per_week"] - 1) * 100

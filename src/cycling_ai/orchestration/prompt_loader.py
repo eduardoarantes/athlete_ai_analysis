@@ -62,8 +62,7 @@ class PromptLoader:
 
         if version is None:
             raise ValueError(
-                "Prompt version must be specified. "
-                "This should come from the .cycling-ai.yaml config file."
+                "Prompt version must be specified. This should come from the .cycling-ai.yaml config file."
             )
 
         self.prompts_base_dir = Path(prompts_base_dir)
@@ -106,8 +105,7 @@ class PromptLoader:
         metadata_file = self.prompts_dir / "metadata.json"
         if not metadata_file.exists():
             raise FileNotFoundError(
-                f"Metadata file not found: {metadata_file}\n"
-                f"Model: {self.model}, Version: {self.version}"
+                f"Metadata file not found: {metadata_file}\nModel: {self.model}, Version: {self.version}"
             )
 
         with open(metadata_file, encoding="utf-8") as f:
@@ -172,14 +170,14 @@ class PromptLoader:
             # Try loading as Jinja2 template
             template = self._jinja_env.get_template(jinja_file)
             return template.render(**template_vars)
-        except TemplateNotFound:
+        except TemplateNotFound as e:
             # Fall back to .txt with string formatting
             txt_path = self.prompts_dir / txt_file
             if not txt_path.exists():
                 raise FileNotFoundError(
                     f"Prompt file not found: neither {jinja_file} nor {txt_file} exists\n"
                     f"Model: {self.model}, Version: {self.version}, Agent: {agent_name}"
-                )
+                ) from e
 
             with open(txt_path, encoding="utf-8") as f:
                 prompt_text = f.read().strip()
@@ -197,7 +195,7 @@ class PromptLoader:
         metadata = self.load_metadata()
         prompts = {}
 
-        for agent_name in metadata.get("agents", {}).keys():
+        for agent_name in metadata.get("agents", {}):
             try:
                 prompts[agent_name] = self.load_prompt(agent_name)
             except FileNotFoundError as e:
@@ -334,12 +332,9 @@ class PromptLoader:
             weekday_per_day = target_minutes // len(weekday_days)
             weekend_per_day = 0
 
-        for i, day in enumerate(available_days):
+        for day in available_days:
             # Assign duration based on day type
-            if day in ["Saturday", "Sunday"]:
-                duration = weekend_per_day
-            else:
-                duration = weekday_per_day
+            duration = weekend_per_day if day in ["Saturday", "Sunday"] else weekday_per_day
 
             # Round to nice numbers
             duration = max(40, min(240, duration))  # Between 40 and 240 minutes
@@ -420,8 +415,7 @@ class PromptLoader:
             import logging
 
             logging.warning(
-                f"Cross-training addon file not found: {addon_file}. "
-                "Cross-training analysis will not be available."
+                f"Cross-training addon file not found: {addon_file}. Cross-training analysis will not be available."
             )
             return ""
 
@@ -512,10 +506,7 @@ def get_prompt_loader(
         ValueError: If version is not provided
     """
     if version is None:
-        raise ValueError(
-            "Prompt version must be specified. "
-            "This should come from the .cycling-ai.yaml config file."
-        )
+        raise ValueError("Prompt version must be specified. This should come from the .cycling-ai.yaml config file.")
 
     return PromptLoader(
         prompts_base_dir=prompts_dir,

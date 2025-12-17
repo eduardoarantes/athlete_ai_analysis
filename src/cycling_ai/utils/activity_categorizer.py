@@ -24,9 +24,7 @@ class ActivityCategory:
 # Sport-to-category mapping based on FIT sport types
 SPORT_CATEGORY_MAP: dict[str, ActivityCategory] = {
     # Cycling variants
-    "cycling": ActivityCategory(
-        category="Cycling", muscle_focus="Legs", fatigue_impact="Medium", recovery_hours=24
-    ),
+    "cycling": ActivityCategory(category="Cycling", muscle_focus="Legs", fatigue_impact="Medium", recovery_hours=24),
     "virtual_ride": ActivityCategory(
         category="Cycling", muscle_focus="Legs", fatigue_impact="Medium", recovery_hours=24
     ),
@@ -34,22 +32,14 @@ SPORT_CATEGORY_MAP: dict[str, ActivityCategory] = {
         category="Cycling", muscle_focus="Legs", fatigue_impact="Medium", recovery_hours=24
     ),
     # Running variants (leg-focused cardio)
-    "running": ActivityCategory(
-        category="Cardio", muscle_focus="Legs", fatigue_impact="High", recovery_hours=48
-    ),
-    "trail_running": ActivityCategory(
-        category="Cardio", muscle_focus="Legs", fatigue_impact="High", recovery_hours=48
-    ),
+    "running": ActivityCategory(category="Cardio", muscle_focus="Legs", fatigue_impact="High", recovery_hours=48),
+    "trail_running": ActivityCategory(category="Cardio", muscle_focus="Legs", fatigue_impact="High", recovery_hours=48),
     "treadmill_running": ActivityCategory(
         category="Cardio", muscle_focus="Legs", fatigue_impact="Medium", recovery_hours=36
     ),
     # Swimming (upper body cardio)
-    "swimming": ActivityCategory(
-        category="Cardio", muscle_focus="Upper", fatigue_impact="Low", recovery_hours=12
-    ),
-    "lap_swimming": ActivityCategory(
-        category="Cardio", muscle_focus="Upper", fatigue_impact="Low", recovery_hours=12
-    ),
+    "swimming": ActivityCategory(category="Cardio", muscle_focus="Upper", fatigue_impact="Low", recovery_hours=12),
+    "lap_swimming": ActivityCategory(category="Cardio", muscle_focus="Upper", fatigue_impact="Low", recovery_hours=12),
     "open_water_swimming": ActivityCategory(
         category="Cardio", muscle_focus="Upper", fatigue_impact="Medium", recovery_hours=24
     ),
@@ -64,27 +54,17 @@ SPORT_CATEGORY_MAP: dict[str, ActivityCategory] = {
         category="Other", muscle_focus="Full Body", fatigue_impact="Medium", recovery_hours=24
     ),
     # Walking/hiking (low-impact cardio)
-    "walking": ActivityCategory(
-        category="Cardio", muscle_focus="Legs", fatigue_impact="Low", recovery_hours=12
-    ),
-    "hiking": ActivityCategory(
-        category="Cardio", muscle_focus="Legs", fatigue_impact="Medium", recovery_hours=24
-    ),
+    "walking": ActivityCategory(category="Cardio", muscle_focus="Legs", fatigue_impact="Low", recovery_hours=12),
+    "hiking": ActivityCategory(category="Cardio", muscle_focus="Legs", fatigue_impact="Medium", recovery_hours=24),
     # Yoga/flexibility
-    "yoga": ActivityCategory(
-        category="Other", muscle_focus="Full Body", fatigue_impact="Low", recovery_hours=0
-    ),
+    "yoga": ActivityCategory(category="Other", muscle_focus="Full Body", fatigue_impact="Low", recovery_hours=0),
     "flexibility_training": ActivityCategory(
         category="Other", muscle_focus="Full Body", fatigue_impact="Low", recovery_hours=0
     ),
     # Rowing
-    "rowing": ActivityCategory(
-        category="Cardio", muscle_focus="Full Body", fatigue_impact="Medium", recovery_hours=24
-    ),
+    "rowing": ActivityCategory(category="Cardio", muscle_focus="Full Body", fatigue_impact="Medium", recovery_hours=24),
     # Elliptical
-    "elliptical": ActivityCategory(
-        category="Cardio", muscle_focus="Legs", fatigue_impact="Low", recovery_hours=12
-    ),
+    "elliptical": ActivityCategory(category="Cardio", muscle_focus="Legs", fatigue_impact="Low", recovery_hours=12),
 }
 
 # Sub-sport specific overrides for strength training focus

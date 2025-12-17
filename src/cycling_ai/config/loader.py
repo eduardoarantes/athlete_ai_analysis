@@ -165,8 +165,7 @@ def get_api_key(provider_name: str, config: CyclingAIConfig) -> str:
     """
     if provider_name not in config.providers:
         raise ValueError(
-            f"Provider '{provider_name}' not configured. "
-            f"Available providers: {', '.join(config.providers.keys())}"
+            f"Provider '{provider_name}' not configured. Available providers: {', '.join(config.providers.keys())}"
         )
 
     provider_config = config.providers[provider_name]
@@ -176,8 +175,6 @@ def get_api_key(provider_name: str, config: CyclingAIConfig) -> str:
 
     api_key = os.getenv(provider_config.api_key_env)
     if not api_key:
-        raise ValueError(
-            f"API key not found. Set environment variable: {provider_config.api_key_env}"
-        )
+        raise ValueError(f"API key not found. Set environment variable: {provider_config.api_key_env}")
 
     return api_key

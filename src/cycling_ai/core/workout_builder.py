@@ -87,9 +87,7 @@ class Workout:
             )
         )
 
-    def add_interval(
-        self, duration_min: int, power_low: int, power_high: int, description: str = ""
-    ):
+    def add_interval(self, duration_min: int, power_low: int, power_high: int, description: str = ""):
         """Add a work interval"""
         desc = description or f"Interval {duration_min} min @ {power_low}-{power_high}W"
         self.segments.append(WorkoutSegment(duration_min, power_low, power_high, desc, "interval"))
@@ -97,9 +95,7 @@ class Workout:
     def add_recovery(self, duration_min: int, power: int):
         """Add a recovery segment"""
         self.segments.append(
-            WorkoutSegment(
-                duration_min, power, power, f"Recovery {duration_min} min @ {power}W", "recovery"
-            )
+            WorkoutSegment(duration_min, power, power, f"Recovery {duration_min} min @ {power}W", "recovery")
         )
 
     def add_steady(self, duration_min: int, power_low: int, power_high: int, description: str = ""):
@@ -158,9 +154,7 @@ class Workout:
         return result
 
 
-def build_threshold_workout(
-    ftp: int, weekday: str, intervals: str = "2x20", week: int = 1
-) -> Workout:
+def build_threshold_workout(ftp: int, weekday: str, intervals: str = "2x20", week: int = 1) -> Workout:
     """
     Build a threshold workout with warm-up and cool-down.
 
@@ -201,9 +195,7 @@ def build_threshold_workout(
     recovery_power = targets["recovery"]
 
     for i in range(sets):
-        workout.add_interval(
-            duration, threshold_low, threshold_high, f"Threshold {duration}min @ 90-95% FTP"
-        )
+        workout.add_interval(duration, threshold_low, threshold_high, f"Threshold {duration}min @ 90-95% FTP")
         if i < sets - 1:  # Don't add recovery after last interval
             workout.add_recovery(5, recovery_power)
 

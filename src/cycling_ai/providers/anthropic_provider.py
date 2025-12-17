@@ -48,10 +48,7 @@ def _normalize_schema_types(schema: dict[str, Any]) -> dict[str, Any]:
             result[key] = value.lower()
         elif key == "properties" and isinstance(value, dict):
             # Recursively normalize nested properties
-            result[key] = {
-                prop_name: _normalize_schema_types(prop_value)
-                for prop_name, prop_value in value.items()
-            }
+            result[key] = {prop_name: _normalize_schema_types(prop_value) for prop_name, prop_value in value.items()}
         elif key == "items" and isinstance(value, dict):
             # Recursively normalize array item schemas
             result[key] = _normalize_schema_types(value)

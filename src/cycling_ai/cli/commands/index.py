@@ -120,7 +120,7 @@ def domain(
 
     except Exception as e:
         console.print(f"[red]Error during indexing:[/red] {str(e)}")
-        raise SystemExit(1)
+        raise SystemExit(1) from None
 
 
 @index.command()
@@ -202,7 +202,7 @@ def templates(
 
     except Exception as e:
         console.print(f"[red]Error during indexing:[/red] {str(e)}")
-        raise SystemExit(1)
+        raise SystemExit(1) from None
 
 
 @index.command()
@@ -324,4 +324,4 @@ def all(
 
     except Exception as e:
         console.print(f"[red]Error during indexing:[/red] {str(e)}")
-        raise SystemExit(1)
+        raise SystemExit(1) from None

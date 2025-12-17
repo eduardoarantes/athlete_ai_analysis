@@ -63,17 +63,20 @@ def extract_tool_result_from_jsonl(
 
         # First check if the result is in the SAME interaction's output
         for interaction in interactions:
-            if interaction.get("interaction_id") == tool_call_interaction_id:
-                # Check if output.content has JSON data
-                if "output" in interaction and interaction["output"].get("content"):
-                    content = interaction["output"]["content"]
-                    # Check if content contains the expected key (if provided)
-                    if result_key and result_key in content:
-                        try:
-                            tool_data = json.loads(content)
-                            return tool_data
-                        except json.JSONDecodeError:
-                            pass  # Fall through to check next interaction
+            # Check if this is the interaction we're looking for and it has output content
+            if (
+                interaction.get("interaction_id") == tool_call_interaction_id
+                and "output" in interaction
+                and interaction["output"].get("content")
+            ):
+                content = interaction["output"]["content"]
+                # Check if content contains the expected key (if provided)
+                if result_key and result_key in content:
+                    try:
+                        tool_data = json.loads(content)
+                        return tool_data
+                    except json.JSONDecodeError:
+                        pass  # Fall through to check next interaction
 
         # If not found in same interaction, check NEXT interaction
         next_interaction_id = tool_call_interaction_id + 1
@@ -95,9 +98,7 @@ def extract_tool_result_from_jsonl(
                 if result:
                     return result
 
-        logger.warning(
-            f"No {tool_name} result found for tool call in interaction {tool_call_interaction_id}"
-        )
+        logger.warning(f"No {tool_name} result found for tool call in interaction {tool_call_interaction_id}")
         return None
 
     except FileNotFoundError:
@@ -135,9 +136,7 @@ def extract_performance_analysis_from_jsonl(jsonl_path: Path) -> dict[str, Any] 
     return extract_tool_result_from_jsonl(jsonl_path, "analyze_performance", "key_trends")
 
 
-def _parse_tool_output(
-    interaction: dict[str, Any], source_path: Path, result_key: str | None = None
-) -> dict[str, Any]:
+def _parse_tool_output(interaction: dict[str, Any], source_path: Path, result_key: str | None = None) -> dict[str, Any]:
     """
     Parse tool output from interaction.
 
@@ -186,9 +185,7 @@ def _parse_tool_output(
                     logger.warning(f"Failed to parse tool output JSON from content: {e}")
                     continue
 
-    logger.warning(
-        f"Could not find tool output data in interaction {interaction.get('interaction_id')}"
-    )
+    logger.warning(f"Could not find tool output data in interaction {interaction.get('interaction_id')}")
     return None
 
 
@@ -314,9 +311,7 @@ def consolidate_athlete_data(
     Raises:
         ValueError: If training_plan_data doesn't have expected NEW format structure
     """
-    logger.info(
-        f"[CONSOLIDATE] Starting consolidation for athlete: {athlete_name} (id={athlete_id})"
-    )
+    logger.info(f"[CONSOLIDATE] Starting consolidation for athlete: {athlete_name} (id={athlete_id})")
     logger.debug(f"[CONSOLIDATE] training_plan_data type: {type(training_plan_data)}")
     logger.debug(
         f"[CONSOLIDATE] training_plan_data keys: {list(training_plan_data.keys()) if isinstance(training_plan_data, dict) else 'N/A'}"
@@ -337,8 +332,7 @@ def consolidate_athlete_data(
     monitoring_guidance = training_plan_data.get("monitoring_guidance", "")
 
     logger.info(
-        f"[CONSOLIDATE] Processing NEW format: {len(weekly_plan)} weeks, "
-        f"target_ftp={plan_metadata.get('target_ftp')}"
+        f"[CONSOLIDATE] Processing NEW format: {len(weekly_plan)} weeks, target_ftp={plan_metadata.get('target_ftp')}"
     )
     logger.debug(f"[CONSOLIDATE] plan_metadata keys: {list(plan_metadata.keys())}")
     logger.debug(f"[CONSOLIDATE] coaching_notes length: {len(coaching_notes)} chars")
@@ -403,9 +397,7 @@ def create_report_data(
                     f"[CREATE_REPORT] Athlete {i + 1} has {len(tp['weekly_plan'])} weeks, target_ftp={target_ftp}"
                 )
             else:
-                logger.warning(
-                    f"[CREATE_REPORT] Athlete {i + 1} missing weekly_plan in training_plan"
-                )
+                logger.warning(f"[CREATE_REPORT] Athlete {i + 1} missing weekly_plan in training_plan")
 
     report_data = {
         "version": "1.0",
@@ -422,9 +414,7 @@ def create_report_data(
     return report_data
 
 
-def extract_from_session_file(
-    session_path: Path, athlete_profile_path: Path | None = None
-) -> dict[str, Any] | None:
+def extract_from_session_file(session_path: Path, athlete_profile_path: Path | None = None) -> dict[str, Any] | None:
     """
     Extract complete athlete data from a single session file.
 

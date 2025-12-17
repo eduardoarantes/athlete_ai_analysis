@@ -155,9 +155,7 @@ class FitWorkoutStep:
 
         # Validate repeat step has repeat_steps
         if self.is_repeat_step() and (self.repeat_steps is None or self.repeat_steps <= 0):
-            raise ValueError(
-                f"Repeat step at index {self.message_index} missing valid repeat_steps value"
-            )
+            raise ValueError(f"Repeat step at index {self.message_index} missing valid repeat_steps value")
 
 
 @dataclass
@@ -192,12 +190,8 @@ class FitRepeatStructure:
             "sets": self.repeat_count,
             "work": {
                 "duration_min": float(self.work_step.duration_value / 60),
-                "power_low_pct": self._calculate_power_pct(
-                    self.work_step.custom_power_low or 0, ftp
-                ),
-                "power_high_pct": self._calculate_power_pct(
-                    self.work_step.custom_power_high or 0, ftp
-                ),
+                "power_low_pct": self._calculate_power_pct(self.work_step.custom_power_low or 0, ftp),
+                "power_high_pct": self._calculate_power_pct(self.work_step.custom_power_high or 0, ftp),
                 "description": self.work_step.step_name or "Work",
             },
         }
@@ -205,12 +199,8 @@ class FitRepeatStructure:
         if self.recovery_step:
             segment["recovery"] = {
                 "duration_min": float(self.recovery_step.duration_value / 60),
-                "power_low_pct": self._calculate_power_pct(
-                    self.recovery_step.custom_power_low or 0, ftp
-                ),
-                "power_high_pct": self._calculate_power_pct(
-                    self.recovery_step.custom_power_high or 0, ftp
-                ),
+                "power_low_pct": self._calculate_power_pct(self.recovery_step.custom_power_low or 0, ftp),
+                "power_high_pct": self._calculate_power_pct(self.recovery_step.custom_power_high or 0, ftp),
                 "description": self.recovery_step.step_name or "Recovery",
             }
 
@@ -540,14 +530,10 @@ class FitWorkoutParser:
 
         # Validate required fields
         if not name:
-            raise ValueError(
-                "Workout name not found in FIT file. This may not be a valid workout file."
-            )
+            raise ValueError("Workout name not found in FIT file. This may not be a valid workout file.")
 
         if num_steps == 0:
-            raise ValueError(
-                "Number of steps not found in FIT file. This may not be a valid workout file."
-            )
+            raise ValueError("Number of steps not found in FIT file. This may not be a valid workout file.")
 
         return FitWorkoutMetadata(
             name=name,
@@ -1018,9 +1004,7 @@ class FitWorkoutParser:
                 recovery_tss = 0.0
                 if recovery:
                     recovery_min = recovery["duration_min"]
-                    recovery_power_pct = (
-                        recovery["power_low_pct"] + recovery["power_high_pct"]
-                    ) / 2
+                    recovery_power_pct = (recovery["power_low_pct"] + recovery["power_high_pct"]) / 2
                     recovery_if = recovery_power_pct / 100.0
                     recovery_tss = (recovery_min / 60.0) * recovery_if * recovery_if * 100
 

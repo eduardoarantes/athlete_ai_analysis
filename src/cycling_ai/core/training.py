@@ -47,9 +47,7 @@ def validate_training_plan(
 
         # Validate total_weeks matches weekly_plan length
         if total_weeks != len(weekly_plan):
-            errors.append(
-                f"total_weeks ({total_weeks}) does not match weekly_plan length ({len(weekly_plan)})"
-            )
+            errors.append(f"total_weeks ({total_weeks}) does not match weekly_plan length ({len(weekly_plan)})")
 
         # Validate each week
         for i, week in enumerate(weekly_plan, 1):
@@ -68,9 +66,7 @@ def validate_training_plan(
 
             # Check workouts is a list
             if not isinstance(workouts, list):
-                errors.append(
-                    f"Week {week_num} 'workouts' must be a list, got {type(workouts).__name__}"
-                )
+                errors.append(f"Week {week_num} 'workouts' must be a list, got {type(workouts).__name__}")
                 continue
 
             # Check at least one workout
@@ -83,9 +79,7 @@ def validate_training_plan(
             for workout_idx, workout in enumerate(workouts, 1):
                 # Validate weekday field exists
                 if "weekday" not in workout:
-                    errors.append(
-                        f"Week {week_num}, workout {workout_idx}: Missing 'weekday' field"
-                    )
+                    errors.append(f"Week {week_num}, workout {workout_idx}: Missing 'weekday' field")
                     continue
 
                 day = workout["weekday"]
@@ -119,9 +113,7 @@ def validate_training_plan(
 
                 segments = workout["segments"]
                 if not isinstance(segments, list):
-                    errors.append(
-                        f"Week {week_num}, {day}: 'segments' must be a list, got {type(segments).__name__}"
-                    )
+                    errors.append(f"Week {week_num}, {day}: 'segments' must be a list, got {type(segments).__name__}")
                     continue
 
                 if len(segments) < 1:
@@ -150,13 +142,9 @@ def validate_training_plan(
 
                     # Check duration
                     if "duration_min" not in segment:
-                        errors.append(
-                            f"Week {week_num}, {day}, segment {seg_idx}: Missing 'duration_min' field"
-                        )
+                        errors.append(f"Week {week_num}, {day}, segment {seg_idx}: Missing 'duration_min' field")
                     elif not isinstance(segment["duration_min"], (int, float)):
-                        errors.append(
-                            f"Week {week_num}, {day}, segment {seg_idx}: 'duration_min' must be a number"
-                        )
+                        errors.append(f"Week {week_num}, {day}, segment {seg_idx}: 'duration_min' must be a number")
                     else:
                         day_minutes += segment["duration_min"]
 
@@ -172,13 +160,9 @@ def validate_training_plan(
 
                     # Check power percentage fields (only for cycling segments)
                     if "power_low_pct" not in segment:
-                        errors.append(
-                            f"Week {week_num}, {day}, segment {seg_idx}: Missing 'power_low_pct' field"
-                        )
+                        errors.append(f"Week {week_num}, {day}, segment {seg_idx}: Missing 'power_low_pct' field")
                     elif not isinstance(segment["power_low_pct"], (int, float)):
-                        errors.append(
-                            f"Week {week_num}, {day}, segment {seg_idx}: 'power_low_pct' must be a number"
-                        )
+                        errors.append(f"Week {week_num}, {day}, segment {seg_idx}: 'power_low_pct' must be a number")
                     elif segment["power_low_pct"] < 0:
                         errors.append(
                             f"Week {week_num}, {day}, segment {seg_idx}: 'power_low_pct' must be >= 0 (got {segment['power_low_pct']})"
@@ -200,11 +184,11 @@ def validate_training_plan(
                             )
 
                 # Check daily cap if specified
-                if daily_caps and day in daily_caps:
-                    if day_minutes > daily_caps[day]:
-                        errors.append(
-                            f"Week {week_num}, {day}: Total duration {day_minutes} min exceeds daily cap of {daily_caps[day]} min"
-                        )
+                if daily_caps and day in daily_caps and day_minutes > daily_caps[day]:
+                    errors.append(
+                        f"Week {week_num}, {day}: Total duration {day_minutes} min exceeds "
+                        f"daily cap of {daily_caps[day]} min"
+                    )
 
                 week_minutes += day_minutes
 
@@ -271,9 +255,7 @@ def finalize_training_plan(
         raise ValueError("Plan duration must be between 4 and 24 weeks")
 
     if len(weekly_plan) != total_weeks:
-        raise ValueError(
-            f"weekly_plan length ({len(weekly_plan)}) does not match total_weeks ({total_weeks})"
-        )
+        raise ValueError(f"weekly_plan length ({len(weekly_plan)}) does not match total_weeks ({total_weeks})")
 
     current_ftp = athlete_profile.ftp
 
@@ -312,9 +294,7 @@ def finalize_training_plan(
         "name": athlete_profile.name,
         "gender": athlete_profile.gender,
         "weight_kg": athlete_profile.weight_kg,
-        "power_to_weight": (
-            float(current_ftp / athlete_profile.weight_kg) if athlete_profile.weight_kg else None
-        ),
+        "power_to_weight": (float(current_ftp / athlete_profile.weight_kg) if athlete_profile.weight_kg else None),
         "max_hr": athlete_profile.max_hr,
         "training_availability": athlete_profile.training_availability,
         "goals": athlete_profile.goals,

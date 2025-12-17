@@ -39,9 +39,7 @@ class AgentPromptsManager:
         Raises:
             FileNotFoundError: If prompt files cannot be found
         """
-        self._prompt_loader = get_prompt_loader(
-            prompts_dir=prompts_dir, model=model, version=version
-        )
+        self._prompt_loader = get_prompt_loader(prompts_dir=prompts_dir, model=model, version=version)
 
         # Verify prompts exist
         if not self._prompt_loader.exists():

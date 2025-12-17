@@ -107,8 +107,7 @@ class BasePhase(ABC):
             if prefetched_data is not None:
                 # OPTIMIZED PATH: Prefetch mode (1 interaction)
                 logger.info(
-                    f"[{self.phase_name}] Using prefetch optimization - "
-                    f"tools pre-executed, synthesis-only mode"
+                    f"[{self.phase_name}] Using prefetch optimization - tools pre-executed, synthesis-only mode"
                 )
                 result = self._execute_with_prefetch(context, prefetched_data, phase_start)
             else:
@@ -133,10 +132,7 @@ class BasePhase(ABC):
             tb_lines = traceback.format_exception(type(e), e, e.__traceback__)
             full_traceback = "".join(tb_lines)
 
-            logger.error(
-                f"Phase {self.phase_name} failed after {execution_time:.2f}s: "
-                f"{error_msg}\n{full_traceback}"
-            )
+            logger.error(f"Phase {self.phase_name} failed after {execution_time:.2f}s: {error_msg}\n{full_traceback}")
 
             result = PhaseResult(
                 phase_name=self.phase_name,
@@ -198,9 +194,7 @@ class BasePhase(ABC):
             tokens_used=self._estimate_tokens(session),
         )
 
-        logger.info(
-            f"Phase {self.phase_name} completed successfully in {execution_time:.2f}s (normal mode)"
-        )
+        logger.info(f"Phase {self.phase_name} completed successfully in {execution_time:.2f}s (normal mode)")
 
         return result
 
@@ -231,9 +225,7 @@ class BasePhase(ABC):
 
         # Step 2: Create agent WITHOUT tools (synthesis only)
         max_iterations = (
-            self.max_iterations
-            if self.max_iterations is not None
-            else 1  # Only 1 iteration needed for synthesis
+            self.max_iterations if self.max_iterations is not None else 1  # Only 1 iteration needed for synthesis
         )
 
         agent = AgentFactory.create_agent(
@@ -268,8 +260,7 @@ class BasePhase(ABC):
         )
 
         logger.info(
-            f"Phase {self.phase_name} completed successfully in "
-            f"{execution_time:.2f}s (prefetch mode - 1 interaction)"
+            f"Phase {self.phase_name} completed successfully in {execution_time:.2f}s (prefetch mode - 1 interaction)"
         )
 
         return result
@@ -326,9 +317,7 @@ class BasePhase(ABC):
         """
         # Determine max iterations
         max_iterations = (
-            self.max_iterations
-            if self.max_iterations is not None
-            else context.config.max_iterations_per_phase
+            self.max_iterations if self.max_iterations is not None else context.config.max_iterations_per_phase
         )
 
         # Create agent with allowed_tools filter
@@ -339,10 +328,7 @@ class BasePhase(ABC):
             max_iterations=max_iterations,
         )
 
-        logger.debug(
-            f"Created agent for phase {self.phase_name} with "
-            f"{len(self.required_tools)} allowed tools"
-        )
+        logger.debug(f"Created agent for phase {self.phase_name} with {len(self.required_tools)} allowed tools")
 
         return agent
 
@@ -548,10 +534,7 @@ class BasePhase(ABC):
             collection = self._get_retrieval_collection()
 
             logger.info(f"[{self.phase_name}] RAG: Building retrieval query from phase context")
-            logger.info(
-                f"[{self.phase_name}] RAG: Query='{retrieval_query[:80]}...', "
-                f"Collection='{collection}'"
-            )
+            logger.info(f"[{self.phase_name}] RAG: Query='{retrieval_query[:80]}...', Collection='{collection}'")
 
             # Retrieve relevant documents
             retrieval_result = context.rag_manager.retrieve(
@@ -563,13 +546,10 @@ class BasePhase(ABC):
 
             if retrieval_result.documents:
                 logger.info(
-                    f"[{self.phase_name}] RAG: Successfully retrieved "
-                    f"{len(retrieval_result.documents)} documents"
+                    f"[{self.phase_name}] RAG: Successfully retrieved {len(retrieval_result.documents)} documents"
                 )
             else:
-                logger.warning(
-                    f"[{self.phase_name}] RAG: No documents retrieved, using base prompt only"
-                )
+                logger.warning(f"[{self.phase_name}] RAG: No documents retrieved, using base prompt only")
 
             # Augment prompt with retrieved context
             augmenter = PromptAugmenter(max_context_tokens=2000)

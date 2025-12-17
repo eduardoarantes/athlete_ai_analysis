@@ -83,20 +83,21 @@ class ToolExecutor:
             if self.session is not None:
                 # Check if tool's execute method accepts session_context parameter
                 tool_execute_sig = inspect.signature(tool.execute)
-                if "session_context" in tool_execute_sig.parameters:
-                    # Only inject if not already provided (allow explicit override)
-                    if "session_context" not in parameters_with_context:
-                        parameters_with_context["session_context"] = self.session.context
+                # Inject session context if tool accepts it and it's not already provided
+                if (
+                    "session_context" in tool_execute_sig.parameters
+                    and "session_context" not in parameters_with_context
+                ):
+                    parameters_with_context["session_context"] = self.session.context
 
             # Execute tool
             result = tool.execute(**parameters_with_context)
 
             # Update session context from tool result metadata
-            if self.session is not None and result.success:
-                if result.metadata and "context_updates" in result.metadata:
-                    context_updates = result.metadata["context_updates"]
-                    if isinstance(context_updates, dict):
-                        self.session.context.update(context_updates)
+            if self.session is not None and result.success and result.metadata and "context_updates" in result.metadata:
+                context_updates = result.metadata["context_updates"]
+                if isinstance(context_updates, dict):
+                    self.session.context.update(context_updates)
 
             return result
 

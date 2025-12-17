@@ -198,9 +198,7 @@ class DataPreparationPhase(BasePhase):
             # Build response message
             validation_msg = validation_result.data.get("message", "Validation passed")
             cache_msg = cache_result.data.get("message", "Cache created")
-            response = (
-                f"{validation_msg}\n\n{cache_msg}\n\nData preparation complete. Ready for analysis."
-            )
+            response = f"{validation_msg}\n\n{cache_msg}\n\nData preparation complete. Ready for analysis."
 
             # Extract data for Phase 2+
             extracted_data = {
@@ -212,9 +210,7 @@ class DataPreparationPhase(BasePhase):
             }
 
             execution_time = (datetime.now() - phase_start).total_seconds()
-            logger.info(
-                f"[PHASE DATA_PREPARATION] Completed in {execution_time:.2f}s (no tokens used)"
-            )
+            logger.info(f"[PHASE DATA_PREPARATION] Completed in {execution_time:.2f}s (no tokens used)")
 
             return PhaseResult(
                 phase_name=self.phase_name,

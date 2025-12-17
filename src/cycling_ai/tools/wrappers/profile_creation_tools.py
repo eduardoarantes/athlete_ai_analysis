@@ -221,9 +221,7 @@ class UpdateProfileFieldTool(BaseTool):
             try:
                 max_hr_val = int(value)
             except (TypeError, ValueError):
-                raise ValueError(
-                    f"Maximum heart rate must be a whole number, got: {value}"
-                ) from None
+                raise ValueError(f"Maximum heart rate must be a whole number, got: {value}") from None
             is_valid, error_msg = validate_max_hr(max_hr_val)
             if not is_valid:
                 raise ValueError(error_msg)

@@ -57,8 +57,7 @@ class ZoneAnalysisTool(BaseTool):
                     name="athlete_profile_json",
                     type="string",
                     description=(
-                        "Path to athlete_profile.json. Required for FTP value "
-                        "and personalized zone recommendations."
+                        "Path to athlete_profile.json. Required for FTP value and personalized zone recommendations."
                     ),
                     required=True,
                 ),

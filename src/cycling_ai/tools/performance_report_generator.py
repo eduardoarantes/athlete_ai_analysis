@@ -9,9 +9,7 @@ from typing import Any
 from cycling_ai.models.performance_analysis import PerformanceAnalysis
 
 
-def generate_performance_html_from_json(
-    report_data: dict[str, Any], output_path: Path | str
-) -> None:
+def generate_performance_html_from_json(report_data: dict[str, Any], output_path: Path | str) -> None:
     """
     Generate HTML performance analysis report from report_data.json structure.
 
@@ -354,7 +352,9 @@ def _build_cross_training(ct) -> str:
         html += '  <div class="load-item">\n'
         html += '    <div class="load-label">Strength</div>\n'
         html += '    <div class="load-bar">\n'
-        html += f'      <div class="load-fill load-strength" style="width: {ct.load_balance.strength_percent}%"></div>\n'
+        html += (
+            f'      <div class="load-fill load-strength" style="width: {ct.load_balance.strength_percent}%"></div>\n'
+        )
         html += "    </div>\n"
         html += f'    <div class="load-value">{ct.load_balance.strength_percent:.1f}%</div>\n'
         html += "  </div>\n"
@@ -375,7 +375,9 @@ def _build_cross_training(ct) -> str:
     if ct.interference_events:
         html += '<div class="cross-training-subsection">\n'
         html += "<h3>Scheduling Conflicts Detected</h3>\n"
-        html += '<p class="interference-warning">⚠️ The following activity pairs may have interfered with performance:</p>\n'
+        html += (
+            '<p class="interference-warning">⚠️ The following activity pairs may have interfered with performance:</p>\n'
+        )
         html += '<table class="interference-table">\n'
         html += "  <thead>\n"
         html += "    <tr>\n"
@@ -391,9 +393,7 @@ def _build_cross_training(ct) -> str:
 
         for event in ct.interference_events:
             # Handle optional score field
-            score = (
-                event.score if event.score is not None else 5
-            )  # Default to medium risk if missing
+            score = event.score if event.score is not None else 5  # Default to medium risk if missing
             risk_class = "risk-high" if score >= 7 else "risk-medium" if score >= 4 else "risk-low"
             score_display = f"{score}/10" if event.score is not None else "N/A"
 

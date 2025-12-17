@@ -238,9 +238,7 @@ class PlanOverviewTool(BaseTool):
             if not weekly_overview:
                 raise ValueError("weekly_overview is required")
             if len(weekly_overview) != total_weeks:
-                raise ValueError(
-                    f"weekly_overview must have exactly {total_weeks} entries, got {len(weekly_overview)}"
-                )
+                raise ValueError(f"weekly_overview must have exactly {total_weeks} entries, got {len(weekly_overview)}")
 
             # Validate training_days in each week
             valid_weekdays = {
@@ -307,9 +305,7 @@ class PlanOverviewTool(BaseTool):
                     workout_types_raw = day_obj.get("workout_types")
 
                     if not weekday:
-                        raise ValueError(
-                            f"Week {week_num}: training day entry missing 'weekday' field: {day_obj}"
-                        )
+                        raise ValueError(f"Week {week_num}: training day entry missing 'weekday' field: {day_obj}")
 
                     if not workout_types_raw:
                         raise ValueError(
@@ -322,14 +318,10 @@ class PlanOverviewTool(BaseTool):
                         )
 
                     if len(workout_types_raw) == 0:
-                        raise ValueError(
-                            f"Week {week_num}, {weekday}: 'workout_types' array cannot be empty"
-                        )
+                        raise ValueError(f"Week {week_num}, {weekday}: 'workout_types' array cannot be empty")
 
                     # Normalize workout_types to lowercase (LLMs sometimes return "Endurance" instead of "endurance")
-                    workout_types = [
-                        wt.lower() if isinstance(wt, str) else wt for wt in workout_types_raw
-                    ]
+                    workout_types = [wt.lower() if isinstance(wt, str) else wt for wt in workout_types_raw]
 
                     # Validate weekday
                     if weekday not in valid_weekdays:
@@ -375,8 +367,7 @@ class PlanOverviewTool(BaseTool):
                 if weekdays_seen != valid_weekdays:
                     missing = valid_weekdays - weekdays_seen
                     raise ValueError(
-                        f"Week {week_num} missing weekdays: {', '.join(sorted(missing))}. "
-                        f"Must include all 7 weekdays."
+                        f"Week {week_num} missing weekdays: {', '.join(sorted(missing))}. Must include all 7 weekdays."
                     )
 
                 # Validate training day count
@@ -388,8 +379,7 @@ class PlanOverviewTool(BaseTool):
 
                 if non_rest_days < 2:
                     logger.warning(
-                        f"Week {week_num} has only {non_rest_days} training days. "
-                        f"Consider adding more training volume."
+                        f"Week {week_num} has only {non_rest_days} training days. Consider adding more training volume."
                     )
 
                 # Validate hard day count

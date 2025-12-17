@@ -155,9 +155,7 @@ class BaseWorkflow(ABC):
         """
         pass
 
-    def _create_phase_context(
-        self, config: WorkflowConfig, previous_phase_data: dict[str, Any]
-    ) -> PhaseContext:
+    def _create_phase_context(self, config: WorkflowConfig, previous_phase_data: dict[str, Any]) -> PhaseContext:
         """
         Create phase execution context.
 
@@ -180,10 +178,7 @@ class BaseWorkflow(ABC):
         if config.rag_config.enabled:
             logger.info("=" * 80)
             logger.info("RAG (Retrieval Augmented Generation) ENABLED for this workflow")
-            logger.info(
-                f"RAG Config: top_k={config.rag_config.top_k}, "
-                f"min_score={config.rag_config.min_score}"
-            )
+            logger.info(f"RAG Config: top_k={config.rag_config.top_k}, min_score={config.rag_config.min_score}")
             logger.info("=" * 80)
             rag_manager = self._initialize_rag_manager(config.rag_config)
         else:
@@ -223,9 +218,7 @@ class BaseWorkflow(ABC):
 
         # Check if project vectorstore path is configured
         if rag_config.project_vectorstore_path is None:
-            logger.warning(
-                "RAG enabled but no project vectorstore path configured. RAG will be disabled."
-            )
+            logger.warning("RAG enabled but no project vectorstore path configured. RAG will be disabled.")
             return None
 
         # Check if project vectorstore exists
@@ -241,13 +234,9 @@ class BaseWorkflow(ABC):
         try:
             from cycling_ai.rag.manager import RAGManager
 
+            logger.info(f"RAG: Initializing RAG manager with vectorstore at: {rag_config.project_vectorstore_path}")
             logger.info(
-                f"RAG: Initializing RAG manager with vectorstore at: "
-                f"{rag_config.project_vectorstore_path}"
-            )
-            logger.info(
-                f"RAG: Embedding provider: {rag_config.embedding_provider} "
-                f"(model: {rag_config.embedding_model})"
+                f"RAG: Embedding provider: {rag_config.embedding_provider} (model: {rag_config.embedding_model})"
             )
 
             rag_manager = RAGManager(
@@ -261,9 +250,7 @@ class BaseWorkflow(ABC):
             logger.info("RAG: Knowledge base ready for retrieval")
             return rag_manager
         except Exception as e:
-            logger.error(
-                f"Failed to initialize RAG manager: {e}. RAG will be disabled for this run."
-            )
+            logger.error(f"Failed to initialize RAG manager: {e}. RAG will be disabled for this run.")
             return None
 
     def _create_failed_workflow_result(

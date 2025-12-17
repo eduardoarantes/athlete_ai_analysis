@@ -136,8 +136,7 @@ class ReportPreparationPhase(BasePhase):
         for key in required_keys:
             if key not in context.previous_phase_data:
                 raise ValueError(
-                    f"Missing required data from previous phases: {key}. "
-                    f"Phase 4 requires data from Phases 2 and 3."
+                    f"Missing required data from previous phases: {key}. Phase 4 requires data from Phases 2 and 3."
                 )
 
     def _execute_phase_logic(self, context: PhaseContext) -> PhaseResult:
@@ -184,9 +183,7 @@ class ReportPreparationPhase(BasePhase):
         athlete_id = find_athlete_id_from_path(context.config.athlete_profile_path)
         athlete_name = context.config.athlete_profile_path.parent.name
 
-        logger.info(
-            f"[PHASE 4] Athlete: {athlete_name} (ID: {athlete_id}), FTP: {profile.get('ftp', 'N/A')}"
-        )
+        logger.info(f"[PHASE 4] Athlete: {athlete_name} (ID: {athlete_id}), FTP: {profile.get('ftp', 'N/A')}")
 
         # Create a session for traceability
         report_session = context.session_manager.create_session(
@@ -231,10 +228,7 @@ class ReportPreparationPhase(BasePhase):
         with open(output_path, "w") as f:
             json.dump(report_data, f, indent=2)
 
-        logger.info(
-            f"[PHASE 4] report_data.json saved successfully, "
-            f"size: {output_path.stat().st_size} bytes"
-        )
+        logger.info(f"[PHASE 4] report_data.json saved successfully, size: {output_path.stat().st_size} bytes")
 
         # Build execution result
         execution_time = (datetime.now() - phase_start).total_seconds()

@@ -116,9 +116,7 @@ class ToolRegistry:
             return [tool.definition for tool in self._tools.values()]
 
         if category not in self._categories:
-            raise ValueError(
-                f"Invalid category '{category}'. Must be one of {list(self._categories.keys())}"
-            )
+            raise ValueError(f"Invalid category '{category}'. Must be one of {list(self._categories.keys())}")
 
         # Return tools in category
         tool_names = self._categories[category]

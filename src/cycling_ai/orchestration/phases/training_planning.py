@@ -107,9 +107,7 @@ class TrainingPlanningPhase(BasePhase):
             overview_result = self._execute_phase_3a_overview(context)
 
             if not overview_result.success:
-                overview_result.execution_time_seconds = (
-                    datetime.now() - phase_start
-                ).total_seconds()
+                overview_result.execution_time_seconds = (datetime.now() - phase_start).total_seconds()
                 return overview_result
 
             logger.info("[PHASE 3a] Overview generation complete")
@@ -147,9 +145,7 @@ class TrainingPlanningPhase(BasePhase):
             finalize_result = self._execute_phase_3c_finalize(context_3b)
 
             if not finalize_result.success:
-                finalize_result.execution_time_seconds = (
-                    datetime.now() - phase_start
-                ).total_seconds()
+                finalize_result.execution_time_seconds = (datetime.now() - phase_start).total_seconds()
                 return finalize_result
 
             logger.info("[PHASE 3c] Plan finalization complete")
@@ -165,9 +161,7 @@ class TrainingPlanningPhase(BasePhase):
             }
 
             # Calculate total tokens used
-            total_tokens = (
-                overview_result.tokens_used + weeks_result.tokens_used + finalize_result.tokens_used
-            )
+            total_tokens = overview_result.tokens_used + weeks_result.tokens_used + finalize_result.tokens_used
 
             return PhaseResult(
                 phase_name=self.phase_name,
@@ -273,9 +267,7 @@ class TrainingPlanningPhase(BasePhase):
 
         # Extract optional athlete profile fields
         goals = getattr(athlete_profile, "goals", None) or "Not specified"
-        current_training_status = (
-            getattr(athlete_profile, "current_training_status", None) or "Not specified"
-        )
+        current_training_status = getattr(athlete_profile, "current_training_status", None) or "Not specified"
 
         # Prepare prompt parameters
         prompt_params = {
@@ -299,12 +291,8 @@ class TrainingPlanningPhase(BasePhase):
         prompt_params["performance_summary"] = performance_summary
 
         # Get prompts
-        system_prompt = context.prompts_manager.get_training_planning_overview_prompt(
-            **prompt_params
-        )
-        user_message = context.prompts_manager.get_training_planning_overview_user_prompt(
-            **prompt_params
-        )
+        system_prompt = context.prompts_manager.get_training_planning_overview_prompt(**prompt_params)
+        user_message = context.prompts_manager.get_training_planning_overview_user_prompt(**prompt_params)
 
         # Create session with isolation
         session = context.session_manager.create_session(
@@ -419,8 +407,7 @@ class TrainingPlanningPhase(BasePhase):
 
         if not overview_file.exists():
             raise ValueError(
-                f"[PHASE 3b] Overview file not found: {overview_file}. "
-                "Phase 3a must complete successfully first."
+                f"[PHASE 3b] Overview file not found: {overview_file}. Phase 3a must complete successfully first."
             )
 
         with open(overview_file) as f:
@@ -496,9 +483,7 @@ class TrainingPlanningPhase(BasePhase):
                 )
 
         execution_time = (datetime.now() - phase_start).total_seconds()
-        logger.info(
-            f"[PHASE 3b] All {total_weeks} weeks generated successfully in {execution_time:.2f}s"
-        )
+        logger.info(f"[PHASE 3b] All {total_weeks} weeks generated successfully in {execution_time:.2f}s")
 
         return PhaseResult(
             phase_name="training_planning_weeks",
@@ -552,17 +537,12 @@ class TrainingPlanningPhase(BasePhase):
             execution_time = (datetime.now() - phase_start).total_seconds()
             weeks_added = result.get("weeks_added", 0)
 
-            logger.info(
-                f"[PHASE 3b-LIBRARY] Completed in {execution_time:.2f}s "
-                f"({weeks_added} weeks, 0 tokens)"
-            )
+            logger.info(f"[PHASE 3b-LIBRARY] Completed in {execution_time:.2f}s ({weeks_added} weeks, 0 tokens)")
 
             return PhaseResult(
                 phase_name="training_planning_weeks",
                 status=PhaseStatus.COMPLETED,
-                agent_response=(
-                    f"Library-based: {weeks_added} weeks generated in {execution_time:.2f}s"
-                ),
+                agent_response=(f"Library-based: {weeks_added} weeks generated in {execution_time:.2f}s"),
                 extracted_data={"weeks_added": list(range(1, weeks_added + 1))},
                 execution_time_seconds=execution_time,
                 tokens_used=0,  # No LLM usage
@@ -619,9 +599,7 @@ class TrainingPlanningPhase(BasePhase):
         system_prompt = context.prompts_manager.get_training_planning_weeks_prompt(**base_params)
 
         # Get user prompt from file with all the detailed instructions
-        user_prompt_template = context.prompts_manager.get_training_planning_weeks_user_prompt(
-            **base_params
-        )
+        user_prompt_template = context.prompts_manager.get_training_planning_weeks_user_prompt(**base_params)
 
         # Build user message with context and detailed instructions
         user_message = f"{context_text}\n\n**Use plan_id: `{plan_id}`**\n\n{user_prompt_template}"
@@ -803,9 +781,7 @@ class TrainingPlanningPhase(BasePhase):
         return PhaseResult(
             phase_name="training_planning_finalize",
             status=PhaseStatus.COMPLETED,
-            agent_response=(
-                f"Training plan finalized and saved to {result.metadata.get('output_path')}"
-            ),
+            agent_response=(f"Training plan finalized and saved to {result.metadata.get('output_path')}"),
             extracted_data=extracted_data,
             execution_time_seconds=execution_time,
         )
@@ -837,9 +813,7 @@ class TrainingPlanningPhase(BasePhase):
                 if "avg_speed" in current_stats:
                     summary_lines.append(f"- Average Speed: {current_stats['avg_speed']:.1f} km/h")
                 if "total_distance" in current_stats:
-                    summary_lines.append(
-                        f"- Total Distance: {current_stats['total_distance']:.0f} km"
-                    )
+                    summary_lines.append(f"- Total Distance: {current_stats['total_distance']:.0f} km")
                 if "total_time" in current_stats:
                     hours = current_stats["total_time"] / 3600
                     summary_lines.append(f"- Total Time: {hours:.1f} hours")
@@ -931,9 +905,8 @@ class TrainingPlanningPhase(BasePhase):
                                     extracted["weeks_added"].append(data["week_number"])
 
                             # For finalize_training_plan, extract plan
-                            elif tool_name == "finalize_training_plan":
-                                if "training_plan" in data:
-                                    extracted["training_plan"] = data["training_plan"]
+                            elif tool_name == "finalize_training_plan" and "training_plan" in data:
+                                extracted["training_plan"] = data["training_plan"]
 
                         except json.JSONDecodeError:
                             logger.warning(f"Could not parse JSON from tool result: {tool_name}")
@@ -973,8 +946,7 @@ class TrainingPlanningPhase(BasePhase):
 
         # Build query with athlete-specific context
         query = (
-            f"training plan periodization {weeks} weeks duration "
-            f"FTP {ftp} watts base building structured plan template"
+            f"training plan periodization {weeks} weeks duration FTP {ftp} watts base building structured plan template"
         )
 
         return query
@@ -998,9 +970,7 @@ class TrainingPlanningPhase(BasePhase):
         Raises:
             NotImplementedError: Always
         """
-        raise NotImplementedError(
-            "TrainingPlanningPhase overrides execute() directly. Use execute(context) instead."
-        )
+        raise NotImplementedError("TrainingPlanningPhase overrides execute() directly. Use execute(context) instead.")
 
     def _get_system_prompt(self, config: dict[str, Any], context: PhaseContext) -> str:
         """
@@ -1010,8 +980,7 @@ class TrainingPlanningPhase(BasePhase):
             NotImplementedError: Always
         """
         raise NotImplementedError(
-            "TrainingPlanningPhase uses different prompts for each sub-phase. "
-            "This method is not applicable."
+            "TrainingPlanningPhase uses different prompts for each sub-phase. This method is not applicable."
         )
 
     def _get_user_message(self, config: dict[str, Any], context: PhaseContext) -> str:
@@ -1022,8 +991,7 @@ class TrainingPlanningPhase(BasePhase):
             NotImplementedError: Always
         """
         raise NotImplementedError(
-            "TrainingPlanningPhase uses different messages for each sub-phase. "
-            "This method is not applicable."
+            "TrainingPlanningPhase uses different messages for each sub-phase. This method is not applicable."
         )
 
     def _extract_data(self, session: ConversationSession) -> dict[str, Any]:

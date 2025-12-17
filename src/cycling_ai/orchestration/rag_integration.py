@@ -146,7 +146,12 @@ actual data, explain the discrepancy."""
         sections = []
 
         for idx, (doc, metadata, score) in enumerate(
-            zip(retrieval_result.documents, retrieval_result.metadata, retrieval_result.scores),
+            zip(
+                retrieval_result.documents,
+                retrieval_result.metadata,
+                retrieval_result.scores,
+                strict=True,
+            ),
             start=1,
         ):
             # Build header with title if available

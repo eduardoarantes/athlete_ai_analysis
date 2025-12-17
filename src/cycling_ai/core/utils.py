@@ -132,9 +132,7 @@ def load_csv_data(csv_file_path: str) -> pd.DataFrame:
         df_clean["activity_category"] = df.iloc[:, 47].astype(str)
     else:
         # Fallback: derive from activity type
-        df_clean["activity_category"] = df_clean["type"].apply(
-            lambda x: "Cycling" if "Ride" in str(x) else "Other"
-        )
+        df_clean["activity_category"] = df_clean["type"].apply(lambda x: "Cycling" if "Ride" in str(x) else "Other")
 
     # Clean up - remove invalid dates and sort
     df_clean = df_clean.dropna(subset=["date"])
@@ -259,38 +257,20 @@ def load_activities_data(csv_file_path: str) -> pd.DataFrame:
         df_clean["date"] = pd.to_datetime(df_parquet["Activity Date"])
         df_clean["name"] = df_parquet["Activity Name"]
         df_clean["type"] = df_parquet["Activity Type"].astype("category")
-        df_clean["elapsed_time"] = pd.to_numeric(
-            df_parquet["Elapsed Time"], errors="coerce"
-        ).fillna(0)
-        df_clean["moving_time"] = pd.to_numeric(df_parquet["Moving Time"], errors="coerce").fillna(
-            0
-        )
+        df_clean["elapsed_time"] = pd.to_numeric(df_parquet["Elapsed Time"], errors="coerce").fillna(0)
+        df_clean["moving_time"] = pd.to_numeric(df_parquet["Moving Time"], errors="coerce").fillna(0)
         df_clean["distance"] = pd.to_numeric(df_parquet["Distance"], errors="coerce").fillna(0)
-        df_clean["elevation"] = pd.to_numeric(df_parquet["Elevation Gain"], errors="coerce").fillna(
-            0
-        )
-        df_clean["avg_hr"] = pd.to_numeric(
-            df_parquet["Average Heart Rate"], errors="coerce"
-        ).fillna(0)
+        df_clean["elevation"] = pd.to_numeric(df_parquet["Elevation Gain"], errors="coerce").fillna(0)
+        df_clean["avg_hr"] = pd.to_numeric(df_parquet["Average Heart Rate"], errors="coerce").fillna(0)
         df_clean["max_hr"] = pd.to_numeric(df_parquet["Max Heart Rate"], errors="coerce").fillna(0)
-        df_clean["avg_watts"] = pd.to_numeric(df_parquet["Average Watts"], errors="coerce").fillna(
-            0
-        )
+        df_clean["avg_watts"] = pd.to_numeric(df_parquet["Average Watts"], errors="coerce").fillna(0)
         df_clean["max_watts"] = pd.to_numeric(df_parquet["Max Watts"], errors="coerce").fillna(0)
-        df_clean["avg_cadence"] = pd.to_numeric(
-            df_parquet["Average Cadence"], errors="coerce"
-        ).fillna(0)
-        df_clean["avg_speed"] = pd.to_numeric(df_parquet["Average Speed"], errors="coerce").fillna(
-            0
-        )
-        df_clean["weighted_power"] = pd.to_numeric(
-            df_parquet["Weighted Average Power"], errors="coerce"
-        ).fillna(0)
+        df_clean["avg_cadence"] = pd.to_numeric(df_parquet["Average Cadence"], errors="coerce").fillna(0)
+        df_clean["avg_speed"] = pd.to_numeric(df_parquet["Average Speed"], errors="coerce").fillna(0)
+        df_clean["weighted_power"] = pd.to_numeric(df_parquet["Weighted Average Power"], errors="coerce").fillna(0)
 
         # Derive activity_category from Activity Type
-        df_clean["activity_category"] = df_clean["type"].apply(
-            lambda x: "Cycling" if "Ride" in str(x) else "Other"
-        )
+        df_clean["activity_category"] = df_clean["type"].apply(lambda x: "Cycling" if "Ride" in str(x) else "Other")
 
         # Include zone enrichment columns if available (from Phase 1 zone enrichment)
         zone_columns = [
@@ -314,9 +294,7 @@ def load_activities_data(csv_file_path: str) -> pd.DataFrame:
         return df_clean
 
     except Exception as e:
-        raise RuntimeError(
-            f"Failed to load Phase 1 Parquet cache from {parquet_path}: {str(e)}"
-        ) from e
+        raise RuntimeError(f"Failed to load Phase 1 Parquet cache from {parquet_path}: {str(e)}") from e
 
 
 def analyze_period(data: pd.DataFrame, period_name: str) -> dict[str, Any]:
@@ -352,9 +330,7 @@ def analyze_period(data: pd.DataFrame, period_name: str) -> dict[str, Any]:
     if len(data) > 0:
         stats["avg_distance_km"] = data["distance"].mean() / 1000
         stats["avg_time_hours"] = data["moving_time"].mean() / 3600
-        stats["avg_speed_kmh"] = (
-            data["avg_speed"].mean() * 3.6 if data["avg_speed"].mean() > 0 else 0
-        )
+        stats["avg_speed_kmh"] = data["avg_speed"].mean() * 3.6 if data["avg_speed"].mean() > 0 else 0
         stats["max_distance_km"] = data["distance"].max() / 1000
     else:
         # Set defaults for periods with no rides
@@ -449,11 +425,15 @@ def format_stats_text(stats: dict[str, Any]) -> str:
     text += f"🚀 Speed: {stats['avg_speed_kmh']:.1f} km/h avg\n"
 
     if stats["power_rides"] > 0:
-        text += f"⚡ Power: {stats['avg_power']:.0f} W avg, {stats['max_power']:.0f} W max ({stats['power_rides']} rides)\n"
+        text += (
+            f"⚡ Power: {stats['avg_power']:.0f} W avg, {stats['max_power']:.0f} W max ({stats['power_rides']} rides)\n"
+        )
         text += f"💪 Normalized Power: {stats['normalized_power']:.0f} W\n"
 
     if stats["hr_rides"] > 0:
-        text += f"❤️ Heart Rate: {stats['avg_hr']:.0f} bpm avg, {stats['max_hr']:.0f} bpm max ({stats['hr_rides']} rides)\n"
+        text += (
+            f"❤️ Heart Rate: {stats['avg_hr']:.0f} bpm avg, {stats['max_hr']:.0f} bpm max ({stats['hr_rides']} rides)\n"
+        )
 
     if stats["cadence_rides"] > 0:
         text += f"🔄 Cadence: {stats['avg_cadence']:.0f} rpm avg ({stats['cadence_rides']} rides)\n"

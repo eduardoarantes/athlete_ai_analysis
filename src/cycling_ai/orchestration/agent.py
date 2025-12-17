@@ -83,11 +83,7 @@ class LLMAgent:
         # Filter tools if allowed_tools is specified
         if self.allowed_tools is not None:
             all_tool_names = [tool.name for tool in all_tools]
-            tools = [
-                tool
-                for tool in all_tools
-                if tool.name in self.allowed_tools and tool.name in all_tool_names
-            ]
+            tools = [tool for tool in all_tools if tool.name in self.allowed_tools and tool.name in all_tool_names]
         else:
             tools = all_tools
 
@@ -103,9 +99,7 @@ class LLMAgent:
             logger = logging.getLogger(__name__)
             logger.info(f"[AGENT LOOP] Iteration {iteration}/{self.max_iterations}")
             logger.info(f"[AGENT LOOP] Current session messages: {len(self.session.messages)}")
-            logger.info(
-                f"[AGENT LOOP] Previously called tools: {list(called_tools_with_args.keys())}"
-            )
+            logger.info(f"[AGENT LOOP] Previously called tools: {list(called_tools_with_args.keys())}")
 
             # Get messages formatted for LLM and convert to ProviderMessage
             messages_data = self.session.get_messages_for_llm()
@@ -124,19 +118,13 @@ class LLMAgent:
             logger.info("[AGENT LOOP] Response received from LLM")
             logger.debug(f"[AGENT LOOP] Response type: {type(response)}")
             logger.debug(f"[AGENT LOOP] Response content type: {type(response.content)}")
-            logger.info(
-                f"[AGENT LOOP] Content length: {len(response.content) if response.content else 0}"
-            )
+            logger.info(f"[AGENT LOOP] Content length: {len(response.content) if response.content else 0}")
 
             # Tool calls debugging
             logger.debug(f"[AGENT LOOP] response.tool_calls type: {type(response.tool_calls)}")
             logger.debug(f"[AGENT LOOP] response.tool_calls value: {response.tool_calls}")
-            logger.debug(
-                f"[AGENT LOOP] response.tool_calls bool evaluation: {bool(response.tool_calls)}"
-            )
-            logger.info(
-                f"[AGENT LOOP] Tool calls count: {len(response.tool_calls) if response.tool_calls else 0}"
-            )
+            logger.debug(f"[AGENT LOOP] response.tool_calls bool evaluation: {bool(response.tool_calls)}")
+            logger.info(f"[AGENT LOOP] Tool calls count: {len(response.tool_calls) if response.tool_calls else 0}")
 
             # Check if LLM wants to call tools
             if response.tool_calls:
@@ -156,18 +144,15 @@ class LLMAgent:
                     args_hash = json.dumps(tool_args, sort_keys=True)
 
                     # Check if this exact tool call was made before
-                    if tool_name in called_tools_with_args:
-                        if args_hash in called_tools_with_args[tool_name]:
-                            logger.warning(
-                                f"[AGENT LOOP] DUPLICATE TOOL CALL DETECTED: {tool_name} "
-                                f"with same arguments was already called in iteration "
-                                f"{called_tools_with_args[tool_name].index(args_hash) + 1}"
-                            )
-                            logger.warning(
-                                "[AGENT LOOP] LLM is stuck in a loop. Forcing response generation."
-                            )
-                            duplicate_detected = True
-                            break
+                    if tool_name in called_tools_with_args and args_hash in called_tools_with_args[tool_name]:
+                        logger.warning(
+                            f"[AGENT LOOP] DUPLICATE TOOL CALL DETECTED: {tool_name} "
+                            f"with same arguments was already called in iteration "
+                            f"{called_tools_with_args[tool_name].index(args_hash) + 1}"
+                        )
+                        logger.warning("[AGENT LOOP] LLM is stuck in a loop. Forcing response generation.")
+                        duplicate_detected = True
+                        break
 
                 # If duplicate detected, skip tool execution and force final response
                 if duplicate_detected:
@@ -192,19 +177,13 @@ class LLMAgent:
                 logger.debug("[AGENT LOOP] Calling _execute_tool_calls()...")
                 try:
                     tool_results = self._execute_tool_calls(response.tool_calls)
-                    logger.info(
-                        f"[AGENT LOOP] Tool execution completed successfully. {len(tool_results)} results."
-                    )
+                    logger.info(f"[AGENT LOOP] Tool execution completed successfully. {len(tool_results)} results.")
                     for i, result in enumerate(tool_results):
-                        logger.debug(
-                            f"[AGENT LOOP]   Result {i + 1}: success={result.success}, format={result.format}"
-                        )
+                        logger.debug(f"[AGENT LOOP]   Result {i + 1}: success={result.success}, format={result.format}")
                         if not result.success:
                             logger.warning(f"[AGENT LOOP]   Result {i + 1} errors: {result.errors}")
                 except Exception as e:
-                    logger.error(
-                        f"[AGENT LOOP] Tool execution failed with exception: {e}", exc_info=True
-                    )
+                    logger.error(f"[AGENT LOOP] Tool execution failed with exception: {e}", exc_info=True)
                     raise
 
                 logger.debug("[AGENT LOOP] Adding tool call and result messages to session...")
@@ -219,7 +198,7 @@ class LLMAgent:
                 )
 
                 # Add tool results as separate messages
-                for tool_call, result in zip(response.tool_calls, tool_results):
+                for tool_call, result in zip(response.tool_calls, tool_results, strict=True):
                     tool_result_msg = self._format_tool_result_message(tool_call, result)
                     self.session.add_message(tool_result_msg)
 
@@ -254,9 +233,7 @@ class LLMAgent:
                         tool_result = tool_results[tool_idx]
                         if tool_result.success:
                             logger.info(f"[AGENT LOOP] {tool_name} succeeded. Forcing completion.")
-                            self.session.add_message(
-                                ConversationMessage(role="assistant", content=completion_msg)
-                            )
+                            self.session.add_message(ConversationMessage(role="assistant", content=completion_msg))
                             return completion_msg
                         else:
                             logger.warning(
@@ -280,9 +257,7 @@ class LLMAgent:
                                     f"({weeks_completed}/{total_weeks}). Forcing completion."
                                 )
                                 completion_msg = f"All {total_weeks} weeks generated successfully. Phase 3b complete."
-                                self.session.add_message(
-                                    ConversationMessage(role="assistant", content=completion_msg)
-                                )
+                                self.session.add_message(ConversationMessage(role="assistant", content=completion_msg))
                                 return completion_msg
 
                 logger.info(
@@ -294,15 +269,11 @@ class LLMAgent:
 
             # No tool calls - this is the final response
             logger.info("[AGENT LOOP] No tool calls. Final response received. Exiting loop.")
-            self.session.add_message(
-                ConversationMessage(role="assistant", content=response.content)
-            )
+            self.session.add_message(ConversationMessage(role="assistant", content=response.content))
 
             return response.content
 
-        raise RuntimeError(
-            f"Maximum iterations ({self.max_iterations}) exceeded. Agent may be stuck in a loop."
-        )
+        raise RuntimeError(f"Maximum iterations ({self.max_iterations}) exceeded. Agent may be stuck in a loop.")
 
     def _execute_tool_calls(self, tool_calls: list[dict[str, Any]]) -> list[ToolExecutionResult]:
         """

@@ -101,8 +101,7 @@ class EmbeddingFactory:
         effective_api_key = api_key or os.getenv("OPENAI_API_KEY")
         if not effective_api_key:
             raise ValueError(
-                "OpenAI API key required. "
-                "Provide api_key parameter or set OPENAI_API_KEY environment variable."
+                "OpenAI API key required. Provide api_key parameter or set OPENAI_API_KEY environment variable."
             )
 
         return OpenAIEmbeddings(

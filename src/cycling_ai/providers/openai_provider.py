@@ -338,11 +338,7 @@ class OpenAIProvider(BaseProvider):
 
             # --- Temperature logic ---
             # Reasoning models only accept temperature=1
-            if (
-                "reasoning" in model_name
-                or any(m in model_name for m in ["o1", "o3"])
-                or model_name == "gpt-5-mini"
-            ):
+            if "reasoning" in model_name or any(m in model_name for m in ["o1", "o3"]) or model_name == "gpt-5-mini":
                 request_params["temperature"] = 1
             else:
                 request_params["temperature"] = self.config.temperature
@@ -385,15 +381,9 @@ class OpenAIProvider(BaseProvider):
                         )
                     except json.JSONDecodeError as e:
                         # Log the malformed JSON for debugging
-                        logger.error(
-                            f"Failed to parse tool call arguments for {tc.function.name}: {e}"
-                        )
-                        logger.error(
-                            f"Malformed JSON (first 500 chars): {tc.function.arguments[:500]}"
-                        )
-                        logger.error(
-                            f"Malformed JSON (last 500 chars): {tc.function.arguments[-500:]}"
-                        )
+                        logger.error(f"Failed to parse tool call arguments for {tc.function.name}: {e}")
+                        logger.error(f"Malformed JSON (first 500 chars): {tc.function.arguments[:500]}")
+                        logger.error(f"Malformed JSON (last 500 chars): {tc.function.arguments[-500:]}")
                         logger.error(f"JSON length: {len(tc.function.arguments)} characters")
                         # Re-raise as a permanent error
                         raise ValueError(

@@ -174,9 +174,7 @@ def prepare_report(
     logger.info(f"  Athletes: {len(athletes)}")
     for athlete in athletes:
         logger.info(f"    - {athlete['name']} (ID: {athlete['id']})")
-        logger.info(
-            f"      FTP: {athlete['profile']['ftp']}W → {athlete['training_plan']['target_ftp']}W"
-        )
+        logger.info(f"      FTP: {athlete['profile']['ftp']}W → {athlete['training_plan']['target_ftp']}W")
         logger.info(f"      Weeks: {athlete['training_plan']['total_weeks']}")
 
     return True
@@ -196,9 +194,7 @@ def validate_report_data(data: dict) -> bool:
         import jsonschema
 
         # Load schema
-        schema_path = (
-            Path(__file__).parent.parent.parent.parent / "schemas" / "report_data_schema.json"
-        )
+        schema_path = Path(__file__).parent.parent.parent.parent / "schemas" / "report_data_schema.json"
 
         if not schema_path.exists():
             logger.warning(f"Schema not found at {schema_path}, skipping validation")
@@ -252,9 +248,7 @@ Examples:
 
     parser.add_argument("--sessions", nargs="+", help="Multiple session files or glob pattern")
 
-    parser.add_argument(
-        "--athlete-dir", type=Path, help="Directory containing athlete profiles (e.g., data/)"
-    )
+    parser.add_argument("--athlete-dir", type=Path, help="Directory containing athlete profiles (e.g., data/)")
 
     parser.add_argument(
         "--output",

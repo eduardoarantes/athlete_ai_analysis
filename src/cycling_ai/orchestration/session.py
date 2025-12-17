@@ -283,9 +283,7 @@ class SessionManager:
         self._sessions[session.session_id] = session
         self._persist_session(session)
 
-    def list_sessions(
-        self, provider_name: str | None = None, limit: int | None = None
-    ) -> list[ConversationSession]:
+    def list_sessions(self, provider_name: str | None = None, limit: int | None = None) -> list[ConversationSession]:
         """
         List all active sessions.
 

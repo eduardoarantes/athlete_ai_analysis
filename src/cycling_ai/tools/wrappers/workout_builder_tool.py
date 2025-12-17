@@ -131,7 +131,7 @@ class WorkoutBuilderTool(BaseTool):
             weekday = kwargs["weekday"]
             description = kwargs["description"]
             segments_data = kwargs["segments"]
-            ftp = float(kwargs["ftp"])
+            _ftp = float(kwargs["ftp"])  # Reserved for future use
 
             # Validate weekday
             valid_days = [
@@ -148,9 +148,7 @@ class WorkoutBuilderTool(BaseTool):
                     success=False,
                     data=None,
                     format="json",
-                    errors=[
-                        f"Invalid weekday '{weekday}'. Must be one of: {', '.join(valid_days)}"
-                    ],
+                    errors=[f"Invalid weekday '{weekday}'. Must be one of: {', '.join(valid_days)}"],
                 )
 
             # Validate segments is a list
@@ -167,9 +165,7 @@ class WorkoutBuilderTool(BaseTool):
                     success=False,
                     data=None,
                     format="json",
-                    errors=[
-                        "segments array cannot be empty - workout must have at least one segment"
-                    ],
+                    errors=["segments array cannot be empty - workout must have at least one segment"],
                 )
 
             # Create workout
@@ -184,18 +180,14 @@ class WorkoutBuilderTool(BaseTool):
                             success=False,
                             data=None,
                             format="json",
-                            errors=[
-                                f"Segment {idx + 1} must be an object with type, duration_min, power_low, etc."
-                            ],
+                            errors=[f"Segment {idx + 1} must be an object with type, duration_min, power_low, etc."],
                         )
 
                     # Extract segment fields
                     seg_type = seg_data.get("type", "").lower()
                     duration_min = seg_data.get("duration_min")
                     power_low = seg_data.get("power_low")
-                    power_high = seg_data.get(
-                        "power_high", power_low
-                    )  # Default to power_low if not provided
+                    power_high = seg_data.get("power_high", power_low)  # Default to power_low if not provided
                     seg_description = seg_data.get("description", "")
 
                     # Validate required fields
@@ -255,9 +247,7 @@ class WorkoutBuilderTool(BaseTool):
                             success=False,
                             data=None,
                             format="json",
-                            errors=[
-                                f"Segment {idx + 1} duration_min must be positive, got {duration_min}"
-                            ],
+                            errors=[f"Segment {idx + 1} duration_min must be positive, got {duration_min}"],
                         )
 
                     if power_low < 0:
@@ -265,9 +255,7 @@ class WorkoutBuilderTool(BaseTool):
                             success=False,
                             data=None,
                             format="json",
-                            errors=[
-                                f"Segment {idx + 1} power_low cannot be negative, got {power_low}"
-                            ],
+                            errors=[f"Segment {idx + 1} power_low cannot be negative, got {power_low}"],
                         )
 
                     if power_high < power_low:

@@ -67,9 +67,7 @@ class ToolDefinition:
 
         valid_categories = {"data_prep", "analysis", "reporting"}
         if self.category not in valid_categories:
-            raise ValueError(
-                f"Invalid category '{self.category}'. Must be one of {valid_categories}"
-            )
+            raise ValueError(f"Invalid category '{self.category}'. Must be one of {valid_categories}")
 
     def get_required_parameters(self) -> list[ToolParameter]:
         """Get list of required parameters."""
@@ -179,14 +177,8 @@ class BaseTool(ABC):
                     raise ValueError(f"Parameter '{param.name}' must be one of {param.enum}")
 
                 # Validate min/max values for numeric parameters
-                if param.min_value is not None and isinstance(value, (int, float)):
-                    if value < param.min_value:
-                        raise ValueError(
-                            f"Parameter '{param.name}' must be >= {param.min_value}, got {value}"
-                        )
+                if param.min_value is not None and isinstance(value, (int, float)) and value < param.min_value:
+                    raise ValueError(f"Parameter '{param.name}' must be >= {param.min_value}, got {value}")
 
-                if param.max_value is not None and isinstance(value, (int, float)):
-                    if value > param.max_value:
-                        raise ValueError(
-                            f"Parameter '{param.name}' must be <= {param.max_value}, got {value}"
-                        )
+                if param.max_value is not None and isinstance(value, (int, float)) and value > param.max_value:
+                    raise ValueError(f"Parameter '{param.name}' must be <= {param.max_value}, got {value}")

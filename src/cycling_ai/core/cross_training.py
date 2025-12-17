@@ -75,9 +75,7 @@ def calculate_weekly_load_distribution(df: pd.DataFrame) -> list[WeeklyLoadMetri
 
     # Use estimated_tss or calculate from duration
     df["tss"] = df.apply(
-        lambda row: row["estimated_tss"]
-        if row["estimated_tss"] > 0
-        else row["hours"] * 50,  # Fallback estimate
+        lambda row: row["estimated_tss"] if row["estimated_tss"] > 0 else row["hours"] * 50,  # Fallback estimate
         axis=1,
     )
 
@@ -134,9 +132,7 @@ def calculate_weekly_load_distribution(df: pd.DataFrame) -> list[WeeklyLoadMetri
     return sorted(weekly_metrics, key=lambda x: x.week_start)
 
 
-def detect_interference_events(
-    df: pd.DataFrame, threshold_score: int = 4
-) -> list[InterferenceEvent]:
+def detect_interference_events(df: pd.DataFrame, threshold_score: int = 4) -> list[InterferenceEvent]:
     """
     Detect potential training interference events (e.g., strength before hard cycling).
 
@@ -170,10 +166,7 @@ def detect_interference_events(
         reasons = []
 
         # Pattern 1: Strength before cycling
-        if (
-            activity1["activity_category"] == "Strength"
-            and activity2["activity_category"] == "Cycling"
-        ):
+        if activity1["activity_category"] == "Strength" and activity2["activity_category"] == "Cycling":
             if hours_between < activity1["recovery_hours"]:
                 score += 5
                 reasons.append(f"Strength < {activity1['recovery_hours']}h before cycling")
@@ -245,9 +238,7 @@ def calculate_performance_windows(df: pd.DataFrame, window_days: int = 7) -> pd.
     daily_cycling = (
         df[df["activity_category"] == "Cycling"]
         .groupby("date")
-        .agg(
-            {"avg_watts": "mean", "weighted_power": "mean", "avg_hr": "mean", "elapsed_time": "sum"}
-        )
+        .agg({"avg_watts": "mean", "weighted_power": "mean", "avg_hr": "mean", "elapsed_time": "sum"})
         .reset_index()
     )
 
@@ -280,9 +271,7 @@ def calculate_performance_windows(df: pd.DataFrame, window_days: int = 7) -> pd.
     df_daily = df_daily.fillna(0)
 
     # Calculate rolling windows
-    df_daily["cycling_power_7d"] = (
-        df_daily["avg_watts"].rolling(window=window_days, min_periods=1).mean()
-    )
+    df_daily["cycling_power_7d"] = df_daily["avg_watts"].rolling(window=window_days, min_periods=1).mean()
     df_daily["cycling_hr_7d"] = df_daily["avg_hr"].rolling(window=window_days, min_periods=1).mean()
     df_daily["strength_tss_7d"] = (
         df_daily.get("strength_tss", pd.Series(0, index=df_daily.index))
@@ -290,17 +279,13 @@ def calculate_performance_windows(df: pd.DataFrame, window_days: int = 7) -> pd.
         .sum()
     )
     df_daily["cardio_tss_7d"] = (
-        df_daily.get("cardio_tss", pd.Series(0, index=df_daily.index))
-        .rolling(window=window_days, min_periods=1)
-        .sum()
+        df_daily.get("cardio_tss", pd.Series(0, index=df_daily.index)).rolling(window=window_days, min_periods=1).sum()
     )
     df_daily["total_tss_7d"] = df_daily["strength_tss_7d"] + df_daily["cardio_tss_7d"]
 
     # Calculate HR efficiency (lower is better)
     df_daily["hr_power_ratio_7d"] = df_daily.apply(
-        lambda row: row["cycling_hr_7d"] / row["cycling_power_7d"]
-        if row["cycling_power_7d"] > 0
-        else 0,
+        lambda row: row["cycling_hr_7d"] / row["cycling_power_7d"] if row["cycling_power_7d"] > 0 else 0,
         axis=1,
     )
 
@@ -340,7 +325,7 @@ def analyze_cross_training_impact(df: pd.DataFrame, analysis_period_weeks: int =
     # Calculate metrics
     weekly_loads = calculate_weekly_load_distribution(df_period)
     interference_events = detect_interference_events(df_period)
-    performance_windows = calculate_performance_windows(df_period)
+    _performance_windows = calculate_performance_windows(df_period)  # Reserved for future use
 
     # Build JSON response
     response_data = {
@@ -423,9 +408,7 @@ def analyze_cross_training_impact(df: pd.DataFrame, analysis_period_weeks: int =
 
         # Populate interference_events list (flat structure for Pydantic model)
         # Include top 10 most significant events
-        all_events_sorted = sorted(
-            interference_events, key=lambda e: e.interference_score, reverse=True
-        )
+        all_events_sorted = sorted(interference_events, key=lambda e: e.interference_score, reverse=True)
         for event in all_events_sorted[:10]:
             response_data["interference_events"].append(
                 {
@@ -498,14 +481,10 @@ def analyze_cross_training_impact(df: pd.DataFrame, analysis_period_weeks: int =
         avg_power_first = float(first_half["avg_watts"].mean())
         avg_power_second = float(second_half["avg_watts"].mean())
         power_change = (
-            float(((avg_power_second - avg_power_first) / avg_power_first) * 100)
-            if avg_power_first > 0
-            else 0
+            float(((avg_power_second - avg_power_first) / avg_power_first) * 100) if avg_power_first > 0 else 0
         )
 
-        trend_status = (
-            "improving" if power_change > 2 else ("declining" if power_change < -2 else "stable")
-        )
+        trend_status = "improving" if power_change > 2 else ("declining" if power_change < -2 else "stable")
 
         # Provide raw trend data for LLM to analyze in context
         response_data["performance_insights"]["trend"] = {

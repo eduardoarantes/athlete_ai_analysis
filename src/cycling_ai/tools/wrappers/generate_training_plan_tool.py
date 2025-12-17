@@ -179,9 +179,7 @@ class GenerateTrainingPlanTool(BaseTool):
         try:
             # Extract session context if provided
             session_context = kwargs.get("session_context", {})
-            logger.debug(
-                f"[GENERATE PLAN TOOL] Session context keys: {list(session_context.keys())}"
-            )
+            logger.debug(f"[GENERATE PLAN TOOL] Session context keys: {list(session_context.keys())}")
 
             # Extract parameters with defaults
             csv_file_path = kwargs.get("csv_file_path")
@@ -204,9 +202,7 @@ class GenerateTrainingPlanTool(BaseTool):
             # Get athlete profile path from session context if not provided
             if not athlete_profile_path and "profile_path" in session_context:
                 athlete_profile_path = session_context["profile_path"]
-                logger.info(
-                    f"[GENERATE PLAN TOOL] Using profile from session: {athlete_profile_path}"
-                )
+                logger.info(f"[GENERATE PLAN TOOL] Using profile from session: {athlete_profile_path}")
 
             # Get provider from session context (required for orchestrator)
             provider = session_context.get("provider")
@@ -311,9 +307,7 @@ class GenerateTrainingPlanTool(BaseTool):
             # Create orchestrator
             logger.info("[GENERATE PLAN TOOL] Initializing multi-agent orchestrator...")
             prompts_manager = AgentPromptsManager()
-            session_manager = SessionManager(
-                storage_dir=Path.home() / ".cycling-ai" / "workflow_sessions"
-            )
+            session_manager = SessionManager(storage_dir=Path.home() / ".cycling-ai" / "workflow_sessions")
 
             orchestrator = MultiAgentOrchestrator(
                 provider=provider,
@@ -327,12 +321,8 @@ class GenerateTrainingPlanTool(BaseTool):
             logger.info("[GENERATE PLAN TOOL] This may take 2-5 minutes...")
             workflow_result = orchestrator.execute_workflow(config)
 
-            logger.info(
-                f"[GENERATE PLAN TOOL] Workflow completed: success={workflow_result.success}"
-            )
-            logger.info(
-                f"[GENERATE PLAN TOOL] Phases executed: {len(workflow_result.phase_results)}"
-            )
+            logger.info(f"[GENERATE PLAN TOOL] Workflow completed: success={workflow_result.success}")
+            logger.info(f"[GENERATE PLAN TOOL] Phases executed: {len(workflow_result.phase_results)}")
 
             # Extract result data
             if not workflow_result.success:
@@ -361,9 +351,7 @@ class GenerateTrainingPlanTool(BaseTool):
                 logger.warning("[GENERATE PLAN TOOL] No report_json_path found in phase results")
 
             # Calculate total execution time and tokens
-            total_execution_time = sum(
-                p.execution_time_seconds for p in workflow_result.phase_results
-            )
+            total_execution_time = sum(p.execution_time_seconds for p in workflow_result.phase_results)
             total_tokens = sum(p.tokens_used for p in workflow_result.phase_results)
 
             # Build success result

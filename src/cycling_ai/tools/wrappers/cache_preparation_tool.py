@@ -158,9 +158,7 @@ class CachePreparationTool(BaseTool):
 
             # Parse Activity Date as datetime
             if "Activity Date" in df.columns:
-                df["Activity Date"] = pd.to_datetime(
-                    df["Activity Date"], format="mixed", errors="coerce"
-                )
+                df["Activity Date"] = pd.to_datetime(df["Activity Date"], format="mixed", errors="coerce")
 
             # Convert numeric columns with proper handling
             numeric_columns = [
@@ -249,7 +247,9 @@ class CachePreparationTool(BaseTool):
 
                     # Count activities by category
                     category_counts = df["activity_category"].value_counts().to_dict()
-                    categorization_summary = f"Categorized: {', '.join([f'{count} {cat}' for cat, count in category_counts.items()])}"
+                    categorization_summary = (
+                        f"Categorized: {', '.join([f'{count} {cat}' for cat, count in category_counts.items()])}"
+                    )
                 else:
                     categorization_summary = "No sport metadata available for categorization"
 
@@ -328,16 +328,12 @@ class CachePreparationTool(BaseTool):
                 "created_at": datetime.now().isoformat(),
                 "fit_only_mode": fit_only_mode,
                 "source_csv": str(csv_path) if csv_path else None,
-                "source_file_mtime": datetime.fromtimestamp(csv_path.stat().st_mtime).isoformat()
-                if csv_path
-                else None,
+                "source_file_mtime": datetime.fromtimestamp(csv_path.stat().st_mtime).isoformat() if csv_path else None,
                 "source_fit_dir": str(fit_dir_path) if fit_dir_path else None,
                 "activity_count": original_count,
                 "original_size_bytes": original_size,
                 "cache_size_bytes": parquet_size,
-                "compression_ratio_percent": round(compression_ratio, 1)
-                if original_size > 0
-                else 0,
+                "compression_ratio_percent": round(compression_ratio, 1) if original_size > 0 else 0,
                 "cross_training_categorized": categorization_summary is not None
                 and "failed" not in categorization_summary.lower(),
                 "categorization_summary": categorization_summary,
@@ -380,8 +376,7 @@ class CachePreparationTool(BaseTool):
             elif fit_dir_path and ftp > 0 and not fit_only_mode:
                 # Only mention "attempted" for CSV mode with optional FIT enrichment
                 message_parts.append(
-                    f"Zone enrichment attempted but no power data found. "
-                    f"Reason: {enrichment_summary or 'Unknown'}"
+                    f"Zone enrichment attempted but no power data found. Reason: {enrichment_summary or 'Unknown'}"
                 )
             elif not fit_dir_path and not fit_only_mode:
                 message_parts.append("Zone enrichment skipped (no FIT directory provided).")
@@ -409,9 +404,7 @@ class CachePreparationTool(BaseTool):
                 "error": str(e),
                 "message": f"❌ Failed to create cache: {str(e)}",
             }
-            return ToolExecutionResult(
-                success=False, data=error_data, format="json", errors=[str(e)]
-            )
+            return ToolExecutionResult(success=False, data=error_data, format="json", errors=[str(e)])
 
 
 # Register tool on module import

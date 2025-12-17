@@ -65,9 +65,7 @@ class ProviderFactory:
 
         if provider_name not in cls._providers:
             available = ", ".join(sorted(cls._providers.keys()))
-            raise ValueError(
-                f"Unknown provider '{config.provider_name}'. Available providers: {available}"
-            )
+            raise ValueError(f"Unknown provider '{config.provider_name}'. Available providers: {available}")
 
         provider_class = cls._providers[provider_name]
         return provider_class(config)

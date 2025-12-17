@@ -8,6 +8,7 @@ analysis with caching for performance.
 Copied from performance-analyzer-mcp/server.py (lines 729-1144)
 """
 
+import contextlib
 import gzip
 import json
 from datetime import datetime, timedelta
@@ -20,9 +21,7 @@ from .power_zones import get_zone_bounds_for_analysis
 from .utils import convert_to_json_serializable
 
 
-def save_time_in_zones_cache(
-    activities_dir: str, athlete_ftp: int, activities_data: list[dict]
-) -> Path:
+def save_time_in_zones_cache(activities_dir: str, athlete_ftp: int, activities_data: list[dict]) -> Path:
     """
     Save per-activity time-in-zones data to cache.
 
@@ -243,7 +242,7 @@ def analyze_time_in_zones(
             if fit_file_path.suffix == ".gz":
                 import tempfile
 
-                temp_file = tempfile.NamedTemporaryFile(suffix=".fit", delete=False)
+                temp_file = tempfile.NamedTemporaryFile(suffix=".fit", delete=False)  # noqa: SIM115
                 with gzip.open(fit_file_path, "rb") as f_in:
                     temp_file.write(f_in.read())
                 temp_file.close()
@@ -268,13 +267,11 @@ def analyze_time_in_zones(
                         break
 
             # Skip if file is older than cutoff date
-            if cutoff_date and file_timestamp:
-                if isinstance(file_timestamp, datetime):
-                    if file_timestamp < cutoff_date:
-                        # Clean up temp file
-                        if temp_file and Path(temp_file.name).exists():
-                            Path(temp_file.name).unlink()
-                        continue
+            if cutoff_date and file_timestamp and isinstance(file_timestamp, datetime) and file_timestamp < cutoff_date:
+                # Clean up temp file
+                if temp_file and Path(temp_file.name).exists():
+                    Path(temp_file.name).unlink()
+                continue
 
             # Re-parse file for power data (fitdecode doesn't support reset)
             fitfile = fitdecode.FitReader(
@@ -293,13 +290,10 @@ def analyze_time_in_zones(
 
                 if frame.name == "record":
                     power = None
-                    timestamp = None
 
                     for field in frame.fields:
                         if field.name == "power":
                             power = field.value
-                        elif field.name == "timestamp":
-                            timestamp = field.value
 
                     # If we have valid power data, categorize it into a zone
                     if power is not None and power > 0:
@@ -331,14 +325,14 @@ def analyze_time_in_zones(
 
                 # Calculate percentages for this activity
                 if file_total_time > 0:
-                    for zone_name in zones_definitions.keys():
+                    for zone_name in zones_definitions:
                         pct = (file_zone_times[zone_name] / file_total_time) * 100
                         activity_data["zone_percentages"][zone_name] = round(pct, 2)
 
                 activities_data.append(activity_data)
 
                 # Add to totals
-                for zone in zones_definitions.keys():
+                for zone in zones_definitions:
                     zone_times[zone] += file_zone_times[zone]
                     total_time += file_zone_times[zone]
                 files_with_power += 1
@@ -350,7 +344,7 @@ def analyze_time_in_zones(
             try:
                 if temp_file and Path(temp_file.name).exists():
                     Path(temp_file.name).unlink()
-            except:
+            except Exception:
                 pass
             # Skip files that fail to parse
             files_failed += 1
@@ -359,13 +353,8 @@ def analyze_time_in_zones(
     # Save cache for future use
     cache_file = None
     if activities_data:
-        try:
-            cache_file = save_time_in_zones_cache(
-                activities_directory, int(athlete_ftp), activities_data
-            )
-        except Exception:
-            # Don't fail if cache save fails
-            pass
+        with contextlib.suppress(Exception):
+            cache_file = save_time_in_zones_cache(activities_directory, int(athlete_ftp), activities_data)
 
     # Build JSON response
     if total_time == 0:
@@ -443,7 +432,7 @@ def analyze_time_in_zones(
             "age_considerations": "Masters athletes (40+) typically benefit from higher polarization (85/5/10 or 80/10/10)",
             "goal_based": "Endurance events favor more Z2, power events favor more threshold work",
             "training_status": "Beginners need more Z2 base, advanced athletes can handle more intensity",
-            "gender_notes": "Women may benefit from slightly different recovery patterns between hard efforts",
+            "gender_notes": "Women may benefit from different recovery patterns between hard efforts",
         },
         "analysis_needed": [
             "Is this distribution optimal for the athlete's age, gender, and training status?",

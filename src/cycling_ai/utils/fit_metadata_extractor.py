@@ -55,7 +55,7 @@ def extract_fit_metadata(fit_file_path: str | Path) -> dict[str, Any] | None:
 
     try:
         if fit_path.suffix == ".gz":
-            temp_file = tempfile.NamedTemporaryFile(suffix=".fit", delete=False)
+            temp_file = tempfile.NamedTemporaryFile(suffix=".fit", delete=False)  # noqa: SIM115
             with gzip.open(fit_path, "rb") as f_in:
                 temp_file.write(f_in.read())
             temp_file.close()
@@ -100,10 +100,9 @@ def extract_fit_metadata(fit_file_path: str | Path) -> dict[str, Any] | None:
         sub_sport_raw = get_value("sub_sport", None)
 
         # Convert sport enum to string if needed
-        if isinstance(sport_raw, (int, float)):
-            sport = "cycling"  # Default if numeric
-        else:
-            sport = str(sport_raw).lower() if sport_raw else "cycling"
+        sport = (
+            "cycling" if isinstance(sport_raw, (int, float)) else (str(sport_raw).lower() if sport_raw else "cycling")
+        )
 
         # Convert sub_sport enum to string if needed
         if sub_sport_raw and not isinstance(sub_sport_raw, str):
@@ -237,8 +236,6 @@ def scan_fit_directory(fit_dir: str | Path) -> list[dict[str, Any]]:
         if metadata:
             activities.append(metadata)
 
-    logger.info(
-        f"Successfully extracted metadata from {len(activities)}/{len(fit_files)} FIT files"
-    )
+    logger.info(f"Successfully extracted metadata from {len(activities)}/{len(fit_files)} FIT files")
 
     return activities

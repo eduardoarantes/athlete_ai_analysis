@@ -54,9 +54,7 @@ class TrainingPlanTool(BaseTool):
                 ToolParameter(
                     name="athlete_profile_json",
                     type="string",
-                    description=(
-                        "Path to athlete_profile.json. Required for athlete metadata and validation."
-                    ),
+                    description=("Path to athlete_profile.json. Required for athlete metadata and validation."),
                     required=True,
                 ),
                 ToolParameter(
@@ -262,12 +260,8 @@ class TrainingPlanTool(BaseTool):
             logger.info(
                 f"[TRAINING PLAN TOOL]   - weekly_plan length: {len(weekly_plan) if isinstance(weekly_plan, list) else 'N/A'}"
             )
-            logger.debug(
-                f"[TRAINING PLAN TOOL]   - coaching_notes length: {len(coaching_notes)} chars"
-            )
-            logger.debug(
-                f"[TRAINING PLAN TOOL]   - monitoring_guidance length: {len(monitoring_guidance)} chars"
-            )
+            logger.debug(f"[TRAINING PLAN TOOL]   - coaching_notes length: {len(coaching_notes)} chars")
+            logger.debug(f"[TRAINING PLAN TOOL]   - monitoring_guidance length: {len(monitoring_guidance)} chars")
 
             # Validate profile path
             profile_path = Path(athlete_profile_json)
@@ -282,13 +276,9 @@ class TrainingPlanTool(BaseTool):
             # Load athlete profile
             try:
                 athlete_profile = load_athlete_profile(profile_path)
-                logger.info(
-                    f"[TRAINING PLAN TOOL] Loaded athlete profile for: {athlete_profile.name}"
-                )
+                logger.info(f"[TRAINING PLAN TOOL] Loaded athlete profile for: {athlete_profile.name}")
                 logger.debug(f"[TRAINING PLAN TOOL]   - Current FTP: {athlete_profile.ftp}")
-                logger.debug(
-                    f"[TRAINING PLAN TOOL]   - Available days: {athlete_profile.get_training_days()}"
-                )
+                logger.debug(f"[TRAINING PLAN TOOL]   - Available days: {athlete_profile.get_training_days()}")
             except Exception as e:
                 logger.error(f"[TRAINING PLAN TOOL] Failed to load athlete profile: {str(e)}")
                 return ToolExecutionResult(
@@ -300,9 +290,7 @@ class TrainingPlanTool(BaseTool):
 
             # Validate weekly_plan is a list
             if not isinstance(weekly_plan, list):
-                logger.error(
-                    f"[TRAINING PLAN TOOL] weekly_plan is not a list, type: {type(weekly_plan)}"
-                )
+                logger.error(f"[TRAINING PLAN TOOL] weekly_plan is not a list, type: {type(weekly_plan)}")
                 return ToolExecutionResult(
                     success=False,
                     data=None,
@@ -365,9 +353,7 @@ class TrainingPlanTool(BaseTool):
 
             if not is_valid:
                 # Return validation errors to allow LLM to retry
-                logger.warning(
-                    f"[TRAINING PLAN TOOL] Plan validation failed with {len(validation_errors)} errors"
-                )
+                logger.warning(f"[TRAINING PLAN TOOL] Plan validation failed with {len(validation_errors)} errors")
                 for i, error in enumerate(validation_errors[:5], 1):
                     logger.warning(f"[TRAINING PLAN TOOL]   Error {i}: {error}")
                 return ToolExecutionResult(
@@ -407,21 +393,15 @@ class TrainingPlanTool(BaseTool):
             logger.info("[TRAINING PLAN TOOL] Parsing result JSON...")
             try:
                 result_data = json.loads(result_json)
-                logger.info(
-                    f"[TRAINING PLAN TOOL] Parsed JSON successfully, keys: {list(result_data.keys())}"
-                )
+                logger.info(f"[TRAINING PLAN TOOL] Parsed JSON successfully, keys: {list(result_data.keys())}")
 
                 # Log structure details
                 if "weekly_plan" in result_data:
-                    logger.info(
-                        f"[TRAINING PLAN TOOL]   - weekly_plan: {len(result_data['weekly_plan'])} weeks"
-                    )
+                    logger.info(f"[TRAINING PLAN TOOL]   - weekly_plan: {len(result_data['weekly_plan'])} weeks")
                 if "target_ftp" in result_data:
                     logger.info(f"[TRAINING PLAN TOOL]   - target_ftp: {result_data['target_ftp']}")
                 if "current_ftp" in result_data:
-                    logger.info(
-                        f"[TRAINING PLAN TOOL]   - current_ftp: {result_data['current_ftp']}"
-                    )
+                    logger.info(f"[TRAINING PLAN TOOL]   - current_ftp: {result_data['current_ftp']}")
 
             except json.JSONDecodeError as e:
                 logger.error(f"[TRAINING PLAN TOOL] JSON decode error: {str(e)}")
@@ -433,13 +413,9 @@ class TrainingPlanTool(BaseTool):
                 )
 
             # Return successful result wrapped in 'training_plan' key for Phase 4
-            logger.info(
-                "[TRAINING PLAN TOOL] Creating ToolExecutionResult with 'training_plan' wrapper"
-            )
+            logger.info("[TRAINING PLAN TOOL] Creating ToolExecutionResult with 'training_plan' wrapper")
             logger.debug("[TRAINING PLAN TOOL] Result data keys after wrapping: ['training_plan']")
-            logger.debug(
-                f"[TRAINING PLAN TOOL] Inner training_plan keys: {list(result_data.keys())}"
-            )
+            logger.debug(f"[TRAINING PLAN TOOL] Inner training_plan keys: {list(result_data.keys())}")
 
             return ToolExecutionResult(
                 success=True,
