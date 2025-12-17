@@ -11,14 +11,15 @@ This document provides comprehensive documentation for the Cycling AI Analysis A
 
 All API endpoints are rate-limited to prevent abuse:
 
-| Endpoint Type | Limit | Window |
-|--------------|-------|--------|
-| General API | 100 requests | 1 hour |
-| Strava Sync | 5 requests | 1 hour |
-| Webhooks | 1000 events | 1 hour |
-| Auth | 20 requests | 15 minutes |
+| Endpoint Type | Limit        | Window     |
+| ------------- | ------------ | ---------- |
+| General API   | 100 requests | 1 hour     |
+| Strava Sync   | 5 requests   | 1 hour     |
+| Webhooks      | 1000 events  | 1 hour     |
+| Auth          | 20 requests  | 15 minutes |
 
 **Rate Limit Headers:**
+
 - `X-RateLimit-Limit`: Maximum requests allowed
 - `X-RateLimit-Remaining`: Requests remaining in current window
 - `X-RateLimit-Reset`: Unix timestamp when the limit resets
@@ -35,6 +36,7 @@ All API endpoints are rate-limited to prevent abuse:
 **Authentication:** Required
 
 **Response:**
+
 ```json
 {
   "profile": {
@@ -59,6 +61,7 @@ All API endpoints are rate-limited to prevent abuse:
 ```
 
 **Status Codes:**
+
 - `200 OK`: Profile retrieved successfully
 - `401 Unauthorized`: User not authenticated
 - `404 Not Found`: Profile doesn't exist
@@ -73,6 +76,7 @@ All API endpoints are rate-limited to prevent abuse:
 **Authentication:** Required
 
 **Request Body:**
+
 ```json
 {
   "firstName": "John",
@@ -92,6 +96,7 @@ All API endpoints are rate-limited to prevent abuse:
 **Note:** All fields are optional. Only provided fields will be updated.
 
 **Response:**
+
 ```json
 {
   "profile": {
@@ -101,6 +106,7 @@ All API endpoints are rate-limited to prevent abuse:
 ```
 
 **Status Codes:**
+
 - `200 OK`: Profile updated successfully
 - `400 Bad Request`: Validation failed
 - `401 Unauthorized`: User not authenticated
@@ -115,6 +121,7 @@ All API endpoints are rate-limited to prevent abuse:
 **Authentication:** Required
 
 **Request Body:**
+
 ```json
 {
   "firstName": "John",
@@ -132,6 +139,7 @@ All API endpoints are rate-limited to prevent abuse:
 ```
 
 **Response:**
+
 ```json
 {
   "profile": {
@@ -141,6 +149,7 @@ All API endpoints are rate-limited to prevent abuse:
 ```
 
 **Status Codes:**
+
 - `201 Created`: Profile created successfully
 - `400 Bad Request`: Validation failed
 - `401 Unauthorized`: User not authenticated
@@ -158,16 +167,19 @@ All API endpoints are rate-limited to prevent abuse:
 **Authentication:** Required
 
 **Query Parameters:**
+
 - `after` (optional): Unix timestamp - only sync activities after this date
 - `perPage` (optional): Activities per page (1-200, default: 30)
 - `maxPages` (optional): Maximum pages to fetch (1-100, default: unlimited)
 
 **Example:**
+
 ```
 POST /api/strava/sync?after=1672531200&perPage=50&maxPages=10
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -178,6 +190,7 @@ POST /api/strava/sync?after=1672531200&perPage=50&maxPages=10
 ```
 
 **Status Codes:**
+
 - `202 Accepted`: Sync started successfully
 - `400 Bad Request`: Invalid parameters or Strava not connected
 - `401 Unauthorized`: User not authenticated
@@ -194,6 +207,7 @@ POST /api/strava/sync?after=1672531200&perPage=50&maxPages=10
 **Authentication:** Required
 
 **Response:**
+
 ```json
 {
   "syncStatus": "success",
@@ -204,6 +218,7 @@ POST /api/strava/sync?after=1672531200&perPage=50&maxPages=10
 ```
 
 **Status Codes:**
+
 - `200 OK`: Status retrieved successfully
 - `400 Bad Request`: Strava not connected
 - `401 Unauthorized`: User not authenticated
@@ -220,16 +235,19 @@ POST /api/strava/sync?after=1672531200&perPage=50&maxPages=10
 **Authentication:** Required
 
 **Query Parameters:**
+
 - `periodDays` (optional): Days to look back (1-365, default: 90)
 - `minActivities` (optional): Minimum activities required (1-100, default: 5)
 - `updateProfile` (optional): Whether to update profile with detected FTP (default: false)
 
 **Example:**
+
 ```
 POST /api/profile/ftp/detect?periodDays=60&minActivities=10&updateProfile=true
 ```
 
 **Response:**
+
 ```json
 {
   "estimate": {
@@ -244,6 +262,7 @@ POST /api/profile/ftp/detect?periodDays=60&minActivities=10&updateProfile=true
 ```
 
 **Status Codes:**
+
 - `200 OK`: FTP detected successfully
 - `400 Bad Request`: Invalid parameters
 - `401 Unauthorized`: User not authenticated
@@ -258,6 +277,7 @@ POST /api/profile/ftp/detect?periodDays=60&minActivities=10&updateProfile=true
 **Authentication:** Required
 
 **Response:**
+
 ```json
 {
   "ftp": 265
@@ -265,6 +285,7 @@ POST /api/profile/ftp/detect?periodDays=60&minActivities=10&updateProfile=true
 ```
 
 **Status Codes:**
+
 - `200 OK`: FTP retrieved successfully
 - `401 Unauthorized`: User not authenticated
 - `500 Internal Server Error`: Server error
@@ -278,11 +299,13 @@ POST /api/profile/ftp/detect?periodDays=60&minActivities=10&updateProfile=true
 **Description:** Verification endpoint for Strava webhook subscription
 
 **Query Parameters:**
+
 - `hub.mode`: Must be "subscribe"
 - `hub.verify_token`: Verification token
 - `hub.challenge`: Challenge string to echo back
 
 **Response:**
+
 ```json
 {
   "hub.challenge": "challenge-string"
@@ -290,6 +313,7 @@ POST /api/profile/ftp/detect?periodDays=60&minActivities=10&updateProfile=true
 ```
 
 **Status Codes:**
+
 - `200 OK`: Verification successful
 - `403 Forbidden`: Verification failed
 
@@ -300,6 +324,7 @@ POST /api/profile/ftp/detect?periodDays=60&minActivities=10&updateProfile=true
 **Description:** Receive webhook events from Strava
 
 **Request Body:**
+
 ```json
 {
   "object_type": "activity",
@@ -312,6 +337,7 @@ POST /api/profile/ftp/detect?periodDays=60&minActivities=10&updateProfile=true
 ```
 
 **Response:**
+
 ```json
 {
   "success": true
@@ -319,6 +345,7 @@ POST /api/profile/ftp/detect?periodDays=60&minActivities=10&updateProfile=true
 ```
 
 **Status Codes:**
+
 - `200 OK`: Event received and processed
 - `500 Internal Server Error`: Server error
 
@@ -338,18 +365,18 @@ All error responses follow this format:
 
 ## Common HTTP Status Codes
 
-| Code | Meaning | Description |
-|------|---------|-------------|
-| 200 | OK | Request successful |
-| 201 | Created | Resource created |
-| 202 | Accepted | Request accepted for async processing |
-| 400 | Bad Request | Invalid request parameters |
-| 401 | Unauthorized | Authentication required |
-| 403 | Forbidden | Insufficient permissions |
-| 404 | Not Found | Resource not found |
-| 409 | Conflict | Resource conflict (e.g., already exists) |
-| 429 | Too Many Requests | Rate limit exceeded |
-| 500 | Internal Server Error | Server error |
+| Code | Meaning               | Description                              |
+| ---- | --------------------- | ---------------------------------------- |
+| 200  | OK                    | Request successful                       |
+| 201  | Created               | Resource created                         |
+| 202  | Accepted              | Request accepted for async processing    |
+| 400  | Bad Request           | Invalid request parameters               |
+| 401  | Unauthorized          | Authentication required                  |
+| 403  | Forbidden             | Insufficient permissions                 |
+| 404  | Not Found             | Resource not found                       |
+| 409  | Conflict              | Resource conflict (e.g., already exists) |
+| 429  | Too Many Requests     | Rate limit exceeded                      |
+| 500  | Internal Server Error | Server error                             |
 
 ## Best Practices
 
@@ -363,6 +390,7 @@ All error responses follow this format:
 ## Support
 
 For issues or questions:
+
 - Check the error message and status code
 - Review this documentation
 - Check application logs for detailed error information

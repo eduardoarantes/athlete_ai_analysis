@@ -5,12 +5,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { errorLogger } from '@/lib/monitoring/error-logger'
-import type {
-  CreateJobParams,
-  UpdateJobParams,
-  SyncJob,
-  JobStatus,
-} from '@/lib/types/jobs'
+import type { CreateJobParams, UpdateJobParams, SyncJob, JobStatus } from '@/lib/types/jobs'
 
 export class JobService {
   /**
@@ -161,10 +156,7 @@ export class JobService {
   /**
    * Mark job as completed
    */
-  async markJobAsCompleted(
-    jobId: string,
-    result: Record<string, unknown>
-  ): Promise<void> {
+  async markJobAsCompleted(jobId: string, result: Record<string, unknown>): Promise<void> {
     await this.updateJob({
       id: jobId,
       status: 'completed',

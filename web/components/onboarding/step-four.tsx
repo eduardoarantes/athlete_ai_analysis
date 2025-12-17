@@ -3,10 +3,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslations } from 'next-intl'
-import {
-  profileStepFourSchema,
-  type ProfileStepFourData,
-} from '@/lib/validations/profile'
+import { profileStepFourSchema, type ProfileStepFourData } from '@/lib/validations/profile'
 import {
   Form,
   FormControl,

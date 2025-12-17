@@ -33,10 +33,7 @@ export async function GET(
     const job = await jobService.getJob(jobId)
 
     if (!job) {
-      return NextResponse.json(
-        { error: 'Job not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Job not found' }, { status: 404 })
     }
 
     // Verify job belongs to authenticated user

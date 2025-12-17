@@ -197,14 +197,18 @@ export class FTPDetectionService {
       dataPoints: activityCount,
       periodDays,
       maxPowers: {},
-      reasoning: 'No power data available for FTP estimation. Upload activities with power meter data.',
+      reasoning:
+        'No power data available for FTP estimation. Upload activities with power meter data.',
     }
   }
 
   /**
    * Update user's profile with detected FTP
    */
-  async updateProfileFTP(userId: string, ftp: number): Promise<{ success: boolean; error?: string }> {
+  async updateProfileFTP(
+    userId: string,
+    ftp: number
+  ): Promise<{ success: boolean; error?: string }> {
     try {
       const supabase = await createClient()
 

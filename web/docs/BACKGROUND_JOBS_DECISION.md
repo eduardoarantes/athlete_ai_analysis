@@ -7,7 +7,9 @@
 ## Decision: Use Vercel `waitUntil()` for Background Jobs
 
 ### Problem
+
 Strava activity sync operations can take 30+ seconds for users with many activities, causing API timeout errors. We need a background job solution that works with:
+
 - Free tier Supabase (no pg_cron or background workers)
 - Serverless architecture (Vercel deployment)
 - No additional infrastructure costs
@@ -15,7 +17,9 @@ Strava activity sync operations can take 30+ seconds for users with many activit
 ### Options Evaluated
 
 #### Option 1: Vercel `waitUntil()` ✅ **SELECTED**
+
 **Pros:**
+
 - Built into Vercel Edge Runtime (no cost)
 - Simple API - single function call
 - Works perfectly with serverless functions
@@ -24,6 +28,7 @@ Strava activity sync operations can take 30+ seconds for users with many activit
 - Compatible with free tier Supabase
 
 **Cons:**
+
 - Limited to Vercel platform
 - No built-in retry logic (must implement ourselves)
 - No job queue visualization
@@ -32,13 +37,16 @@ Strava activity sync operations can take 30+ seconds for users with many activit
 **Cost:** $0 (included in Vercel)
 
 #### Option 2: Trigger.dev
+
 **Pros:**
+
 - Full-featured job orchestration
 - Built-in retries and error handling
 - Nice dashboard for monitoring
 - Supports long-running jobs
 
 **Cons:**
+
 - Requires external service
 - Free tier: 50k runs/month, then $10/month
 - Additional complexity
@@ -47,12 +55,15 @@ Strava activity sync operations can take 30+ seconds for users with many activit
 **Cost:** $0-10/month
 
 #### Option 3: Inngest
+
 **Pros:**
+
 - Event-driven architecture
 - Good developer experience
 - Built-in retry and error handling
 
 **Cons:**
+
 - External service dependency
 - Free tier limitations
 - Learning curve
@@ -62,6 +73,7 @@ Strava activity sync operations can take 30+ seconds for users with many activit
 ### Selected Solution: Vercel `waitUntil()`
 
 **Rationale:**
+
 1. **Zero cost** - Critical for free tier deployment
 2. **Simplicity** - Minimal code changes required
 3. **Supabase compatible** - Works perfectly with free tier
@@ -91,16 +103,19 @@ export async function POST(request: NextRequest) {
 ### Limitations & Mitigations
 
 **Limitation 1: No built-in retries**
+
 - **Mitigation:** Implement retry logic in sync service
 - Store attempt count in job record
 - Exponential backoff for failures
 
 **Limitation 2: No job queue dashboard**
+
 - **Mitigation:** Simple status API endpoint
 - Database table tracks all jobs
 - Can query Supabase directly for monitoring
 
 **Limitation 3: Platform lock-in**
+
 - **Mitigation:** Abstract behind job service interface
 - Easy to swap implementation later if needed
 
@@ -137,6 +152,7 @@ CREATE TABLE sync_jobs (
 ### Future Considerations
 
 If we need more advanced features later:
+
 - **Retry logic** - Can implement in current solution
 - **Scheduled jobs** - Would require Trigger.dev or similar
 - **Job priorities** - Not needed for current use case
@@ -152,6 +168,7 @@ If we need more advanced features later:
 ---
 
 **Next Steps:**
+
 1. Install `@vercel/functions` package
 2. Create database migration for `sync_jobs` table
 3. Implement background job service

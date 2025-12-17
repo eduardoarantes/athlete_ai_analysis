@@ -16,12 +16,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Info } from 'lucide-react'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface StepTwoProps {
   initialData?: ProfileStepTwoData | null
@@ -49,7 +44,7 @@ export function StepTwo({ initialData, onSubmit }: StepTwoProps) {
   const convertWeight = (value: number, toMetric: boolean): number => {
     if (toMetric) {
       // lbs to kg
-      return Math.round(value / 2.205 * 10) / 10
+      return Math.round((value / 2.205) * 10) / 10
     } else {
       // kg to lbs
       return Math.round(value * 2.205 * 10) / 10
@@ -216,9 +211,7 @@ export function StepTwo({ initialData, onSubmit }: StepTwoProps) {
           <Button type="button" variant="outline" disabled className="w-full">
             {t('autoDetectFromStrava')}
           </Button>
-          <FormDescription className="text-center mt-2">
-            {t('autoDetectDisabled')}
-          </FormDescription>
+          <FormDescription className="text-center mt-2">{t('autoDetectDisabled')}</FormDescription>
         </div>
 
         {/* Skip info */}

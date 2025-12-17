@@ -16,7 +16,13 @@ interface GoalStepProps {
   onUpdate: (data: any) => void
 }
 
-const GOAL_IDS = ['improve-ftp', 'build-endurance', 'race-prep', 'weight-loss', 'general-fitness'] as const
+const GOAL_IDS = [
+  'improve-ftp',
+  'build-endurance',
+  'race-prep',
+  'weight-loss',
+  'general-fitness',
+] as const
 
 const GOAL_ICONS = {
   'improve-ftp': { icon: TrendingUp, color: 'text-blue-500' },
@@ -51,9 +57,7 @@ export function GoalStep({ data, onUpdate }: GoalStepProps) {
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-semibold mb-2">{t('title')}</h3>
-        <p className="text-sm text-muted-foreground">
-          {t('description')}
-        </p>
+        <p className="text-sm text-muted-foreground">{t('description')}</p>
       </div>
 
       <RadioGroup value={selectedGoal} onValueChange={handleGoalSelect}>
@@ -78,7 +82,9 @@ export function GoalStep({ data, onUpdate }: GoalStepProps) {
                     <Icon className={`h-5 w-5 ${color}`} />
                     <span className="font-semibold">{t(`goals.${goalId}.label`)}</span>
                   </div>
-                  <p className="text-sm text-muted-foreground">{t(`goals.${goalId}.description`)}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {t(`goals.${goalId}.description`)}
+                  </p>
                 </div>
               </Label>
             )
@@ -96,11 +102,7 @@ export function GoalStep({ data, onUpdate }: GoalStepProps) {
           rows={3}
           className={customGoal ? 'border-primary' : ''}
         />
-        {customGoal && (
-          <p className="text-xs text-muted-foreground">
-            {t('customGoalHint')}
-          </p>
-        )}
+        {customGoal && <p className="text-xs text-muted-foreground">{t('customGoalHint')}</p>}
       </div>
     </div>
   )

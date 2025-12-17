@@ -63,7 +63,8 @@ export const MESSAGES = {
   UNAUTHORIZED: 'Unauthorized',
   STRAVA_NOT_CONNECTED: 'Strava not connected. Please connect your Strava account first.',
   SYNC_IN_PROGRESS: 'Sync already in progress',
-  SYNC_IN_PROGRESS_MESSAGE: 'Another sync operation is currently running. Please wait for it to complete.',
+  SYNC_IN_PROGRESS_MESSAGE:
+    'Another sync operation is currently running. Please wait for it to complete.',
   SYNC_STARTED: 'Sync started in background',
   PROFILE_NOT_FOUND: 'Profile not found',
   PROFILE_ALREADY_EXISTS: 'Profile already exists. Use PUT /api/profile to update.',

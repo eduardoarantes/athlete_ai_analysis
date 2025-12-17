@@ -4,7 +4,13 @@ import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -85,9 +91,7 @@ export function ProfileStep({ data, onUpdate }: ProfileStepProps) {
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-semibold mb-2">{t('title')}</h3>
-        <p className="text-sm text-muted-foreground">
-          {t('description')}
-        </p>
+        <p className="text-sm text-muted-foreground">{t('description')}</p>
       </div>
 
       {/* FTP */}
@@ -169,15 +173,16 @@ export function ProfileStep({ data, onUpdate }: ProfileStepProps) {
           />
           <span className="flex items-center text-sm text-muted-foreground">{t('bpm')}</span>
         </div>
-        <p className="text-xs text-muted-foreground">
-          {t('maxHrHint')}
-        </p>
+        <p className="text-xs text-muted-foreground">{t('maxHrHint')}</p>
       </div>
 
       {/* Weekly Training Time */}
       <div className="space-y-2">
         <Label htmlFor="weeklyHours">{t('weeklyHours')}</Label>
-        <Select value={profile.weeklyHours} onValueChange={(v) => handleFieldChange('weeklyHours', v)}>
+        <Select
+          value={profile.weeklyHours}
+          onValueChange={(v) => handleFieldChange('weeklyHours', v)}
+        >
           <SelectTrigger>
             <SelectValue placeholder={t('selectWeeklyHours')} />
           </SelectTrigger>
@@ -231,9 +236,7 @@ export function ProfileStep({ data, onUpdate }: ProfileStepProps) {
                   checked={isSelected}
                   onCheckedChange={(checked) => handleDayToggle(day.id, !!checked)}
                 />
-                <span className="text-sm font-medium select-none">
-                  {t(`days.${day.id}`)}
-                </span>
+                <span className="text-sm font-medium select-none">{t(`days.${day.id}`)}</span>
               </label>
             )
           })}

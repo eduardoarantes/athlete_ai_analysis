@@ -37,9 +37,7 @@ export function ReviewStep({ data }: ReviewStepProps) {
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-semibold mb-2">{t('title')}</h3>
-        <p className="text-sm text-muted-foreground">
-          {t('description')}
-        </p>
+        <p className="text-sm text-muted-foreground">{t('description')}</p>
       </div>
 
       {/* Goal Summary */}
@@ -84,11 +82,15 @@ export function ReviewStep({ data }: ReviewStepProps) {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">{t('eventDate')}</span>
-                  <Badge variant="outline">{new Date(timeline.eventDate).toLocaleDateString()}</Badge>
+                  <Badge variant="outline">
+                    {new Date(timeline.eventDate).toLocaleDateString()}
+                  </Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">{t('weeksUntilEvent')}</span>
-                  <Badge variant="outline">{t('weeksValue', { weeks: calculateWeeks(timeline.eventDate) })}</Badge>
+                  <Badge variant="outline">
+                    {t('weeksValue', { weeks: calculateWeeks(timeline.eventDate) })}
+                  </Badge>
                 </div>
               </div>
             ) : (

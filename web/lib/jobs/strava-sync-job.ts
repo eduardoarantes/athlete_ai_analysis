@@ -33,10 +33,7 @@ export async function executeStravaSyncJob(
     await jobService.markJobAsStarted(jobId)
 
     // Execute Strava activity sync
-    const result = await syncService.syncActivities(
-      payload.userId,
-      payload.syncOptions
-    )
+    const result = await syncService.syncActivities(payload.userId, payload.syncOptions)
 
     const endTime = new Date().toISOString()
 
@@ -111,10 +108,7 @@ export async function executeStravaSyncJob(
  * Helper to determine sync progress (for future use)
  * Not currently used but reserved for progress tracking
  */
-export function calculateSyncProgress(
-  currentPage: number,
-  totalPages: number | undefined
-): number {
+export function calculateSyncProgress(currentPage: number, totalPages: number | undefined): number {
   if (!totalPages) {
     // Unknown total pages - show indeterminate progress
     return 0

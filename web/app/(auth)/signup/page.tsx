@@ -8,9 +8,7 @@ export default function SignupPage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl">Create an account</CardTitle>
-          <CardDescription>
-            Start analyzing your cycling performance with AI
-          </CardDescription>
+          <CardDescription>Start analyzing your cycling performance with AI</CardDescription>
         </CardHeader>
         <CardContent>
           <SignupForm />

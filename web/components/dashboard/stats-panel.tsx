@@ -151,9 +151,7 @@ export function StatsPanel({
                 onClick={() => setSelectedSport(sport)}
                 className={cn(
                   'p-1.5 rounded-md transition-colors',
-                  activeSport === sport
-                    ? 'bg-primary/10'
-                    : 'hover:bg-muted'
+                  activeSport === sport ? 'bg-primary/10' : 'hover:bg-muted'
                 )}
                 title={sport}
               >
@@ -173,7 +171,9 @@ export function StatsPanel({
               <p className="text-[10px] text-muted-foreground">activities</p>
             </div>
             <div>
-              <p className="text-lg font-bold">{formatNumber(Math.round(yearStats.distance / 1000))}</p>
+              <p className="text-lg font-bold">
+                {formatNumber(Math.round(yearStats.distance / 1000))}
+              </p>
               <p className="text-[10px] text-muted-foreground">km</p>
             </div>
             <div className="flex flex-col items-center">
@@ -195,13 +195,17 @@ export function StatsPanel({
               <p className="text-[10px] text-muted-foreground">activities</p>
             </div>
             <div>
-              <p className="text-lg font-bold">{formatNumber(Math.round(monthStats.distance / 1000))}</p>
+              <p className="text-lg font-bold">
+                {formatNumber(Math.round(monthStats.distance / 1000))}
+              </p>
               <p className="text-[10px] text-muted-foreground">km</p>
             </div>
             <div className="flex flex-col items-center">
               <div className="flex items-center gap-0.5">
                 <Mountain className="h-3 w-3 text-muted-foreground" />
-                <p className="text-lg font-bold">{formatNumber(Math.round(monthStats.elevation))}</p>
+                <p className="text-lg font-bold">
+                  {formatNumber(Math.round(monthStats.elevation))}
+                </p>
               </div>
               <p className="text-[10px] text-muted-foreground">m</p>
             </div>
@@ -217,13 +221,17 @@ export function StatsPanel({
               <p className="text-[10px] text-muted-foreground">activities</p>
             </div>
             <div>
-              <p className="text-lg font-bold">{formatNumber(Math.round(lastWeekStats.distance / 1000))}</p>
+              <p className="text-lg font-bold">
+                {formatNumber(Math.round(lastWeekStats.distance / 1000))}
+              </p>
               <p className="text-[10px] text-muted-foreground">km</p>
             </div>
             <div className="flex flex-col items-center">
               <div className="flex items-center gap-0.5">
                 <Mountain className="h-3 w-3 text-muted-foreground" />
-                <p className="text-lg font-bold">{formatNumber(Math.round(lastWeekStats.elevation))}</p>
+                <p className="text-lg font-bold">
+                  {formatNumber(Math.round(lastWeekStats.elevation))}
+                </p>
               </div>
               <p className="text-[10px] text-muted-foreground">m</p>
             </div>

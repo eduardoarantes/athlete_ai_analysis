@@ -252,9 +252,7 @@ export default function CreateTrainingPlanPage() {
             <Sparkles className="h-8 w-8 text-primary" />
             {t('title')}
           </h1>
-          <p className="text-muted-foreground mt-2">
-            {t('subtitle')}
-          </p>
+          <p className="text-muted-foreground mt-2">{t('subtitle')}</p>
         </div>
 
         {/* Progress Indicator */}
@@ -284,7 +282,9 @@ export default function CreateTrainingPlanPage() {
           <div className="lg:col-span-2">
             <Card>
               <CardHeader>
-                <CardTitle>{t('stepTitle', { step: currentStep, name: t(`steps.${currentStepKey}`) })}</CardTitle>
+                <CardTitle>
+                  {t('stepTitle', { step: currentStep, name: t(`steps.${currentStepKey}`) })}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <StepComponent

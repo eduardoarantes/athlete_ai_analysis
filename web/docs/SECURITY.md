@@ -69,6 +69,7 @@ ALTER TABLE public.strava_connections
 #### 4. Update Application Code
 
 **Before (current):**
+
 ```typescript
 // Retrieve tokens directly from strava_connections
 const { data } = await supabase
@@ -81,6 +82,7 @@ const accessToken = data.access_token
 ```
 
 **After (with Vault):**
+
 ```typescript
 // Retrieve tokens from encrypted vault
 const { data: accessTokenData } = await supabase
@@ -95,29 +97,26 @@ const accessToken = accessTokenData.secret
 #### 5. Update Token Storage
 
 **Store new tokens in vault:**
+
 ```typescript
 async function storeTokens(userId: string, accessToken: string, refreshToken: string) {
   // Store access token
-  await supabase
-    .from('vault.secrets')
-    .upsert({
-      name: `strava_access_${userId}`,
-      secret: accessToken
-    })
+  await supabase.from('vault.secrets').upsert({
+    name: `strava_access_${userId}`,
+    secret: accessToken,
+  })
 
   // Store refresh token
-  await supabase
-    .from('vault.secrets')
-    .upsert({
-      name: `strava_refresh_${userId}`,
-      secret: refreshToken
-    })
+  await supabase.from('vault.secrets').upsert({
+    name: `strava_refresh_${userId}`,
+    secret: refreshToken,
+  })
 
   // Update connection metadata (without tokens)
   await supabase
     .from('strava_connections')
     .update({
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     })
     .eq('user_id', userId)
 }
@@ -157,7 +156,7 @@ function encryptToken(token: string): { encrypted: string; iv: string } {
 
   return {
     encrypted: encrypted + authTag.toString('hex'),
-    iv: iv.toString('hex')
+    iv: iv.toString('hex'),
   }
 }
 
@@ -227,20 +226,20 @@ export function middleware(request: NextRequest) {
 const securityHeaders = [
   {
     key: 'X-Content-Type-Options',
-    value: 'nosniff'
+    value: 'nosniff',
   },
   {
     key: 'X-Frame-Options',
-    value: 'DENY'
+    value: 'DENY',
   },
   {
     key: 'X-XSS-Protection',
-    value: '1; mode=block'
+    value: '1; mode=block',
   },
   {
     key: 'Strict-Transport-Security',
-    value: 'max-age=31536000; includeSubDomains'
-  }
+    value: 'max-age=31536000; includeSubDomains',
+  },
 ]
 ```
 
@@ -274,14 +273,11 @@ if (!result.success) {
 
 ```typescript
 // SAFE - Supabase uses parameterized queries
-await supabase
-  .from('users')
-  .select('*')
-  .eq('email', userEmail) // Automatically sanitized
+await supabase.from('users').select('*').eq('email', userEmail) // Automatically sanitized
 
 // NEVER do this:
 await supabase.rpc('raw_sql', {
-  query: `SELECT * FROM users WHERE email = '${userEmail}'`
+  query: `SELECT * FROM users WHERE email = '${userEmail}'`,
 }) // Vulnerable to SQL injection!
 ```
 
@@ -305,6 +301,7 @@ pnpm update --latest
 ### If Tokens Are Compromised
 
 1. **Immediately revoke all tokens:**
+
    ```sql
    DELETE FROM vault.secrets WHERE name LIKE 'strava_%';
    DELETE FROM strava_connections;
@@ -349,6 +346,7 @@ pnpm update --latest
 ## Status
 
 **Current Implementation:**
+
 - ✅ Rate limiting
 - ✅ Input validation
 - ✅ Environment variables
@@ -356,6 +354,7 @@ pnpm update --latest
 - ❌ Token encryption (plaintext storage)
 
 **Recommended Next Steps:**
+
 1. Implement Supabase Vault for token encryption
 2. Add security headers (CSP, HSTS)
 3. Set up automated dependency audits

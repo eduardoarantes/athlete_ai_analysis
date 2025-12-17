@@ -24,10 +24,7 @@ export async function GET(request: NextRequest) {
     const expiresIn = parseInt(searchParams.get('expiresIn') || '3600')
 
     if (!filename) {
-      return NextResponse.json(
-        { error: 'Filename is required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Filename is required' }, { status: 400 })
     }
 
     const storageService = new FitFileStorageService()
@@ -39,11 +36,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get signed URL
-    const result = await storageService.getSignedUrl(
-      user.id,
-      filename,
-      expiresIn
-    )
+    const result = await storageService.getSignedUrl(user.id, filename, expiresIn)
 
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 500 })
@@ -55,9 +48,6 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('Download file error:', error)
-    return NextResponse.json(
-      { error: 'Failed to get download URL' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to get download URL' }, { status: 500 })
   }
 }

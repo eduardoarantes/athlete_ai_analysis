@@ -71,9 +71,6 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Validation error:', error)
-    return NextResponse.json(
-      { error: 'Failed to validate' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to validate' }, { status: 500 })
   }
 }

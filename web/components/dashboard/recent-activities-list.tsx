@@ -225,9 +225,7 @@ export function RecentActivitiesList({ activities, stravaConnected }: RecentActi
         </svg>
         <h3 className="font-semibold text-lg mb-2">{t('noActivities')}</h3>
         <p className="text-sm text-muted-foreground mb-4">
-          {stravaConnected
-            ? t('activitiesWillAppear')
-            : t('connectStravaPrompt')}
+          {stravaConnected ? t('activitiesWillAppear') : t('connectStravaPrompt')}
         </p>
         <Button asChild>
           <Link href={stravaConnected ? '/activities' : '/settings/integrations'}>
@@ -256,9 +254,7 @@ export function RecentActivitiesList({ activities, stravaConnected }: RecentActi
             className={`flex items-center justify-between p-3 rounded-lg border transition-colors group ${getActivityColors(activity.sport_type)}`}
           >
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="flex-shrink-0">
-                {getActivityIcon(activity.sport_type)}
-              </div>
+              <div className="flex-shrink-0">{getActivityIcon(activity.sport_type)}</div>
               <div className="flex-1 min-w-0">
                 <h4 className="font-medium truncate flex items-center gap-2">
                   {activity.name}

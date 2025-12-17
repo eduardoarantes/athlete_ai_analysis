@@ -82,10 +82,7 @@ export async function POST(request: NextRequest) {
 
     // Update profile if requested and FTP was detected
     if (updateProfile && result.estimate && result.estimate.estimatedFTP > 0) {
-      const updateResult = await ftpService.updateProfileFTP(
-        user.id,
-        result.estimate.estimatedFTP
-      )
+      const updateResult = await ftpService.updateProfileFTP(user.id, result.estimate.estimatedFTP)
 
       if (!updateResult.success) {
         return NextResponse.json(

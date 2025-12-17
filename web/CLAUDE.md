@@ -176,8 +176,9 @@ The errorLogger provides three severity levels:
 ```typescript
 // For informational messages (successful operations, status updates)
 errorLogger.logInfo('Webhook event received', {
-  userId: user.id,          // Optional: Associate with user
-  metadata: {               // Optional: Additional context
+  userId: user.id, // Optional: Associate with user
+  metadata: {
+    // Optional: Additional context
     objectType: event.type,
     objectId: event.id,
   },
@@ -201,6 +202,7 @@ errorLogger.logError(error as Error, {
 ### Common Patterns
 
 **API Route Error Handling:**
+
 ```typescript
 export async function POST(request: NextRequest) {
   try {
@@ -223,6 +225,7 @@ export async function POST(request: NextRequest) {
 ```
 
 **Service Layer Logging:**
+
 ```typescript
 async function processWebhookEvent(event: WebhookEvent): Promise<void> {
   errorLogger.logInfo('Processing webhook event', {

@@ -1,6 +1,7 @@
 # Manual Strava Connection Test
 
 ## Prerequisites
+
 - Supabase running: `supabase status` (should show "Running")
 - Dev server running: `pnpm dev` (on http://localhost:3000)
 
@@ -17,11 +18,13 @@
 ## Step 2: Connect to Strava
 
 **While still logged in**, navigate to:
+
 ```
 http://localhost:3000/api/auth/strava/connect
 ```
 
 **Expected:**
+
 - Browser redirects to Strava authorization page
 - URL should be: `https://www.strava.com/oauth/authorize?client_id=181018&redirect_uri=...`
 - Page shows: "Authorize Cycling AI"
@@ -34,6 +37,7 @@ http://localhost:3000/api/auth/strava/connect
 3. Wait for redirect back to app
 
 **Expected:**
+
 - Redirects to: `http://localhost:3000/dashboard?strava_connected=true`
 - You should see the dashboard with a success message
 
@@ -55,6 +59,7 @@ FROM public.strava_connections;
 ```
 
 **Expected:**
+
 - One row with your user_id
 - `token_valid` should be `t` (true)
 - `sync_status` should be `pending`
@@ -68,6 +73,7 @@ FROM public.strava_connections;
 **Cause:** Not logged in to the app
 
 **Fix:**
+
 1. Go back to http://localhost:3000
 2. Log in or create an account
 3. Then try http://localhost:3000/api/auth/strava/connect again
@@ -79,6 +85,7 @@ FROM public.strava_connections;
 **Cause:** CSRF token mismatch (cookies expired)
 
 **Fix:**
+
 1. Clear browser cookies for localhost:3000
 2. Log in again
 3. Try connecting again
@@ -88,6 +95,7 @@ FROM public.strava_connections;
 **Symptom:** Connection errors, 500 errors
 
 **Fix:**
+
 ```bash
 supabase status  # Check if running
 supabase start   # Start if not running
@@ -96,11 +104,13 @@ supabase start   # Start if not running
 ### Environment Variables Missing
 
 **Check:**
+
 ```bash
 cat .env.local
 ```
 
 **Should contain:**
+
 ```
 STRAVA_CLIENT_ID=181018
 STRAVA_CLIENT_SECRET=321d506f0fbc15feec4dda84e22464ca758bf2c3

@@ -1,6 +1,7 @@
 # Strava OAuth Testing Guide
 
 ## Prerequisites
+
 1. Supabase running: `supabase start`
 2. Dev server running: `pnpm dev`
 3. Logged in to the app at `http://localhost:3000`
@@ -8,20 +9,25 @@
 ## Test Flow
 
 ### 1. Connect to Strava
+
 **URL:** http://localhost:3000/api/auth/strava/connect
 
 **Expected:**
+
 - Redirects to Strava authorization page
 - Shows scope: `read,activity:read_all,profile:read_all`
 
 ### 2. Authorize on Strava
+
 **Action:** Click "Authorize" on Strava
 
 **Expected:**
+
 - Redirects back to: `http://localhost:3000/api/auth/strava/callback?code=...`
 - Then redirects to: `http://localhost:3000/dashboard?strava_connected=true`
 
 ### 3. Verify in Database
+
 ```sql
 -- Connect to database
 psql postgresql://postgres:postgres@127.0.0.1:54322/postgres
@@ -42,9 +48,11 @@ FROM public.strava_connections;
 ```
 
 ### 4. Check Status
+
 **URL:** http://localhost:3000/api/auth/strava/status
 
 **Expected Response:**
+
 ```json
 {
   "connected": true,
@@ -56,9 +64,11 @@ FROM public.strava_connections;
 ```
 
 ### 5. Disconnect (Optional)
+
 **URL:** `POST http://localhost:3000/api/auth/strava/disconnect`
 
 **Using curl:**
+
 ```bash
 # While logged in, copy session cookie from browser DevTools
 curl -X POST http://localhost:3000/api/auth/strava/disconnect \
@@ -67,14 +77,17 @@ curl -X POST http://localhost:3000/api/auth/strava/disconnect \
 ```
 
 **Expected:**
+
 - Returns: `{"success": true}`
 - Database connection deleted
 - Strava access revoked
 
 ### 6. Verify Disconnect
+
 **URL:** http://localhost:3000/api/auth/strava/status
 
 **Expected Response:**
+
 ```json
 {
   "connected": false
@@ -84,18 +97,22 @@ curl -X POST http://localhost:3000/api/auth/strava/disconnect \
 ## Troubleshooting
 
 ### Error: "invalid_state"
+
 - **Cause:** CSRF token mismatch
 - **Fix:** Clear cookies and try again
 
 ### Error: "access_denied"
+
 - **Cause:** User clicked "Cancel" on Strava
 - **Expected:** Redirects to `/dashboard?strava_error=access_denied`
 
 ### Error: "Unauthorized"
+
 - **Cause:** Not logged in to the app
 - **Fix:** Log in at `http://localhost:3000` first
 
 ### Database Connection Not Created
+
 - **Check:** Look at browser DevTools → Network tab for error responses
 - **Check:** Verify environment variables in `.env.local`:
   - `STRAVA_CLIENT_ID=181018`
@@ -116,6 +133,7 @@ curl -X POST http://localhost:3000/api/auth/strava/disconnect \
 **URL:** `POST http://localhost:3000/api/strava/sync`
 
 **Using curl:**
+
 ```bash
 # While logged in, copy session cookie from browser DevTools
 curl -X POST http://localhost:3000/api/strava/sync \
@@ -124,6 +142,7 @@ curl -X POST http://localhost:3000/api/strava/sync \
 ```
 
 **Expected Response:**
+
 ```json
 {
   "success": true,
@@ -132,6 +151,7 @@ curl -X POST http://localhost:3000/api/strava/sync \
 ```
 
 **Check Activities in Database:**
+
 ```sql
 -- Connect to database
 psql postgresql://postgres:postgres@127.0.0.1:54322/postgres
@@ -155,6 +175,7 @@ FROM public.strava_activities;
 ```
 
 **Check Sync Status:**
+
 ```bash
 # GET sync status
 curl http://localhost:3000/api/strava/sync \
@@ -162,6 +183,7 @@ curl http://localhost:3000/api/strava/sync \
 ```
 
 **Expected Response:**
+
 ```json
 {
   "syncStatus": "success",
@@ -172,6 +194,7 @@ curl http://localhost:3000/api/strava/sync \
 ```
 
 **Sync with Options:**
+
 ```bash
 # Sync only recent activities (last 30 days)
 # after = Unix timestamp (e.g., 30 days ago)
@@ -187,6 +210,7 @@ curl -X POST "http://localhost:3000/api/strava/sync?maxPages=2&perPage=30" \
 ## Troubleshooting Sync
 
 ### Sync already in progress
+
 - **Error:** `{"error": "Sync already in progress"}`
 - **Fix:** Wait for current sync to complete, or reset status in database:
   ```sql
@@ -196,11 +220,13 @@ curl -X POST "http://localhost:3000/api/strava/sync?maxPages=2&perPage=30" \
   ```
 
 ### No activities synced
+
 - **Check:** Token is valid and not expired
 - **Check:** User has activities in Strava account
 - **Check:** `after` parameter is not filtering out all activities
 
 ### Sync fails with error
+
 - **Check:** Database logs for specific error
 - **Check:** `strava_connections.sync_error` column for error message
   ```sql
@@ -212,6 +238,7 @@ curl -X POST "http://localhost:3000/api/strava/sync?maxPages=2&perPage=30" \
 ## Next Steps
 
 After successful connection and sync:
+
 - Implement FIT file storage (P3-T5)
 - Implement webhook subscription (P3-T6)
 - Build UI for connection status (P3-T8)

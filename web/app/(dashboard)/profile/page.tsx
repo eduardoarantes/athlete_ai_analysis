@@ -33,9 +33,7 @@ function calculateProfileCompleteness(profile: CompleteProfileData): ProfileComp
     { name: 'unitsSystem', value: profile.unitsSystem, label: 'Units System' },
   ]
 
-  const missingFields = fields
-    .filter((f) => !f.value)
-    .map((f) => f.label)
+  const missingFields = fields.filter((f) => !f.value).map((f) => f.label)
 
   const completedCount = fields.length - missingFields.length
   const percentage = Math.round((completedCount / fields.length) * 100)
@@ -78,7 +76,8 @@ function ProfileCompletenessCard({ completeness }: { completeness: ProfileComple
             {!completeness.isComplete && completeness.missingFields.length > 0 && (
               <p className="text-xs text-muted-foreground mt-2">
                 {t('missingFields')}: {completeness.missingFields.slice(0, 3).join(', ')}
-                {completeness.missingFields.length > 3 && ` +${completeness.missingFields.length - 3} more`}
+                {completeness.missingFields.length > 3 &&
+                  ` +${completeness.missingFields.length - 3} more`}
               </p>
             )}
           </div>

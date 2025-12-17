@@ -43,32 +43,34 @@ export function StravaConnection() {
   const [currentJobId, setCurrentJobId] = useState<string | null>(null)
 
   // Use polling hook for background job status
-  const { status: jobStatus, isPolling, startPolling, reset: resetPolling } = useSyncPolling(
-    currentJobId,
-    {
-      onComplete: (completedJob) => {
-        if (completedJob.status === 'completed' && completedJob.result) {
-          const message = t('syncedActivities', { count: completedJob.result.activitiesSynced })
-          setSuccessMessage(message)
-          toast.success(message, {
-            duration: 5000,
-            icon: '✅',
-          })
-          loadStatus() // Reload status to get updated counts
-        } else if (completedJob.status === 'failed') {
-          const errorMsg = completedJob.error || t('failedToSync')
-          setError(errorMsg)
-          toast.error(errorMsg)
-        }
-        setCurrentJobId(null)
-      },
-      onError: (errorMsg) => {
+  const {
+    status: jobStatus,
+    isPolling,
+    startPolling,
+    reset: resetPolling,
+  } = useSyncPolling(currentJobId, {
+    onComplete: (completedJob) => {
+      if (completedJob.status === 'completed' && completedJob.result) {
+        const message = t('syncedActivities', { count: completedJob.result.activitiesSynced })
+        setSuccessMessage(message)
+        toast.success(message, {
+          duration: 5000,
+          icon: '✅',
+        })
+        loadStatus() // Reload status to get updated counts
+      } else if (completedJob.status === 'failed') {
+        const errorMsg = completedJob.error || t('failedToSync')
         setError(errorMsg)
         toast.error(errorMsg)
-        setCurrentJobId(null)
-      },
-    }
-  )
+      }
+      setCurrentJobId(null)
+    },
+    onError: (errorMsg) => {
+      setError(errorMsg)
+      toast.error(errorMsg)
+      setCurrentJobId(null)
+    },
+  })
 
   useEffect(() => {
     loadStatus()
@@ -161,12 +163,9 @@ export function StravaConnection() {
       setError(null)
       setSuccessMessage(null)
 
-      const res = await fetch(
-        `/api/profile/ftp/detect?updateProfile=${updateProfile}`,
-        {
-          method: 'POST',
-        }
-      )
+      const res = await fetch(`/api/profile/ftp/detect?updateProfile=${updateProfile}`, {
+        method: 'POST',
+      })
 
       if (res.ok) {
         const data = await res.json()
@@ -290,15 +289,12 @@ export function StravaConnection() {
               </div>
               <div>
                 <p className="text-muted-foreground">{t('syncStatus')}</p>
-                <p className="text-lg font-semibold capitalize">
-                  {syncStatus.syncStatus}
-                </p>
+                <p className="text-lg font-semibold capitalize">{syncStatus.syncStatus}</p>
               </div>
             </div>
             {syncStatus.lastSyncAt && (
               <p className="text-sm text-muted-foreground">
-                {t('lastSynced')}:{' '}
-                {new Date(syncStatus.lastSyncAt).toLocaleString()}
+                {t('lastSynced')}: {new Date(syncStatus.lastSyncAt).toLocaleString()}
               </p>
             )}
             {syncStatus.syncError && (
@@ -326,10 +322,7 @@ export function StravaConnection() {
               {detectingFTP ? t('detecting') : t('detectFtp')}
             </Button>
             {ftpEstimate && ftpEstimate.estimatedFTP > 0 && (
-              <Button
-                onClick={() => handleDetectFTP(true)}
-                disabled={detectingFTP}
-              >
+              <Button onClick={() => handleDetectFTP(true)} disabled={detectingFTP}>
                 {t('detectAndUpdate')}
               </Button>
             )}
@@ -340,9 +333,7 @@ export function StravaConnection() {
               {ftpEstimate.estimatedFTP > 0 ? (
                 <>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold">
-                      {ftpEstimate.estimatedFTP}
-                    </span>
+                    <span className="text-3xl font-bold">{ftpEstimate.estimatedFTP}</span>
                     <span className="text-muted-foreground">{t('watts')}</span>
                     <span
                       className={`ml-auto text-sm px-2 py-1 rounded ${
@@ -362,9 +353,7 @@ export function StravaConnection() {
                   <p className="text-sm">{ftpEstimate.reasoning}</p>
                 </>
               ) : (
-                <p className="text-sm text-muted-foreground">
-                  {ftpEstimate.reasoning}
-                </p>
+                <p className="text-sm text-muted-foreground">{ftpEstimate.reasoning}</p>
               )}
             </div>
           )}

@@ -69,10 +69,7 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('Activities fetch error:', error)
-      return NextResponse.json(
-        { error: 'Failed to fetch activities' },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: 'Failed to fetch activities' }, { status: 500 })
     }
 
     return NextResponse.json({
@@ -86,9 +83,6 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('Activities error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch activities' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to fetch activities' }, { status: 500 })
   }
 }

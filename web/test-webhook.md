@@ -31,6 +31,7 @@ This gives you a public URL like: `https://abc123.ngrok.io`
 ### 2. Update Environment Variables
 
 Add to `.env.local`:
+
 ```
 NEXT_PUBLIC_APP_URL=https://abc123.ngrok.io
 STRAVA_WEBHOOK_VERIFY_TOKEN=CYCLING_AI
@@ -52,6 +53,7 @@ curl -X POST http://localhost:3000/api/webhooks/strava/subscription \
 ```
 
 **Expected Response:**
+
 ```json
 {
   "success": true,
@@ -76,6 +78,7 @@ curl http://localhost:3000/api/webhooks/strava/subscription \
 ```
 
 **Expected Response:**
+
 ```json
 {
   "subscriptions": [
@@ -94,11 +97,13 @@ curl http://localhost:3000/api/webhooks/strava/subscription \
 Now when you create, update, or delete activities on Strava, events will be sent to your webhook endpoint.
 
 **Test by:**
+
 1. Go to Strava.com
 2. Create a new activity (manual entry or upload)
 3. Check your app logs for webhook event
 
 **Expected Log Output:**
+
 ```
 [Webhook] Received event: {
   object_type: 'activity',
@@ -133,6 +138,7 @@ LIMIT 10;
 ```
 
 **Expected Output:**
+
 ```
  object_type | aspect_type | object_id | owner_id  | processed |       event_time        |         created_at
 -------------+-------------+-----------+-----------+-----------+-------------------------+-------------------------
@@ -178,6 +184,7 @@ curl -X DELETE "http://localhost:3000/api/webhooks/strava/subscription?id=${SUBS
 ```
 
 **Expected Response:**
+
 ```json
 {
   "success": true
@@ -191,11 +198,13 @@ curl -X DELETE "http://localhost:3000/api/webhooks/strava/subscription?id=${SUBS
 **Symptom:** Subscription creation fails with "verification failed"
 
 **Causes:**
+
 1. Callback URL not publicly accessible
 2. `STRAVA_WEBHOOK_VERIFY_TOKEN` mismatch
 3. Webhook endpoint not responding to GET requests
 
 **Fix:**
+
 1. Ensure ngrok is running and URL is correct
 2. Check `.env.local` has correct verify token
 3. Test verification manually:
@@ -209,11 +218,13 @@ curl -X DELETE "http://localhost:3000/api/webhooks/strava/subscription?id=${SUBS
 **Symptom:** No webhook events in logs after creating activity
 
 **Causes:**
+
 1. Subscription not active
 2. Activity created by different Strava account
 3. Webhook endpoint down
 
 **Fix:**
+
 1. Verify subscription exists (step 2)
 2. Ensure you're creating activity on the same Strava account that's connected
 3. Check ngrok is still running, dev server is up
@@ -223,11 +234,13 @@ curl -X DELETE "http://localhost:3000/api/webhooks/strava/subscription?id=${SUBS
 **Symptom:** Events appear in `strava_webhook_events` with `processed=false`
 
 **Causes:**
+
 1. Access token expired
 2. Activity fetch failed
 3. Database error
 
 **Fix:**
+
 1. Check `error` column in `strava_webhook_events` table
 2. Verify user's Strava connection is still valid
 3. Check application logs for processing errors
@@ -267,6 +280,7 @@ STRAVA_WEBHOOK_VERIFY_TOKEN=CYCLING_AI  # Defaults to "CYCLING_AI" if not set
 ## Next Steps
 
 After successful webhook setup:
+
 - Build UI for viewing webhook event log
 - Implement error notification system
 - Add retry mechanism for failed events

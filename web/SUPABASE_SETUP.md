@@ -132,6 +132,7 @@ STRAVA_WEBHOOK_VERIFY_TOKEN=your-random-secure-token-here
 ```
 
 **IMPORTANT:**
+
 - Replace `xxx.supabase.co` with your actual project URL
 - Replace the keys with your actual keys from Supabase dashboard
 - **Generate a secure random token** for `STRAVA_WEBHOOK_VERIFY_TOKEN`:
@@ -213,6 +214,7 @@ After completing this setup:
 4. TypeScript types generated ✓
 
 You can now proceed to:
+
 - **P1-T6:** Install Supabase client libraries
 - **P1-T7:** Build authentication pages
 - **P1-T8:** Implement protected routes
@@ -230,6 +232,7 @@ You can now proceed to:
 ### Security
 
 All tables have Row-Level Security (RLS) enabled:
+
 - Users can only access their own data
 - Policies enforce `user_id = auth.uid()` checks
 - No direct database access without authentication
@@ -237,6 +240,7 @@ All tables have Row-Level Security (RLS) enabled:
 ### Performance
 
 Key indexes created on:
+
 - `activities(user_id, start_date DESC)` - Fast activity queries
 - `activities(strava_activity_id)` - Fast Strava sync
 - `training_plans(user_id, status)` - Fast plan lookups
@@ -245,11 +249,13 @@ Key indexes created on:
 ## Support
 
 For Supabase-specific issues:
+
 - Documentation: https://supabase.com/docs
 - Discord: https://discord.supabase.com
 - GitHub: https://github.com/supabase/supabase
 
 For project-specific issues:
+
 - Check `CLAUDE.md` for project guidelines
 - Review migration files in `supabase/migrations/`
 - Consult the implementation plan in `.claude/current_task/PLAN.md`

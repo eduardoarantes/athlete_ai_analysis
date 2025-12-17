@@ -9,13 +9,7 @@ import {
   type ProfileStepThreeData,
   PRESET_GOALS,
 } from '@/lib/validations/profile'
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormDescription,
-} from '@/components/ui/form'
+import { Form, FormField, FormItem, FormLabel, FormDescription } from '@/components/ui/form'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'

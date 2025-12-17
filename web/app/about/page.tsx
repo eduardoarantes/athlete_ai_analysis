@@ -96,8 +96,7 @@ export default function AboutPage() {
         </div>
 
         <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
-          {t('hero.title.part1')}{' '}
-          <span className="text-primary">{t('hero.title.highlight')}</span>{' '}
+          {t('hero.title.part1')} <span className="text-primary">{t('hero.title.highlight')}</span>{' '}
           {t('hero.title.part2')}
         </h1>
 
@@ -170,7 +169,9 @@ export default function AboutPage() {
               className="border-none bg-card/50 backdrop-blur hover:bg-card/80 transition-colors"
             >
               <CardContent className="p-6">
-                <div className={`w-12 h-12 rounded-lg ${feature.bgColor} flex items-center justify-center mb-4`}>
+                <div
+                  className={`w-12 h-12 rounded-lg ${feature.bgColor} flex items-center justify-center mb-4`}
+                >
                   <feature.icon className={`h-6 w-6 ${feature.color}`} />
                 </div>
                 <h3 className="text-lg font-semibold mb-2">{t(feature.titleKey)}</h3>
@@ -238,7 +239,8 @@ export default function AboutPage() {
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
           <p>{t('footer.copyright', { year: new Date().getFullYear() })}</p>
           <p className="flex items-center gap-2">
-            {t('footer.madeWith')} <Heart className="h-4 w-4 text-red-500 fill-red-500" /> {t('footer.forCyclists')}
+            {t('footer.madeWith')} <Heart className="h-4 w-4 text-red-500 fill-red-500" />{' '}
+            {t('footer.forCyclists')}
           </p>
         </div>
       </footer>

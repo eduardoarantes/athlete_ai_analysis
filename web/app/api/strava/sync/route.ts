@@ -209,10 +209,7 @@ export async function POST(request: NextRequest) {
         .from('strava_connections')
         .update({
           sync_status: 'error',
-          sync_error:
-            jobError instanceof Error
-              ? jobError.message
-              : 'Failed to start sync job',
+          sync_error: jobError instanceof Error ? jobError.message : 'Failed to start sync job',
         })
         .eq('user_id', user.id)
 
@@ -259,10 +256,7 @@ export async function GET() {
       }>()
 
     if (!connection) {
-      return NextResponse.json(
-        { error: 'Strava not connected' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Strava not connected' }, { status: 400 })
     }
 
     const syncService = new StravaSyncService()
@@ -276,9 +270,6 @@ export async function GET() {
     })
   } catch (error) {
     console.error('Get sync status error:', error)
-    return NextResponse.json(
-      { error: 'Failed to get sync status' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to get sync status' }, { status: 500 })
   }
 }

@@ -48,12 +48,10 @@ export class FitFileStorageService {
       const filePath = `${userId}/${filename}`
 
       // Upload file
-      const { error } = await supabase.storage
-        .from(this.bucketName)
-        .upload(filePath, file, {
-          contentType: 'application/octet-stream',
-          upsert: true, // Allow overwriting existing file
-        })
+      const { error } = await supabase.storage.from(this.bucketName).upload(filePath, file, {
+        contentType: 'application/octet-stream',
+        upsert: true, // Allow overwriting existing file
+      })
 
       if (error) {
         return {
@@ -86,9 +84,7 @@ export class FitFileStorageService {
 
       const filePath = `${userId}/${filename}`
 
-      const { data, error } = await supabase.storage
-        .from(this.bucketName)
-        .download(filePath)
+      const { data, error } = await supabase.storage.from(this.bucketName).download(filePath)
 
       if (error) {
         return {
@@ -121,9 +117,7 @@ export class FitFileStorageService {
 
       const filePath = `${userId}/${filename}`
 
-      const { error } = await supabase.storage
-        .from(this.bucketName)
-        .remove([filePath])
+      const { error } = await supabase.storage.from(this.bucketName).remove([filePath])
 
       if (error) {
         return {
@@ -150,11 +144,9 @@ export class FitFileStorageService {
     try {
       const supabase = await createClient()
 
-      const { data, error } = await supabase.storage
-        .from(this.bucketName)
-        .list(userId, {
-          sortBy: { column: 'created_at', order: 'desc' },
-        })
+      const { data, error } = await supabase.storage.from(this.bucketName).list(userId, {
+        sortBy: { column: 'created_at', order: 'desc' },
+      })
 
       if (error) {
         return {
@@ -226,11 +218,9 @@ export class FitFileStorageService {
     try {
       const supabase = await createClient()
 
-      const { data, error } = await supabase.storage
-        .from(this.bucketName)
-        .list(userId, {
-          search: filename,
-        })
+      const { data, error } = await supabase.storage.from(this.bucketName).list(userId, {
+        search: filename,
+      })
 
       if (error) {
         return false

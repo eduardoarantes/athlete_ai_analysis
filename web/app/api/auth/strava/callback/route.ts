@@ -16,16 +16,12 @@ export async function GET(request: NextRequest) {
 
     // Handle user denial
     if (error === 'access_denied') {
-      return NextResponse.redirect(
-        new URL('/dashboard?strava_error=access_denied', request.url)
-      )
+      return NextResponse.redirect(new URL('/dashboard?strava_error=access_denied', request.url))
     }
 
     // Validate required parameters
     if (!code || !state || !scope) {
-      return NextResponse.redirect(
-        new URL('/dashboard?strava_error=invalid_request', request.url)
-      )
+      return NextResponse.redirect(new URL('/dashboard?strava_error=invalid_request', request.url))
     }
 
     // Verify state token (CSRF protection)
@@ -63,9 +59,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Clear state cookies
-    const response = NextResponse.redirect(
-      new URL('/dashboard?strava_connected=true', request.url)
-    )
+    const response = NextResponse.redirect(new URL('/dashboard?strava_connected=true', request.url))
     response.cookies.delete('strava_oauth_state')
     response.cookies.delete('strava_oauth_user_id')
 

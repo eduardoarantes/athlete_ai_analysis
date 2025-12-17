@@ -30,10 +30,7 @@ export async function GET() {
     })
   } catch (error) {
     console.error('List files error:', error)
-    return NextResponse.json(
-      { error: 'Failed to list files' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to list files' }, { status: 500 })
   }
 }
 
@@ -56,10 +53,7 @@ export async function DELETE(request: NextRequest) {
     const filename = searchParams.get('filename')
 
     if (!filename) {
-      return NextResponse.json(
-        { error: 'Filename is required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Filename is required' }, { status: 400 })
     }
 
     const storageService = new FitFileStorageService()
@@ -72,9 +66,6 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Delete file error:', error)
-    return NextResponse.json(
-      { error: 'Failed to delete file' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to delete file' }, { status: 500 })
   }
 }

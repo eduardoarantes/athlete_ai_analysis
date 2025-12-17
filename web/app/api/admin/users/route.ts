@@ -117,14 +117,11 @@ export async function GET(request: NextRequest) {
     )
 
     if (countError) {
-      errorLogger.logError(
-        new Error(`get_admin_users_count failed: ${countError.message}`),
-        {
-          ...(auth.userId && { userId: auth.userId }),
-          path: '/api/admin/users',
-          metadata: { dbError: countError },
-        }
-      )
+      errorLogger.logError(new Error(`get_admin_users_count failed: ${countError.message}`), {
+        ...(auth.userId && { userId: auth.userId }),
+        path: '/api/admin/users',
+        metadata: { dbError: countError },
+      })
 
       return NextResponse.json(
         { error: MESSAGES.ADMIN_USERS_FETCH_FAILED },

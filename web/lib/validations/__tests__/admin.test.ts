@@ -145,9 +145,7 @@ describe('Admin Validation Schemas', () => {
     })
 
     it('rejects empty update (at least one field required)', () => {
-      expect(() => updateUserSubscriptionSchema.parse({})).toThrow(
-        /At least one field/
-      )
+      expect(() => updateUserSubscriptionSchema.parse({})).toThrow(/At least one field/)
     })
 
     it('rejects invalid subscription status', () => {

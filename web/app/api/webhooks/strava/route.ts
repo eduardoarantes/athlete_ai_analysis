@@ -8,9 +8,9 @@ const WEBHOOK_VERIFY_TOKEN = process.env.STRAVA_WEBHOOK_VERIFY_TOKEN
 if (!WEBHOOK_VERIFY_TOKEN) {
   throw new Error(
     'STRAVA_WEBHOOK_VERIFY_TOKEN environment variable is required. ' +
-    'This token is used to verify webhook requests from Strava. ' +
-    'Set it in your .env.local file for development or in your deployment environment variables. ' +
-    'Example: STRAVA_WEBHOOK_VERIFY_TOKEN=your_random_secure_token'
+      'This token is used to verify webhook requests from Strava. ' +
+      'Set it in your .env.local file for development or in your deployment environment variables. ' +
+      'Example: STRAVA_WEBHOOK_VERIFY_TOKEN=your_random_secure_token'
   )
 }
 
@@ -52,10 +52,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ 'hub.challenge': challenge })
     } else {
       errorLogger.logWarning('Webhook verification failed')
-      return NextResponse.json(
-        { error: 'Verification failed' },
-        { status: 403 }
-      )
+      return NextResponse.json({ error: 'Verification failed' }, { status: 403 })
     }
   } catch (error) {
     errorLogger.logError(error as Error, { path: '/api/webhooks/strava', method: 'GET' })
@@ -74,24 +71,26 @@ export async function POST(request: NextRequest) {
     const event: StravaWebhookEvent = await request.json()
 
     errorLogger.logInfo('Webhook event received', {
-      metadata: { objectType: event.object_type, aspectType: event.aspect_type, objectId: event.object_id },
+      metadata: {
+        objectType: event.object_type,
+        aspectType: event.aspect_type,
+        objectId: event.object_id,
+      },
     })
 
     // Store event in database for processing
     const supabase = await createClient()
 
-    const { error } = await supabase
-      .from('strava_webhook_events')
-      .insert({
-        subscription_id: event.subscription_id,
-        object_id: event.object_id,
-        event_time: new Date(event.event_time * 1000).toISOString(),
-        object_type: event.object_type,
-        aspect_type: event.aspect_type,
-        owner_id: event.owner_id,
-        raw_data: event as never,
-        processed: false,
-      } as never)
+    const { error } = await supabase.from('strava_webhook_events').insert({
+      subscription_id: event.subscription_id,
+      object_id: event.object_id,
+      event_time: new Date(event.event_time * 1000).toISOString(),
+      object_type: event.object_type,
+      aspect_type: event.aspect_type,
+      owner_id: event.owner_id,
+      raw_data: event as never,
+      processed: false,
+    } as never)
 
     if (error) {
       // If it's a duplicate, that's okay (composite primary key prevents duplicates)
@@ -106,7 +105,7 @@ export async function POST(request: NextRequest) {
         path: '/api/webhooks/strava',
         method: 'POST',
       })
-      return NextResponse.json({ error: 'Failed to store event' }, {status: 500 })
+      return NextResponse.json({ error: 'Failed to store event' }, { status: 500 })
     }
 
     errorLogger.logInfo('Webhook event stored', {
@@ -191,9 +190,8 @@ async function processWebhookEvent(event: StravaWebhookEvent): Promise<void> {
       const activity = await activityResponse.json()
 
       // Upsert activity to database
-      await supabase
-        .from('strava_activities')
-        .upsert({
+      await supabase.from('strava_activities').upsert(
+        {
           user_id: connection.user_id,
           strava_activity_id: activity.id,
           name: activity.name,
@@ -210,9 +208,11 @@ async function processWebhookEvent(event: StravaWebhookEvent): Promise<void> {
           average_heartrate: activity.average_heartrate,
           max_heartrate: activity.max_heartrate,
           raw_data: activity,
-        } as never, {
+        } as never,
+        {
           onConflict: 'strava_activity_id',
-        })
+        }
+      )
 
       errorLogger.logInfo('Webhook synced activity', {
         userId: connection.user_id,

@@ -65,7 +65,7 @@ export function calculatePowerTSS(
   }
 
   const intensityFactor = normalizedPower / ftp
-  const tss = (durationSeconds * normalizedPower * intensityFactor) / (ftp * 3600) * 100
+  const tss = ((durationSeconds * normalizedPower * intensityFactor) / (ftp * 3600)) * 100
 
   // Round to 1 decimal place
   return Math.round(tss * 10) / 10
@@ -141,10 +141,7 @@ export function calculateHeartRateTSS(
  * @param athlete - Athlete profile data
  * @returns TSS calculation result or null if insufficient data
  */
-export function calculateTSS(
-  activity: ActivityData,
-  athlete: AthleteData
-): TSSResult | null {
+export function calculateTSS(activity: ActivityData, athlete: AthleteData): TSSResult | null {
   const { movingTimeSeconds, normalizedPower, averageWatts, averageHeartRate } = activity
   const { ftp, maxHr, restingHr, gender } = athlete
 
@@ -204,13 +201,7 @@ export function calculateTSS(
     // Default to male coefficients if gender is not specified or is 'other'/'prefer_not_to_say'
     const isMale = gender !== 'female'
 
-    const tss = calculateHeartRateTSS(
-      movingTimeSeconds,
-      averageHeartRate,
-      maxHr,
-      restingHr,
-      isMale
-    )
+    const tss = calculateHeartRateTSS(movingTimeSeconds, averageHeartRate, maxHr, restingHr, isMale)
 
     return {
       tss,

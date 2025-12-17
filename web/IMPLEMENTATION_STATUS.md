@@ -8,6 +8,7 @@
 ## Completed Tasks
 
 ### ✅ P1-T1: Initialize Next.js Project
+
 - Next.js 16.0.6 with TypeScript and App Router
 - Tailwind CSS 4.0 configured
 - shadcn/ui components initialized
@@ -15,6 +16,7 @@
 - All quality checks passing
 
 **Files Created:**
+
 - `web/` directory with complete Next.js structure
 - `package.json` with all dependencies
 - `tsconfig.json` with strict mode
@@ -22,26 +24,31 @@
 - `components.json` for shadcn/ui
 
 ### ✅ P1-T2: Configure ESLint and Prettier
+
 - ESLint 9 with Next.js and TypeScript plugins
 - Prettier 3.7 for consistent formatting
 - Format-on-save recommended for VSCode
 - All linting rules configured
 
 **Files Created:**
+
 - `eslint.config.mjs`
 - `.prettierrc`
 - `.prettierignore`
 
 ### ✅ P1-T3: GitHub CI/CD Pipeline
+
 - Automated quality checks on every PR
 - Runs: type-check, lint, format-check, build
 - Separate job for Python tests
 - Ready for continuous integration
 
 **Files Created:**
+
 - `.github/workflows/ci.yml`
 
 ### ✅ P1-T4: Supabase Database Schema
+
 - Complete database schema with 5 tables
 - Foreign key relationships to auth.users
 - Indexes for query performance
@@ -49,12 +56,14 @@
 - Two migrations created and ready to apply
 
 **Files Created:**
+
 - `web/supabase/config.toml`
 - `web/supabase/migrations/20251211001020_create_initial_schema.sql`
 - `web/supabase/migrations/20251211001136_enable_rls_policies.sql`
 - `web/SUPABASE_SETUP.md` (detailed setup guide)
 
 **Tables Created:**
+
 1. `athlete_profiles` - User fitness data (FTP, max HR, weight, goals)
 2. `strava_connections` - OAuth tokens and sync status
 3. `activities` - Cycling activities from Strava
@@ -62,18 +71,21 @@
 5. `reports` - AI-generated performance reports
 
 ### ✅ P1-T5: Row-Level Security Policies
+
 - RLS enabled on all 5 tables
 - 20 policies total (4 per table: SELECT, INSERT, UPDATE, DELETE)
 - All policies enforce user isolation via `auth.uid() = user_id`
 - Data security guaranteed at database level
 
 **Policies Created:**
+
 - SELECT: Users can only view their own data
 - INSERT: Users can only create data for themselves
 - UPDATE: Users can only update their own data
 - DELETE: Users can only delete their own data
 
 ### ✅ P1-T6: Supabase Client Configuration
+
 - `@supabase/supabase-js` and `@supabase/ssr` installed
 - Three client utilities for different contexts:
   - Client-side: `lib/supabase/client.ts`
@@ -84,6 +96,7 @@
 - Middleware for session management and protected routes
 
 **Files Created:**
+
 - `lib/supabase/client.ts` - Browser client
 - `lib/supabase/server.ts` - Server Component client
 - `lib/supabase/middleware.ts` - Session refresh and route protection
@@ -96,10 +109,12 @@
 ## Remaining Tasks (Week 2)
 
 ### 🔄 P1-T7: Signup Page (3 hours)
+
 **Status:** In Progress
 **Dependencies:** P1-T6 complete
 
 **Todo:**
+
 - Create signup form with react-hook-form + Zod validation
 - Email, password fields with strength indicator
 - Profile setup (FTP, max HR, weight, age)
@@ -108,10 +123,12 @@
 - Redirect to dashboard on success
 
 ### 📋 P1-T8: Login Page (2 hours)
+
 **Status:** Pending
 **Dependencies:** P1-T7 complete
 
 **Todo:**
+
 - Create login form with email/password
 - Remember me checkbox
 - Link to password recovery
@@ -119,10 +136,12 @@
 - Redirect authenticated users to dashboard
 
 ### 📋 P1-T9: Password Recovery (2 hours)
+
 **Status:** Pending
 **Dependencies:** P1-T8 complete
 
 **Todo:**
+
 - Password reset request page
 - Email sent confirmation
 - Password reset form
@@ -130,10 +149,12 @@
 - Success/error messaging
 
 ### 📋 P1-T10: Protected Route Middleware (2 hours)
+
 **Status:** Pending (partially complete)
 **Dependencies:** P1-T7 complete
 
 **Todo:**
+
 - Enhance existing middleware
 - Add session refresh logic
 - Handle expired sessions
@@ -141,10 +162,12 @@
 - Test with actual authentication
 
 ### 📋 P1-T11: App Layout with Navbar (4 hours)
+
 **Status:** Pending
 **Dependencies:** P1-T10 complete
 
 **Todo:**
+
 - Create app layout structure
 - Top navigation bar with logo
 - User menu (profile, settings, logout)
@@ -153,10 +176,12 @@
 - Active route highlighting
 
 ### 📋 P1-T12: Dashboard Home Page (2 hours)
+
 **Status:** Pending
 **Dependencies:** P1-T11 complete
 
 **Todo:**
+
 - Welcome message with user name
 - Quick stats cards (placeholder data)
 - Empty state for new users
@@ -184,6 +209,7 @@
    - Save for next step
 
 3. **Link Local Project to Cloud:**
+
    ```bash
    cd /Users/eduardo/Documents/projects/cycling-ai-analysis/web
    supabase login
@@ -191,11 +217,13 @@
    ```
 
 4. **Push Migrations to Cloud:**
+
    ```bash
    supabase db push
    ```
 
 5. **Configure Environment Variables:**
+
    ```bash
    # Create .env.local from .env.example
    cp .env.example .env.local
@@ -218,6 +246,7 @@
 ## Quality Metrics
 
 ### Code Quality
+
 - ✅ TypeScript strict mode enabled
 - ✅ ESLint passing (6 warnings - acceptable non-null assertions)
 - ✅ Prettier formatting applied
@@ -225,17 +254,20 @@
 - ✅ No runtime errors
 
 ### Test Coverage
+
 - 🔄 Unit tests: Not yet implemented (Phase 1 focus is infrastructure)
 - 🔄 Integration tests: Will be added in Phase 2
 - 🔄 E2E tests: Will be added in Phase 3
 
 ### Performance
+
 - ✅ Production build optimized
 - ✅ React Compiler enabled (automatic memoization)
 - ✅ Turbopack build tool (faster compilation)
 - ✅ Static generation where possible
 
 ### Security
+
 - ✅ Row-Level Security enabled on all tables
 - ✅ Environment variables for secrets
 - ✅ .env.local in .gitignore
@@ -247,6 +279,7 @@
 ## Architecture Overview
 
 ### Frontend Stack
+
 - **Framework:** Next.js 16.0.6 (App Router)
 - **Language:** TypeScript 5.0+ (strict mode)
 - **Styling:** Tailwind CSS 4.0
@@ -255,6 +288,7 @@
 - **State:** React Server Components + Client Components
 
 ### Backend Stack
+
 - **Database:** PostgreSQL (Supabase)
 - **Auth:** Supabase Auth
 - **API:** PostgREST (auto-generated from schema)
@@ -262,11 +296,13 @@
 - **Realtime:** Supabase Realtime (future use for live updates)
 
 ### Middleware
+
 - Session management and refresh
 - Protected route enforcement
 - Automatic redirects for auth state
 
 ### Database Design
+
 ```
 auth.users (Supabase managed)
     ↓
@@ -289,6 +325,7 @@ reports (1:many)
 **Estimated Time:** 3 hours
 
 **Implementation Steps:**
+
 1. Create signup route: `app/(auth)/signup/page.tsx`
 2. Build form with react-hook-form + Zod schema
 3. Integrate Supabase Auth signup
@@ -298,10 +335,12 @@ reports (1:many)
 7. Add loading states and error handling
 
 **Prerequisites:**
+
 - User must complete Supabase cloud setup (see above)
 - Environment variables configured
 
 **Testing Checklist:**
+
 - [ ] Form validation works (email, password strength)
 - [ ] Duplicate email shows error
 - [ ] Successful signup creates user + profile
