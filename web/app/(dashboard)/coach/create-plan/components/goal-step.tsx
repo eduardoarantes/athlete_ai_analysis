@@ -1,4 +1,5 @@
 'use client'
+/* eslint-disable react-hooks/set-state-in-effect -- Intentional prop-to-state sync for session restoration */
 
 import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'

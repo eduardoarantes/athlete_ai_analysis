@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Mountain, Bike, Footprints, Waves, Activity, Dumbbell } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -112,23 +112,26 @@ export function StatsPanel({
   const activeSport = selectedSport ?? (topSports[0] || null)
 
   // Filter activities by selected sport
-  const filterBySport = (activities: ActivityStats[]) => {
-    if (!activeSport) return activities
-    return activities.filter((a) => getGroupedSport(a.sport_type) === activeSport)
-  }
+  const filterBySport = useCallback(
+    (activities: ActivityStats[]) => {
+      if (!activeSport) return activities
+      return activities.filter((a) => getGroupedSport(a.sport_type) === activeSport)
+    },
+    [activeSport]
+  )
 
   // Calculate filtered stats
   const yearStats = useMemo(
     () => calculateStats(filterBySport(yearActivities)),
-    [yearActivities, activeSport]
+    [yearActivities, filterBySport]
   )
   const monthStats = useMemo(
     () => calculateStats(filterBySport(monthActivities)),
-    [monthActivities, activeSport]
+    [monthActivities, filterBySport]
   )
   const lastWeekStats = useMemo(
     () => calculateStats(filterBySport(lastWeekActivities)),
-    [lastWeekActivities, activeSport]
+    [lastWeekActivities, filterBySport]
   )
 
   if (topSports.length === 0) {

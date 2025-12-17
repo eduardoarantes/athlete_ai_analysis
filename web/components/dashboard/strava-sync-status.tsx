@@ -104,7 +104,7 @@ export function StravaSyncStatus() {
         setError(error)
         toast.error(error)
       }
-    } catch (err) {
+    } catch {
       const error = 'Failed to start sync'
       setError(error)
       toast.error(error)
