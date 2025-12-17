@@ -5,6 +5,37 @@
 
 ---
 
+## Code Quality Checks (REQUIRED)
+
+**Before committing changes, run these checks:**
+
+```bash
+# 1. TypeScript - requires full project context for path aliases and JSX
+pnpm type-check
+
+# 2. Lint only changed TypeScript/TSX files
+pnpm lint $(git diff --name-only --diff-filter=ACMR main | grep -E '\.(ts|tsx)$')
+
+# 3. Format check only changed files
+pnpm format:check $(git diff --name-only --diff-filter=ACMR main)
+```
+
+**If format issues are found, auto-fix with:**
+
+```bash
+pnpm format $(git diff --name-only --diff-filter=ACMR main)
+```
+
+**Do not commit if there are:**
+
+- TypeScript type errors in files you modified
+- ESLint errors (pre-existing warnings in unchanged files are acceptable)
+- Formatting issues in files you modified
+
+**Note:** Only fix issues in files you modified. Do not fix pre-existing issues in unrelated files.
+
+---
+
 ## Field Validation Pattern
 
 When implementing form validation that communicates with an API, follow this pattern to ensure validation errors are displayed to users.
