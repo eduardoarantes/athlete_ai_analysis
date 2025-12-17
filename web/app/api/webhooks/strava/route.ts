@@ -2,16 +2,21 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { errorLogger } from '@/lib/monitoring/error-logger'
 
-// Webhook verify token - MUST be set in environment variables
-const WEBHOOK_VERIFY_TOKEN = process.env.STRAVA_WEBHOOK_VERIFY_TOKEN
-
-if (!WEBHOOK_VERIFY_TOKEN) {
-  throw new Error(
-    'STRAVA_WEBHOOK_VERIFY_TOKEN environment variable is required. ' +
-      'This token is used to verify webhook requests from Strava. ' +
-      'Set it in your .env.local file for development or in your deployment environment variables. ' +
-      'Example: STRAVA_WEBHOOK_VERIFY_TOKEN=your_random_secure_token'
-  )
+/**
+ * Get webhook verify token at runtime (not build time)
+ * This prevents build failures when the env var is not set during CI
+ */
+function getWebhookVerifyToken(): string {
+  const token = process.env.STRAVA_WEBHOOK_VERIFY_TOKEN
+  if (!token) {
+    throw new Error(
+      'STRAVA_WEBHOOK_VERIFY_TOKEN environment variable is required. ' +
+        'This token is used to verify webhook requests from Strava. ' +
+        'Set it in your .env.local file for development or in your deployment environment variables. ' +
+        'Example: STRAVA_WEBHOOK_VERIFY_TOKEN=your_random_secure_token'
+    )
+  }
+  return token
 }
 
 interface StravaWebhookEvent {
@@ -47,7 +52,7 @@ export async function GET(request: NextRequest) {
     })
 
     // Verify the token
-    if (mode === 'subscribe' && token === WEBHOOK_VERIFY_TOKEN) {
+    if (mode === 'subscribe' && token === getWebhookVerifyToken()) {
       errorLogger.logInfo('Webhook verification successful')
       return NextResponse.json({ 'hub.challenge': challenge })
     } else {
