@@ -58,27 +58,43 @@ def mock_workout() -> Workout:
 
 @pytest.fixture
 def weekly_overview_data() -> dict:
-    """Create sample weekly overview data from Phase 3a."""
+    """Create sample weekly overview data from Phase 3a.
+
+    Data structure matches what plan_overview_tool produces:
+    - week_number (not week)
+    - workout_types as array (not workout_type string)
+    - total_hours required for time budget calculations
+    """
     return {
         "weekly_overview": [
             {
-                "week": 1,
+                "week_number": 1,
                 "phase": "Base",
+                "total_hours": 6.5,
+                "target_tss": 310,
                 "training_days": [
-                    {"weekday": "Monday", "workout_type": "endurance", "target_tss": 65},
-                    {"weekday": "Wednesday", "workout_type": "sweetspot", "target_tss": 85},
-                    {"weekday": "Friday", "workout_type": "endurance", "target_tss": 70},
-                    {"weekday": "Saturday", "workout_type": "endurance", "target_tss": 90},
+                    {"weekday": "Monday", "workout_types": ["endurance"]},
+                    {"weekday": "Tuesday", "workout_types": ["rest"]},
+                    {"weekday": "Wednesday", "workout_types": ["sweetspot"]},
+                    {"weekday": "Thursday", "workout_types": ["rest"]},
+                    {"weekday": "Friday", "workout_types": ["endurance"]},
+                    {"weekday": "Saturday", "workout_types": ["endurance"]},
+                    {"weekday": "Sunday", "workout_types": ["rest"]},
                 ],
             },
             {
-                "week": 2,
+                "week_number": 2,
                 "phase": "Base",
+                "total_hours": 7.0,
+                "target_tss": 330,
                 "training_days": [
-                    {"weekday": "Monday", "workout_type": "endurance", "target_tss": 70},
-                    {"weekday": "Wednesday", "workout_type": "sweetspot", "target_tss": 90},
-                    {"weekday": "Friday", "workout_type": "endurance", "target_tss": 75},
-                    {"weekday": "Saturday", "workout_type": "endurance", "target_tss": 95},
+                    {"weekday": "Monday", "workout_types": ["endurance"]},
+                    {"weekday": "Tuesday", "workout_types": ["rest"]},
+                    {"weekday": "Wednesday", "workout_types": ["sweetspot"]},
+                    {"weekday": "Thursday", "workout_types": ["rest"]},
+                    {"weekday": "Friday", "workout_types": ["endurance"]},
+                    {"weekday": "Saturday", "workout_types": ["endurance"]},
+                    {"weekday": "Sunday", "workout_types": ["rest"]},
                 ],
             },
         ]
@@ -97,10 +113,6 @@ def temp_overview_file(tmp_path: Path, weekly_overview_data: dict) -> Path:
     return overview_path
 
 
-@pytest.mark.skip(
-    reason="Tests failing with KeyError: 'total_hours' - data structure mismatch "
-    "between test fixtures and implementation expectations"
-)
 class TestLibraryBasedTrainingPlanningWeeks:
     """Test library-based training planning phase."""
 
@@ -124,9 +136,10 @@ class TestLibraryBasedTrainingPlanningWeeks:
             overview = phase._load_weekly_overview(plan_id)
 
         assert len(overview) == 2
-        assert overview[0]["week"] == 1
+        assert overview[0]["week_number"] == 1
         assert overview[0]["phase"] == "Base"
-        assert len(overview[0]["training_days"]) == 4
+        assert overview[0]["total_hours"] == 6.5
+        assert len(overview[0]["training_days"]) == 7  # All 7 weekdays
 
     def test_load_weekly_overview_missing_file(self, tmp_path: Path) -> None:
         """Test error when overview file is missing."""
