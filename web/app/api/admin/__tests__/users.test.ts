@@ -92,7 +92,7 @@ describe('GET /api/admin/users', () => {
   })
 
   it('applies filters from query parameters', async () => {
-    const mockRpc = vi.fn().mockImplementation((funcName, params) => {
+    const mockRpc = vi.fn().mockImplementation((funcName, _params) => {
       if (funcName === 'get_admin_users') {
         return Promise.resolve({ data: [], error: null })
       }

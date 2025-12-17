@@ -264,7 +264,6 @@ describe('PATCH /api/admin/users/[id]', () => {
   })
 
   it('returns 404 when user subscription not found', async () => {
-    let fromCallCount = 0
     const mockFrom = vi.fn().mockImplementation((table) => {
       if (table === 'subscription_plans') {
         return {
