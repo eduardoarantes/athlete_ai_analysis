@@ -56,8 +56,9 @@ app.add_middleware(
 )
 
 
-# Health check endpoint
+# Health check endpoint (both at root and /api for CloudFront routing)
 @app.get("/health", tags=["health"])
+@app.get("/api/health", tags=["health"], include_in_schema=False)
 async def health_check() -> JSONResponse:
     """
     Health check endpoint.
@@ -75,6 +76,8 @@ async def health_check() -> JSONResponse:
 
 # Root endpoint
 @app.get("/", tags=["root"])
+@app.get("/api", tags=["root"], include_in_schema=False)
+@app.get("/api/", tags=["root"], include_in_schema=False)
 async def root() -> JSONResponse:
     """
     Root endpoint with API information.

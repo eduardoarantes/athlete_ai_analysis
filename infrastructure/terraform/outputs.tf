@@ -23,8 +23,18 @@ output "lambda_function_arn" {
 }
 
 output "lambda_url" {
-  description = "Lambda Function URL for API access"
+  description = "Lambda Function URL (internal, blocked by account policy)"
   value       = aws_lambda_function_url.api.function_url
+}
+
+output "api_gateway_url" {
+  description = "API Gateway URL (direct access)"
+  value       = aws_apigatewayv2_api.api.api_endpoint
+}
+
+output "api_url" {
+  description = "API URL via CloudFront (recommended)"
+  value       = "https://${aws_cloudfront_distribution.web.domain_name}/api"
 }
 
 # S3 outputs
@@ -68,6 +78,6 @@ output "deployment_commands" {
 output "web_env_vars" {
   description = "Environment variables to set in web/.env.production"
   value = {
-    NEXT_PUBLIC_API_URL = aws_lambda_function_url.api.function_url
+    NEXT_PUBLIC_API_URL = "https://${aws_cloudfront_distribution.web.domain_name}/api"
   }
 }

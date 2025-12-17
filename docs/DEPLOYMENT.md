@@ -163,6 +163,23 @@ Create a custom IAM policy with these permissions:
       "Resource": "*"
     },
     {
+      "Sid": "APIGateway",
+      "Effect": "Allow",
+      "Action": [
+        "apigateway:POST",
+        "apigateway:GET",
+        "apigateway:PUT",
+        "apigateway:DELETE",
+        "apigateway:PATCH",
+        "apigateway:TagResource",
+        "apigateway:UntagResource"
+      ],
+      "Resource": [
+        "arn:aws:apigateway:*::/v2/*",
+        "arn:aws:apigateway:*::/tags/*"
+      ]
+    },
+    {
       "Sid": "CloudWatchLogs",
       "Effect": "Allow",
       "Action": [
@@ -170,11 +187,16 @@ Create a custom IAM policy with these permissions:
         "logs:DeleteLogGroup",
         "logs:DescribeLogGroups",
         "logs:ListTagsLogGroup",
+        "logs:ListTagsForResource",
         "logs:PutRetentionPolicy",
         "logs:TagLogGroup",
+        "logs:TagResource",
         "logs:UntagLogGroup"
       ],
-      "Resource": "arn:aws:logs:*:*:log-group:/aws/lambda/cycling-ai-*"
+      "Resource": [
+        "arn:aws:logs:*:*:log-group:/aws/lambda/cycling-ai-*",
+        "arn:aws:logs:*:*:log-group:/aws/apigateway/cycling-ai-*"
+      ]
     },
     {
       "Sid": "DynamoDB",

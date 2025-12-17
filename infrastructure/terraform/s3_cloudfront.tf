@@ -1,4 +1,5 @@
 # Cycling AI Analysis - S3 and CloudFront for Next.js Static Hosting
+# Also serves as a proxy for the Lambda API at /api/*
 
 # S3 bucket for static Next.js files
 resource "aws_s3_bucket" "web" {
@@ -28,11 +29,20 @@ resource "aws_s3_bucket_versioning" "web" {
   }
 }
 
-# CloudFront Origin Access Control
+# CloudFront Origin Access Control for S3
 resource "aws_cloudfront_origin_access_control" "web" {
   name                              = "${local.name_prefix}-web-oac"
   description                       = "OAC for ${local.name_prefix} web bucket"
   origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
+
+# CloudFront Origin Access Control for Lambda
+resource "aws_cloudfront_origin_access_control" "api" {
+  name                              = "${local.name_prefix}-api-oac"
+  description                       = "OAC for ${local.name_prefix} Lambda API"
+  origin_access_control_origin_type = "lambda"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
 }
@@ -52,6 +62,33 @@ resource "aws_cloudfront_distribution" "web" {
     domain_name              = aws_s3_bucket.web.bucket_regional_domain_name
     origin_id                = "S3Origin"
     origin_access_control_id = aws_cloudfront_origin_access_control.web.id
+  }
+
+  # API Gateway origin
+  origin {
+    domain_name = replace(aws_apigatewayv2_api.api.api_endpoint, "https://", "")
+    origin_id   = "APIGatewayOrigin"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  # API cache behavior - forward all requests to API Gateway (no caching)
+  ordered_cache_behavior {
+    path_pattern           = "/api/*"
+    allowed_methods        = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "APIGatewayOrigin"
+    viewer_protocol_policy = "redirect-to-https"
+    compress               = true
+
+    # Use AWS managed CachingDisabled policy
+    cache_policy_id          = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
+    origin_request_policy_id = aws_cloudfront_origin_request_policy.api.id
   }
 
   default_cache_behavior {
@@ -156,7 +193,7 @@ resource "aws_cloudfront_cache_policy" "immutable" {
   }
 }
 
-# Origin request policy
+# Origin request policy for web (S3)
 resource "aws_cloudfront_origin_request_policy" "web" {
   name    = "${local.name_prefix}-web-origin-policy"
   comment = "Origin request policy for ${local.name_prefix}"
@@ -169,6 +206,26 @@ resource "aws_cloudfront_origin_request_policy" "web" {
   }
   query_strings_config {
     query_string_behavior = "none"
+  }
+}
+
+# Origin request policy for API - forward headers and query strings
+resource "aws_cloudfront_origin_request_policy" "api" {
+  name    = "${local.name_prefix}-api-origin-policy"
+  comment = "Origin request policy for ${local.name_prefix} API"
+
+  cookies_config {
+    cookie_behavior = "all"
+  }
+  headers_config {
+    header_behavior = "whitelist"
+    headers {
+      # Note: Authorization is handled separately by OAC, don't include it here
+      items = ["Content-Type", "Accept", "Origin", "Referer", "Accept-Language"]
+    }
+  }
+  query_strings_config {
+    query_string_behavior = "all"
   }
 }
 

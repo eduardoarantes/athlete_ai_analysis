@@ -63,10 +63,10 @@ resource "aws_lambda_function" "api" {
   }
 }
 
-# Lambda Function URL (simpler than API Gateway for prototype)
+# Lambda Function URL (accessed via CloudFront as custom origin)
 resource "aws_lambda_function_url" "api" {
   function_name      = aws_lambda_function.api.function_name
-  authorization_type = "NONE" # Auth handled by JWT middleware in the app
+  authorization_type = "NONE" # CloudFront accesses as custom origin
 
   cors {
     allow_credentials = true
@@ -95,4 +95,13 @@ resource "aws_lambda_permission" "cloudwatch" {
   function_name = aws_lambda_function.api.function_name
   principal     = "logs.${var.aws_region}.amazonaws.com"
   source_arn    = "${aws_cloudwatch_log_group.lambda.arn}:*"
+}
+
+# Lambda permission for Function URL public access (CloudFront accesses this)
+resource "aws_lambda_permission" "function_url" {
+  statement_id           = "FunctionURLAllowPublicAccess"
+  action                 = "lambda:InvokeFunctionUrl"
+  function_name          = aws_lambda_function.api.function_name
+  principal              = "*"
+  function_url_auth_type = "NONE"
 }

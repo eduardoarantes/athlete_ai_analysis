@@ -27,6 +27,7 @@ anthropic>=0.18.0
 pandas>=2.1.0
 numpy>=1.26.0
 pyarrow>=14.0.0
+fitdecode>=0.10.0
 
 # Configuration
 pyyaml>=6.0.0
