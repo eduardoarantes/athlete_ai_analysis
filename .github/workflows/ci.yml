@@ -86,11 +86,12 @@ jobs:
           key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
 
       - name: Install dependencies
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --no-root
 
-      - name: Install project
-        run: poetry install --no-interaction
+      - name: Install project in editable mode with dev dependencies
+        run: |
+          source .venv/bin/activate
+          pip install -e ".[dev]"
 
       - name: Run tests
         run: |
