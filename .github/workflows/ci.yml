@@ -89,8 +89,10 @@ jobs:
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --no-root
 
-      - name: Install project
-        run: poetry install --no-interaction
+      - name: Install project in editable mode
+        run: |
+          source .venv/bin/activate
+          pip install -e .
 
       - name: Run tests
         run: |
