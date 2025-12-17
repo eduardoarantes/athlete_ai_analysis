@@ -1,0 +1,27 @@
+# Cycling AI Analysis - Terraform Variables Example
+# Copy this file to terraform.tfvars and fill in your values
+# DO NOT commit terraform.tfvars to version control!
+
+# AWS Configuration
+aws_region   = "us-east-1"
+environment  = "prod"
+project_name = "cycling-ai"
+
+# Supabase Configuration (from Supabase Dashboard > Settings > API)
+supabase_url              = "https://your-project-ref.supabase.co"
+supabase_anon_key         = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+supabase_service_role_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+supabase_jwt_secret       = "your-jwt-secret-from-supabase"
+
+# API Keys
+anthropic_api_key = "sk-ant-..."
+google_api_key    = ""  # Optional
+openai_api_key    = ""  # Optional
+
+# Lambda Configuration (Free Tier friendly defaults)
+lambda_memory_size = 512  # MB
+lambda_timeout     = 300  # seconds (5 min)
+
+# Custom Domain (optional)
+# custom_domain   = "app.yourdomain.com"
+# certificate_arn = "arn:aws:acm:us-east-1:123456789:certificate/..."

@@ -55,3 +55,13 @@ cache/
 reports/
 logs/
 .playwright-mcp
+
+# Terraform
+infrastructure/terraform/.terraform/
+infrastructure/terraform/*.tfstate
+infrastructure/terraform/*.tfstate.*
+infrastructure/terraform/terraform.tfvars
+infrastructure/terraform/.terraform.lock.hcl
+
+# Lambda build artifacts
+dist/

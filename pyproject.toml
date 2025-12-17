@@ -53,6 +53,10 @@ dependencies = [
     "fastapi>=0.109.0",
     "uvicorn[standard]>=0.27.0",
     "python-multipart>=0.0.6",
+    # AWS Lambda adapter
+    "mangum>=0.17.0",
+    # JWT validation for Supabase auth
+    "python-jose[cryptography]>=3.3.0",
 ]
 
 [project.scripts]
@@ -179,6 +183,18 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "uvicorn.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "mangum.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "jose.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "starlette.*"
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

@@ -1,0 +1,44 @@
+# Lambda deployment dependencies
+# Used by scripts/build-lambda.sh to create the deployment package
+#
+# Keep minimal for Lambda size limits (50MB zipped, 250MB unzipped)
+# Do not include dev dependencies (pytest, mypy, etc.)
+
+# Core
+mangum>=0.17.0
+fastapi>=0.109.0
+pydantic>=2.0.0
+pydantic-settings>=2.1.0
+
+# Authentication
+python-jose[cryptography]>=3.3.0
+
+# HTTP client
+httpx>=0.25.0
+
+# LLM Providers (include only what you need for Lambda)
+anthropic>=0.18.0
+# openai>=1.0.0        # Uncomment if using OpenAI
+# google-genai>=1.0.0  # Uncomment if using Gemini
+
+# Data processing (minimal for API)
+# Note: For Lambda, consider using pre-processed data from Supabase
+# rather than processing CSV/Parquet files in Lambda
+pandas>=2.1.0
+numpy>=1.26.0
+pyarrow>=14.0.0
+
+# Configuration
+pyyaml>=6.0.0
+python-dateutil>=2.8.0
+
+# Templating (for report generation)
+jinja2>=3.1.0
+
+# Note: The following large dependencies are intentionally excluded
+# to keep Lambda package size manageable:
+# - chromadb (400MB+) - Use external vector DB service instead
+# - sentence-transformers (500MB+) - Use API-based embeddings
+# - langchain (large, many deps) - Direct API calls instead
+# - ollama (local only, not needed in Lambda)
+# - boto3/botocore (provided by Lambda runtime)

@@ -1,0 +1,363 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      # Only deploy when relevant files change
+      - 'src/**'
+      - 'web/**'
+      - 'infrastructure/**'
+      - 'requirements-lambda.txt'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'prod'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+      deploy_lambda:
+        description: 'Deploy Lambda function'
+        required: false
+        default: true
+        type: boolean
+      deploy_web:
+        description: 'Deploy web application'
+        required: false
+        default: true
+        type: boolean
+      terraform_apply:
+        description: 'Apply Terraform changes'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  AWS_REGION: us-east-1
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '20'
+  TERRAFORM_VERSION: '1.6.0'
+  # Default to prod for push events, use input for workflow_dispatch
+  TF_WORKSPACE: ${{ github.event.inputs.environment || 'prod' }}
+
+jobs:
+  # Run tests first before deploying
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        run: poetry install --no-interaction --no-root
+
+      - name: Install project
+        run: |
+          source .venv/bin/activate
+          pip install -e ".[dev]"
+
+      - name: Run tests
+        run: |
+          source .venv/bin/activate
+          pytest tests/ -v --tb=short -q
+
+  # Build Lambda deployment package
+  build-lambda:
+    name: Build Lambda Package
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' || github.event.inputs.deploy_lambda == 'true'
+    outputs:
+      artifact-name: lambda-package
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Build Lambda package
+        run: |
+          # Create dist directory
+          rm -rf dist && mkdir -p dist/package
+
+          # Install dependencies for Lambda (Linux x86_64)
+          pip install \
+            --platform manylinux2014_x86_64 \
+            --target dist/package \
+            --implementation cp \
+            --python-version 3.11 \
+            --only-binary=:all: \
+            --upgrade \
+            -r requirements-lambda.txt
+
+          # Copy source code
+          cp -r src/cycling_ai dist/package/
+
+          # Clean up unnecessary files
+          cd dist/package
+          find . -type d -name "tests" -exec rm -rf {} + 2>/dev/null || true
+          find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+          find . -name "*.pyc" -delete 2>/dev/null || true
+
+          # Create zip
+          zip -r9 ../lambda.zip . -x "*.pyc" -x "*__pycache__*"
+
+      - name: Upload Lambda artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lambda-package
+          path: dist/lambda.zip
+          retention-days: 1
+
+  # Build Next.js static export
+  build-web:
+    name: Build Web Application
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' || github.event.inputs.deploy_web == 'true'
+    outputs:
+      artifact-name: web-build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        working-directory: ./web
+        run: pnpm install --frozen-lockfile
+
+      - name: Build static export
+        working-directory: ./web
+        env:
+          NEXT_EXPORT: 'true'
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+          NEXT_PUBLIC_ENV: production
+        run: pnpm build
+
+      - name: Upload web artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-build
+          path: web/out
+          retention-days: 1
+
+  # Deploy infrastructure with Terraform
+  terraform:
+    name: Terraform (${{ github.event.inputs.environment || 'prod' }})
+    runs-on: ubuntu-latest
+    needs: [build-lambda]
+    if: github.event_name == 'push' || github.event.inputs.terraform_apply == 'true'
+    environment: ${{ github.event.inputs.environment || 'prod' }}
+    defaults:
+      run:
+        working-directory: infrastructure/terraform
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download Lambda artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: lambda-package
+          path: dist
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Terraform Init
+        run: terraform init -backend-config="bucket=${{ secrets.TERRAFORM_STATE_BUCKET }}"
+
+      - name: Select Terraform Workspace
+        run: |
+          terraform workspace select ${{ env.TF_WORKSPACE }} || terraform workspace new ${{ env.TF_WORKSPACE }}
+          echo "Using workspace: $(terraform workspace show)"
+
+      - name: Terraform Plan
+        run: |
+          terraform plan \
+            -var="supabase_url=${{ secrets.SUPABASE_URL }}" \
+            -var="supabase_anon_key=${{ secrets.SUPABASE_ANON_KEY }}" \
+            -var="supabase_service_role_key=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -var="supabase_jwt_secret=${{ secrets.SUPABASE_JWT_SECRET }}" \
+            -var="anthropic_api_key=${{ secrets.ANTHROPIC_API_KEY }}" \
+            -out=tfplan
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main'
+        run: terraform apply -auto-approve tfplan
+
+  # Deploy Lambda function
+  deploy-lambda:
+    name: Deploy Lambda (${{ github.event.inputs.environment || 'prod' }})
+    runs-on: ubuntu-latest
+    needs: [build-lambda, terraform]
+    if: always() && needs.build-lambda.result == 'success' && (github.event_name == 'push' || github.event.inputs.deploy_lambda == 'true')
+    environment: ${{ github.event.inputs.environment || 'prod' }}
+    steps:
+      - name: Download Lambda artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: lambda-package
+          path: dist
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy to Lambda
+        run: |
+          FUNCTION_NAME="cycling-ai-${{ env.TF_WORKSPACE }}-api"
+          echo "Deploying to Lambda function: $FUNCTION_NAME"
+          aws lambda update-function-code \
+            --function-name "$FUNCTION_NAME" \
+            --zip-file fileb://dist/lambda.zip \
+            --publish
+
+      - name: Wait for Lambda update
+        run: |
+          FUNCTION_NAME="cycling-ai-${{ env.TF_WORKSPACE }}-api"
+          aws lambda wait function-updated \
+            --function-name "$FUNCTION_NAME"
+
+  # Deploy web to S3/CloudFront
+  deploy-web:
+    name: Deploy Web
+    runs-on: ubuntu-latest
+    needs: [build-web, terraform]
+    if: always() && needs.build-web.result == 'success' && (github.event_name == 'push' || github.event.inputs.deploy_web == 'true')
+    environment: ${{ github.event.inputs.environment || 'prod' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download web artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: web-build
+          path: web/out
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - name: Get deployment outputs from Terraform
+        id: tf-outputs
+        working-directory: infrastructure/terraform
+        run: |
+          terraform init -backend-config="bucket=${{ secrets.TERRAFORM_STATE_BUCKET }}"
+          terraform workspace select ${{ env.TF_WORKSPACE }} || terraform workspace new ${{ env.TF_WORKSPACE }}
+          echo "s3_bucket=$(terraform output -raw s3_bucket_name)" >> $GITHUB_OUTPUT
+          echo "cloudfront_id=$(terraform output -raw cloudfront_distribution_id)" >> $GITHUB_OUTPUT
+
+      - name: Deploy to S3
+        run: |
+          echo "Deploying to S3 bucket: ${{ steps.tf-outputs.outputs.s3_bucket }}"
+          aws s3 sync web/out/ s3://${{ steps.tf-outputs.outputs.s3_bucket }} \
+            --delete \
+            --cache-control "public, max-age=31536000, immutable" \
+            --exclude "*.html" \
+            --exclude "*.json"
+
+          # HTML and JSON files with shorter cache
+          aws s3 sync web/out/ s3://${{ steps.tf-outputs.outputs.s3_bucket }} \
+            --cache-control "public, max-age=0, must-revalidate" \
+            --include "*.html" \
+            --include "*.json"
+
+      - name: Invalidate CloudFront
+        run: |
+          echo "Invalidating CloudFront distribution: ${{ steps.tf-outputs.outputs.cloudfront_id }}"
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ steps.tf-outputs.outputs.cloudfront_id }} \
+            --paths "/*"
+
+  # Summary job
+  summary:
+    name: Deployment Summary
+    runs-on: ubuntu-latest
+    needs: [deploy-lambda, deploy-web]
+    if: always()
+    steps:
+      - name: Summary
+        run: |
+          echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ env.TF_WORKSPACE }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Component | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Lambda | ${{ needs.deploy-lambda.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Web | ${{ needs.deploy-web.result }} |" >> $GITHUB_STEP_SUMMARY
