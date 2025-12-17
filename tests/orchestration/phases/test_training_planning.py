@@ -87,13 +87,14 @@ class TestPerformanceSummaryGeneration:
         assert "Tempo: 25.0%" in summary
 
 
-@pytest.mark.skip(reason="Tests need refactoring - implementation changed, mock setup outdated")
 class TestPhase3aOverviewSubphase:
     """Test Phase 3a: Training plan overview generation."""
 
     @pytest.fixture
     def mock_context(self, tmp_path):
         """Create mock PhaseContext."""
+        import json
+
         config = WorkflowConfig(
             athlete_profile_path=tmp_path / "athlete_profile.json",
             csv_file_path=tmp_path / "activities.csv",
@@ -103,11 +104,10 @@ class TestPhase3aOverviewSubphase:
         )
 
         # Create athlete profile file
-        import json
         profile_data = {
             "FTP": 260,
             "max_hr": 186,
-            "weight": "70kg",  # weight should be string with kg
+            "weight": "70kg",
             "age": 35,
             "goals": ["Improve FTP"],
             "training_availability": {
@@ -120,7 +120,10 @@ class TestPhase3aOverviewSubphase:
 
         session_manager = Mock(spec=SessionManager)
         provider = Mock()
+        provider.config.provider_name = "mock"
         prompts_manager = Mock()
+        prompts_manager.get_training_planning_overview_prompt.return_value = "System prompt"
+        prompts_manager.get_training_planning_overview_user_prompt.return_value = "User prompt"
 
         context = PhaseContext(
             config=config,
@@ -139,14 +142,22 @@ class TestPhase3aOverviewSubphase:
     @patch("cycling_ai.orchestration.phases.training_planning.AgentFactory")
     def test_execute_overview_subphase_success(self, mock_agent_factory, mock_context):
         """Phase 3a should successfully create plan overview."""
-        # Mock agent and tool call
+        import json
+
+        # Mock agent
         mock_agent = Mock()
         mock_agent_factory.create_agent.return_value = mock_agent
-        mock_agent.process_message.return_value = "Plan overview created with plan_id: test_plan_123"
+        mock_agent.process_message.return_value = "Plan overview created"
 
-        # Mock session
+        # Create mock session with proper tool result structure
+        mock_message = Mock()
+        mock_message.role = "tool"
+        mock_message.content = json.dumps({"plan_id": "test_plan_123"})
+        mock_message.tool_results = [{"success": True, "tool_name": "create_plan_overview"}]
+
         mock_session = Mock(spec=ConversationSession)
-        mock_session.messages = []
+        mock_session.messages = [mock_message]
+        mock_session.get_total_tokens.return_value = 1000
         mock_context.session_manager.create_session.return_value = mock_session
 
         phase = TrainingPlanningPhase()
@@ -155,70 +166,64 @@ class TestPhase3aOverviewSubphase:
         assert result.phase_name == "training_planning_overview"
         assert result.status == PhaseStatus.COMPLETED
         assert "plan_id" in result.extracted_data
+        assert result.extracted_data["plan_id"] == "test_plan_123"
 
-    def test_execute_overview_missing_ftp(self, mock_context, tmp_path):
+    def test_execute_overview_missing_ftp(self, mock_context):
         """Phase 3a should fail if FTP missing from profile."""
-        # Overwrite profile without FTP
-        import json
-        profile_data = {
-            "max_hr": 186,
-            "weight": "70kg",
-            "age": 35,
-            "goals": ["Improve FTP"],
-            "training_availability": {
-                "week_days": "Monday",
-                "hours_per_week": 8.0,
-            },
-        }
-        with open(mock_context.config.athlete_profile_path, "w") as f:
-            json.dump(profile_data, f)
+        # Mock athlete profile without FTP
+        mock_profile = Mock()
+        mock_profile.ftp = None  # Missing FTP!
+        mock_profile.get_training_days.return_value = ["Monday", "Wednesday", "Friday"]
+        mock_profile.get_weekly_training_hours.return_value = 8.0
 
         phase = TrainingPlanningPhase()
 
-        with pytest.raises(ValueError, match="(does not have a valid FTP|FTP.*required)"):
-            phase._execute_phase_3a_overview(mock_context)
+        # Patch at source module since import is local within the function
+        with patch(
+            "cycling_ai.core.athlete.load_athlete_profile",
+            return_value=mock_profile,
+        ):
+            with pytest.raises(ValueError, match="(does not have a valid FTP|FTP.*required)"):
+                phase._execute_phase_3a_overview(mock_context)
 
     def test_execute_overview_missing_training_days(self, mock_context):
         """Phase 3a should fail if no training days specified."""
-        # Overwrite profile without training days
-        import json
-        profile_data = {
-            "FTP": 260,
-            "max_hr": 186,
-            "weight": "70kg",
-            "age": 35,
-            "goals": ["Improve FTP"],
-            "training_availability": {
-                "week_days": "",  # Empty - no training days
-                "hours_per_week": 8.0,
-            },
-        }
-        with open(mock_context.config.athlete_profile_path, "w") as f:
-            json.dump(profile_data, f)
+        # Mock athlete profile with no available days
+        mock_profile = Mock()
+        mock_profile.ftp = 260
+        mock_profile.get_training_days.return_value = []  # No days!
+        mock_profile.get_weekly_training_hours.return_value = 8.0
 
         phase = TrainingPlanningPhase()
 
-        with pytest.raises(ValueError, match="(does not specify available training days|training days|available days)"):
-            phase._execute_phase_3a_overview(mock_context)
+        # Patch at source module since import is local within the function
+        with patch(
+            "cycling_ai.core.athlete.load_athlete_profile",
+            return_value=mock_profile,
+        ):
+            with pytest.raises(ValueError, match="(does not specify available training days|training days|available days)"):
+                phase._execute_phase_3a_overview(mock_context)
 
 
-@pytest.mark.skip(reason="Tests need refactoring - implementation changed, mock setup outdated")
 class TestPhase3bWeeksSubphase:
     """Test Phase 3b: Weekly workout details generation."""
 
     @pytest.fixture
     def mock_context_with_plan_id(self, tmp_path):
         """Create context with plan_id from Phase 3a."""
+        import json
+
+        plan_id = "test_plan_123"
+
         config = WorkflowConfig(
             athlete_profile_path=tmp_path / "athlete_profile.json",
             csv_file_path=tmp_path / "activities.csv",
             output_dir=tmp_path / "output",
-            training_plan_weeks=3,  # Small number for testing
+            training_plan_weeks=2,  # Small number for testing
             generate_training_plan=True,
         )
 
         # Create athlete profile
-        import json
         profile_data = {
             "FTP": 260,
             "max_hr": 186,
@@ -233,14 +238,56 @@ class TestPhase3bWeeksSubphase:
         with open(config.athlete_profile_path, "w") as f:
             json.dump(profile_data, f)
 
+        # Create the overview file that Phase 3b expects
+        overview_data = {
+            "weekly_overview": [
+                {
+                    "week_number": 1,
+                    "phase": "Base",
+                    "total_hours": 6.0,
+                    "target_tss": 300,
+                    "training_days": [
+                        {"weekday": "Monday", "workout_types": ["endurance"]},
+                        {"weekday": "Tuesday", "workout_types": ["rest"]},
+                        {"weekday": "Wednesday", "workout_types": ["sweetspot"]},
+                        {"weekday": "Thursday", "workout_types": ["rest"]},
+                        {"weekday": "Friday", "workout_types": ["recovery"]},
+                        {"weekday": "Saturday", "workout_types": ["rest"]},
+                        {"weekday": "Sunday", "workout_types": ["rest"]},
+                    ],
+                },
+                {
+                    "week_number": 2,
+                    "phase": "Base",
+                    "total_hours": 6.5,
+                    "target_tss": 320,
+                    "training_days": [
+                        {"weekday": "Monday", "workout_types": ["endurance"]},
+                        {"weekday": "Tuesday", "workout_types": ["rest"]},
+                        {"weekday": "Wednesday", "workout_types": ["sweetspot"]},
+                        {"weekday": "Thursday", "workout_types": ["rest"]},
+                        {"weekday": "Friday", "workout_types": ["recovery"]},
+                        {"weekday": "Saturday", "workout_types": ["rest"]},
+                        {"weekday": "Sunday", "workout_types": ["rest"]},
+                    ],
+                },
+            ]
+        }
+        overview_file = Path("/tmp") / f"{plan_id}_overview.json"
+        with open(overview_file, "w") as f:
+            json.dump(overview_data, f)
+
         session_manager = Mock(spec=SessionManager)
         provider = Mock()
+        provider.config.provider_name = "mock"
         prompts_manager = Mock()
+        prompts_manager.get_training_planning_weeks_prompt.return_value = "System prompt"
+        prompts_manager.get_training_planning_weeks_user_prompt.return_value = "User prompt"
 
         context = PhaseContext(
             config=config,
             previous_phase_data={
-                "plan_id": "test_plan_123",
+                "plan_id": plan_id,
                 "athlete_profile_path": str(config.athlete_profile_path),
             },
             session_manager=session_manager,
@@ -249,26 +296,50 @@ class TestPhase3bWeeksSubphase:
             progress_callback=None,
         )
 
-        return context
+        yield context
+
+        # Cleanup
+        if overview_file.exists():
+            overview_file.unlink()
 
     @patch("cycling_ai.orchestration.phases.training_planning.AgentFactory")
     def test_execute_weeks_subphase_success(self, mock_agent_factory, mock_context_with_plan_id):
         """Phase 3b should successfully add weekly details."""
+        import json
+
         # Mock agent
         mock_agent = Mock()
         mock_agent_factory.create_agent.return_value = mock_agent
-        mock_agent.process_message.return_value = "Week details added for all weeks"
+        mock_agent.process_message.return_value = "Week details added"
 
-        # Mock session
-        mock_session = Mock(spec=ConversationSession)
-        mock_session.messages = []
-        mock_context_with_plan_id.session_manager.create_session.return_value = mock_session
+        # Create mock session with proper tool result structure for each week
+        def create_week_session(week_num):
+            mock_message = Mock()
+            mock_message.role = "tool"
+            mock_message.content = json.dumps({"week_number": week_num})
+            mock_message.tool_results = [{"success": True, "tool_name": "add_week_details"}]
+
+            mock_session = Mock(spec=ConversationSession)
+            mock_session.messages = [mock_message]
+            mock_session.get_total_tokens.return_value = 500
+            return mock_session
+
+        # Return fresh session for each week
+        session_count = [0]
+
+        def create_session_side_effect(*args, **kwargs):
+            session_count[0] += 1
+            return create_week_session(session_count[0])
+
+        mock_context_with_plan_id.session_manager.create_session.side_effect = create_session_side_effect
 
         phase = TrainingPlanningPhase()
         result = phase._execute_phase_3b_weeks(mock_context_with_plan_id)
 
         assert result.phase_name == "training_planning_weeks"
         assert result.status == PhaseStatus.COMPLETED
+        assert "weeks_added" in result.extracted_data
+        assert len(result.extracted_data["weeks_added"]) == 2
 
     def test_execute_weeks_missing_plan_id(self, mock_context_with_plan_id):
         """Phase 3b should fail if plan_id missing."""
@@ -363,23 +434,26 @@ class TestPhase3cFinalizeSubphase:
             phase._execute_phase_3c_finalize(mock_context_with_plan_id)
 
 
-@pytest.mark.skip(reason="Tests need refactoring - implementation changed, mock setup outdated")
 class TestFullPhaseExecution:
     """Test full Phase 3 execution (all 3 sub-phases)."""
 
     @pytest.fixture
     def full_mock_context(self, tmp_path):
         """Create complete mock context for full execution."""
+        import json
+
+        plan_id = "test_full_plan"
+
         config = WorkflowConfig(
             athlete_profile_path=tmp_path / "athlete_profile.json",
             csv_file_path=tmp_path / "activities.csv",
             output_dir=tmp_path / "output",
             training_plan_weeks=2,  # Small for testing
             generate_training_plan=True,
+            workout_source="llm",  # Use LLM-based path for this test
         )
 
         # Create athlete profile
-        import json
         profile_data = {
             "FTP": 260,
             "max_hr": 186,
@@ -394,19 +468,38 @@ class TestFullPhaseExecution:
         with open(config.athlete_profile_path, "w") as f:
             json.dump(profile_data, f)
 
+        # Set up prompts_manager with all required methods
+        prompts_manager = Mock()
+        prompts_manager.get_training_planning_overview_prompt.return_value = "System"
+        prompts_manager.get_training_planning_overview_user_prompt.return_value = "User"
+        prompts_manager.get_training_planning_weeks_prompt.return_value = "System"
+        prompts_manager.get_training_planning_weeks_user_prompt.return_value = "User"
+
+        # Set up provider
+        provider = Mock()
+        provider.config.provider_name = "mock"
+
         context = PhaseContext(
             config=config,
             previous_phase_data={
                 "athlete_profile_path": str(config.athlete_profile_path),
                 "performance_data": {},
             },
-            session_manager=Mock(),
-            provider=Mock(),
-            prompts_manager=Mock(),
+            session_manager=Mock(spec=SessionManager),
+            provider=provider,
+            prompts_manager=prompts_manager,
             progress_callback=None,
         )
 
-        return context
+        # Store plan_id for use in tests
+        context._test_plan_id = plan_id
+
+        yield context
+
+        # Cleanup any overview files
+        overview_file = Path("/tmp") / f"{plan_id}_overview.json"
+        if overview_file.exists():
+            overview_file.unlink()
 
     @patch("cycling_ai.orchestration.phases.training_planning.FinalizePlanTool")
     @patch("cycling_ai.orchestration.phases.training_planning.AgentFactory")
@@ -414,37 +507,88 @@ class TestFullPhaseExecution:
         self, mock_agent_factory, mock_finalize_tool, full_mock_context
     ):
         """Test successful execution of all 3 sub-phases."""
-        # Mock Phase 3a (overview)
-        mock_agent_3a = Mock()
-        mock_agent_3b = Mock()
+        import json
 
-        def agent_side_effect(*args, **kwargs):
-            # Return different agent instances for 3a and 3b
-            if not hasattr(agent_side_effect, "call_count"):
-                agent_side_effect.call_count = 0
-            agent_side_effect.call_count += 1
+        plan_id = full_mock_context._test_plan_id
 
-            if agent_side_effect.call_count == 1:
-                return mock_agent_3a
+        # Mock agent
+        mock_agent = Mock()
+        mock_agent_factory.create_agent.return_value = mock_agent
+        mock_agent.process_message.return_value = "Success"
+
+        # Create session factory to return different sessions
+        session_call_count = [0]
+
+        def create_session_side_effect(*args, **kwargs):
+            session_call_count[0] += 1
+            mock_session = Mock(spec=ConversationSession)
+            mock_session.get_total_tokens.return_value = 500
+
+            if session_call_count[0] == 1:
+                # Phase 3a session - return plan_id
+                mock_message = Mock()
+                mock_message.role = "tool"
+                mock_message.content = json.dumps({"plan_id": plan_id})
+                mock_message.tool_results = [{"success": True, "tool_name": "create_plan_overview"}]
+                mock_session.messages = [mock_message]
+
+                # Create overview file for Phase 3b
+                overview_data = {
+                    "weekly_overview": [
+                        {
+                            "week_number": 1,
+                            "phase": "Base",
+                            "total_hours": 6.0,
+                            "target_tss": 300,
+                            "training_days": [
+                                {"weekday": "Monday", "workout_types": ["endurance"]},
+                                {"weekday": "Tuesday", "workout_types": ["rest"]},
+                                {"weekday": "Wednesday", "workout_types": ["sweetspot"]},
+                                {"weekday": "Thursday", "workout_types": ["rest"]},
+                                {"weekday": "Friday", "workout_types": ["recovery"]},
+                                {"weekday": "Saturday", "workout_types": ["rest"]},
+                                {"weekday": "Sunday", "workout_types": ["rest"]},
+                            ],
+                        },
+                        {
+                            "week_number": 2,
+                            "phase": "Base",
+                            "total_hours": 6.5,
+                            "target_tss": 320,
+                            "training_days": [
+                                {"weekday": "Monday", "workout_types": ["endurance"]},
+                                {"weekday": "Tuesday", "workout_types": ["rest"]},
+                                {"weekday": "Wednesday", "workout_types": ["sweetspot"]},
+                                {"weekday": "Thursday", "workout_types": ["rest"]},
+                                {"weekday": "Friday", "workout_types": ["recovery"]},
+                                {"weekday": "Saturday", "workout_types": ["rest"]},
+                                {"weekday": "Sunday", "workout_types": ["rest"]},
+                            ],
+                        },
+                    ]
+                }
+                overview_file = Path("/tmp") / f"{plan_id}_overview.json"
+                with open(overview_file, "w") as f:
+                    json.dump(overview_data, f)
             else:
-                return mock_agent_3b
+                # Phase 3b sessions - return week numbers
+                week_num = session_call_count[0] - 1
+                mock_message = Mock()
+                mock_message.role = "tool"
+                mock_message.content = json.dumps({"week_number": week_num})
+                mock_message.tool_results = [{"success": True, "tool_name": "add_week_details"}]
+                mock_session.messages = [mock_message]
 
-        mock_agent_factory.create_agent.side_effect = agent_side_effect
+            return mock_session
 
-        mock_agent_3a.process_message.return_value = "Overview created"
-        mock_agent_3b.process_message.return_value = "Weeks added"
-
-        # Mock sessions
-        mock_session = Mock(spec=ConversationSession)
-        mock_session.messages = []
-        full_mock_context.session_manager.create_session.return_value = mock_session
+        full_mock_context.session_manager.create_session.side_effect = create_session_side_effect
 
         # Mock Phase 3c (finalize)
         mock_tool = Mock()
         mock_finalize_tool.return_value = mock_tool
         mock_tool.execute.return_value = ToolExecutionResult(
             success=True,
-            data={"plan_id": "test_plan", "weeks": 2},
+            data={"plan_id": plan_id, "weeks": 2},
             format="json",
             metadata={"output_path": "/path/to/plan.json"},
         )
@@ -468,6 +612,7 @@ class TestFullPhaseExecution:
         # Mock session
         mock_session = Mock(spec=ConversationSession)
         mock_session.messages = []
+        mock_session.get_total_tokens.return_value = 100
         full_mock_context.session_manager.create_session.return_value = mock_session
 
         phase = TrainingPlanningPhase()
