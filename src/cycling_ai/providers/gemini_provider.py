@@ -291,7 +291,7 @@ class GeminiProvider(BaseProvider):
             # Call the API
             response = self.client.models.generate_content(
                 model=self.config.model,
-                contents=contents,  # type: ignore[arg-type]  # list[Content] is compatible at runtime
+                contents=contents,  # type: ignore[unused-ignore, arg-type]
                 config=generate_config,
             )
 
