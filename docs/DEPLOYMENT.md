@@ -41,6 +41,179 @@ User → CloudFront → S3 (Next.js static)
 2. **Supabase Cloud Project** (already set up)
 3. **GitHub Repository** with Actions enabled
 4. **AWS CLI** installed locally (for initial setup)
+5. **AWS IAM User** with deployment permissions (see below)
+
+## AWS IAM Permissions
+
+The AWS user needs permissions to create and manage the infrastructure resources.
+
+### Option A: Custom Policy (Recommended - Least Privilege)
+
+Create a custom IAM policy with these permissions:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "S3StateAndWeb",
+      "Effect": "Allow",
+      "Action": [
+        "s3:CreateBucket",
+        "s3:DeleteBucket",
+        "s3:GetBucketAcl",
+        "s3:GetBucketCORS",
+        "s3:GetBucketLocation",
+        "s3:GetBucketLogging",
+        "s3:GetBucketPolicy",
+        "s3:GetBucketPublicAccessBlock",
+        "s3:GetBucketTagging",
+        "s3:GetBucketVersioning",
+        "s3:GetBucketWebsite",
+        "s3:GetEncryptionConfiguration",
+        "s3:GetObject",
+        "s3:ListBucket",
+        "s3:PutBucketAcl",
+        "s3:PutBucketCORS",
+        "s3:PutBucketPolicy",
+        "s3:PutBucketPublicAccessBlock",
+        "s3:PutBucketTagging",
+        "s3:PutBucketVersioning",
+        "s3:PutBucketWebsite",
+        "s3:PutEncryptionConfiguration",
+        "s3:PutObject",
+        "s3:DeleteObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::cycling-ai-*",
+        "arn:aws:s3:::cycling-ai-*/*"
+      ]
+    },
+    {
+      "Sid": "Lambda",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:CreateFunction",
+        "lambda:DeleteFunction",
+        "lambda:GetFunction",
+        "lambda:GetFunctionCodeSigningConfig",
+        "lambda:GetFunctionConfiguration",
+        "lambda:GetFunctionUrlConfig",
+        "lambda:UpdateFunctionCode",
+        "lambda:UpdateFunctionConfiguration",
+        "lambda:CreateFunctionUrlConfig",
+        "lambda:DeleteFunctionUrlConfig",
+        "lambda:UpdateFunctionUrlConfig",
+        "lambda:AddPermission",
+        "lambda:RemovePermission",
+        "lambda:GetPolicy",
+        "lambda:ListTags",
+        "lambda:TagResource",
+        "lambda:UntagResource",
+        "lambda:PublishVersion"
+      ],
+      "Resource": "arn:aws:lambda:*:*:function:cycling-ai-*"
+    },
+    {
+      "Sid": "IAM",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateRole",
+        "iam:DeleteRole",
+        "iam:GetRole",
+        "iam:PassRole",
+        "iam:AttachRolePolicy",
+        "iam:DetachRolePolicy",
+        "iam:PutRolePolicy",
+        "iam:DeleteRolePolicy",
+        "iam:GetRolePolicy",
+        "iam:ListAttachedRolePolicies",
+        "iam:ListRolePolicies",
+        "iam:TagRole",
+        "iam:UntagRole",
+        "iam:ListInstanceProfilesForRole"
+      ],
+      "Resource": "arn:aws:iam::*:role/cycling-ai-*"
+    },
+    {
+      "Sid": "CloudFront",
+      "Effect": "Allow",
+      "Action": [
+        "cloudfront:CreateDistribution",
+        "cloudfront:DeleteDistribution",
+        "cloudfront:GetDistribution",
+        "cloudfront:UpdateDistribution",
+        "cloudfront:TagResource",
+        "cloudfront:UntagResource",
+        "cloudfront:ListTagsForResource",
+        "cloudfront:CreateOriginAccessControl",
+        "cloudfront:DeleteOriginAccessControl",
+        "cloudfront:GetOriginAccessControl",
+        "cloudfront:UpdateOriginAccessControl",
+        "cloudfront:CreateCachePolicy",
+        "cloudfront:DeleteCachePolicy",
+        "cloudfront:GetCachePolicy",
+        "cloudfront:UpdateCachePolicy",
+        "cloudfront:CreateOriginRequestPolicy",
+        "cloudfront:DeleteOriginRequestPolicy",
+        "cloudfront:GetOriginRequestPolicy",
+        "cloudfront:UpdateOriginRequestPolicy",
+        "cloudfront:CreateInvalidation"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "CloudWatchLogs",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:DeleteLogGroup",
+        "logs:DescribeLogGroups",
+        "logs:ListTagsLogGroup",
+        "logs:PutRetentionPolicy",
+        "logs:TagLogGroup",
+        "logs:UntagLogGroup"
+      ],
+      "Resource": "arn:aws:logs:*:*:log-group:/aws/lambda/cycling-ai-*"
+    },
+    {
+      "Sid": "DynamoDB",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:CreateTable",
+        "dynamodb:DeleteTable",
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:DeleteItem"
+      ],
+      "Resource": "arn:aws:dynamodb:*:*:table/cycling-ai-*"
+    }
+  ]
+}
+```
+
+### Option B: Managed Policies (Simpler, Less Secure)
+
+For prototyping, attach these AWS managed policies to your IAM user:
+
+| Policy | Purpose |
+|--------|---------|
+| `AmazonS3FullAccess` | S3 buckets |
+| `AWSLambda_FullAccess` | Lambda functions |
+| `CloudFrontFullAccess` | CloudFront distributions |
+| `IAMFullAccess` | IAM roles |
+| `CloudWatchLogsFullAccess` | CloudWatch logs |
+| `AmazonDynamoDBFullAccess` | DynamoDB for state locking |
+
+### Setup Steps
+
+1. Go to **AWS Console → IAM → Policies → Create policy**
+2. Select **JSON** tab and paste the custom policy above
+3. Name it `CyclingAIDeployment`
+4. Go to **IAM → Users → Your User → Permissions**
+5. Click **Add permissions → Attach policies directly**
+6. Select `CyclingAIDeployment`
 
 ## Initial Setup (One-Time)
 

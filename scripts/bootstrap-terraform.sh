@@ -20,7 +20,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 
 # Configuration
-AWS_REGION="${AWS_REGION:-us-east-1}"
+AWS_REGION="${AWS_REGION:-ap-southeast-2}"
 PROJECT_NAME="cycling-ai"
 
 # Get AWS account ID

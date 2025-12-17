@@ -30,7 +30,7 @@ terraform {
 
     # State file path - workspaces create separate paths automatically
     key            = "cycling-ai/terraform.tfstate"
-    region         = "us-east-1"
+    region         = "ap-southeast-2"
     encrypt        = true
 
     # DynamoDB table for state locking
