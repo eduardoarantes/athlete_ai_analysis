@@ -235,10 +235,6 @@ class TestScaleWeekendWorkouts:
         assert scaled == []
 
 
-@pytest.mark.skip(
-    reason="Weekend scaling algorithm returning 0.0h - requires investigation of "
-    "_select_and_scale_workouts implementation"
-)
 class TestSelectAndScaleWorkouts:
     """Tests for _select_and_scale_workouts() orchestration method."""
 
@@ -259,13 +255,13 @@ class TestSelectAndScaleWorkouts:
             "phase": "Recovery",
             "total_hours": 5.2,
             "training_days": [
-                {"weekday": "Monday", "workout_type": "rest"},
-                {"weekday": "Tuesday", "workout_type": "recovery"},
-                {"weekday": "Wednesday", "workout_type": "rest"},
-                {"weekday": "Thursday", "workout_type": "endurance"},
-                {"weekday": "Friday", "workout_type": "recovery"},
-                {"weekday": "Saturday", "workout_type": "endurance"},
-                {"weekday": "Sunday", "workout_type": "recovery"},
+                {"weekday": "Monday", "workout_types": ["rest"]},
+                {"weekday": "Tuesday", "workout_types": ["recovery"]},
+                {"weekday": "Wednesday", "workout_types": ["rest"]},
+                {"weekday": "Thursday", "workout_types": ["endurance"]},
+                {"weekday": "Friday", "workout_types": ["recovery"]},
+                {"weekday": "Saturday", "workout_types": ["endurance"]},
+                {"weekday": "Sunday", "workout_types": ["recovery"]},
             ],
         }
 
@@ -296,7 +292,7 @@ class TestSelectAndScaleWorkouts:
             w
             for w in workouts
             if w.get("weekday") in ["Saturday", "Sunday"] and any(
-                day["weekday"] == w.get("weekday") and day["workout_type"] == "endurance"
+                day["weekday"] == w.get("weekday") and "endurance" in day["workout_types"]
                 for day in week["training_days"]
             )
         ]
@@ -310,7 +306,7 @@ class TestSelectAndScaleWorkouts:
             w
             for w in workouts
             if w.get("weekday") in ["Saturday", "Sunday"] and any(
-                day["weekday"] == w.get("weekday") and day["workout_type"] == "recovery"
+                day["weekday"] == w.get("weekday") and "recovery" in day["workout_types"]
                 for day in week["training_days"]
             )
         ]
@@ -330,13 +326,13 @@ class TestSelectAndScaleWorkouts:
             "phase": "Foundation",
             "total_hours": 7.8,
             "training_days": [
-                {"weekday": "Monday", "workout_type": "rest"},
-                {"weekday": "Tuesday", "workout_type": "sweetspot"},
-                {"weekday": "Wednesday", "workout_type": "recovery"},
-                {"weekday": "Thursday", "workout_type": "endurance"},
-                {"weekday": "Friday", "workout_type": "threshold"},
-                {"weekday": "Saturday", "workout_type": "endurance"},
-                {"weekday": "Sunday", "workout_type": "endurance"},
+                {"weekday": "Monday", "workout_types": ["rest"]},
+                {"weekday": "Tuesday", "workout_types": ["sweetspot"]},
+                {"weekday": "Wednesday", "workout_types": ["recovery"]},
+                {"weekday": "Thursday", "workout_types": ["endurance"]},
+                {"weekday": "Friday", "workout_types": ["threshold"]},
+                {"weekday": "Saturday", "workout_types": ["endurance"]},
+                {"weekday": "Sunday", "workout_types": ["endurance"]},
             ],
         }
 
