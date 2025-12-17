@@ -3,6 +3,7 @@ Rich console formatting utilities for CLI.
 
 Provides beautiful console output with syntax highlighting, tables, and panels.
 """
+
 from __future__ import annotations
 
 import json
@@ -47,10 +48,10 @@ def format_performance_analysis(data: dict[str, Any]) -> None:
 
     # Create athlete info panel
     athlete_info = f"""
-Name: {athlete.get('name', 'Unknown')}
-Age: {athlete.get('age')} years
-FTP: {athlete.get('ftp')} W
-Power-to-Weight: {athlete.get('power_to_weight', 0):.2f} W/kg
+Name: {athlete.get("name", "Unknown")}
+Age: {athlete.get("age")} years
+FTP: {athlete.get("ftp")} W
+Power-to-Weight: {athlete.get("power_to_weight", 0):.2f} W/kg
 """
     console.print(Panel(athlete_info.strip(), title="Athlete Profile", border_style="blue"))
 

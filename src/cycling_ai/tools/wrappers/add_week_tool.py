@@ -108,12 +108,11 @@ def _calculate_week_metrics(
         workout_type = workout.get("workout_type")
         if workout_type:
             # Use explicit type from library
-            is_strength = (workout_type == "strength")
+            is_strength = workout_type == "strength"
         else:
             # Fallback: keyword matching (old behavior)
-            is_strength = (
-                "strength" in workout.get("description", "").lower() or
-                any("strength" in seg.get("type", "").lower() for seg in workout.get("segments", []))
+            is_strength = "strength" in workout.get("description", "").lower() or any(
+                "strength" in seg.get("type", "").lower() for seg in workout.get("segments", [])
             )
         if not is_strength:
             cycling_workouts.append(workout)
@@ -329,18 +328,14 @@ def _attempt_auto_fix(
 
     # Check if already under budget
     if current_hours <= target_hours:
-        logger.info(
-            f"Week {week_number}: Already within budget, no fix needed"
-        )
+        logger.info(f"Week {week_number}: Already within budget, no fix needed")
         return (None, f"Already within budget: {current_hours:.1f}h <= {target_hours:.1f}h")
 
     # Find weekend endurance rides
     weekend_rides = _find_weekend_endurance_rides(workouts)
 
     if not weekend_rides:
-        logger.warning(
-            f"Week {week_number}: No weekend endurance rides found to reduce"
-        )
+        logger.warning(f"Week {week_number}: No weekend endurance rides found to reduce")
         return (None, "No weekend endurance rides to reduce")
 
     # Target the longest weekend ride
@@ -348,9 +343,7 @@ def _attempt_auto_fix(
     target_index = target_ride["workout_index"]
     target_weekday = target_ride["weekday"]
 
-    logger.info(
-        f"Week {week_number}: Found {len(weekend_rides)} weekend endurance ride(s)"
-    )
+    logger.info(f"Week {week_number}: Found {len(weekend_rides)} weekend endurance ride(s)")
     logger.info(
         f"Week {week_number}: Targeting longest ride on {target_weekday} "
         f"({target_ride['duration_min']} min)"
@@ -366,9 +359,7 @@ def _attempt_auto_fix(
     original_segments = workout_to_modify.get("segments", [])
 
     # Step 1: Try removing warmup/cooldown
-    logger.info(
-        f"Week {week_number}: Step 1 - Attempting to remove warmup/cooldown segments"
-    )
+    logger.info(f"Week {week_number}: Step 1 - Attempting to remove warmup/cooldown segments")
     modified_segments = []
     removed_segments = []
 
@@ -377,18 +368,12 @@ def _attempt_auto_fix(
         if seg_type not in ["warmup", "cooldown"]:
             modified_segments.append(seg)
         else:
-            removed_segments.append(
-                f"{seg_type} ({seg.get('duration_min', 0)} min)"
-            )
+            removed_segments.append(f"{seg_type} ({seg.get('duration_min', 0)} min)")
 
     if removed_segments:
-        logger.info(
-            f"Week {week_number}:   Removed: {', '.join(removed_segments)}"
-        )
+        logger.info(f"Week {week_number}:   Removed: {', '.join(removed_segments)}")
     else:
-        logger.info(
-            f"Week {week_number}:   No warmup/cooldown segments to remove"
-        )
+        logger.info(f"Week {week_number}:   No warmup/cooldown segments to remove")
 
     # Update segments
     workout_to_modify["segments"] = modified_segments
@@ -445,9 +430,7 @@ def _attempt_auto_fix(
 
         # Check if we can reduce
         if longest_seg_idx is None:
-            logger.warning(
-                f"Week {week_number}:   No more endurance segments to reduce"
-            )
+            logger.warning(f"Week {week_number}:   No more endurance segments to reduce")
             break
 
         if longest_duration - reduction_increment < min_endurance_duration:
@@ -615,7 +598,7 @@ class AddWeekDetailsTool(BaseTool):
             ToolExecutionResult with success status and progress info
         """
         logger.info("=" * 80)
-        logger.info("TOOL EXECUTION START: add_week_details") 
+        logger.info("TOOL EXECUTION START: add_week_details")
         logger.info("=" * 80)
 
         try:
@@ -717,7 +700,10 @@ class AddWeekDetailsTool(BaseTool):
 
                 # Validate workout is on designated training day
                 workout_weekday = workout.get("weekday")
-                if expected_workout_types_by_day and workout_weekday not in expected_workout_types_by_day:
+                if (
+                    expected_workout_types_by_day
+                    and workout_weekday not in expected_workout_types_by_day
+                ):
                     raise ValueError(
                         f"Workout {i + 1} scheduled on '{workout_weekday}' but this week's "
                         f"training_days are: {', '.join(sorted(expected_workout_types_by_day.keys()))}. "
@@ -726,9 +712,8 @@ class AddWeekDetailsTool(BaseTool):
                     )
 
                 # Check if this is a strength workout (infer from workout description)
-                is_strength_workout = (
-                    "strength" in workout.get("description", "").lower() or
-                    any("strength" in seg.get("type", "").lower() for seg in workout.get("segments", []))
+                is_strength_workout = "strength" in workout.get("description", "").lower() or any(
+                    "strength" in seg.get("type", "").lower() for seg in workout.get("segments", [])
                 )
 
                 # Validate each segment (skip power zone validation for strength workouts)
@@ -775,12 +760,14 @@ class AddWeekDetailsTool(BaseTool):
                         workout_type = workout.get("workout_type")
                         if workout_type:
                             # Use explicit type from library
-                            is_strength = (workout_type == "strength")
+                            is_strength = workout_type == "strength"
                         else:
                             # Fallback: keyword matching (old behavior)
-                            is_strength = (
-                                "strength" in workout.get("description", "").lower() or
-                                any("strength" in seg.get("type", "").lower() for seg in workout.get("segments", []))
+                            is_strength = "strength" in workout.get(
+                                "description", ""
+                            ).lower() or any(
+                                "strength" in seg.get("type", "").lower()
+                                for seg in workout.get("segments", [])
                             )
                         if is_strength:
                             actual_strength += 1
@@ -815,9 +802,7 @@ class AddWeekDetailsTool(BaseTool):
             scenario_results: list[dict[str, Any]] = []
 
             # Scenario 1: Include all workouts (default)
-            logger.info(
-                f"Week {week_number}: Validating scenario 1 (all workouts)"
-            )
+            logger.info(f"Week {week_number}: Validating scenario 1 (all workouts)")
             total_hours_full, actual_tss_full = _calculate_week_metrics(
                 workouts, current_ftp, exclude_workout_index=None
             )
@@ -825,9 +810,7 @@ class AddWeekDetailsTool(BaseTool):
                 f"  - Calculated: {total_hours_full:.2f}h, {actual_tss_full:.0f} TSS (info only)"
             )
             if target_hours is not None:
-                logger.info(
-                    f"  - Target: {target_hours:.2f}h"
-                )
+                logger.info(f"  - Target: {target_hours:.2f}h")
             else:
                 logger.info("  - Target: Not specified in overview")
             warnings_full, errors_full = _validate_time_budget(
@@ -837,9 +820,7 @@ class AddWeekDetailsTool(BaseTool):
                 is_recovery_week,
             )
             if errors_full:
-                logger.warning(
-                    f"  - Scenario 1 FAILED with {len(errors_full)} error(s)"
-                )
+                logger.warning(f"  - Scenario 1 FAILED with {len(errors_full)} error(s)")
             else:
                 logger.info("  - Scenario 1 PASSED")
 
@@ -873,9 +854,7 @@ class AddWeekDetailsTool(BaseTool):
                     is_recovery_week,
                 )
                 if errors_no_rec:
-                    logger.warning(
-                        f"  - Scenario 2 FAILED with {len(errors_no_rec)} error(s)"
-                    )
+                    logger.warning(f"  - Scenario 2 FAILED with {len(errors_no_rec)} error(s)")
                 else:
                     logger.info("  - Scenario 2 PASSED")
 
@@ -908,9 +887,7 @@ class AddWeekDetailsTool(BaseTool):
                 auto_fix_enabled = kwargs.get("auto_fix", True)  # Default: enabled
 
                 if auto_fix_enabled:
-                    logger.info(
-                        f"Week {week_number}: Auto-fix is enabled, attempting to fix..."
-                    )
+                    logger.info(f"Week {week_number}: Auto-fix is enabled, attempting to fix...")
 
                     # Try auto-fix for the full workout scenario
                     modified_workouts, fix_log = _attempt_auto_fix(
@@ -1044,9 +1021,7 @@ class AddWeekDetailsTool(BaseTool):
                     f"{time_status} Time: {total_hours:.1f}h (target: {target_hours:.1f}h)"
                 )
             # TSS is informational only (no validation)
-            validation_summary.append(
-                f"ℹ TSS: {actual_tss:.0f} (info only)"
-            )
+            validation_summary.append(f"ℹ TSS: {actual_tss:.0f} (info only)")
 
             if validation_summary:
                 success_message += "\n" + " | ".join(validation_summary)

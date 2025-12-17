@@ -4,16 +4,16 @@ Logging configuration for cycling-ai.
 Provides centralized logging setup with configurable levels, formatters,
 and output destinations (console and optional file logging).
 """
+
 import contextvars
 import logging
 import sys
 from pathlib import Path
-from typing import Optional
 
 # Context variable to track current session ID across the call stack
 # Default is "in-progress" for logs outside of a session context
 session_id_context: contextvars.ContextVar[str] = contextvars.ContextVar(
-    'session_id', default='in-progress'
+    "session_id", default="in-progress"
 )
 
 
@@ -34,7 +34,7 @@ class SessionLogFilter(logging.Filter):
 
 def configure_logging(
     level: int = logging.INFO,
-    log_file: Optional[Path] = None,
+    log_file: Path | None = None,
     verbose: bool = False,
 ) -> None:
     """
@@ -52,13 +52,11 @@ def configure_logging(
     """
     # Create formatters with session_id as FIRST field
     detailed_formatter = logging.Formatter(
-        '[%(session_id)s] - %(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        "[%(session_id)s] - %(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
     )
 
-    simple_formatter = logging.Formatter(
-        '[%(session_id)s] - %(levelname)s - %(message)s'
-    )
+    simple_formatter = logging.Formatter("[%(session_id)s] - %(levelname)s - %(message)s")
 
     # Create session filter
     session_filter = SessionLogFilter()
@@ -96,16 +94,16 @@ def configure_logging(
     )
 
     # Set specific log levels for noisy libraries
-    logging.getLogger('urllib3').setLevel(logging.WARNING)
-    logging.getLogger('openai').setLevel(logging.WARNING)
-    logging.getLogger('anthropic').setLevel(logging.WARNING)
-    logging.getLogger('httpx').setLevel(logging.WARNING)
-    logging.getLogger('httpcore').setLevel(logging.WARNING)
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
+    logging.getLogger("openai").setLevel(logging.WARNING)
+    logging.getLogger("anthropic").setLevel(logging.WARNING)
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
 
     # Google libraries can be very verbose
-    logging.getLogger('google').setLevel(logging.WARNING)
-    logging.getLogger('google.auth').setLevel(logging.WARNING)
-    logging.getLogger('google.api_core').setLevel(logging.WARNING)
+    logging.getLogger("google").setLevel(logging.WARNING)
+    logging.getLogger("google.auth").setLevel(logging.WARNING)
+    logging.getLogger("google.api_core").setLevel(logging.WARNING)
 
     # Log configuration complete
     logger = logging.getLogger(__name__)
@@ -131,19 +129,16 @@ def get_log_level_from_string(level_str: str) -> int:
         True
     """
     level_map = {
-        'DEBUG': logging.DEBUG,
-        'INFO': logging.INFO,
-        'WARNING': logging.WARNING,
-        'ERROR': logging.ERROR,
-        'CRITICAL': logging.CRITICAL,
+        "DEBUG": logging.DEBUG,
+        "INFO": logging.INFO,
+        "WARNING": logging.WARNING,
+        "ERROR": logging.ERROR,
+        "CRITICAL": logging.CRITICAL,
     }
 
     level_upper = level_str.upper()
     if level_upper not in level_map:
-        valid_levels = ', '.join(level_map.keys())
-        raise ValueError(
-            f"Invalid log level: {level_str}. "
-            f"Must be one of: {valid_levels}"
-        )
+        valid_levels = ", ".join(level_map.keys())
+        raise ValueError(f"Invalid log level: {level_str}. Must be one of: {valid_levels}")
 
     return level_map[level_upper]

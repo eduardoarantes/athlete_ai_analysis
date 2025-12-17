@@ -1,4 +1,5 @@
 """Configuration loading from YAML files and environment."""
+
 from __future__ import annotations
 
 import os

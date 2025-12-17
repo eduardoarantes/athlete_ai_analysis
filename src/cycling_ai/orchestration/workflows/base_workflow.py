@@ -10,7 +10,6 @@ import logging
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from datetime import datetime
-from pathlib import Path
 from typing import Any
 
 from cycling_ai.orchestration.base import (
@@ -20,9 +19,9 @@ from cycling_ai.orchestration.base import (
     WorkflowConfig,
     WorkflowResult,
 )
+from cycling_ai.orchestration.phases.base_phase import BasePhase
 from cycling_ai.orchestration.prompts import AgentPromptsManager
 from cycling_ai.orchestration.session import SessionManager
-from cycling_ai.orchestration.phases.base_phase import BasePhase
 
 logger = logging.getLogger(__name__)
 
@@ -225,8 +224,7 @@ class BaseWorkflow(ABC):
         # Check if project vectorstore path is configured
         if rag_config.project_vectorstore_path is None:
             logger.warning(
-                "RAG enabled but no project vectorstore path configured. "
-                "RAG will be disabled."
+                "RAG enabled but no project vectorstore path configured. RAG will be disabled."
             )
             return None
 
@@ -264,8 +262,7 @@ class BaseWorkflow(ABC):
             return rag_manager
         except Exception as e:
             logger.error(
-                f"Failed to initialize RAG manager: {e}. "
-                f"RAG will be disabled for this run."
+                f"Failed to initialize RAG manager: {e}. RAG will be disabled for this run."
             )
             return None
 

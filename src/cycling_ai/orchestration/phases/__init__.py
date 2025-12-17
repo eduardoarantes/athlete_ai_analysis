@@ -8,8 +8,8 @@ executed independently or composed into workflows.
 from .base_phase import BasePhase
 from .data_preparation import DataPreparationPhase
 from .performance_analysis import PerformanceAnalysisPhase
-from .training_planning import TrainingPlanningPhase
 from .report_preparation import ReportPreparationPhase
+from .training_planning import TrainingPlanningPhase
 
 __all__ = [
     "BasePhase",

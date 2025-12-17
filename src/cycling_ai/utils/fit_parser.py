@@ -5,6 +5,7 @@ This module provides pure Python FIT zone parsing using fitdecode,
 which handles corrupted/imperfect FIT files (like Coros Dura) better than
 the Java Garmin FIT SDK.
 """
+
 from __future__ import annotations
 
 import gzip
@@ -169,7 +170,4 @@ def has_power_data(zone_data: dict[str, Any]) -> bool:
     Returns:
         True if file had power data, False otherwise
     """
-    return (
-        zone_data.get("success", False)
-        and zone_data.get("total_power_seconds", 0) > 0
-    )
+    return zone_data.get("success", False) and zone_data.get("total_power_seconds", 0) > 0

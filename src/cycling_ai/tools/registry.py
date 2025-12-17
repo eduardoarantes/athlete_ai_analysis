@@ -4,6 +4,7 @@ Tool registry for managing and discovering tools.
 This module provides a central registry where tools can be registered and
 discovered, along with utilities for generating provider-specific schemas.
 """
+
 from __future__ import annotations
 
 from cycling_ai.tools.base import BaseTool, ToolDefinition
@@ -116,8 +117,7 @@ class ToolRegistry:
 
         if category not in self._categories:
             raise ValueError(
-                f"Invalid category '{category}'. "
-                f"Must be one of {list(self._categories.keys())}"
+                f"Invalid category '{category}'. Must be one of {list(self._categories.keys())}"
             )
 
         # Return tools in category

@@ -9,6 +9,7 @@ This tool enables the chat interface to execute the same complete workflow that
 the `cycling-ai generate` command uses, producing detailed training plans with
 workouts from the library.
 """
+
 from __future__ import annotations
 
 import logging
@@ -22,7 +23,6 @@ from cycling_ai.orchestration.base import WorkflowConfig
 # - MultiAgentOrchestrator
 # - AgentPromptsManager
 # - SessionManager
-
 from cycling_ai.tools.base import (
     BaseTool,
     ToolDefinition,
@@ -192,7 +192,7 @@ class GenerateTrainingPlanTool(BaseTool):
             period_months = int(kwargs.get("period_months", 6))
             workout_source = kwargs.get("workout_source", "library")
 
-            logger.info(f"[GENERATE PLAN TOOL] Parameters:")
+            logger.info("[GENERATE PLAN TOOL] Parameters:")
             logger.info(f"[GENERATE PLAN TOOL]   - csv_file: {csv_file_path}")
             logger.info(f"[GENERATE PLAN TOOL]   - profile: {athlete_profile_path}")
             logger.info(f"[GENERATE PLAN TOOL]   - fit_dir: {fit_dir_path}")
@@ -264,9 +264,7 @@ class GenerateTrainingPlanTool(BaseTool):
                 )
 
             if not profile_path.exists():
-                logger.error(
-                    f"[GENERATE PLAN TOOL] Profile file not found: {profile_path}"
-                )
+                logger.error(f"[GENERATE PLAN TOOL] Profile file not found: {profile_path}")
                 return ToolExecutionResult(
                     success=False,
                     data=None,
@@ -344,9 +342,7 @@ class GenerateTrainingPlanTool(BaseTool):
                     if phase_result.errors:
                         errors.extend(phase_result.errors)
 
-                logger.error(
-                    f"[GENERATE PLAN TOOL] Workflow failed with {len(errors)} errors"
-                )
+                logger.error(f"[GENERATE PLAN TOOL] Workflow failed with {len(errors)} errors")
                 return ToolExecutionResult(
                     success=False,
                     data=None,
@@ -362,9 +358,7 @@ class GenerateTrainingPlanTool(BaseTool):
                     break
 
             if not report_json_path:
-                logger.warning(
-                    "[GENERATE PLAN TOOL] No report_json_path found in phase results"
-                )
+                logger.warning("[GENERATE PLAN TOOL] No report_json_path found in phase results")
 
             # Calculate total execution time and tokens
             total_execution_time = sum(
@@ -390,12 +384,8 @@ class GenerateTrainingPlanTool(BaseTool):
                 "total_tokens": total_tokens,
             }
 
-            logger.info(
-                f"[GENERATE PLAN TOOL] Success! Report saved to: {report_json_path}"
-            )
-            logger.info(
-                f"[GENERATE PLAN TOOL] Total execution time: {total_execution_time:.1f}s"
-            )
+            logger.info(f"[GENERATE PLAN TOOL] Success! Report saved to: {report_json_path}")
+            logger.info(f"[GENERATE PLAN TOOL] Total execution time: {total_execution_time:.1f}s")
             logger.info(f"[GENERATE PLAN TOOL] Total tokens used: {total_tokens}")
 
             return ToolExecutionResult(

@@ -1,4 +1,5 @@
 """Configuration schema models using Pydantic."""
+
 from __future__ import annotations
 
 from typing import Literal

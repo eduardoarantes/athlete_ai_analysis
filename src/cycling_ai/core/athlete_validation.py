@@ -4,9 +4,10 @@ Athlete profile validation logic.
 Single source of truth for all athlete profile field validation.
 Consolidates validation from profile_onboarding.py and profile_creation_tools.py.
 """
+
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Any
 
 
 class ValidationResult:
@@ -145,9 +146,15 @@ def validate_max_hr(max_hr: int) -> tuple[bool, str]:
     if not isinstance(max_hr, int):
         return False, "Maximum heart rate must be a whole number"
     if max_hr < MAX_HR_MIN_BPM:
-        return False, f"Maximum heart rate must be between {MAX_HR_MIN_BPM} and {MAX_HR_MAX_BPM} BPM"
+        return (
+            False,
+            f"Maximum heart rate must be between {MAX_HR_MIN_BPM} and {MAX_HR_MAX_BPM} BPM",
+        )
     if max_hr > MAX_HR_MAX_BPM:
-        return False, f"Maximum heart rate must be between {MAX_HR_MIN_BPM} and {MAX_HR_MAX_BPM} BPM"
+        return (
+            False,
+            f"Maximum heart rate must be between {MAX_HR_MIN_BPM} and {MAX_HR_MAX_BPM} BPM",
+        )
     return True, ""
 
 
@@ -171,9 +178,15 @@ def validate_training_availability(hours: float) -> tuple[bool, str]:
     if not isinstance(hours, (int, float)):
         return False, "Training availability must be a number"
     if hours < TRAINING_HOURS_MIN:
-        return False, f"Training availability must be between {TRAINING_HOURS_MIN} and {TRAINING_HOURS_MAX} hours per week"
+        return (
+            False,
+            f"Training availability must be between {TRAINING_HOURS_MIN} and {TRAINING_HOURS_MAX} hours per week",
+        )
     if hours > TRAINING_HOURS_MAX:
-        return False, f"Training availability must be between {TRAINING_HOURS_MIN} and {TRAINING_HOURS_MAX} hours per week"
+        return (
+            False,
+            f"Training availability must be between {TRAINING_HOURS_MIN} and {TRAINING_HOURS_MAX} hours per week",
+        )
     return True, ""
 
 

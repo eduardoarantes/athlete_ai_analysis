@@ -163,8 +163,7 @@ class WorkoutSelector:
         # Duration match (15 points, inverse of percentage difference)
         if target_duration_min > 0:
             duration_diff_pct = (
-                abs(workout.base_duration_min - target_duration_min)
-                / target_duration_min
+                abs(workout.base_duration_min - target_duration_min) / target_duration_min
             )
             # Score inversely proportional to difference (0% diff = 15 pts, 100% diff = 0 pts)
             duration_score = max(0, 15 * (1 - min(duration_diff_pct, 1.0)))
@@ -287,9 +286,7 @@ class WorkoutSelector:
             duration_per_unit = var_comp.duration_per_unit_min or 0
 
             if tss_per_unit == 0:
-                logger.warning(
-                    f"Workout {workout.id} has tss_per_unit=0, cannot adjust TSS"
-                )
+                logger.warning(f"Workout {workout.id} has tss_per_unit=0, cannot adjust TSS")
                 return deepcopy(workout)
 
             # Calculate units needed
@@ -318,9 +315,7 @@ class WorkoutSelector:
             )
             return adjusted_workout
         else:
-            logger.warning(
-                f"Unknown adjustable_field: {adjustable_field}, using original"
-            )
+            logger.warning(f"Unknown adjustable_field: {adjustable_field}, using original")
             return deepcopy(workout)
 
     def _get_current_value(self, workout: Workout) -> float:
@@ -396,8 +391,7 @@ class WorkoutSelector:
         normalized_phase = PHASE_NAME_MAPPING.get(target_phase, target_phase)
         if normalized_phase != target_phase:
             logger.info(
-                f"Mapped phase '{target_phase}' → '{normalized_phase}' "
-                f"for library compatibility"
+                f"Mapped phase '{target_phase}' → '{normalized_phase}' for library compatibility"
             )
 
         # Filter candidates by phase (mandatory)
@@ -414,8 +408,7 @@ class WorkoutSelector:
 
         if not candidates:
             logger.warning(
-                f"No workouts found for phase={normalized_phase} "
-                f"(original: {target_phase})"
+                f"No workouts found for phase={normalized_phase} (original: {target_phase})"
             )
             return None
 

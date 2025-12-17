@@ -3,6 +3,7 @@ Tool execution coordinator.
 
 Simple orchestration layer for executing tools by name and managing results.
 """
+
 from __future__ import annotations
 
 import inspect
@@ -46,9 +47,7 @@ class ToolExecutor:
         self.session = session
         self.allowed_tools = allowed_tools
 
-    def execute_tool(
-        self, tool_name: str, parameters: dict[str, Any]
-    ) -> ToolExecutionResult:
+    def execute_tool(self, tool_name: str, parameters: dict[str, Any]) -> ToolExecutionResult:
         """
         Execute a tool by name.
 
@@ -132,7 +131,4 @@ class ToolExecutor:
             return all_tools
 
         # Filter to only allowed tools that exist in registry
-        return [
-            tool for tool in all_tools
-            if tool.name in self.allowed_tools
-        ]
+        return [tool for tool in all_tools if tool.name in self.allowed_tools]

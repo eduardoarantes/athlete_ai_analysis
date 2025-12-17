@@ -4,6 +4,7 @@ Training plan overview tool - Phase 1 of two-phase plan generation.
 Creates high-level plan structure with weekly overview (phases, TSS, focus).
 Part of the two-phase approach to avoid massive JSON generation in one call.
 """
+
 from __future__ import annotations
 
 import json
@@ -38,10 +39,10 @@ def _convert_to_native_types(obj: Any) -> Any:
         return {key: _convert_to_native_types(value) for key, value in obj.items()}
     elif isinstance(obj, (list, tuple)):
         return [_convert_to_native_types(item) for item in obj]
-    elif hasattr(obj, 'items') and callable(getattr(obj, 'items')):
+    elif hasattr(obj, "items") and callable(obj.items):
         # Handle protobuf message-like objects with items()
         return {key: _convert_to_native_types(value) for key, value in obj.items()}
-    elif hasattr(obj, '__iter__'):
+    elif hasattr(obj, "__iter__"):
         # Handle protobuf RepeatedComposite and similar iterable types
         return [_convert_to_native_types(item) for item in obj]
     else:
@@ -124,26 +125,44 @@ class PlanOverviewTool(BaseTool):
                                     "properties": {
                                         "weekday": {
                                             "type": "string",
-                                            "enum": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-                                            "description": "Day of the week"
+                                            "enum": [
+                                                "Monday",
+                                                "Tuesday",
+                                                "Wednesday",
+                                                "Thursday",
+                                                "Friday",
+                                                "Saturday",
+                                                "Sunday",
+                                            ],
+                                            "description": "Day of the week",
                                         },
                                         "workout_types": {
                                             "type": "array",
                                             "items": {
                                                 "type": "string",
-                                                "enum": ["rest", "recovery", "endurance", "tempo", "sweetspot", "threshold", "vo2max", "mixed", "strength"]
+                                                "enum": [
+                                                    "rest",
+                                                    "recovery",
+                                                    "endurance",
+                                                    "tempo",
+                                                    "sweetspot",
+                                                    "threshold",
+                                                    "vo2max",
+                                                    "mixed",
+                                                    "strength",
+                                                ],
                                             },
                                             "minItems": 1,
-                                            "description": "Array of workout types for this day (e.g., ['endurance', 'strength'] for cycling + strength on same day)"
+                                            "description": "Array of workout types for this day (e.g., ['endurance', 'strength'] for cycling + strength on same day)",
                                         },
                                         "optional": {
                                             "type": "boolean",
-                                            "description": "Whether this training day is optional (default: false)"
-                                        }
+                                            "description": "Whether this training day is optional (default: false)",
+                                        },
                                     },
-                                    "required": ["weekday", "workout_types"]
+                                    "required": ["weekday", "workout_types"],
                                 },
-                                "description": "All 7 weekdays with prescribed workout types from library"
+                                "description": "All 7 weekdays with prescribed workout types from library",
                             },
                             "target_tss": {"type": "number"},
                             "total_hours": {"type": "number"},
@@ -195,7 +214,7 @@ class PlanOverviewTool(BaseTool):
             # Convert protobuf objects to native Python types
             weekly_overview = _convert_to_native_types(weekly_overview_raw)
 
-            logger.info(f"Parameters:")
+            logger.info("Parameters:")
             logger.info(f"  - athlete_profile_json: {athlete_profile_json}")
             logger.info(f"  - total_weeks: {total_weeks}")
             logger.info(f"  - target_ftp: {target_ftp}")
@@ -224,9 +243,35 @@ class PlanOverviewTool(BaseTool):
                 )
 
             # Validate training_days in each week
-            valid_weekdays = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"}
-            valid_workout_types = {"rest", "recovery", "endurance", "tempo", "sweetspot", "threshold", "vo2max", "mixed", "strength"}
-            cycling_workout_types = {"recovery", "endurance", "tempo", "sweetspot", "threshold", "vo2max", "mixed"}
+            valid_weekdays = {
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday",
+            }
+            valid_workout_types = {
+                "rest",
+                "recovery",
+                "endurance",
+                "tempo",
+                "sweetspot",
+                "threshold",
+                "vo2max",
+                "mixed",
+                "strength",
+            }
+            cycling_workout_types = {
+                "recovery",
+                "endurance",
+                "tempo",
+                "sweetspot",
+                "threshold",
+                "vo2max",
+                "mixed",
+            }
             hard_workout_types = {"threshold", "vo2max", "sweetspot"}
 
             for i, week in enumerate(weekly_overview):
@@ -283,8 +328,7 @@ class PlanOverviewTool(BaseTool):
 
                     # Normalize workout_types to lowercase (LLMs sometimes return "Endurance" instead of "endurance")
                     workout_types = [
-                        wt.lower() if isinstance(wt, str) else wt
-                        for wt in workout_types_raw
+                        wt.lower() if isinstance(wt, str) else wt for wt in workout_types_raw
                     ]
 
                     # Validate weekday
@@ -296,9 +340,7 @@ class PlanOverviewTool(BaseTool):
 
                     # Check for duplicate weekdays
                     if weekday in weekdays_seen:
-                        raise ValueError(
-                            f"Week {week_num} has duplicate weekday: {weekday}"
-                        )
+                        raise ValueError(f"Week {week_num} has duplicate weekday: {weekday}")
                     weekdays_seen.add(weekday)
 
                     # Validate each workout_type in the array
@@ -387,7 +429,7 @@ class PlanOverviewTool(BaseTool):
             with open(overview_file, "w") as f:
                 json.dump(overview_data, f, indent=2)
 
-            logger.info(f"Overview saved successfully")
+            logger.info("Overview saved successfully")
             logger.info("=" * 80)
             logger.info("TOOL EXECUTION COMPLETE: create_plan_overview")
             logger.info("=" * 80)

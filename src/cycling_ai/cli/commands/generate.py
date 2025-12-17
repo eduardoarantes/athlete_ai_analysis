@@ -4,6 +4,7 @@ Generate command for comprehensive report generation.
 Orchestrates multi-agent workflow to produce comprehensive HTML reports
 from cycling data in a single command.
 """
+
 from __future__ import annotations
 
 import logging
@@ -150,33 +151,19 @@ def create_rag_config(
             "\n[yellow]⚠️  Warning: RAG enabled but vectorstore not found[/yellow]",
             style="bold",
         )
-        console.print(
-            f"[yellow]   Expected location: {project_vectorstore}[/yellow]"
-        )
-        console.print(
-            "\n[yellow]   To populate the vectorstore, run:[/yellow]"
-        )
-        console.print(
-            "[yellow]      cycling-ai index domain[/yellow]"
-        )
-        console.print(
-            "[yellow]      cycling-ai index templates[/yellow]"
-        )
-        console.print(
-            "\n[yellow]   RAG will be disabled for this run.[/yellow]\n"
-        )
+        console.print(f"[yellow]   Expected location: {project_vectorstore}[/yellow]")
+        console.print("\n[yellow]   To populate the vectorstore, run:[/yellow]")
+        console.print("[yellow]      cycling-ai index domain[/yellow]")
+        console.print("[yellow]      cycling-ai index templates[/yellow]")
+        console.print("\n[yellow]   RAG will be disabled for this run.[/yellow]\n")
 
     # Create configuration
     rag_config = RAGConfig(
         enabled=enabled and project_vectorstore.exists(),  # Disable if vectorstore missing
         top_k=top_k,
         min_score=min_score,
-        project_vectorstore_path=(
-            project_vectorstore if project_vectorstore.exists() else None
-        ),
-        user_vectorstore_path=(
-            user_vectorstore if user_vectorstore.exists() else None
-        ),
+        project_vectorstore_path=(project_vectorstore if project_vectorstore.exists() else None),
+        user_vectorstore_path=(user_vectorstore if user_vectorstore.exists() else None),
         embedding_provider="local",
         embedding_model=None,  # Use provider defaults
     )
@@ -184,10 +171,7 @@ def create_rag_config(
     # Log RAG status
     if enabled:
         if rag_config.enabled:
-            console.print(
-                f"[green]✓[/green] RAG enabled with top_k={top_k}, "
-                f"min_score={min_score}"
-            )
+            console.print(f"[green]✓[/green] RAG enabled with top_k={top_k}, min_score={min_score}")
         else:
             console.print("[yellow]⚠️  RAG disabled (vectorstore not found)[/yellow]")
 
@@ -362,6 +346,7 @@ def generate(
         # Load athlete profile early to check for raw_training_data_path
         try:
             import json
+
             with open(profile_file) as f:
                 athlete_profile = json.load(f)
         except Exception as e:
@@ -369,20 +354,26 @@ def generate(
             raise click.Abort()
 
         # Read training_plan_weeks from profile (required field)
-        training_plan_weeks = athlete_profile.get('training_plan_weeks')
+        training_plan_weeks = athlete_profile.get("training_plan_weeks")
         if training_plan_weeks is None:
             console.print("[red]Error: 'training_plan_weeks' not found in athlete profile.[/red]")
-            console.print("[yellow]Please add 'training_plan_weeks' field to your athlete_profile.json[/yellow]")
+            console.print(
+                "[yellow]Please add 'training_plan_weeks' field to your athlete_profile.json[/yellow]"
+            )
             raise click.Abort()
 
-        if not isinstance(training_plan_weeks, int) or training_plan_weeks < 1 or training_plan_weeks > 52:
+        if (
+            not isinstance(training_plan_weeks, int)
+            or training_plan_weeks < 1
+            or training_plan_weeks > 52
+        ):
             console.print(
                 f"[red]Error: 'training_plan_weeks' must be an integer between 1 and 52, got: {training_plan_weeks}[/red]"
             )
             raise click.Abort()
 
         # Determine data sources (CLI args override profile)
-        profile_data_path = athlete_profile.get('raw_training_data_path')
+        profile_data_path = athlete_profile.get("raw_training_data_path")
 
         # Use profile path as fallback if CLI args not provided
         if fit_dir is None and profile_data_path:
@@ -485,9 +476,7 @@ def generate(
                 f"[cyan]Using prompts from: {prompts_dir}/{prompt_model}/{prompt_version}[/cyan]"
             )
         else:
-            console.print(
-                f"[cyan]Using default prompts: {prompt_model}/{prompt_version}[/cyan]"
-            )
+            console.print(f"[cyan]Using default prompts: {prompt_model}/{prompt_version}[/cyan]")
         console.print()
 
         # Setup RAG configuration
@@ -542,7 +531,11 @@ def generate(
         try:
             # Temporarily suppress console logging during Live display to prevent flickering
             root_logger = logging.getLogger()
-            console_handlers = [h for h in root_logger.handlers if isinstance(h, logging.StreamHandler) and h.stream.name == '<stderr>']
+            console_handlers = [
+                h
+                for h in root_logger.handlers
+                if isinstance(h, logging.StreamHandler) and h.stream.name == "<stderr>"
+            ]
             original_levels = {}
 
             # Store original levels and set to WARNING (suppress INFO/DEBUG)
@@ -623,8 +616,7 @@ def _generate_html_report(output_dir: Path, result: WorkflowResult) -> Path | No
 
     # Find report_data.json path from Phase 4 result
     phase4_result = next(
-        (r for r in result.phase_results if r.phase_name == "report_data_preparation"),
-        None
+        (r for r in result.phase_results if r.phase_name == "report_data_preparation"), None
     )
 
     if not phase4_result or not phase4_result.success:
@@ -645,10 +637,7 @@ def _generate_html_report(output_dir: Path, result: WorkflowResult) -> Path | No
 
     # Generate HTML
     output_html_path = output_dir / "performance_report.html"
-    generate_performance_html_from_json(
-        report_data=report_data,
-        output_path=output_html_path
-    )
+    generate_performance_html_from_json(report_data=report_data, output_path=output_html_path)
 
     return output_html_path
 
@@ -898,16 +887,11 @@ def _validate_output_directory(output_dir: Path) -> None:
             "Permission denied. Try a different location."
         ) from e
     except Exception as e:
-        raise ValueError(
-            f"Cannot create output directory: {output_dir}. Error: {str(e)}"
-        ) from e
+        raise ValueError(f"Cannot create output directory: {output_dir}. Error: {str(e)}") from e
 
     # Check if writable
     if not os.access(output_dir, os.W_OK):
-        raise ValueError(
-            f"Output directory is not writable: {output_dir}. "
-            "Check permissions."
-        )
+        raise ValueError(f"Output directory is not writable: {output_dir}. Check permissions.")
 
 
 def _print_provider_help(provider_name: str) -> None:

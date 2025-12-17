@@ -374,9 +374,7 @@ class ComplianceScorer:
             tss_compliance_pct=round(tss_pct, 1) if tss_pct is not None else None,
         )
 
-    def score_duration(
-        self, planned: PlannedWorkout, actual: ActualWorkout
-    ) -> tuple[float, float]:
+    def score_duration(self, planned: PlannedWorkout, actual: ActualWorkout) -> tuple[float, float]:
         """
         Score duration compliance.
 
@@ -396,9 +394,7 @@ class ComplianceScorer:
 
         return score, compliance_pct
 
-    def score_intensity(
-        self, planned: PlannedWorkout, actual: ActualWorkout
-    ) -> float:
+    def score_intensity(self, planned: PlannedWorkout, actual: ActualWorkout) -> float:
         """
         Score intensity compliance via zone distribution match.
 
@@ -409,9 +405,7 @@ class ComplianceScorer:
         Returns:
             Score 0-100
         """
-        return self.calculate_zone_match_score(
-            planned.zone_distribution, actual.zone_distribution
-        )
+        return self.calculate_zone_match_score(planned.zone_distribution, actual.zone_distribution)
 
     def score_tss(
         self, planned: PlannedWorkout, actual: ActualWorkout
@@ -535,9 +529,7 @@ class WorkoutMatcher:
                 if len(exact_matches) == 1:
                     best_idx, best_match = exact_matches[0]
                 else:
-                    best_idx, best_match = max(
-                        exact_matches, key=lambda x: x[1].duration_minutes
-                    )
+                    best_idx, best_match = max(exact_matches, key=lambda x: x[1].duration_minutes)
 
                 matched_pairs.append((planned, best_match))
                 used_actual_indices.add(best_idx)
@@ -1139,9 +1131,7 @@ class WorkoutComparer:
 
         # Find actual workout(s) for this date
         actuals_on_date = [
-            actual
-            for actual in self._actual_workouts
-            if actual.date.date() == target_date.date()
+            actual for actual in self._actual_workouts if actual.date.date() == target_date.date()
         ]
 
         # Match planned to actual (select longest if multiple)
@@ -1218,9 +1208,7 @@ class WorkoutComparer:
 
         total_planned_tss = sum(p.planned_tss for p in weekly_planned)
         total_actual_tss = sum(
-            c.actual.actual_tss
-            for c in daily_comparisons
-            if c.actual and c.actual.actual_tss
+            c.actual.actual_tss for c in daily_comparisons if c.actual and c.actual.actual_tss
         )
         tss_compliance_pct = (
             (total_actual_tss / total_planned_tss * 100) if total_planned_tss > 0 else 0.0
@@ -1375,8 +1363,11 @@ class WorkoutComparer:
         # Parse zone distribution from columns
         zone_distribution: dict[str, float] = {}
         zone_columns = [
-            "zone1_minutes", "zone2_minutes", "zone3_minutes",
-            "zone4_minutes", "zone5_minutes"
+            "zone1_minutes",
+            "zone2_minutes",
+            "zone3_minutes",
+            "zone4_minutes",
+            "zone5_minutes",
         ]
         for zone in zone_columns:
             if zone in row and row[zone]:

@@ -5,6 +5,7 @@ Wraps core.training.finalize_training_plan() as a BaseTool for LLM provider inte
 The LLM designs the plan using create_workout and calculate_power_zones tools,
 then uses this tool to save the complete plan.
 """
+
 from __future__ import annotations
 
 import json
@@ -100,15 +101,15 @@ class TrainingPlanTool(BaseTool):
                         "properties": {
                             "week_number": {
                                 "type": "INTEGER",
-                                "description": "Week number (1 to total_weeks)"
+                                "description": "Week number (1 to total_weeks)",
                             },
                             "phase": {
                                 "type": "STRING",
-                                "description": "Training phase (e.g., Foundation, Build, Recovery, Peak)"
+                                "description": "Training phase (e.g., Foundation, Build, Recovery, Peak)",
                             },
                             "phase_rationale": {
                                 "type": "STRING",
-                                "description": "Explanation of why this phase for this week"
+                                "description": "Explanation of why this phase for this week",
                             },
                             "workouts": {
                                 "type": "ARRAY",
@@ -118,11 +119,11 @@ class TrainingPlanTool(BaseTool):
                                     "properties": {
                                         "weekday": {
                                             "type": "STRING",
-                                            "description": "Day of the week (Monday-Sunday)"
+                                            "description": "Day of the week (Monday-Sunday)",
                                         },
                                         "name": {
                                             "type": "STRING",
-                                            "description": "Short workout name (3-10 words). Examples: 'VO2 Max intervals', 'Threshold repeats', 'Endurance base'"
+                                            "description": "Short workout name (3-10 words). Examples: 'VO2 Max intervals', 'Threshold repeats', 'Endurance base'",
                                         },
                                         "detailed_description": {
                                             "type": "STRING",
@@ -132,11 +133,11 @@ class TrainingPlanTool(BaseTool):
                                                 "2) Physiological target (what system this trains), "
                                                 "3) Training benefits (how this improves performance), "
                                                 "4) Execution guidance (how to perform effectively). REQUIRED for all workouts."
-                                            )
+                                            ),
                                         },
                                         "description": {
                                             "type": "STRING",
-                                            "description": "DEPRECATED: Use 'name' instead. Kept for backward compatibility."
+                                            "description": "DEPRECATED: Use 'name' instead. Kept for backward compatibility.",
                                         },
                                         "segments": {
                                             "type": "ARRAY",
@@ -146,44 +147,49 @@ class TrainingPlanTool(BaseTool):
                                                 "properties": {
                                                     "type": {
                                                         "type": "STRING",
-                                                        "description": "Segment type (warmup/interval/recovery/cooldown/steady/work/tempo)"
+                                                        "description": "Segment type (warmup/interval/recovery/cooldown/steady/work/tempo)",
                                                     },
                                                     "duration_min": {
                                                         "type": "INTEGER",
-                                                        "description": "Duration in minutes"
+                                                        "description": "Duration in minutes",
                                                     },
                                                     "power_low_pct": {
                                                         "type": "NUMBER",
-                                                        "description": "Lower power bound as percentage of FTP"
+                                                        "description": "Lower power bound as percentage of FTP",
                                                     },
                                                     "power_high_pct": {
                                                         "type": "NUMBER",
-                                                        "description": "Upper power bound as percentage of FTP (optional)"
+                                                        "description": "Upper power bound as percentage of FTP (optional)",
                                                     },
                                                     "description": {
                                                         "type": "STRING",
-                                                        "description": "Purpose and guidance for this segment"
-                                                    }
+                                                        "description": "Purpose and guidance for this segment",
+                                                    },
                                                 },
-                                                "required": ["type", "duration_min", "power_low_pct", "description"]
-                                            }
-                                        }
+                                                "required": [
+                                                    "type",
+                                                    "duration_min",
+                                                    "power_low_pct",
+                                                    "description",
+                                                ],
+                                            },
+                                        },
                                     },
-                                    "required": ["weekday", "segments"]
+                                    "required": ["weekday", "segments"],
                                     # Note: name and description are optional to support both old and new formats
                                     # Validation will check that at least one is present
-                                }
+                                },
                             },
                             "weekly_focus": {
                                 "type": "STRING",
-                                "description": "Key training focus for the week"
+                                "description": "Key training focus for the week",
                             },
                             "weekly_watch_points": {
                                 "type": "STRING",
-                                "description": "What athlete should watch for this week"
-                            }
+                                "description": "What athlete should watch for this week",
+                            },
                         },
-                        "required": ["week_number", "phase", "workouts", "weekly_focus"]
+                        "required": ["week_number", "phase", "workouts", "weekly_focus"],
                     },
                 ),
                 ToolParameter(
@@ -249,13 +255,19 @@ class TrainingPlanTool(BaseTool):
             coaching_notes = kwargs["coaching_notes"]
             monitoring_guidance = kwargs["monitoring_guidance"]
 
-            logger.info(f"[TRAINING PLAN TOOL] Extracted parameters:")
+            logger.info("[TRAINING PLAN TOOL] Extracted parameters:")
             logger.info(f"[TRAINING PLAN TOOL]   - athlete_profile: {athlete_profile_json}")
             logger.info(f"[TRAINING PLAN TOOL]   - total_weeks: {total_weeks}")
             logger.info(f"[TRAINING PLAN TOOL]   - target_ftp: {target_ftp}")
-            logger.info(f"[TRAINING PLAN TOOL]   - weekly_plan length: {len(weekly_plan) if isinstance(weekly_plan, list) else 'N/A'}")
-            logger.debug(f"[TRAINING PLAN TOOL]   - coaching_notes length: {len(coaching_notes)} chars")
-            logger.debug(f"[TRAINING PLAN TOOL]   - monitoring_guidance length: {len(monitoring_guidance)} chars")
+            logger.info(
+                f"[TRAINING PLAN TOOL]   - weekly_plan length: {len(weekly_plan) if isinstance(weekly_plan, list) else 'N/A'}"
+            )
+            logger.debug(
+                f"[TRAINING PLAN TOOL]   - coaching_notes length: {len(coaching_notes)} chars"
+            )
+            logger.debug(
+                f"[TRAINING PLAN TOOL]   - monitoring_guidance length: {len(monitoring_guidance)} chars"
+            )
 
             # Validate profile path
             profile_path = Path(athlete_profile_json)
@@ -264,17 +276,19 @@ class TrainingPlanTool(BaseTool):
                     success=False,
                     data=None,
                     format="json",
-                    errors=[
-                        f"Athlete profile not found at path: {athlete_profile_json}"
-                    ],
+                    errors=[f"Athlete profile not found at path: {athlete_profile_json}"],
                 )
 
             # Load athlete profile
             try:
                 athlete_profile = load_athlete_profile(profile_path)
-                logger.info(f"[TRAINING PLAN TOOL] Loaded athlete profile for: {athlete_profile.name}")
+                logger.info(
+                    f"[TRAINING PLAN TOOL] Loaded athlete profile for: {athlete_profile.name}"
+                )
                 logger.debug(f"[TRAINING PLAN TOOL]   - Current FTP: {athlete_profile.ftp}")
-                logger.debug(f"[TRAINING PLAN TOOL]   - Available days: {athlete_profile.get_training_days()}")
+                logger.debug(
+                    f"[TRAINING PLAN TOOL]   - Available days: {athlete_profile.get_training_days()}"
+                )
             except Exception as e:
                 logger.error(f"[TRAINING PLAN TOOL] Failed to load athlete profile: {str(e)}")
                 return ToolExecutionResult(
@@ -286,7 +300,9 @@ class TrainingPlanTool(BaseTool):
 
             # Validate weekly_plan is a list
             if not isinstance(weekly_plan, list):
-                logger.error(f"[TRAINING PLAN TOOL] weekly_plan is not a list, type: {type(weekly_plan)}")
+                logger.error(
+                    f"[TRAINING PLAN TOOL] weekly_plan is not a list, type: {type(weekly_plan)}"
+                )
                 return ToolExecutionResult(
                     success=False,
                     data=None,
@@ -294,7 +310,7 @@ class TrainingPlanTool(BaseTool):
                     errors=["weekly_plan must be an array of week objects"],
                 )
 
-            logger.info(f"[TRAINING PLAN TOOL] Validating plan structure...")
+            logger.info("[TRAINING PLAN TOOL] Validating plan structure...")
 
             # Validate workout fields (name/description)
             for week in weekly_plan:
@@ -349,7 +365,9 @@ class TrainingPlanTool(BaseTool):
 
             if not is_valid:
                 # Return validation errors to allow LLM to retry
-                logger.warning(f"[TRAINING PLAN TOOL] Plan validation failed with {len(validation_errors)} errors")
+                logger.warning(
+                    f"[TRAINING PLAN TOOL] Plan validation failed with {len(validation_errors)} errors"
+                )
                 for i, error in enumerate(validation_errors[:5], 1):
                     logger.warning(f"[TRAINING PLAN TOOL]   Error {i}: {error}")
                 return ToolExecutionResult(
@@ -372,7 +390,9 @@ class TrainingPlanTool(BaseTool):
                     coaching_notes=coaching_notes,
                     monitoring_guidance=monitoring_guidance,
                 )
-                logger.info(f"[TRAINING PLAN TOOL] finalize_training_plan() returned JSON of length: {len(result_json)}")
+                logger.info(
+                    f"[TRAINING PLAN TOOL] finalize_training_plan() returned JSON of length: {len(result_json)}"
+                )
                 logger.debug(f"[TRAINING PLAN TOOL] First 200 chars of result: {result_json[:200]}")
             except ValueError as e:
                 logger.error(f"[TRAINING PLAN TOOL] Plan validation error: {str(e)}")
@@ -387,15 +407,21 @@ class TrainingPlanTool(BaseTool):
             logger.info("[TRAINING PLAN TOOL] Parsing result JSON...")
             try:
                 result_data = json.loads(result_json)
-                logger.info(f"[TRAINING PLAN TOOL] Parsed JSON successfully, keys: {list(result_data.keys())}")
+                logger.info(
+                    f"[TRAINING PLAN TOOL] Parsed JSON successfully, keys: {list(result_data.keys())}"
+                )
 
                 # Log structure details
                 if "weekly_plan" in result_data:
-                    logger.info(f"[TRAINING PLAN TOOL]   - weekly_plan: {len(result_data['weekly_plan'])} weeks")
+                    logger.info(
+                        f"[TRAINING PLAN TOOL]   - weekly_plan: {len(result_data['weekly_plan'])} weeks"
+                    )
                 if "target_ftp" in result_data:
                     logger.info(f"[TRAINING PLAN TOOL]   - target_ftp: {result_data['target_ftp']}")
                 if "current_ftp" in result_data:
-                    logger.info(f"[TRAINING PLAN TOOL]   - current_ftp: {result_data['current_ftp']}")
+                    logger.info(
+                        f"[TRAINING PLAN TOOL]   - current_ftp: {result_data['current_ftp']}"
+                    )
 
             except json.JSONDecodeError as e:
                 logger.error(f"[TRAINING PLAN TOOL] JSON decode error: {str(e)}")
@@ -407,9 +433,13 @@ class TrainingPlanTool(BaseTool):
                 )
 
             # Return successful result wrapped in 'training_plan' key for Phase 4
-            logger.info("[TRAINING PLAN TOOL] Creating ToolExecutionResult with 'training_plan' wrapper")
-            logger.debug(f"[TRAINING PLAN TOOL] Result data keys after wrapping: ['training_plan']")
-            logger.debug(f"[TRAINING PLAN TOOL] Inner training_plan keys: {list(result_data.keys())}")
+            logger.info(
+                "[TRAINING PLAN TOOL] Creating ToolExecutionResult with 'training_plan' wrapper"
+            )
+            logger.debug("[TRAINING PLAN TOOL] Result data keys after wrapping: ['training_plan']")
+            logger.debug(
+                f"[TRAINING PLAN TOOL] Inner training_plan keys: {list(result_data.keys())}"
+            )
 
             return ToolExecutionResult(
                 success=True,

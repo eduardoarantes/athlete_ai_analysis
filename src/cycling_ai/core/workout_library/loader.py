@@ -50,9 +50,7 @@ class WorkoutLibraryLoader:
             # From src/cycling_ai/core/workout_library/loader.py
             # Go up: loader.py -> workout_library/ -> core/ -> cycling_ai/ -> src/ -> project_root
             library_path = (
-                Path(__file__).parent.parent.parent.parent.parent
-                / "data"
-                / "workout_library.json"
+                Path(__file__).parent.parent.parent.parent.parent / "data" / "workout_library.json"
             )
 
         if not library_path.exists():

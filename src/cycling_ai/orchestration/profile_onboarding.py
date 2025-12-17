@@ -18,8 +18,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
-# Import validation from centralized module
-from cycling_ai.core.athlete_validation import (
+# Import validation from centralized module (re-exported for tests)
+from cycling_ai.core.athlete_validation import (  # noqa: F401
     validate_age,
     validate_ftp,
     validate_max_hr,

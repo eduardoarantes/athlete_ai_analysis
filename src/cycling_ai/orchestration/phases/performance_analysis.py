@@ -12,7 +12,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from cycling_ai.orchestration.base import PhaseContext, PhaseResult, PhaseStatus
+from cycling_ai.orchestration.base import PhaseContext
 from cycling_ai.orchestration.phases.base_phase import BasePhase
 from cycling_ai.orchestration.session import ConversationSession
 
@@ -182,9 +182,7 @@ class PerformanceAnalysisPhase(BasePhase):
                     f"Available fields: {list(context.previous_phase_data.keys())}"
                 )
 
-    def _get_system_prompt(
-        self, config: dict[str, Any], context: PhaseContext
-    ) -> str:
+    def _get_system_prompt(self, config: dict[str, Any], context: PhaseContext) -> str:
         """
         Get system prompt for performance analysis.
 
@@ -198,9 +196,7 @@ class PerformanceAnalysisPhase(BasePhase):
         prompt: str = context.prompts_manager.get_performance_analysis_prompt()
         return prompt
 
-    def _get_user_message(
-        self, config: dict[str, Any], context: PhaseContext
-    ) -> str:
+    def _get_user_message(self, config: dict[str, Any], context: PhaseContext) -> str:
         """
         Build user message with conditional cross-training section.
 
@@ -280,9 +276,7 @@ class PerformanceAnalysisPhase(BasePhase):
                             logger.debug("[PHASE 2] Extracted cross_training_analysis")
 
                     except json.JSONDecodeError:
-                        logger.warning(
-                            f"[PHASE 2] Failed to parse JSON from tool {tool_name}"
-                        )
+                        logger.warning(f"[PHASE 2] Failed to parse JSON from tool {tool_name}")
                         continue
 
         return extracted
@@ -465,7 +459,9 @@ Use concrete numbers and percentages in all descriptions. Be encouraging but hon
                             events.append(item)
 
                 ct["interference_events"] = events
-                logger.debug(f"[PHASE 2] Fixed interference_events schema (extracted {len(events)} events)")
+                logger.debug(
+                    f"[PHASE 2] Fixed interference_events schema (extracted {len(events)} events)"
+                )
             else:
                 # Default to empty list
                 ct["interference_events"] = []

@@ -3,6 +3,7 @@ Analyze commands for CLI.
 
 Commands for running different types of analysis (performance, zones, cross-training).
 """
+
 from __future__ import annotations
 
 import json
@@ -10,8 +11,13 @@ from pathlib import Path
 
 import click
 
-from ..formatting import console, format_json_as_rich, format_performance_analysis, format_zone_analysis
 from ...tools.wrappers import CrossTrainingTool, PerformanceAnalysisTool, ZoneAnalysisTool
+from ..formatting import (
+    console,
+    format_json_as_rich,
+    format_performance_analysis,
+    format_zone_analysis,
+)
 
 
 @click.group()

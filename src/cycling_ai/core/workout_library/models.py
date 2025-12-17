@@ -60,9 +60,10 @@ class Workout(BaseModel):
     suitable_phases: (
         list[Literal["Base", "Build", "Peak", "Taper", "Foundation", "Recovery"]] | None
     ) = None  # Optional
-    suitable_weekdays: list[
-        Literal["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-    ] | None = None  # Optional
+    suitable_weekdays: (
+        list[Literal["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]]
+        | None
+    ) = None  # Optional
     segments: list[WorkoutSegment]
     base_duration_min: float
     base_tss: float

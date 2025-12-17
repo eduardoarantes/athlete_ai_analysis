@@ -18,8 +18,8 @@ from cycling_ai.orchestration.base import (
 )
 from cycling_ai.orchestration.phases.base_phase import BasePhase
 from cycling_ai.orchestration.session import ConversationSession
-from cycling_ai.tools.wrappers.data_validation_tool import DataValidationTool
 from cycling_ai.tools.wrappers.cache_preparation_tool import CachePreparationTool
+from cycling_ai.tools.wrappers.data_validation_tool import DataValidationTool
 
 logger = logging.getLogger(__name__)
 
@@ -103,10 +103,7 @@ class DataPreparationPhase(BasePhase):
             execution_time = (datetime.now() - phase_start).total_seconds()
             error_msg = f"{type(e).__name__}: {str(e)}"
 
-            logger.error(
-                f"Phase {self.phase_name} failed after {execution_time:.2f}s: "
-                f"{error_msg}"
-            )
+            logger.error(f"Phase {self.phase_name} failed after {execution_time:.2f}s: {error_msg}")
 
             result = PhaseResult(
                 phase_name=self.phase_name,
@@ -138,15 +135,11 @@ class DataPreparationPhase(BasePhase):
 
         # Athlete profile is required
         if not config.athlete_profile_path:
-            raise ValueError(
-                "athlete_profile_path is required for data preparation phase"
-            )
+            raise ValueError("athlete_profile_path is required for data preparation phase")
 
         # At least one data source is required
         if not config.csv_file_path and not config.fit_dir_path:
-            raise ValueError(
-                "At least one data source required: csv_file_path or fit_dir_path"
-            )
+            raise ValueError("At least one data source required: csv_file_path or fit_dir_path")
 
     def _execute_phase(self, context: PhaseContext) -> PhaseResult:
         """
@@ -206,8 +199,7 @@ class DataPreparationPhase(BasePhase):
             validation_msg = validation_result.data.get("message", "Validation passed")
             cache_msg = cache_result.data.get("message", "Cache created")
             response = (
-                f"{validation_msg}\n\n{cache_msg}\n\n"
-                "Data preparation complete. Ready for analysis."
+                f"{validation_msg}\n\n{cache_msg}\n\nData preparation complete. Ready for analysis."
             )
 
             # Extract data for Phase 2+
@@ -221,8 +213,7 @@ class DataPreparationPhase(BasePhase):
 
             execution_time = (datetime.now() - phase_start).total_seconds()
             logger.info(
-                f"[PHASE DATA_PREPARATION] Completed in {execution_time:.2f}s "
-                "(no tokens used)"
+                f"[PHASE DATA_PREPARATION] Completed in {execution_time:.2f}s (no tokens used)"
             )
 
             return PhaseResult(
@@ -236,9 +227,7 @@ class DataPreparationPhase(BasePhase):
 
         except Exception as e:
             execution_time = (datetime.now() - phase_start).total_seconds()
-            logger.error(
-                f"[PHASE DATA_PREPARATION] Failed with exception: {e}", exc_info=True
-            )
+            logger.error(f"[PHASE DATA_PREPARATION] Failed with exception: {e}", exc_info=True)
 
             return PhaseResult(
                 phase_name=self.phase_name,
@@ -297,9 +286,7 @@ class DataPreparationPhase(BasePhase):
 
         return cache_tool.execute(**cache_params)
 
-    def _extract_phase_data(
-        self, response: str, session: ConversationSession
-    ) -> dict[str, Any]:
+    def _extract_phase_data(self, response: str, session: ConversationSession) -> dict[str, Any]:
         """
         Extract structured data from phase execution.
 
@@ -315,9 +302,7 @@ class DataPreparationPhase(BasePhase):
         """
         return {}
 
-    def _get_system_prompt(
-        self, config: dict[str, Any], context: PhaseContext
-    ) -> str:
+    def _get_system_prompt(self, config: dict[str, Any], context: PhaseContext) -> str:
         """
         Get system prompt for LLM.
 
@@ -332,9 +317,7 @@ class DataPreparationPhase(BasePhase):
         """
         return ""
 
-    def _get_user_message(
-        self, config: dict[str, Any], context: PhaseContext
-    ) -> str:
+    def _get_user_message(self, config: dict[str, Any], context: PhaseContext) -> str:
         """
         Get user message for LLM.
 

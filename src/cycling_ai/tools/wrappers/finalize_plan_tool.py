@@ -4,6 +4,7 @@ Finalize training plan tool - Phase 3 of two-phase plan generation.
 Assembles complete training plan from overview + all week details.
 Called once after all weeks have been added.
 """
+
 from __future__ import annotations
 
 import json
@@ -77,7 +78,7 @@ class FinalizePlanTool(BaseTool):
             # Extract parameters
             plan_id = kwargs.get("plan_id")
 
-            logger.info(f"Parameters:")
+            logger.info("Parameters:")
             logger.info(f"  - plan_id: {plan_id}")
 
             # Validate required parameters
@@ -95,14 +96,16 @@ class FinalizePlanTool(BaseTool):
                 )
 
             logger.info(f"Loading overview from: {overview_file}")
-            with open(overview_file, "r") as f:
+            with open(overview_file) as f:
                 overview_data = json.load(f)
 
             # Convert to int (LLM may pass as float)
             total_weeks = int(overview_data["total_weeks"])
             weeks_completed = int(overview_data.get("weeks_completed", 0))
 
-            logger.info(f"Overview loaded: {total_weeks} weeks planned, {weeks_completed} completed")
+            logger.info(
+                f"Overview loaded: {total_weeks} weeks planned, {weeks_completed} completed"
+            )
 
             # Check if all weeks have been added
             if weeks_completed < total_weeks:
@@ -123,7 +126,7 @@ class FinalizePlanTool(BaseTool):
                     )
 
                 logger.info(f"Loading week {week_num} from: {week_file}")
-                with open(week_file, "r") as f:
+                with open(week_file) as f:
                     week_data = json.load(f)
 
                 # Merge overview metadata with week details
@@ -159,14 +162,10 @@ class FinalizePlanTool(BaseTool):
             weekly_hours = athlete_profile.get_weekly_training_hours()
 
             valid, errors = validate_training_plan(
-                complete_plan,
-                available_days=available_days,
-                weekly_hours=weekly_hours
+                complete_plan, available_days=available_days, weekly_hours=weekly_hours
             )
             if not valid:
-                error_msg = "Plan validation failed:\n" + "\n".join(
-                    f"  - {err}" for err in errors
-                )
+                error_msg = "Plan validation failed:\n" + "\n".join(f"  - {err}" for err in errors)
                 raise ValueError(error_msg)
 
             logger.info("Plan validation passed")

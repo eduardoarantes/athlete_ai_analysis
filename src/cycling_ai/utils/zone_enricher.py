@@ -6,6 +6,7 @@ Handles the complete workflow of:
 2. Parsing FIT files for power/zone data
 3. Adding zone columns to DataFrame
 """
+
 from __future__ import annotations
 
 import logging

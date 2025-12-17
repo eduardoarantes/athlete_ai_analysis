@@ -11,6 +11,7 @@ Supports both plain text (.txt) and Jinja2 templates (.jinja2) for prompts.
 Note: Phase 1 (data preparation) no longer uses LLM prompts.
 Defaults to 'default' model. Version should be specified from .cycling-ai.yaml config.
 """
+
 from __future__ import annotations
 
 import json
@@ -109,7 +110,7 @@ class PromptLoader:
                 f"Model: {self.model}, Version: {self.version}"
             )
 
-        with open(metadata_file, "r", encoding="utf-8") as f:
+        with open(metadata_file, encoding="utf-8") as f:
             self._metadata = json.load(f)
 
         return self._metadata
@@ -141,7 +142,7 @@ class PromptLoader:
             )
 
         # Load and cache
-        with open(prompt_file, "r", encoding="utf-8") as f:
+        with open(prompt_file, encoding="utf-8") as f:
             prompt_text = f.read().strip()
 
         self._prompts_cache[agent_name] = prompt_text
@@ -180,7 +181,7 @@ class PromptLoader:
                     f"Model: {self.model}, Version: {self.version}, Agent: {agent_name}"
                 )
 
-            with open(txt_path, "r", encoding="utf-8") as f:
+            with open(txt_path, encoding="utf-8") as f:
                 prompt_text = f.read().strip()
 
             # Use Python string formatting for .txt files
@@ -202,6 +203,7 @@ class PromptLoader:
             except FileNotFoundError as e:
                 # Log warning but don't fail
                 import logging
+
                 logging.warning(f"Failed to load prompt for {agent_name}: {e}")
 
         return prompts
@@ -230,6 +232,7 @@ class PromptLoader:
             # If template variable is missing, return unformatted
             # (for backward compatibility with v1.1 prompts that don't use variables)
             import logging
+
             logging.warning(f"Missing template variable in training_planning prompt: {e}")
             return prompt_template
 
@@ -267,6 +270,7 @@ class PromptLoader:
             return prompt_template.format(**kwargs)
         except KeyError as e:
             import logging
+
             logging.warning(f"Missing template variable in training_planning_overview prompt: {e}")
             return prompt_template
 
@@ -281,6 +285,7 @@ class PromptLoader:
             return prompt_template.format(**kwargs)
         except KeyError as e:
             import logging
+
             logging.warning(f"Missing template variable in training_planning_weeks prompt: {e}")
             return prompt_template
 
@@ -413,6 +418,7 @@ class PromptLoader:
         if not addon_file.exists():
             # Graceful degradation - return empty string if addon doesn't exist
             import logging
+
             logging.warning(
                 f"Cross-training addon file not found: {addon_file}. "
                 "Cross-training analysis will not be available."
@@ -420,7 +426,7 @@ class PromptLoader:
             return ""
 
         # Load addon template
-        with open(addon_file, "r", encoding="utf-8") as f:
+        with open(addon_file, encoding="utf-8") as f:
             template = f.read().strip()
 
         # Format with provided variables
@@ -483,11 +489,7 @@ class PromptLoader:
         if not model_dir.exists():
             return []
 
-        return [
-            d.name
-            for d in model_dir.iterdir()
-            if d.is_dir() and not d.name.startswith(".")
-        ]
+        return [d.name for d in model_dir.iterdir() if d.is_dir() and not d.name.startswith(".")]
 
 
 def get_prompt_loader(

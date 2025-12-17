@@ -25,7 +25,7 @@ class AthleteProfile:
         training_availability: dict[str, Any] | None = None,
         goals: str | None = None,
         current_training_status: str | None = None,
-        raw_training_data_path: str | None = None
+        raw_training_data_path: str | None = None,
     ):
         self.name = name
         self.age = age
@@ -46,30 +46,30 @@ class AthleteProfile:
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for easy access."""
         return {
-            'name': self.name,
-            'age': self.age,
-            'weight_kg': self.weight_kg,
-            'ftp': self.ftp,
-            'max_hr': self.max_hr,
-            'gender': self.gender,
-            'training_availability': self.training_availability,
-            'goals': self.goals,
-            'current_training_status': self.current_training_status,
-            'raw_training_data_path': self.raw_training_data_path
+            "name": self.name,
+            "age": self.age,
+            "weight_kg": self.weight_kg,
+            "ftp": self.ftp,
+            "max_hr": self.max_hr,
+            "gender": self.gender,
+            "training_availability": self.training_availability,
+            "goals": self.goals,
+            "current_training_status": self.current_training_status,
+            "raw_training_data_path": self.raw_training_data_path,
         }
 
     def get_weekly_training_hours(self) -> float:
         """Get available weekly training hours from training availability."""
-        if self.training_availability and 'hours_per_week' in self.training_availability:
-            return float(self.training_availability['hours_per_week'])
+        if self.training_availability and "hours_per_week" in self.training_availability:
+            return float(self.training_availability["hours_per_week"])
         return 7.0  # Default
 
     def get_training_days(self) -> list[str]:
         """Get list of available training days."""
-        if self.training_availability and 'week_days' in self.training_availability:
-            days_str = self.training_availability['week_days']
+        if self.training_availability and "week_days" in self.training_availability:
+            days_str = self.training_availability["week_days"]
             if isinstance(days_str, str):
-                return [day.strip() for day in days_str.split(',')]
+                return [day.strip() for day in days_str.split(",")]
             return days_str
         return []  # Default to empty
 
@@ -117,33 +117,33 @@ def load_athlete_profile(json_file_path: str | Path) -> AthleteProfile:
         raise FileNotFoundError(f"Athlete profile JSON not found: {json_path}")
 
     try:
-        with open(json_path, encoding='utf-8') as f:
+        with open(json_path, encoding="utf-8") as f:
             data = json.load(f)
 
         # Parse weight (handle "84kg" format)
-        weight_str = str(data.get('weight', ''))
-        weight_kg = float(weight_str.replace('kg', '').strip())
+        weight_str = str(data.get("weight", ""))
+        weight_kg = float(weight_str.replace("kg", "").strip())
 
         # Parse FTP (handle "260w" format)
-        ftp_str = str(data.get('FTP', ''))
-        ftp = float(ftp_str.replace('w', '').replace('W', '').strip())
+        ftp_str = str(data.get("FTP", ""))
+        ftp = float(ftp_str.replace("w", "").replace("W", "").strip())
 
         # Get other fields
-        age = int(data.get('age', 0))
+        age = int(data.get("age", 0))
         if age <= 0:
             raise ValueError("Age is required and must be positive")
 
-        critical_hr = data.get('critical_HR')
+        critical_hr = data.get("critical_HR")
         max_hr = int(critical_hr) if critical_hr else None
 
-        gender = data.get('gender')
-        training_availability = data.get('training_availability', {})
-        goals = data.get('goals')
-        current_training_status = data.get('current_training_status')
-        raw_training_data_path = data.get('raw_training_data_path')
+        gender = data.get("gender")
+        training_availability = data.get("training_availability", {})
+        goals = data.get("goals")
+        current_training_status = data.get("current_training_status")
+        raw_training_data_path = data.get("raw_training_data_path")
 
         # Extract name from file path if not in JSON
-        name = data.get('name', json_path.parent.name)
+        name = data.get("name", json_path.parent.name)
 
         # Create and return profile
         return AthleteProfile(
@@ -156,7 +156,7 @@ def load_athlete_profile(json_file_path: str | Path) -> AthleteProfile:
             training_availability=training_availability,
             goals=goals,
             current_training_status=current_training_status,
-            raw_training_data_path=raw_training_data_path
+            raw_training_data_path=raw_training_data_path,
         )
 
     except json.JSONDecodeError as e:

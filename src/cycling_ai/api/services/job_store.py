@@ -3,6 +3,7 @@ In-memory job storage for background task tracking.
 
 Simple dictionary-based storage for MVP. Can be replaced with database later.
 """
+
 from __future__ import annotations
 
 import asyncio

@@ -1,4 +1,5 @@
 """Pydantic models for performance analysis JSON output."""
+
 from __future__ import annotations
 
 from typing import Literal
@@ -14,7 +15,9 @@ class AthleteProfile(BaseModel):
     weight: float = Field(..., description="Weight in kilograms")
     w_kg: float = Field(..., description="Watts per kilogram (FTP/weight)")
     age: int | None = Field(None, description="Athlete's age")
-    experience_level: str | None = Field(None, description="Experience level (e.g., Beginner, Intermediate, Advanced)")
+    experience_level: str | None = Field(
+        None, description="Experience level (e.g., Beginner, Intermediate, Advanced)"
+    )
 
 
 class PerformanceMetric(BaseModel):
@@ -82,11 +85,17 @@ class LoadBalance(BaseModel):
     """Training load balance across activity categories."""
 
     cycling_percent: float = Field(..., ge=0, le=100, description="Percentage of load from cycling")
-    strength_percent: float = Field(..., ge=0, le=100, description="Percentage of load from strength training")
-    cardio_percent: float = Field(..., ge=0, le=100, description="Percentage of load from cardio activities")
+    strength_percent: float = Field(
+        ..., ge=0, le=100, description="Percentage of load from strength training"
+    )
+    cardio_percent: float = Field(
+        ..., ge=0, le=100, description="Percentage of load from cardio activities"
+    )
     assessment: str | None = Field(None, description="Assessment of load balance appropriateness")
     is_optimal: bool | None = Field(None, description="Whether load balance is optimal")
-    recommendation: str | None = Field(None, description="Recommendation for load balance adjustment")
+    recommendation: str | None = Field(
+        None, description="Recommendation for load balance adjustment"
+    )
 
 
 class InterferenceEvent(BaseModel):
@@ -96,14 +105,18 @@ class InterferenceEvent(BaseModel):
     activity1: str = Field(..., description="First activity name")
     activity2: str = Field(..., description="Second activity name")
     hours_between: float = Field(..., ge=0, description="Hours between activities")
-    score: int | None = Field(None, ge=0, le=10, description="Interference severity score (0-10, optional)")
+    score: int | None = Field(
+        None, ge=0, le=10, description="Interference severity score (0-10, optional)"
+    )
     explanation: str = Field(..., description="Explanation of why this is an interference")
 
 
 class CrossTrainingAnalysis(BaseModel):
     """Cross-training impact analysis data."""
 
-    analyzed: bool = Field(default=True, description="Whether cross-training analysis was performed")
+    analyzed: bool = Field(
+        default=True, description="Whether cross-training analysis was performed"
+    )
     activity_distribution: list[ActivityDistribution] = Field(
         default_factory=list, description="Distribution of activities by category"
     )
@@ -125,18 +138,15 @@ class PerformanceAnalysis(BaseModel):
     performance_comparison: list[PerformanceMetric] = Field(
         ..., description="Performance metrics comparison"
     )
-    time_in_zones: list[ZoneDistribution] = Field(
-        ..., description="Training zone distribution"
-    )
+    time_in_zones: list[ZoneDistribution] = Field(..., description="Training zone distribution")
     key_trends: list[KeyTrend] = Field(..., description="Key performance trends")
     insights: list[Insight] = Field(..., description="Training insights")
     recommendations: RecommendationCategories = Field(..., description="Training recommendations")
     cross_training: CrossTrainingAnalysis | None = Field(
-        None, description="Cross-training impact analysis (optional, only if athlete does multiple sports)"
+        None,
+        description="Cross-training impact analysis (optional, only if athlete does multiple sports)",
     )
-    analysis_period_months: int = Field(
-        default=6, description="Number of months analyzed"
-    )
+    analysis_period_months: int = Field(default=6, description="Number of months analyzed")
 
     class Config:
         """Pydantic configuration."""

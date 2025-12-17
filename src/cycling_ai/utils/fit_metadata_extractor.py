@@ -8,6 +8,7 @@ without requiring a CSV export from Strava. It extracts all essential metadata
 Uses fitdecode library for metadata extraction. fitdecode handles corrupted files
 from devices like Coros Dura better than fitparse.
 """
+
 from __future__ import annotations
 
 import gzip
@@ -65,7 +66,7 @@ def extract_fit_metadata(fit_file_path: str | Path) -> dict[str, Any] | None:
         fit_reader = fitdecode.FitReader(
             file_to_parse,
             check_crc=fitdecode.CrcCheck.DISABLED,
-            error_handling=fitdecode.ErrorHandling.IGNORE
+            error_handling=fitdecode.ErrorHandling.IGNORE,
         )
 
         # Get session message (contains summary data)
@@ -145,7 +146,9 @@ def extract_fit_metadata(fit_file_path: str | Path) -> dict[str, Any] | None:
         return {
             "Activity ID": int(activity_id) if activity_id.isdigit() else activity_id,
             "Activity Date": activity_date,
-            "Activity Name": f"{activity_type_display} - {activity_date.strftime('%B %d, %Y')}" if isinstance(activity_date, datetime) else activity_type_display,
+            "Activity Name": f"{activity_type_display} - {activity_date.strftime('%B %d, %Y')}"
+            if isinstance(activity_date, datetime)
+            else activity_type_display,
             "Activity Type": activity_type_display,  # Strava-style display name
             "sport": sport,  # Raw sport type (lowercase, normalized)
             "sub_sport": sub_sport,  # Sub-sport detail (e.g., road, mountain, indoor)
@@ -234,6 +237,8 @@ def scan_fit_directory(fit_dir: str | Path) -> list[dict[str, Any]]:
         if metadata:
             activities.append(metadata)
 
-    logger.info(f"Successfully extracted metadata from {len(activities)}/{len(fit_files)} FIT files")
+    logger.info(
+        f"Successfully extracted metadata from {len(activities)}/{len(fit_files)} FIT files"
+    )
 
     return activities

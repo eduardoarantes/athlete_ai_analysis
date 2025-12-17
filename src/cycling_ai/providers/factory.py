@@ -4,6 +4,7 @@ Provider factory for creating LLM provider instances.
 Provides a centralized registry and factory pattern for instantiating
 provider adapters from configuration.
 """
+
 from __future__ import annotations
 
 from cycling_ai.providers.base import BaseProvider, ProviderConfig
@@ -65,8 +66,7 @@ class ProviderFactory:
         if provider_name not in cls._providers:
             available = ", ".join(sorted(cls._providers.keys()))
             raise ValueError(
-                f"Unknown provider '{config.provider_name}'. "
-                f"Available providers: {available}"
+                f"Unknown provider '{config.provider_name}'. Available providers: {available}"
             )
 
         provider_class = cls._providers[provider_name]

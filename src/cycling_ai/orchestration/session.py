@@ -4,6 +4,7 @@ Conversation session management.
 Manages multi-turn conversation state, message history, and context
 for LLM-powered conversational interface.
 """
+
 from __future__ import annotations
 
 import json
@@ -42,7 +43,7 @@ def _deep_serialize(obj: Any) -> Any:
 
     # Try to convert iterables like RepeatedComposite
     try:
-        if hasattr(obj, '__iter__') and not isinstance(obj, str):
+        if hasattr(obj, "__iter__") and not isinstance(obj, str):
             return [_deep_serialize(item) for item in obj]
     except (TypeError, AttributeError):
         pass
@@ -239,9 +240,7 @@ class SessionManager:
 
         # Add system message if provided
         if system_prompt:
-            session.add_message(
-                ConversationMessage(role="system", content=system_prompt)
-            )
+            session.add_message(ConversationMessage(role="system", content=system_prompt))
 
         self._sessions[session_id] = session
         self._persist_session(session)

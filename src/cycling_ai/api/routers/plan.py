@@ -3,13 +3,13 @@ Plan Router.
 
 API endpoints for training plan generation.
 """
+
 from __future__ import annotations
 
 import json
 import logging
 import tempfile
 from pathlib import Path
-from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.responses import JSONResponse
@@ -60,8 +60,7 @@ async def _execute_plan_generation(
                 "FTP": f"{request.athlete_profile.ftp}w",
                 "critical_HR": request.athlete_profile.max_hr,
                 "gender": "unknown",
-                "training_availability": request.athlete_profile.training_availability
-                or {},
+                "training_availability": request.athlete_profile.training_availability or {},
                 "goals": " ".join(request.athlete_profile.goals or []),
                 "current_training_status": request.athlete_profile.experience_level
                 or "intermediate",

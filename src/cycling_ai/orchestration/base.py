@@ -261,9 +261,7 @@ class WorkflowResult:
 
         Workflow is successful if all non-skipped phases completed.
         """
-        return all(
-            r.success for r in self.phase_results if r.status != PhaseStatus.SKIPPED
-        )
+        return all(r.success for r in self.phase_results if r.status != PhaseStatus.SKIPPED)
 
     def get_phase_result(self, phase_name: str) -> PhaseResult | None:
         """

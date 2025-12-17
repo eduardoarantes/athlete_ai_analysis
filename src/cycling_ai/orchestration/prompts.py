@@ -6,11 +6,12 @@ All prompts are stored in the /prompts directory with model/version organization
 
 Uses PromptLoader for prompt management - no hardcoded prompts.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
 
-from cycling_ai.orchestration.prompt_loader import PromptLoader, get_prompt_loader
+from cycling_ai.orchestration.prompt_loader import get_prompt_loader
 
 
 class AgentPromptsManager:
@@ -39,9 +40,7 @@ class AgentPromptsManager:
             FileNotFoundError: If prompt files cannot be found
         """
         self._prompt_loader = get_prompt_loader(
-            prompts_dir=prompts_dir,
-            model=model,
-            version=version
+            prompts_dir=prompts_dir, model=model, version=version
         )
 
         # Verify prompts exist

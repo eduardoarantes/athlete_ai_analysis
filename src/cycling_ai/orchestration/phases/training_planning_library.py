@@ -112,9 +112,7 @@ class LibraryBasedTrainingPlanningWeeks:
 
             # Validate required fields
             if week_num is None:
-                raise ValueError(
-                    f"Week data missing 'week_number' or 'week' field: {week_data}"
-                )
+                raise ValueError(f"Week data missing 'week_number' or 'week' field: {week_data}")
             if not phase:
                 raise ValueError(f"Week {week_num} missing 'phase' field")
             if not training_days:
@@ -140,16 +138,12 @@ class LibraryBasedTrainingPlanningWeeks:
 
             if not result.success:
                 errors = result.errors or ["Unknown error"]
-                raise RuntimeError(
-                    f"Failed to add week {week_num}: {', '.join(errors)}"
-                )
+                raise RuntimeError(f"Failed to add week {week_num}: {', '.join(errors)}")
 
             weeks_added += 1
             logger.info(f"[PHASE 3b-LIBRARY] Week {week_num} added successfully")
 
-        logger.info(
-            f"[PHASE 3b-LIBRARY] Completed: {weeks_added} weeks added successfully"
-        )
+        logger.info(f"[PHASE 3b-LIBRARY] Completed: {weeks_added} weeks added successfully")
 
         return {
             "success": True,
@@ -267,9 +261,7 @@ class LibraryBasedTrainingPlanningWeeks:
             with open(overview_path) as f:
                 data = json.load(f)
         except json.JSONDecodeError as e:
-            raise ValueError(
-                f"Invalid JSON in overview file {overview_path}: {e}"
-            ) from e
+            raise ValueError(f"Invalid JSON in overview file {overview_path}: {e}") from e
 
         if "weekly_overview" not in data:
             raise ValueError(
@@ -354,10 +346,7 @@ class LibraryBasedTrainingPlanningWeeks:
 
         return scaled_workouts
 
-    def _select_and_scale_workouts(
-        self,
-        week: dict[str, Any]
-    ) -> list[dict[str, Any]]:
+    def _select_and_scale_workouts(self, week: dict[str, Any]) -> list[dict[str, Any]]:
         """
         Select workouts and scale weekends to hit time target.
 
@@ -391,7 +380,7 @@ class LibraryBasedTrainingPlanningWeeks:
 
             # Skip rest days
             if "rest" in workout_types:
-                logger.info(f"  → Skipping rest day")
+                logger.info("  → Skipping rest day")
                 continue
 
             is_weekend = day["weekday"] in ["Saturday", "Sunday"]
@@ -450,7 +439,11 @@ class LibraryBasedTrainingPlanningWeeks:
                     # Ensure all segments have duration_min calculated (for interval sets)
                     for segment in workout_dict.get("segments", []):
                         if segment.get("duration_min") is None:
-                            if segment.get("sets") and segment.get("work") and segment.get("recovery"):
+                            if (
+                                segment.get("sets")
+                                and segment.get("work")
+                                and segment.get("recovery")
+                            ):
                                 # Calculate duration for interval sets
                                 work_duration = segment["work"].get("duration_min", 0) or 0
                                 recovery_duration = segment["recovery"].get("duration_min", 0) or 0
@@ -532,14 +525,14 @@ class LibraryBasedTrainingPlanningWeeks:
 
         logger.info(
             f"Week {week.get('week_number')}: "
-            f"Target {target_minutes/60:.1f}h (cycling only), "
-            f"Weekdays {weekday_minutes/60:.1f}h, "
-            f"Weekends (before) {weekend_minutes_before/60:.1f}h, "
-            f"Deficit {deficit_minutes/60:.1f}h, "
-            f"Weekends (after) {(actual_cycling_minutes-weekday_minutes)/60:.1f}h, "
-            f"Cycling {actual_cycling_minutes/60:.1f}h, "
-            f"Strength {actual_strength_minutes/60:.1f}h, "
-            f"Total {actual_total_minutes/60:.1f}h"
+            f"Target {target_minutes / 60:.1f}h (cycling only), "
+            f"Weekdays {weekday_minutes / 60:.1f}h, "
+            f"Weekends (before) {weekend_minutes_before / 60:.1f}h, "
+            f"Deficit {deficit_minutes / 60:.1f}h, "
+            f"Weekends (after) {(actual_cycling_minutes - weekday_minutes) / 60:.1f}h, "
+            f"Cycling {actual_cycling_minutes / 60:.1f}h, "
+            f"Strength {actual_strength_minutes / 60:.1f}h, "
+            f"Total {actual_total_minutes / 60:.1f}h"
         )
 
         # Debug: Log each workout being returned
@@ -548,7 +541,7 @@ class LibraryBasedTrainingPlanningWeeks:
             workout_dur = sum(seg.get("duration_min", 0) for seg in w.get("segments", []))
             is_strength = self._is_strength_workout(w)
             logger.info(
-                f"  [{i+1}] {w.get('weekday')}: {w.get('description', 'N/A')[:40]} "
+                f"  [{i + 1}] {w.get('weekday')}: {w.get('description', 'N/A')[:40]} "
                 f"({workout_dur:.0f}min, type={'STRENGTH' if is_strength else 'CYCLING'})"
             )
 

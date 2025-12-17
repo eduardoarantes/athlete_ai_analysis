@@ -68,7 +68,9 @@ def validate_training_plan(
 
             # Check workouts is a list
             if not isinstance(workouts, list):
-                errors.append(f"Week {week_num} 'workouts' must be a list, got {type(workouts).__name__}")
+                errors.append(
+                    f"Week {week_num} 'workouts' must be a list, got {type(workouts).__name__}"
+                )
                 continue
 
             # Check at least one workout
@@ -81,15 +83,27 @@ def validate_training_plan(
             for workout_idx, workout in enumerate(workouts, 1):
                 # Validate weekday field exists
                 if "weekday" not in workout:
-                    errors.append(f"Week {week_num}, workout {workout_idx}: Missing 'weekday' field")
+                    errors.append(
+                        f"Week {week_num}, workout {workout_idx}: Missing 'weekday' field"
+                    )
                     continue
 
                 day = workout["weekday"]
 
                 # Validate day name
-                valid_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+                valid_days = [
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday",
+                    "Friday",
+                    "Saturday",
+                    "Sunday",
+                ]
                 if day not in valid_days:
-                    errors.append(f"Week {week_num}, workout {workout_idx}: Invalid weekday '{day}' (must be one of {valid_days})")
+                    errors.append(
+                        f"Week {week_num}, workout {workout_idx}: Invalid weekday '{day}' (must be one of {valid_days})"
+                    )
                     continue
 
                 # Check day is in available days
@@ -118,7 +132,16 @@ def validate_training_plan(
                 day_minutes: float = 0
                 for seg_idx, segment in enumerate(segments, 1):
                     # Check segment type
-                    valid_types = {"warmup", "interval", "work", "recovery", "cooldown", "steady", "tempo", "strength"}
+                    valid_types = {
+                        "warmup",
+                        "interval",
+                        "work",
+                        "recovery",
+                        "cooldown",
+                        "steady",
+                        "tempo",
+                        "strength",
+                    }
                     seg_type = segment.get("type")
                     if seg_type not in valid_types:
                         errors.append(
@@ -127,7 +150,9 @@ def validate_training_plan(
 
                     # Check duration
                     if "duration_min" not in segment:
-                        errors.append(f"Week {week_num}, {day}, segment {seg_idx}: Missing 'duration_min' field")
+                        errors.append(
+                            f"Week {week_num}, {day}, segment {seg_idx}: Missing 'duration_min' field"
+                        )
                     elif not isinstance(segment["duration_min"], (int, float)):
                         errors.append(
                             f"Week {week_num}, {day}, segment {seg_idx}: 'duration_min' must be a number"
@@ -136,7 +161,7 @@ def validate_training_plan(
                         day_minutes += segment["duration_min"]
 
                     # Skip power zone validation for strength segments
-                    is_strength_segment = (seg_type == "strength")
+                    is_strength_segment = seg_type == "strength"
                     if is_strength_segment:
                         # Strength segments don't need power zones
                         continue
@@ -147,7 +172,9 @@ def validate_training_plan(
 
                     # Check power percentage fields (only for cycling segments)
                     if "power_low_pct" not in segment:
-                        errors.append(f"Week {week_num}, {day}, segment {seg_idx}: Missing 'power_low_pct' field")
+                        errors.append(
+                            f"Week {week_num}, {day}, segment {seg_idx}: Missing 'power_low_pct' field"
+                        )
                     elif not isinstance(segment["power_low_pct"], (int, float)):
                         errors.append(
                             f"Week {week_num}, {day}, segment {seg_idx}: 'power_low_pct' must be a number"
@@ -276,28 +303,24 @@ def finalize_training_plan(
             raise ValueError(f"Week {week_data.get('week_number')} missing 'workouts' field")
 
         if not isinstance(week_data["workouts"], list):
-            raise ValueError(
-                f"Week {week_data.get('week_number')} 'workouts' must be a list"
-            )
+            raise ValueError(f"Week {week_data.get('week_number')} 'workouts' must be a list")
 
     # Build athlete profile data for metadata
     athlete_profile_data = {
-        'age': athlete_profile.age,
-        'ftp': float(current_ftp),
-        'name': athlete_profile.name,
-        'gender': athlete_profile.gender,
-        'weight_kg': athlete_profile.weight_kg,
-        'power_to_weight': (
-            float(current_ftp / athlete_profile.weight_kg)
-            if athlete_profile.weight_kg
-            else None
+        "age": athlete_profile.age,
+        "ftp": float(current_ftp),
+        "name": athlete_profile.name,
+        "gender": athlete_profile.gender,
+        "weight_kg": athlete_profile.weight_kg,
+        "power_to_weight": (
+            float(current_ftp / athlete_profile.weight_kg) if athlete_profile.weight_kg else None
         ),
-        'max_hr': athlete_profile.max_hr,
-        'training_availability': athlete_profile.training_availability,
-        'goals': athlete_profile.goals,
-        'current_training_status': athlete_profile.current_training_status,
-        'available_training_days': athlete_profile.get_training_days(),
-        'weekly_training_hours': athlete_profile.get_weekly_training_hours(),
+        "max_hr": athlete_profile.max_hr,
+        "training_availability": athlete_profile.training_availability,
+        "goals": athlete_profile.goals,
+        "current_training_status": athlete_profile.current_training_status,
+        "available_training_days": athlete_profile.get_training_days(),
+        "weekly_training_hours": athlete_profile.get_weekly_training_hours(),
     }
 
     # Calculate FTP progression
@@ -306,18 +329,18 @@ def finalize_training_plan(
 
     # Build complete plan structure
     plan_data = {
-        'athlete_profile': athlete_profile_data,
-        'plan_metadata': {
-            'total_weeks': total_weeks,
-            'current_ftp': float(current_ftp),
-            'target_ftp': float(target_ftp),
-            'ftp_gain_watts': float(ftp_gain),
-            'ftp_gain_percent': float(ftp_gain_percent),
-            'plan_type': 'LLM-designed personalized plan',
+        "athlete_profile": athlete_profile_data,
+        "plan_metadata": {
+            "total_weeks": total_weeks,
+            "current_ftp": float(current_ftp),
+            "target_ftp": float(target_ftp),
+            "ftp_gain_watts": float(ftp_gain),
+            "ftp_gain_percent": float(ftp_gain_percent),
+            "plan_type": "LLM-designed personalized plan",
         },
-        'coaching_notes': coaching_notes,
-        'monitoring_guidance': monitoring_guidance,
-        'weekly_plan': weekly_plan,
+        "coaching_notes": coaching_notes,
+        "monitoring_guidance": monitoring_guidance,
+        "weekly_plan": weekly_plan,
     }
 
     # Convert to JSON-serializable types

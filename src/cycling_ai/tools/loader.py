@@ -1,4 +1,5 @@
 """Tool auto-loading and registration."""
+
 from __future__ import annotations
 
 import importlib

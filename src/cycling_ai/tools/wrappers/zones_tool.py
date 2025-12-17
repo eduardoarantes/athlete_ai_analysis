@@ -3,6 +3,7 @@ Zone analysis tool wrapper.
 
 Wraps core.zones.analyze_time_in_zones() as a BaseTool for LLM provider integration.
 """
+
 from __future__ import annotations
 
 import json
@@ -123,9 +124,7 @@ class ZoneAnalysisTool(BaseTool):
                     success=False,
                     data=None,
                     format="json",
-                    errors=[
-                        f"Activities directory not found at path: {activities_directory}"
-                    ],
+                    errors=[f"Activities directory not found at path: {activities_directory}"],
                 )
 
             if not activities_path.is_dir():
@@ -142,9 +141,7 @@ class ZoneAnalysisTool(BaseTool):
                     success=False,
                     data=None,
                     format="json",
-                    errors=[
-                        f"Athlete profile not found at path: {athlete_profile_json}"
-                    ],
+                    errors=[f"Athlete profile not found at path: {athlete_profile_json}"],
                 )
 
             # Load athlete profile

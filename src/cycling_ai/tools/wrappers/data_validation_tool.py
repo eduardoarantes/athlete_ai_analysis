@@ -3,6 +3,7 @@ Data validation tool for Phase 1: Data Preparation.
 
 Validates that required data files exist and have correct structure.
 """
+
 from __future__ import annotations
 
 import json
@@ -87,7 +88,7 @@ class DataValidationTool(BaseTool):
             return ToolExecutionResult(
                 success=False,
                 data={"success": False, "issues": issues, "warnings": warnings},
-                format="json"
+                format="json",
             )
 
         # Validate CSV file (if provided)
@@ -121,7 +122,7 @@ class DataValidationTool(BaseTool):
             issues.append(f"Profile path is not a file: {profile_path}")
         else:
             try:
-                with open(profile_path, 'r') as f:
+                with open(profile_path) as f:
                     profile_data = json.load(f)
 
                 # Check for key fields
@@ -142,7 +143,9 @@ class DataValidationTool(BaseTool):
         if fit_dir:
             if not fit_dir.exists():
                 if fit_only_mode:
-                    issues.append(f"FIT directory not found: {fit_dir} (required for FIT-only mode)")
+                    issues.append(
+                        f"FIT directory not found: {fit_dir} (required for FIT-only mode)"
+                    )
                 else:
                     warnings.append(f"FIT directory not found: {fit_dir}")
             elif not fit_dir.is_dir():
@@ -156,7 +159,9 @@ class DataValidationTool(BaseTool):
                 fit_files_count = len(fit_files)
                 if fit_files_count == 0:
                     if fit_only_mode:
-                        issues.append(f"No FIT files found in directory: {fit_dir} (required for FIT-only mode)")
+                        issues.append(
+                            f"No FIT files found in directory: {fit_dir} (required for FIT-only mode)"
+                        )
                     else:
                         warnings.append(f"No FIT files found in directory: {fit_dir}")
         elif fit_only_mode:
@@ -196,11 +201,7 @@ class DataValidationTool(BaseTool):
         else:
             result["message"] = f"❌ Validation failed with {len(issues)} issue(s)"
 
-        return ToolExecutionResult(
-            success=success,
-            data=result,
-            format="json"
-        )
+        return ToolExecutionResult(success=success, data=result, format="json")
 
 
 # Register tool on module import

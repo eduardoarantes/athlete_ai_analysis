@@ -129,10 +129,7 @@ class TrainingPlanningPhase(BasePhase):
 
             # Phase 3b: Add weekly details (library-based or LLM-based)
             workout_source = context.config.workout_source
-            logger.info(
-                f"[PHASE 3b] Starting weekly details generation "
-                f"(source={workout_source})"
-            )
+            logger.info(f"[PHASE 3b] Starting weekly details generation (source={workout_source})")
 
             if workout_source == "library":
                 weeks_result = self._execute_phase_3b_library(context_3b)
@@ -140,9 +137,7 @@ class TrainingPlanningPhase(BasePhase):
                 weeks_result = self._execute_phase_3b_weeks(context_3b)
 
             if not weeks_result.success:
-                weeks_result.execution_time_seconds = (
-                    datetime.now() - phase_start
-                ).total_seconds()
+                weeks_result.execution_time_seconds = (datetime.now() - phase_start).total_seconds()
                 return weeks_result
 
             logger.info("[PHASE 3b] Weekly details generation complete")
@@ -171,9 +166,7 @@ class TrainingPlanningPhase(BasePhase):
 
             # Calculate total tokens used
             total_tokens = (
-                overview_result.tokens_used
-                + weeks_result.tokens_used
-                + finalize_result.tokens_used
+                overview_result.tokens_used + weeks_result.tokens_used + finalize_result.tokens_used
             )
 
             return PhaseResult(
@@ -208,8 +201,8 @@ class TrainingPlanningPhase(BasePhase):
         Returns:
             PhaseResult with plan_id and overview data
         """
-        from cycling_ai.core.power_zones import calculate_power_zones
         from cycling_ai.core.athlete import load_athlete_profile
+        from cycling_ai.core.power_zones import calculate_power_zones
 
         phase_start = datetime.now()
 
@@ -270,7 +263,7 @@ class TrainingPlanningPhase(BasePhase):
             zones_text += (
                 f"- **{zone_id.upper()} ({zone_data['name']})**: "
                 f"{zone_data['min']}-{zone_data['max']}W "
-                f"({int(zone_data['ftp_pct_min']*100)}-{int(zone_data['ftp_pct_max']*100)}% FTP) "
+                f"({int(zone_data['ftp_pct_min'] * 100)}-{int(zone_data['ftp_pct_max'] * 100)}% FTP) "
                 f"- {zone_data['description']}\n"
             )
 
@@ -280,7 +273,9 @@ class TrainingPlanningPhase(BasePhase):
 
         # Extract optional athlete profile fields
         goals = getattr(athlete_profile, "goals", None) or "Not specified"
-        current_training_status = getattr(athlete_profile, "current_training_status", None) or "Not specified"
+        current_training_status = (
+            getattr(athlete_profile, "current_training_status", None) or "Not specified"
+        )
 
         # Prepare prompt parameters
         prompt_params = {
@@ -300,9 +295,7 @@ class TrainingPlanningPhase(BasePhase):
         }
 
         # Generate performance summary from Phase 2 data
-        performance_summary = self._generate_performance_summary(
-            context.previous_phase_data
-        )
+        performance_summary = self._generate_performance_summary(context.previous_phase_data)
         prompt_params["performance_summary"] = performance_summary
 
         # Get prompts
@@ -386,8 +379,8 @@ class TrainingPlanningPhase(BasePhase):
         Returns:
             PhaseResult with all weeks added
         """
-        from cycling_ai.core.power_zones import calculate_power_zones
         from cycling_ai.core.athlete import load_athlete_profile
+        from cycling_ai.core.power_zones import calculate_power_zones
 
         phase_start = datetime.now()
 
@@ -416,7 +409,7 @@ class TrainingPlanningPhase(BasePhase):
             zones_text += (
                 f"- **{zone_id.upper()} ({zone_data['name']})**: "
                 f"{zone_data['min']}-{zone_data['max']}W "
-                f"({int(zone_data['ftp_pct_min']*100)}-{int(zone_data['ftp_pct_max']*100)}% FTP) "
+                f"({int(zone_data['ftp_pct_min'] * 100)}-{int(zone_data['ftp_pct_max'] * 100)}% FTP) "
                 f"- {zone_data['description']}\n"
             )
 
@@ -490,6 +483,7 @@ class TrainingPlanningPhase(BasePhase):
 
             except Exception as e:
                 import traceback
+
                 tb_str = "".join(traceback.format_exception(type(e), e, e.__traceback__))
                 logger.error(f"[PHASE 3b] Week {week_num} exception: {e}\n{tb_str}")
                 return PhaseResult(
@@ -502,7 +496,9 @@ class TrainingPlanningPhase(BasePhase):
                 )
 
         execution_time = (datetime.now() - phase_start).total_seconds()
-        logger.info(f"[PHASE 3b] All {total_weeks} weeks generated successfully in {execution_time:.2f}s")
+        logger.info(
+            f"[PHASE 3b] All {total_weeks} weeks generated successfully in {execution_time:.2f}s"
+        )
 
         return PhaseResult(
             phase_name="training_planning_weeks",
@@ -543,10 +539,7 @@ class TrainingPlanningPhase(BasePhase):
                 "Phase 3a must complete successfully first."
             )
 
-        logger.info(
-            f"[PHASE 3b-LIBRARY] Using library-based workout selection "
-            f"for plan {plan_id}"
-        )
+        logger.info(f"[PHASE 3b-LIBRARY] Using library-based workout selection for plan {plan_id}")
 
         try:
             # Initialize library-based phase with temperature for variety
@@ -568,8 +561,7 @@ class TrainingPlanningPhase(BasePhase):
                 phase_name="training_planning_weeks",
                 status=PhaseStatus.COMPLETED,
                 agent_response=(
-                    f"Library-based: {weeks_added} weeks generated in "
-                    f"{execution_time:.2f}s"
+                    f"Library-based: {weeks_added} weeks generated in {execution_time:.2f}s"
                 ),
                 extracted_data={"weeks_added": list(range(1, weeks_added + 1))},
                 execution_time_seconds=execution_time,
@@ -578,6 +570,7 @@ class TrainingPlanningPhase(BasePhase):
 
         except Exception as e:
             import traceback
+
             tb_str = "".join(traceback.format_exception(type(e), e, e.__traceback__))
             execution_time = (datetime.now() - phase_start).total_seconds()
             error_msg = f"Library-based workout selection failed: {str(e)}"
@@ -617,17 +610,13 @@ class TrainingPlanningPhase(BasePhase):
         # Extract plan_id from context (set in Phase 3a)
         plan_id = base_params.get("plan_id")
         if not plan_id:
-            raise ValueError(
-                f"[PHASE 3b] plan_id not found in base_params for week {week_number}"
-            )
+            raise ValueError(f"[PHASE 3b] plan_id not found in base_params for week {week_number}")
 
         # Build context string showing successful weeks
         context_text = f"Successfully completed weeks: {successful_weeks if successful_weeks else 'None (first week)'}"
 
         # Get prompts with week-specific context
-        system_prompt = context.prompts_manager.get_training_planning_weeks_prompt(
-            **base_params
-        )
+        system_prompt = context.prompts_manager.get_training_planning_weeks_prompt(**base_params)
 
         # Get user prompt from file with all the detailed instructions
         user_prompt_template = context.prompts_manager.get_training_planning_weeks_user_prompt(
@@ -635,11 +624,7 @@ class TrainingPlanningPhase(BasePhase):
         )
 
         # Build user message with context and detailed instructions
-        user_message = (
-            f"{context_text}\n\n"
-            f"**Use plan_id: `{plan_id}`**\n\n"
-            f"{user_prompt_template}"
-        )
+        user_message = f"{context_text}\n\n**Use plan_id: `{plan_id}`**\n\n{user_prompt_template}"
 
         # Create FRESH session for this week
         session = context.session_manager.create_session(
@@ -677,7 +662,9 @@ class TrainingPlanningPhase(BasePhase):
                 # Week not added - check for errors in session
                 error_details = self._extract_week_error_details(session)
                 if error_details:
-                    logger.warning(f"[PHASE 3b] Week {week_number} attempt {attempt}/{max_retries} had errors: {error_details['error_summary']}")
+                    logger.warning(
+                        f"[PHASE 3b] Week {week_number} attempt {attempt}/{max_retries} had errors: {error_details['error_summary']}"
+                    )
 
                     if attempt < max_retries:
                         # Retry with fresh session (rebuild pattern)
@@ -701,7 +688,7 @@ class TrainingPlanningPhase(BasePhase):
                             f"**Use plan_id: `{plan_id}`**\n\n"
                             f"**Previous Attempt Failed for Week {week_number}:**\n\n"
                             f"{error_details['full_error']}\n\n"
-                            f"Call `add_week_details` with plan_id=\"{plan_id}\" and week_number={week_number}, correcting the issues above."
+                            f'Call `add_week_details` with plan_id="{plan_id}" and week_number={week_number}, correcting the issues above.'
                         )
                         continue
                     else:
@@ -709,7 +696,7 @@ class TrainingPlanningPhase(BasePhase):
                         return {
                             "success": False,
                             "tokens_used": session.get_total_tokens(),
-                            "errors": [error_details['error_summary']],
+                            "errors": [error_details["error_summary"]],
                         }
 
                 # No errors but week not added - unexpected
@@ -735,9 +722,7 @@ class TrainingPlanningPhase(BasePhase):
             "errors": [f"Week {week_number} failed after {max_retries} attempts"],
         }
 
-    def _extract_week_error_details(
-        self, session: ConversationSession
-    ) -> dict[str, str] | None:
+    def _extract_week_error_details(self, session: ConversationSession) -> dict[str, str] | None:
         """
         Extract detailed error information from tool results in session.
 
@@ -757,7 +742,7 @@ class TrainingPlanningPhase(BasePhase):
                         content = message.content
                         if content:
                             # Extract summary (first line or first 100 chars)
-                            lines = content.split('\n')
+                            lines = content.split("\n")
                             summary = lines[0] if lines else content[:100]
 
                             return {
@@ -784,9 +769,7 @@ class TrainingPlanningPhase(BasePhase):
         # Extract plan_id from Phase 3a
         plan_id = context.previous_phase_data.get("plan_id")
         if not plan_id:
-            raise ValueError(
-                "[PHASE 3c] Cannot proceed: No plan_id found in Phase 3a results."
-            )
+            raise ValueError("[PHASE 3c] Cannot proceed: No plan_id found in Phase 3a results.")
 
         logger.info("[PHASE 3c FINALIZE] Starting plan finalization (no LLM)")
         logger.info(f"[PHASE 3c FINALIZE] plan_id: {plan_id}")
@@ -815,9 +798,7 @@ class TrainingPlanningPhase(BasePhase):
         }
 
         execution_time = (datetime.now() - phase_start).total_seconds()
-        logger.info(
-            f"[PHASE 3c FINALIZE] Completed in {execution_time:.2f}s (no tokens used)"
-        )
+        logger.info(f"[PHASE 3c FINALIZE] Completed in {execution_time:.2f}s (no tokens used)")
 
         return PhaseResult(
             phase_name="training_planning_finalize",
@@ -852,13 +833,9 @@ class TrainingPlanningPhase(BasePhase):
             if current_stats:
                 summary_lines.append("**Current Performance:**")
                 if "avg_power" in current_stats:
-                    summary_lines.append(
-                        f"- Average Power: {current_stats['avg_power']:.0f}W"
-                    )
+                    summary_lines.append(f"- Average Power: {current_stats['avg_power']:.0f}W")
                 if "avg_speed" in current_stats:
-                    summary_lines.append(
-                        f"- Average Speed: {current_stats['avg_speed']:.1f} km/h"
-                    )
+                    summary_lines.append(f"- Average Speed: {current_stats['avg_speed']:.1f} km/h")
                 if "total_distance" in current_stats:
                     summary_lines.append(
                         f"- Total Distance: {current_stats['total_distance']:.0f} km"
@@ -917,9 +894,7 @@ class TrainingPlanningPhase(BasePhase):
                 "Training planning phase requires generate_training_plan=True."
             )
 
-    def _extract_phase_data(
-        self, response: str, session: ConversationSession
-    ) -> dict[str, Any]:
+    def _extract_phase_data(self, response: str, session: ConversationSession) -> dict[str, Any]:
         """
         Extract structured data from tool results in session.
 
@@ -953,9 +928,7 @@ class TrainingPlanningPhase(BasePhase):
                                 if "weeks_added" not in extracted:
                                     extracted["weeks_added"] = []
                                 if "week_number" in data:
-                                    extracted["weeks_added"].append(
-                                        data["week_number"]
-                                    )
+                                    extracted["weeks_added"].append(data["week_number"])
 
                             # For finalize_training_plan, extract plan
                             elif tool_name == "finalize_training_plan":
@@ -963,9 +936,7 @@ class TrainingPlanningPhase(BasePhase):
                                     extracted["training_plan"] = data["training_plan"]
 
                         except json.JSONDecodeError:
-                            logger.warning(
-                                f"Could not parse JSON from tool result: {tool_name}"
-                            )
+                            logger.warning(f"Could not parse JSON from tool result: {tool_name}")
 
         return extracted
 
@@ -991,6 +962,7 @@ class TrainingPlanningPhase(BasePhase):
         perf_data = context.previous_phase_data.get("performance_analysis", {})
         if isinstance(perf_data, str):
             import json
+
             try:
                 perf_data = json.loads(perf_data)
             except json.JSONDecodeError:
@@ -1027,8 +999,7 @@ class TrainingPlanningPhase(BasePhase):
             NotImplementedError: Always
         """
         raise NotImplementedError(
-            "TrainingPlanningPhase overrides execute() directly. "
-            "Use execute(context) instead."
+            "TrainingPlanningPhase overrides execute() directly. Use execute(context) instead."
         )
 
     def _get_system_prompt(self, config: dict[str, Any], context: PhaseContext) -> str:
@@ -1063,6 +1034,5 @@ class TrainingPlanningPhase(BasePhase):
             NotImplementedError: Always
         """
         raise NotImplementedError(
-            "TrainingPlanningPhase extracts data per sub-phase. "
-            "Use _extract_phase_data() instead."
+            "TrainingPlanningPhase extracts data per sub-phase. Use _extract_phase_data() instead."
         )

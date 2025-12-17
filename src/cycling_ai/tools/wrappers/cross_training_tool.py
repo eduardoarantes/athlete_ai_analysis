@@ -3,6 +3,7 @@ Cross-training analysis tool wrapper.
 
 Wraps core.cross_training.analyze_cross_training_impact() as a BaseTool for LLM provider integration.
 """
+
 from __future__ import annotations
 
 import json
@@ -117,7 +118,7 @@ class CrossTrainingTool(BaseTool):
             cache_file_path = kwargs.get("cache_file_path")
             analysis_period_weeks = kwargs.get("analysis_period_weeks", 12)
 
-            logger.info(f"Parameters:")
+            logger.info("Parameters:")
             logger.info(f"  - cache_file_path: {cache_file_path}")
             logger.info(f"  - csv_file_path: {csv_file_path}")
             logger.info(f"  - analysis_period_weeks: {analysis_period_weeks}")
@@ -151,7 +152,13 @@ class CrossTrainingTool(BaseTool):
                     logger.info(f"Loaded {len(df)} activities from cache")
 
                     # Verify cache has cross-training categorization
-                    required_columns = ["activity_category", "muscle_focus", "fatigue_impact", "recovery_hours", "intensity_category"]
+                    required_columns = [
+                        "activity_category",
+                        "muscle_focus",
+                        "fatigue_impact",
+                        "recovery_hours",
+                        "intensity_category",
+                    ]
                     missing_columns = [col for col in required_columns if col not in df.columns]
 
                     logger.info(f"Validating required columns: {required_columns}")
@@ -237,9 +244,11 @@ class CrossTrainingTool(BaseTool):
 
             # Return successful result
             total_activities = result_data.get("analysis_period", {}).get("total_activities", 0)
-            interference_events = result_data.get("interference_analysis", {}).get("total_events", 0)
+            interference_events = result_data.get("interference_analysis", {}).get(
+                "total_events", 0
+            )
 
-            logger.info(f"Analysis completed successfully:")
+            logger.info("Analysis completed successfully:")
             logger.info(f"  - Total activities analyzed: {total_activities}")
             logger.info(f"  - Interference events detected: {interference_events}")
             logger.info("=" * 80)

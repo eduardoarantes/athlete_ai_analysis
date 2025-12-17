@@ -150,24 +150,15 @@ class WorkoutSelector:
         candidates = self.workouts
 
         # Filter by phase
-        candidates = [
-            w for w in candidates
-            if requirements.phase in w.get("suitable_phases", [])
-        ]
+        candidates = [w for w in candidates if requirements.phase in w.get("suitable_phases", [])]
 
         # Filter by workout type (if specified)
         if requirements.workout_type:
-            candidates = [
-                w for w in candidates
-                if w.get("type") == requirements.workout_type
-            ]
+            candidates = [w for w in candidates if w.get("type") == requirements.workout_type]
 
         # Filter by intensity (if specified)
         if requirements.intensity:
-            candidates = [
-                w for w in candidates
-                if w.get("intensity") == requirements.intensity
-            ]
+            candidates = [w for w in candidates if w.get("intensity") == requirements.intensity]
 
         return candidates
 
@@ -229,9 +220,7 @@ class WorkoutSelector:
 
         best_score, best_workout = scored_candidates[0]
 
-        logger.debug(
-            f"Selected workout '{best_workout['name']}' with score {best_score:.1f}"
-        )
+        logger.debug(f"Selected workout '{best_workout['name']}' with score {best_score:.1f}")
 
         return best_workout
 
@@ -340,9 +329,7 @@ class WorkoutSelector:
             adjusted=True,
             adjustment_details={
                 "field": adjustable_field,
-                "original_value": self._calculate_base_value(
-                    workout, adjustable_field
-                ),
+                "original_value": self._calculate_base_value(workout, adjustable_field),
                 "adjusted_value": adjusted_value,
                 "original_duration_min": base_duration,
                 "adjusted_duration_min": new_duration,
@@ -464,9 +451,7 @@ class WorkoutSelector:
         Returns:
             List of workouts suitable for the phase
         """
-        return [
-            w for w in self.workouts if phase in w.get("suitable_phases", [])
-        ]
+        return [w for w in self.workouts if phase in w.get("suitable_phases", [])]
 
     def get_workout_stats(self) -> dict[str, Any]:
         """

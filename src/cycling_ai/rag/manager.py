@@ -56,6 +56,7 @@ class RetrievalResult:
         query: Original query string
         collection: Collection name that was searched
     """
+
     documents: list[str]
     metadata: list[dict[str, Any]]
     scores: list[float]
@@ -122,9 +123,7 @@ class RAGManager:
         )
 
         # Initialize user vectorstore (athlete history)
-        user_path = user_vectorstore_path or (
-            Path.home() / ".cycling-ai" / "athlete_history"
-        )
+        user_path = user_vectorstore_path or (Path.home() / ".cycling-ai" / "athlete_history")
         self.user_vectorstore = ChromaVectorStore(
             persist_directory=user_path,
             embedding_function=self.embedding_function,
@@ -196,10 +195,7 @@ class RAGManager:
         logger.debug(f"RAG: Raw retrieval found {len(results)} documents")
 
         # Filter by score and extract data
-        filtered_results = [
-            (doc, score) for doc, score in results
-            if score >= min_score
-        ]
+        filtered_results = [(doc, score) for doc, score in results if score >= min_score]
 
         if len(filtered_results) < len(results):
             logger.info(
@@ -227,9 +223,7 @@ class RAGManager:
             collection=collection,
         )
 
-    def _get_vectorstore_for_collection(
-        self, collection: str
-    ) -> ChromaVectorStore:
+    def _get_vectorstore_for_collection(self, collection: str) -> ChromaVectorStore:
         """
         Route collection to appropriate vectorstore.
 
@@ -252,8 +246,7 @@ class RAGManager:
         else:
             all_collections = self.PROJECT_COLLECTIONS | self.USER_COLLECTIONS
             raise ValueError(
-                f"Unknown collection: '{collection}'. "
-                f"Must be one of: {sorted(all_collections)}"
+                f"Unknown collection: '{collection}'. Must be one of: {sorted(all_collections)}"
             )
 
     def _create_embedding_function(
@@ -277,11 +270,8 @@ class RAGManager:
                 model_name=model or "sentence-transformers/all-MiniLM-L6-v2"
             )
         elif provider == "openai":
-            return EmbeddingFactory.create_openai(
-                model=model or "text-embedding-3-small"
-            )
+            return EmbeddingFactory.create_openai(model=model or "text-embedding-3-small")
         else:
             raise ValueError(
-                f"Unknown embedding provider: '{provider}'. "
-                f"Must be 'local' or 'openai'."
+                f"Unknown embedding provider: '{provider}'. Must be 'local' or 'openai'."
             )

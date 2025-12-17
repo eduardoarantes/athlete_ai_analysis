@@ -7,6 +7,7 @@ Delegates execution to modular phase-based workflow while preserving the origina
 DEPRECATED: New code should use FullReportWorkflow directly.
 This module is kept for backward compatibility with existing tests and CLI commands.
 """
+
 from __future__ import annotations
 
 import logging
@@ -89,10 +90,7 @@ class MultiAgentOrchestrator:
         return SessionManager(storage_dir=storage_dir)
 
     def _should_analyze_cross_training(
-        self,
-        cache_file_path: str,
-        threshold_pct: float = 0.10,
-        min_activities: int = 20
+        self, cache_file_path: str, threshold_pct: float = 0.10, min_activities: int = 20
     ) -> bool:
         """
         Auto-detect if cross-training analysis is warranted.
@@ -120,8 +118,7 @@ class MultiAgentOrchestrator:
             cache_path = Path(cache_file_path)
             if not cache_path.exists():
                 logger.warning(
-                    f"Cache file not found for cross-training detection: "
-                    f"{cache_file_path}"
+                    f"Cache file not found for cross-training detection: {cache_file_path}"
                 )
                 return False
 
@@ -136,7 +133,7 @@ class MultiAgentOrchestrator:
                 return False
 
             # Check for activity_category column (added by cache preparation)
-            if 'activity_category' not in df.columns:
+            if "activity_category" not in df.columns:
                 logger.warning(
                     "Cache missing 'activity_category' column - "
                     "cross-training analysis not available"
@@ -144,7 +141,7 @@ class MultiAgentOrchestrator:
                 return False
 
             # Count activities by category
-            category_counts = df['activity_category'].value_counts()
+            category_counts = df["activity_category"].value_counts()
 
             # Need at least 2 categories
             if len(category_counts) < 2:
@@ -152,7 +149,7 @@ class MultiAgentOrchestrator:
                 return False
 
             # Calculate non-cycling percentage
-            non_cycling_count = (df['activity_category'] != 'Cycling').sum()
+            non_cycling_count = (df["activity_category"] != "Cycling").sum()
             non_cycling_pct = non_cycling_count / len(df)
 
             if non_cycling_pct >= threshold_pct:
@@ -172,12 +169,11 @@ class MultiAgentOrchestrator:
             logger.error(f"Error during cross-training auto-detection: {str(e)}")
             return False
 
-
     def _validate_weekly_hours(
         self,
         training_plan: dict[str, Any],
         plan_metadata: dict[str, Any],
-        tolerance_pct: float = 0.10
+        tolerance_pct: float = 0.10,
     ) -> list[dict[str, Any]]:
         """
         Validate that weekly training hours don't exceed guideline (with tolerance).
@@ -196,14 +192,18 @@ class MultiAgentOrchestrator:
         # Get the weekly hours guideline
         weekly_hours_guideline = plan_metadata.get("weekly_training_hours")
         if weekly_hours_guideline is None:
-            logger.debug("[HOURS VALIDATION] No weekly_training_hours guideline found, skipping validation")
+            logger.debug(
+                "[HOURS VALIDATION] No weekly_training_hours guideline found, skipping validation"
+            )
             return violations
 
         # Convert to float
         try:
             weekly_hours_guideline = float(weekly_hours_guideline)
         except (ValueError, TypeError):
-            logger.warning(f"[HOURS VALIDATION] Invalid weekly_training_hours: {weekly_hours_guideline}")
+            logger.warning(
+                f"[HOURS VALIDATION] Invalid weekly_training_hours: {weekly_hours_guideline}"
+            )
             return violations
 
         # Calculate max allowed with tolerance
@@ -228,23 +228,24 @@ class MultiAgentOrchestrator:
                 try:
                     total_hours += float(duration_minutes) / 60.0
                 except (ValueError, TypeError):
-                    logger.warning(f"[HOURS VALIDATION] Invalid duration for workout in week {week_idx}: {duration_minutes}")
+                    logger.warning(
+                        f"[HOURS VALIDATION] Invalid duration for workout in week {week_idx}: {duration_minutes}"
+                    )
                     continue
 
             # Check if exceeds max allowed
             if total_hours > max_allowed:
-                violations.append({
-                    "week": week_idx,
-                    "actual_hours": total_hours,
-                    "max_allowed": max_allowed,
-                    "guideline": weekly_hours_guideline,
-                    "exceeds_by": total_hours - max_allowed
-                })
+                violations.append(
+                    {
+                        "week": week_idx,
+                        "actual_hours": total_hours,
+                        "max_allowed": max_allowed,
+                        "guideline": weekly_hours_guideline,
+                        "exceeds_by": total_hours - max_allowed,
+                    }
+                )
 
         return violations
-
-
-
 
     def execute_workflow(self, config: WorkflowConfig) -> WorkflowResult:
         """

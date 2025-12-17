@@ -49,11 +49,7 @@ class PromptAugmenter:
         self.max_context_tokens = max_context_tokens
         self.max_context_chars = max_context_tokens * 4  # Rough estimate
 
-    def augment_system_prompt(
-        self,
-        base_prompt: str,
-        retrieval_result: RetrievalResult
-    ) -> str:
+    def augment_system_prompt(self, base_prompt: str, retrieval_result: RetrievalResult) -> str:
         """
         Augment system prompt with retrieved context.
 
@@ -116,12 +112,10 @@ class PromptAugmenter:
                 f"(~{self.max_context_tokens} tokens)"
             )
             # Truncate and add indicator
-            context_section = context_section[:self.max_context_chars]
+            context_section = context_section[: self.max_context_chars]
             context_section += "\n\n[...truncated due to length]"
         else:
-            logger.info(
-                f"RAG: Context size: {context_chars} chars (~{context_chars // 4} tokens)"
-            )
+            logger.info(f"RAG: Context size: {context_chars} chars (~{context_chars // 4} tokens)")
 
         # Combine base prompt with retrieved context
         augmented_prompt = f"""{base_prompt}
@@ -139,10 +133,7 @@ actual data, explain the discrepancy."""
 
         return augmented_prompt
 
-    def _format_retrieved_documents(
-        self,
-        retrieval_result: RetrievalResult
-    ) -> str:
+    def _format_retrieved_documents(self, retrieval_result: RetrievalResult) -> str:
         """
         Format retrieved documents with scores and metadata.
 
@@ -155,12 +146,8 @@ actual data, explain the discrepancy."""
         sections = []
 
         for idx, (doc, metadata, score) in enumerate(
-            zip(
-                retrieval_result.documents,
-                retrieval_result.metadata,
-                retrieval_result.scores
-            ),
-            start=1
+            zip(retrieval_result.documents, retrieval_result.metadata, retrieval_result.scores),
+            start=1,
         ):
             # Build header with title if available
             title = metadata.get("title", metadata.get("source_file", f"Document {idx}"))

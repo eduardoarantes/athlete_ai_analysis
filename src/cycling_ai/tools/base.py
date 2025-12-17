@@ -4,6 +4,7 @@ Base abstractions for tool definitions and execution.
 This module provides the foundation for defining provider-agnostic tools
 that can be used across different LLM providers (OpenAI, Anthropic, Gemini, etc.).
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -35,9 +36,7 @@ class ToolParameter:
         """Validate parameter definition."""
         valid_types = {"string", "integer", "number", "boolean", "object", "array"}
         if self.type not in valid_types:
-            raise ValueError(
-                f"Invalid parameter type '{self.type}'. Must be one of {valid_types}"
-            )
+            raise ValueError(f"Invalid parameter type '{self.type}'. Must be one of {valid_types}")
 
         if self.enum is not None and not self.enum:
             raise ValueError("enum must be non-empty if provided")
@@ -100,9 +99,7 @@ class ToolExecutionResult:
         """Validate execution result."""
         valid_formats = {"json", "markdown", "html", "text"}
         if self.format not in valid_formats:
-            raise ValueError(
-                f"Invalid format '{self.format}'. Must be one of {valid_formats}"
-            )
+            raise ValueError(f"Invalid format '{self.format}'. Must be one of {valid_formats}")
 
         if not self.success and not self.errors:
             raise ValueError("Failed execution must include error messages")

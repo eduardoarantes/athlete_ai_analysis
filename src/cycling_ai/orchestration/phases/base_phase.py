@@ -10,15 +10,14 @@ Provides template method pattern for phase execution with:
 
 from __future__ import annotations
 
-import json
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any
 
+from cycling_ai.orchestration.agent import AgentFactory
 from cycling_ai.orchestration.base import PhaseContext, PhaseResult, PhaseStatus
 from cycling_ai.orchestration.session import ConversationSession
-from cycling_ai.orchestration.agent import AgentFactory
 
 logger = logging.getLogger(__name__)
 
@@ -200,8 +199,7 @@ class BasePhase(ABC):
         )
 
         logger.info(
-            f"Phase {self.phase_name} completed successfully in "
-            f"{execution_time:.2f}s (normal mode)"
+            f"Phase {self.phase_name} completed successfully in {execution_time:.2f}s (normal mode)"
         )
 
         return result
@@ -305,9 +303,7 @@ class BasePhase(ABC):
             system_prompt=system_prompt,
         )
 
-        logger.debug(
-            f"Created session {session.session_id} for phase {self.phase_name}"
-        )
+        logger.debug(f"Created session {session.session_id} for phase {self.phase_name}")
 
         return session
 
@@ -461,9 +457,7 @@ class BasePhase(ABC):
         return prefetched_data
 
     @abstractmethod
-    def _get_system_prompt(
-        self, config: dict[str, Any], context: PhaseContext
-    ) -> str:
+    def _get_system_prompt(self, config: dict[str, Any], context: PhaseContext) -> str:
         """
         Get system prompt for this phase.
 
@@ -479,9 +473,7 @@ class BasePhase(ABC):
         pass
 
     @abstractmethod
-    def _get_user_message(
-        self, config: dict[str, Any], context: PhaseContext
-    ) -> str:
+    def _get_user_message(self, config: dict[str, Any], context: PhaseContext) -> str:
         """
         Craft user message for this phase.
 
@@ -512,9 +504,7 @@ class BasePhase(ABC):
         """
         pass
 
-    def _augment_prompt_with_rag(
-        self, base_prompt: str, context: PhaseContext
-    ) -> str:
+    def _augment_prompt_with_rag(self, base_prompt: str, context: PhaseContext) -> str:
         """
         Augment system prompt with RAG-retrieved context (if enabled).
 
@@ -540,9 +530,7 @@ class BasePhase(ABC):
 
         # Check if RAG manager is available
         if context.rag_manager is None:
-            logger.warning(
-                f"[{self.phase_name}] RAG enabled but no RAG manager available"
-            )
+            logger.warning(f"[{self.phase_name}] RAG enabled but no RAG manager available")
             return base_prompt
 
         logger.info(
@@ -559,9 +547,7 @@ class BasePhase(ABC):
             retrieval_query = self._get_retrieval_query(context)
             collection = self._get_retrieval_collection()
 
-            logger.info(
-                f"[{self.phase_name}] RAG: Building retrieval query from phase context"
-            )
+            logger.info(f"[{self.phase_name}] RAG: Building retrieval query from phase context")
             logger.info(
                 f"[{self.phase_name}] RAG: Query='{retrieval_query[:80]}...', "
                 f"Collection='{collection}'"
@@ -582,23 +568,17 @@ class BasePhase(ABC):
                 )
             else:
                 logger.warning(
-                    f"[{self.phase_name}] RAG: No documents retrieved, "
-                    f"using base prompt only"
+                    f"[{self.phase_name}] RAG: No documents retrieved, using base prompt only"
                 )
 
             # Augment prompt with retrieved context
             augmenter = PromptAugmenter(max_context_tokens=2000)
-            augmented_prompt = augmenter.augment_system_prompt(
-                base_prompt, retrieval_result
-            )
+            augmented_prompt = augmenter.augment_system_prompt(base_prompt, retrieval_result)
 
             return augmented_prompt
 
         except Exception as e:
-            logger.error(
-                f"[{self.phase_name}] RAG augmentation failed: {e}. "
-                f"Using base prompt."
-            )
+            logger.error(f"[{self.phase_name}] RAG augmentation failed: {e}. Using base prompt.")
             return base_prompt
 
     def _get_retrieval_query(self, context: PhaseContext) -> str:

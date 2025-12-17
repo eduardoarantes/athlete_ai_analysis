@@ -3,6 +3,7 @@ Pydantic models for training plan generation.
 
 Defines request/response models for plan-related endpoints.
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -54,9 +55,7 @@ class AthleteProfileData(BaseModel):
 class TrainingPlanRequest(BaseModel):
     """Request model for training plan generation."""
 
-    athlete_profile: AthleteProfileData = Field(
-        ..., description="Athlete profile information"
-    )
+    athlete_profile: AthleteProfileData = Field(..., description="Athlete profile information")
     weeks: int = Field(..., ge=4, le=24, description="Plan duration in weeks")
     target_ftp: float | None = Field(None, gt=0, description="Target FTP in watts")
 

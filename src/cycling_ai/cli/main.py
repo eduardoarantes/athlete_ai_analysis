@@ -3,6 +3,7 @@ Main CLI entry point.
 
 Provides command-line interface for cycling AI analysis using Click.
 """
+
 from __future__ import annotations
 
 import logging
@@ -12,7 +13,8 @@ import click
 
 from cycling_ai.logging_config import configure_logging
 
-from .commands import analyze, chat, config as config_cmd, generate, index, plan, providers, report
+from .commands import analyze, chat, generate, index, plan, providers, report
+from .commands import config as config_cmd
 from .commands.prepare_report_cmd import prepare_report_cmd
 from .formatting import console
 

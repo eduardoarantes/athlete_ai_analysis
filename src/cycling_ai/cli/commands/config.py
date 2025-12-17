@@ -3,6 +3,7 @@ Configuration commands for CLI.
 
 Commands for managing configuration files.
 """
+
 from __future__ import annotations
 
 import click

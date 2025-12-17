@@ -6,11 +6,12 @@ identifying trends, and generating insights from Strava CSV data.
 
 Extracted from MCP implementation - all business logic preserved.
 """
+
 from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from .utils import analyze_period, convert_to_json_serializable, load_activities_data
@@ -65,7 +66,7 @@ def analyze_performance(
         # Previous period: N months prior to that - from 2N months ago to N months ago
         # Example with N=6: Recent = last 6 months, Previous = 6 months before that (months 7-12)
         # Use timezone-aware datetime to match Parquet cache (which stores dates in UTC)
-        today = datetime.now(timezone.utc)
+        today = datetime.now(UTC)
         logger.debug(f"today: {today} (type: {type(today)})")
         period_start = today - timedelta(days=30 * period_months)
         previous_period_start = today - timedelta(days=30 * period_months * 2)
@@ -121,11 +122,9 @@ def analyze_performance(
         )
 
         # Top 10 longest rides by distance - shows endurance capacity
-        longest_rides = (
-            rides.nlargest(10, "distance")[
-                ["date", "name", "distance", "moving_time", "elevation", "avg_watts"]
-            ].to_dict("records")
-        )
+        longest_rides = rides.nlargest(10, "distance")[
+            ["date", "name", "distance", "moving_time", "elevation", "avg_watts"]
+        ].to_dict("records")
 
         # Format best rides for JSON (convert dates to strings)
         formatted_best_power = []
@@ -159,9 +158,7 @@ def analyze_performance(
                     "distance_km": float(ride["distance"] / 1000),
                     "time_hours": float(ride["moving_time"] / 3600),
                     "elevation_m": float(ride["elevation"]),
-                    "avg_power_w": (
-                        float(ride["avg_watts"]) if ride["avg_watts"] > 0 else None
-                    ),
+                    "avg_power_w": (float(ride["avg_watts"]) if ride["avg_watts"] > 0 else None),
                 }
             )
 

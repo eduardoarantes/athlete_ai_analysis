@@ -8,6 +8,7 @@ Logs all interactions with LLM providers including:
 - LLM responses
 - Timestamps and metadata
 """
+
 from __future__ import annotations
 
 import json
@@ -211,7 +212,7 @@ class InteractionLogger:
 
         # Try to convert iterables like RepeatedComposite
         try:
-            if hasattr(obj, '__iter__') and not isinstance(obj, str):
+            if hasattr(obj, "__iter__") and not isinstance(obj, str):
                 return [self._deep_serialize(item) for item in obj]
         except (TypeError, AttributeError):
             pass
@@ -240,7 +241,9 @@ class InteractionLogger:
             f"Tools: {len(interaction['input']['tools'])} | "
             f"Response length: {len(interaction['output']['content']) if interaction['output']['content'] else 0} | "
             f"Tool calls: {len(interaction['output']['tool_calls']) if interaction['output']['tool_calls'] else 0} | "
-            f"Duration: {interaction['duration_ms']:.0f}ms" if interaction['duration_ms'] else ""
+            f"Duration: {interaction['duration_ms']:.0f}ms"
+            if interaction["duration_ms"]
+            else ""
         )
 
     def get_session_log_path(self) -> Path:

@@ -3,6 +3,7 @@ Performance analysis tool wrapper.
 
 Wraps core.performance.analyze_performance() as a BaseTool for LLM provider integration.
 """
+
 from __future__ import annotations
 
 import json

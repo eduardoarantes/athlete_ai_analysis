@@ -1,4 +1,5 @@
 """JSON validation utilities for LLM outputs."""
+
 from __future__ import annotations
 
 import json
@@ -32,8 +33,7 @@ def extract_and_validate_performance_analysis(llm_output: str) -> PerformanceAna
 
     if not json_str:
         raise ValueError(
-            "No valid JSON found in LLM output. "
-            f"Output preview: {llm_output[:200]}..."
+            f"No valid JSON found in LLM output. Output preview: {llm_output[:200]}..."
         )
 
     # Parse JSON
@@ -73,8 +73,8 @@ def _extract_json(text: str) -> str | None:
     # Strategy 1: Extract from markdown code blocks
     # Matches: ```json\n{...}\n``` or ```\n{...}\n```
     code_block_patterns = [
-        r'```json\s*\n(.*?)\n```',
-        r'```\s*\n(.*?)\n```',
+        r"```json\s*\n(.*?)\n```",
+        r"```\s*\n(.*?)\n```",
     ]
 
     for pattern in code_block_patterns:
@@ -86,12 +86,12 @@ def _extract_json(text: str) -> str | None:
 
     # Strategy 2: Look for JSON object boundaries
     # Find outermost { ... } that looks like JSON
-    start_idx = text.find('{')
+    start_idx = text.find("{")
     if start_idx != -1:
         # Find matching closing brace
         end_idx = _find_matching_brace(text, start_idx)
         if end_idx != -1:
-            json_str = text[start_idx:end_idx + 1]
+            json_str = text[start_idx : end_idx + 1]
             if _is_valid_json_start(json_str):
                 return json_str
 
@@ -105,7 +105,7 @@ def _extract_json(text: str) -> str | None:
 def _is_valid_json_start(text: str) -> bool:
     """Check if text starts like valid JSON."""
     text = text.strip()
-    return text.startswith('{') or text.startswith('[')
+    return text.startswith("{") or text.startswith("[")
 
 
 def _find_matching_brace(text: str, start_idx: int) -> int:
@@ -119,7 +119,7 @@ def _find_matching_brace(text: str, start_idx: int) -> int:
     Returns:
         Index of matching closing brace, or -1 if not found
     """
-    if text[start_idx] != '{':
+    if text[start_idx] != "{":
         return -1
 
     depth = 0
@@ -133,7 +133,7 @@ def _find_matching_brace(text: str, start_idx: int) -> int:
             escape_next = False
             continue
 
-        if char == '\\':
+        if char == "\\":
             escape_next = True
             continue
 
@@ -144,9 +144,9 @@ def _find_matching_brace(text: str, start_idx: int) -> int:
         if in_string:
             continue
 
-        if char == '{':
+        if char == "{":
             depth += 1
-        elif char == '}':
+        elif char == "}":
             depth -= 1
             if depth == 0:
                 return i

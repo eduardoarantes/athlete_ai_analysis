@@ -9,24 +9,22 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from pathlib import Path
 from typing import Any
 
 from cycling_ai.orchestration.base import (
-    PhaseContext,
     PhaseResult,
     PhaseStatus,
     WorkflowConfig,
     WorkflowResult,
 )
-from cycling_ai.orchestration.workflows.base_workflow import BaseWorkflow
+from cycling_ai.orchestration.phases.base_phase import BasePhase
 from cycling_ai.orchestration.phases.data_preparation import DataPreparationPhase
 from cycling_ai.orchestration.phases.performance_analysis import (
     PerformanceAnalysisPhase,
 )
-from cycling_ai.orchestration.phases.training_planning import TrainingPlanningPhase
 from cycling_ai.orchestration.phases.report_preparation import ReportPreparationPhase
-from cycling_ai.orchestration.phases.base_phase import BasePhase
+from cycling_ai.orchestration.phases.training_planning import TrainingPlanningPhase
+from cycling_ai.orchestration.workflows.base_workflow import BaseWorkflow
 
 logger = logging.getLogger(__name__)
 
@@ -132,9 +130,7 @@ class FullReportWorkflow(BaseWorkflow):
         # Check for failure (SKIPPED is OK)
         if phase1_result.status == PhaseStatus.FAILED:
             logger.error("Phase 1 failed, stopping workflow")
-            return self._create_failed_workflow_result(
-                phase_results, workflow_start, total_tokens
-            )
+            return self._create_failed_workflow_result(phase_results, workflow_start, total_tokens)
 
         # ===================================================================
         # PHASE 2: Performance Analysis
@@ -150,9 +146,7 @@ class FullReportWorkflow(BaseWorkflow):
 
         if phase2_result.status == PhaseStatus.FAILED:
             logger.error("Phase 2 failed, stopping workflow")
-            return self._create_failed_workflow_result(
-                phase_results, workflow_start, total_tokens
-            )
+            return self._create_failed_workflow_result(phase_results, workflow_start, total_tokens)
 
         # ===================================================================
         # PHASE 3 & 4: Training Planning and Report Preparation (optional)
@@ -190,9 +184,7 @@ class FullReportWorkflow(BaseWorkflow):
                     phase_results, workflow_start, total_tokens
                 )
         else:
-            logger.info(
-                "Skipping Phase 3 and 4 per config.generate_training_plan=False"
-            )
+            logger.info("Skipping Phase 3 and 4 per config.generate_training_plan=False")
 
         # ===================================================================
         # Workflow Complete

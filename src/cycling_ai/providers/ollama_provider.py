@@ -4,6 +4,7 @@ Ollama provider adapter.
 Implements the provider interface for Ollama's local LLM models.
 Uses OpenAI-compatible schema for function calling (when supported).
 """
+
 from __future__ import annotations
 
 import json
