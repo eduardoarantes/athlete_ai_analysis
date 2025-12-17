@@ -271,11 +271,7 @@ export function ActivitiesCalendar({ sportTypeFilter }: ActivitiesCalendarProps)
       setLoading(true)
 
       // Calculate the visible date range (including previous/next month days)
-      const firstDayOfMonth = new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth(),
-        1
-      )
+      const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
       const firstDayOfWeek = firstDayOfMonth.getDay()
 
       // First visible day (may be from previous month)
@@ -284,11 +280,7 @@ export function ActivitiesCalendar({ sportTypeFilter }: ActivitiesCalendarProps)
       firstVisibleDay.setHours(0, 0, 0, 0)
 
       // Last day of month
-      const lastDayOfMonth = new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth() + 1,
-        0
-      )
+      const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
 
       // Calculate total calendar cells needed
       const daysInMonth = lastDayOfMonth.getDate()
@@ -339,16 +331,8 @@ export function ActivitiesCalendar({ sportTypeFilter }: ActivitiesCalendarProps)
   }
 
   // Get first day of current month
-  const firstDayOfMonth = new Date(
-    currentDate.getFullYear(),
-    currentDate.getMonth(),
-    1
-  )
-  const lastDayOfMonth = new Date(
-    currentDate.getFullYear(),
-    currentDate.getMonth() + 1,
-    0
-  )
+  const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
+  const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
 
   // Get day of week for first day (0 = Sunday)
   const firstDayOfWeek = firstDayOfMonth.getDay()
@@ -383,15 +367,11 @@ export function ActivitiesCalendar({ sportTypeFilter }: ActivitiesCalendarProps)
   })
 
   const goToPreviousMonth = () => {
-    setCurrentDate(
-      new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
-    )
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))
   }
 
   const goToNextMonth = () => {
-    setCurrentDate(
-      new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
-    )
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))
   }
 
   const goToToday = () => {
@@ -420,15 +400,9 @@ export function ActivitiesCalendar({ sportTypeFilter }: ActivitiesCalendarProps)
     })
   ).size
   const totalHours =
-    currentMonthActivities.reduce(
-      (sum, activity) => sum + activity.moving_time,
-      0
-    ) / 3600
+    currentMonthActivities.reduce((sum, activity) => sum + activity.moving_time, 0) / 3600
   const totalDistance =
-    currentMonthActivities.reduce(
-      (sum, activity) => sum + activity.distance,
-      0
-    ) / 1000
+    currentMonthActivities.reduce((sum, activity) => sum + activity.distance, 0) / 1000
 
   return (
     <div className="space-y-4 relative">
@@ -462,12 +436,7 @@ export function ActivitiesCalendar({ sportTypeFilter }: ActivitiesCalendarProps)
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <Button
-            onClick={goToNextMonth}
-            variant="outline"
-            size="icon"
-            aria-label="Next month"
-          >
+          <Button onClick={goToNextMonth} variant="outline" size="icon" aria-label="Next month">
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
@@ -478,10 +447,7 @@ export function ActivitiesCalendar({ sportTypeFilter }: ActivitiesCalendarProps)
         <div className="grid grid-cols-7 gap-px bg-muted">
           {/* Day Headers */}
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-            <div
-              key={day}
-              className="bg-background p-2 text-center text-sm font-medium"
-            >
+            <div key={day} className="bg-background p-2 text-center text-sm font-medium">
               {day}
             </div>
           ))}

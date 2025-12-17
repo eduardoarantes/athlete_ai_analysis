@@ -11,6 +11,7 @@ Supports both plain text (.txt) and Jinja2 templates (.jinja2) for prompts.
 Note: Phase 1 (data preparation) no longer uses LLM prompts.
 Defaults to 'default' model. Version should be specified from .cycling-ai.yaml config.
 """
+
 from __future__ import annotations
 
 import json
@@ -61,8 +62,7 @@ class PromptLoader:
 
         if version is None:
             raise ValueError(
-                "Prompt version must be specified. "
-                "This should come from the .cycling-ai.yaml config file."
+                "Prompt version must be specified. This should come from the .cycling-ai.yaml config file."
             )
 
         self.prompts_base_dir = Path(prompts_base_dir)
@@ -105,11 +105,10 @@ class PromptLoader:
         metadata_file = self.prompts_dir / "metadata.json"
         if not metadata_file.exists():
             raise FileNotFoundError(
-                f"Metadata file not found: {metadata_file}\n"
-                f"Model: {self.model}, Version: {self.version}"
+                f"Metadata file not found: {metadata_file}\nModel: {self.model}, Version: {self.version}"
             )
 
-        with open(metadata_file, "r", encoding="utf-8") as f:
+        with open(metadata_file, encoding="utf-8") as f:
             self._metadata = json.load(f)
 
         return self._metadata
@@ -141,7 +140,7 @@ class PromptLoader:
             )
 
         # Load and cache
-        with open(prompt_file, "r", encoding="utf-8") as f:
+        with open(prompt_file, encoding="utf-8") as f:
             prompt_text = f.read().strip()
 
         self._prompts_cache[agent_name] = prompt_text
@@ -171,16 +170,16 @@ class PromptLoader:
             # Try loading as Jinja2 template
             template = self._jinja_env.get_template(jinja_file)
             return template.render(**template_vars)
-        except TemplateNotFound:
+        except TemplateNotFound as e:
             # Fall back to .txt with string formatting
             txt_path = self.prompts_dir / txt_file
             if not txt_path.exists():
                 raise FileNotFoundError(
                     f"Prompt file not found: neither {jinja_file} nor {txt_file} exists\n"
                     f"Model: {self.model}, Version: {self.version}, Agent: {agent_name}"
-                )
+                ) from e
 
-            with open(txt_path, "r", encoding="utf-8") as f:
+            with open(txt_path, encoding="utf-8") as f:
                 prompt_text = f.read().strip()
 
             # Use Python string formatting for .txt files
@@ -196,12 +195,13 @@ class PromptLoader:
         metadata = self.load_metadata()
         prompts = {}
 
-        for agent_name in metadata.get("agents", {}).keys():
+        for agent_name in metadata.get("agents", {}):
             try:
                 prompts[agent_name] = self.load_prompt(agent_name)
             except FileNotFoundError as e:
                 # Log warning but don't fail
                 import logging
+
                 logging.warning(f"Failed to load prompt for {agent_name}: {e}")
 
         return prompts
@@ -230,6 +230,7 @@ class PromptLoader:
             # If template variable is missing, return unformatted
             # (for backward compatibility with v1.1 prompts that don't use variables)
             import logging
+
             logging.warning(f"Missing template variable in training_planning prompt: {e}")
             return prompt_template
 
@@ -267,6 +268,7 @@ class PromptLoader:
             return prompt_template.format(**kwargs)
         except KeyError as e:
             import logging
+
             logging.warning(f"Missing template variable in training_planning_overview prompt: {e}")
             return prompt_template
 
@@ -281,6 +283,7 @@ class PromptLoader:
             return prompt_template.format(**kwargs)
         except KeyError as e:
             import logging
+
             logging.warning(f"Missing template variable in training_planning_weeks prompt: {e}")
             return prompt_template
 
@@ -329,12 +332,9 @@ class PromptLoader:
             weekday_per_day = target_minutes // len(weekday_days)
             weekend_per_day = 0
 
-        for i, day in enumerate(available_days):
+        for day in available_days:
             # Assign duration based on day type
-            if day in ["Saturday", "Sunday"]:
-                duration = weekend_per_day
-            else:
-                duration = weekday_per_day
+            duration = weekend_per_day if day in ["Saturday", "Sunday"] else weekday_per_day
 
             # Round to nice numbers
             duration = max(40, min(240, duration))  # Between 40 and 240 minutes
@@ -413,14 +413,14 @@ class PromptLoader:
         if not addon_file.exists():
             # Graceful degradation - return empty string if addon doesn't exist
             import logging
+
             logging.warning(
-                f"Cross-training addon file not found: {addon_file}. "
-                "Cross-training analysis will not be available."
+                f"Cross-training addon file not found: {addon_file}. Cross-training analysis will not be available."
             )
             return ""
 
         # Load addon template
-        with open(addon_file, "r", encoding="utf-8") as f:
+        with open(addon_file, encoding="utf-8") as f:
             template = f.read().strip()
 
         # Format with provided variables
@@ -483,11 +483,7 @@ class PromptLoader:
         if not model_dir.exists():
             return []
 
-        return [
-            d.name
-            for d in model_dir.iterdir()
-            if d.is_dir() and not d.name.startswith(".")
-        ]
+        return [d.name for d in model_dir.iterdir() if d.is_dir() and not d.name.startswith(".")]
 
 
 def get_prompt_loader(
@@ -510,10 +506,7 @@ def get_prompt_loader(
         ValueError: If version is not provided
     """
     if version is None:
-        raise ValueError(
-            "Prompt version must be specified. "
-            "This should come from the .cycling-ai.yaml config file."
-        )
+        raise ValueError("Prompt version must be specified. This should come from the .cycling-ai.yaml config file.")
 
     return PromptLoader(
         prompts_base_dir=prompts_dir,

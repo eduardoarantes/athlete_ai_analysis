@@ -73,31 +73,23 @@ export function StravaConnectionToast() {
         <div className="flex-1">
           <h4
             className={`font-semibold ${
-              isSuccess
-                ? 'text-green-800 dark:text-green-200'
-                : 'text-red-800 dark:text-red-200'
+              isSuccess ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'
             }`}
           >
             {isSuccess ? t('connectionSuccess') : t('connectionError')}
           </h4>
           <p
             className={`text-sm mt-1 ${
-              isSuccess
-                ? 'text-green-700 dark:text-green-300'
-                : 'text-red-700 dark:text-red-300'
+              isSuccess ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'
             }`}
           >
-            {isSuccess
-              ? t('connectionSuccessDescription')
-              : getErrorMessage(stravaError || '')}
+            {isSuccess ? t('connectionSuccessDescription') : getErrorMessage(stravaError || '')}
           </p>
         </div>
         <button
           onClick={() => setDismissed(true)}
           className={`flex-shrink-0 p-1 rounded hover:bg-black/10 dark:hover:bg-white/10 ${
-            isSuccess
-              ? 'text-green-600 dark:text-green-400'
-              : 'text-red-600 dark:text-red-400'
+            isSuccess ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
           }`}
         >
           <X className="h-4 w-4" />

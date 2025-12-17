@@ -3,6 +3,7 @@ Plan generation commands for CLI.
 
 Commands for generating training plans.
 """
+
 from __future__ import annotations
 
 import json
@@ -10,8 +11,8 @@ from pathlib import Path
 
 import click
 
-from ..formatting import console, format_json_as_rich, format_training_plan
 from ...tools.wrappers import TrainingPlanTool
+from ..formatting import console, format_json_as_rich, format_training_plan
 
 
 @click.group()
@@ -66,22 +67,20 @@ def generate(
     """
     # Load athlete profile to get training_plan_weeks
     try:
-        with open(profile, 'r') as f:
+        with open(profile) as f:
             athlete_profile = json.load(f)
     except Exception as e:
         console.print(f"[red]Error loading athlete profile: {e}[/red]")
-        raise click.Abort()
+        raise click.Abort() from None
 
-    weeks = athlete_profile.get('training_plan_weeks')
+    weeks = athlete_profile.get("training_plan_weeks")
     if weeks is None:
         console.print("[red]Error: 'training_plan_weeks' not found in athlete profile.[/red]")
         console.print("[yellow]Please add 'training_plan_weeks' field to your athlete_profile.json[/yellow]")
         raise click.Abort()
 
     if not isinstance(weeks, int) or weeks < 1 or weeks > 52:
-        console.print(
-            f"[red]Error: 'training_plan_weeks' must be an integer between 1 and 52, got: {weeks}[/red]"
-        )
+        console.print(f"[red]Error: 'training_plan_weeks' must be an integer between 1 and 52, got: {weeks}[/red]")
         raise click.Abort()
 
     with console.status("[bold green]Generating training plan..."):

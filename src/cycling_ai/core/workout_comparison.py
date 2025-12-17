@@ -356,12 +356,7 @@ class ComplianceScorer:
         tss_score, tss_pct = self.score_tss(planned, actual)
 
         # Weighted average
-        compliance_score = (
-            completion_score * 0.40
-            + duration_score * 0.25
-            + intensity_score * 0.25
-            + tss_score * 0.10
-        )
+        compliance_score = completion_score * 0.40 + duration_score * 0.25 + intensity_score * 0.25 + tss_score * 0.10
 
         return ComplianceMetrics(
             completed=True,
@@ -374,9 +369,7 @@ class ComplianceScorer:
             tss_compliance_pct=round(tss_pct, 1) if tss_pct is not None else None,
         )
 
-    def score_duration(
-        self, planned: PlannedWorkout, actual: ActualWorkout
-    ) -> tuple[float, float]:
+    def score_duration(self, planned: PlannedWorkout, actual: ActualWorkout) -> tuple[float, float]:
         """
         Score duration compliance.
 
@@ -396,9 +389,7 @@ class ComplianceScorer:
 
         return score, compliance_pct
 
-    def score_intensity(
-        self, planned: PlannedWorkout, actual: ActualWorkout
-    ) -> float:
+    def score_intensity(self, planned: PlannedWorkout, actual: ActualWorkout) -> float:
         """
         Score intensity compliance via zone distribution match.
 
@@ -409,13 +400,9 @@ class ComplianceScorer:
         Returns:
             Score 0-100
         """
-        return self.calculate_zone_match_score(
-            planned.zone_distribution, actual.zone_distribution
-        )
+        return self.calculate_zone_match_score(planned.zone_distribution, actual.zone_distribution)
 
-    def score_tss(
-        self, planned: PlannedWorkout, actual: ActualWorkout
-    ) -> tuple[float, float | None]:
+    def score_tss(self, planned: PlannedWorkout, actual: ActualWorkout) -> tuple[float, float | None]:
         """
         Score TSS compliance.
 
@@ -535,9 +522,7 @@ class WorkoutMatcher:
                 if len(exact_matches) == 1:
                     best_idx, best_match = exact_matches[0]
                 else:
-                    best_idx, best_match = max(
-                        exact_matches, key=lambda x: x[1].duration_minutes
-                    )
+                    best_idx, best_match = max(exact_matches, key=lambda x: x[1].duration_minutes)
 
                 matched_pairs.append((planned, best_match))
                 used_actual_indices.add(best_idx)
@@ -672,10 +657,7 @@ class DeviationDetector:
 
         # 3. Intensity deviations
         if metrics.intensity_score < 70:
-            deviations.append(
-                f"Intensity deviated from plan "
-                f"(zone match score: {metrics.intensity_score:.0f}/100)"
-            )
+            deviations.append(f"Intensity deviated from plan (zone match score: {metrics.intensity_score:.0f}/100)")
 
         # 4. TSS deviations
         if metrics.tss_compliance_pct is not None and metrics.tss_compliance_pct < 85:
@@ -727,10 +709,7 @@ class RecommendationEngine:
         # Excellent compliance (90-100)
         if score >= 90:
             if score == 100:
-                return (
-                    "Excellent execution! Workout completed exactly as planned. "
-                    "Continue this level of consistency."
-                )
+                return "Excellent execution! Workout completed exactly as planned. Continue this level of consistency."
             else:
                 return (
                     f"Great execution ({score:.0f}% compliance). "
@@ -1138,11 +1117,7 @@ class WorkoutComparer:
             return None
 
         # Find actual workout(s) for this date
-        actuals_on_date = [
-            actual
-            for actual in self._actual_workouts
-            if actual.date.date() == target_date.date()
-        ]
+        actuals_on_date = [actual for actual in self._actual_workouts if actual.date.date() == target_date.date()]
 
         # Match planned to actual (select longest if multiple)
         actual = None
@@ -1160,9 +1135,7 @@ class WorkoutComparer:
         deviations = self._deviation_detector.detect_deviations(planned, actual, metrics)
 
         # Generate recommendation
-        recommendation = self._recommendation_engine.generate_recommendation(
-            planned, actual, metrics, deviations
-        )
+        recommendation = self._recommendation_engine.generate_recommendation(planned, actual, metrics, deviations)
 
         return WorkoutComparison(
             date=target_date,
@@ -1212,37 +1185,21 @@ class WorkoutComparer:
         # Aggregate metrics
         workouts_planned = len(weekly_planned)
         workouts_completed = sum(1 for c in daily_comparisons if c.metrics.completed)
-        completion_rate_pct = (
-            (workouts_completed / workouts_planned * 100) if workouts_planned > 0 else 0.0
-        )
+        completion_rate_pct = (workouts_completed / workouts_planned * 100) if workouts_planned > 0 else 0.0
 
         total_planned_tss = sum(p.planned_tss for p in weekly_planned)
-        total_actual_tss = sum(
-            c.actual.actual_tss
-            for c in daily_comparisons
-            if c.actual and c.actual.actual_tss
-        )
-        tss_compliance_pct = (
-            (total_actual_tss / total_planned_tss * 100) if total_planned_tss > 0 else 0.0
-        )
+        total_actual_tss = sum(c.actual.actual_tss for c in daily_comparisons if c.actual and c.actual.actual_tss)
+        tss_compliance_pct = (total_actual_tss / total_planned_tss * 100) if total_planned_tss > 0 else 0.0
 
         total_planned_duration = sum(p.total_duration_minutes for p in weekly_planned)
-        total_actual_duration = sum(
-            c.actual.duration_minutes for c in daily_comparisons if c.actual
-        )
+        total_actual_duration = sum(c.actual.duration_minutes for c in daily_comparisons if c.actual)
         duration_compliance_pct = (
-            (total_actual_duration / total_planned_duration * 100)
-            if total_planned_duration > 0
-            else 0.0
+            (total_actual_duration / total_planned_duration * 100) if total_planned_duration > 0 else 0.0
         )
 
         # Calculate average compliance score (only for completed workouts)
-        completed_scores = [
-            c.metrics.compliance_score for c in daily_comparisons if c.metrics.completed
-        ]
-        avg_compliance_score = (
-            sum(completed_scores) / len(completed_scores) if completed_scores else 0.0
-        )
+        completed_scores = [c.metrics.compliance_score for c in daily_comparisons if c.metrics.completed]
+        avg_compliance_score = sum(completed_scores) / len(completed_scores) if completed_scores else 0.0
 
         # Detect patterns
         patterns = self._pattern_detector.identify_weekly_patterns(daily_comparisons)
@@ -1375,8 +1332,11 @@ class WorkoutComparer:
         # Parse zone distribution from columns
         zone_distribution: dict[str, float] = {}
         zone_columns = [
-            "zone1_minutes", "zone2_minutes", "zone3_minutes",
-            "zone4_minutes", "zone5_minutes"
+            "zone1_minutes",
+            "zone2_minutes",
+            "zone3_minutes",
+            "zone4_minutes",
+            "zone5_minutes",
         ]
         for zone in zone_columns:
             if zone in row and row[zone]:

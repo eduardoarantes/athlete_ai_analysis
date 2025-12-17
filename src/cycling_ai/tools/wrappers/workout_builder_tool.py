@@ -3,9 +3,9 @@ Workout builder tool wrapper.
 
 Allows LLM to create structured workouts with segments (warm-up, intervals, recovery, cool-down).
 """
+
 from __future__ import annotations
 
-import json
 from typing import Any
 
 from cycling_ai.core.workout_builder import Workout, WorkoutSegment
@@ -73,34 +73,32 @@ class WorkoutBuilderTool(BaseTool):
                         "properties": {
                             "type": {
                                 "type": "STRING",
-                                "description": "Segment type: warmup, interval, work, recovery, cooldown, steady, or tempo"
+                                "description": "Segment type: warmup, interval, work, recovery, cooldown, steady, or tempo",
                             },
                             "duration_min": {
                                 "type": "INTEGER",
-                                "description": "Duration of segment in minutes"
+                                "description": "Duration of segment in minutes",
                             },
                             "power_low": {
                                 "type": "INTEGER",
-                                "description": "Lower power target in watts"
+                                "description": "Lower power target in watts",
                             },
                             "power_high": {
                                 "type": "INTEGER",
-                                "description": "Upper power target in watts (optional, defaults to power_low)"
+                                "description": "Upper power target in watts (optional, defaults to power_low)",
                             },
                             "description": {
                                 "type": "STRING",
-                                "description": "Purpose or details of this segment"
-                            }
+                                "description": "Purpose or details of this segment",
+                            },
                         },
-                        "required": ["type", "duration_min", "power_low"]
+                        "required": ["type", "duration_min", "power_low"],
                     },
                 ),
                 ToolParameter(
                     name="ftp",
                     type="number",
-                    description=(
-                        "Athlete's current FTP in watts. Used for workout metadata."
-                    ),
+                    description=("Athlete's current FTP in watts. Used for workout metadata."),
                     required=True,
                 ),
             ],
@@ -133,10 +131,18 @@ class WorkoutBuilderTool(BaseTool):
             weekday = kwargs["weekday"]
             description = kwargs["description"]
             segments_data = kwargs["segments"]
-            ftp = float(kwargs["ftp"])
+            _ftp = float(kwargs["ftp"])  # Reserved for future use
 
             # Validate weekday
-            valid_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+            valid_days = [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday",
+            ]
             if weekday not in valid_days:
                 return ToolExecutionResult(
                     success=False,
@@ -210,7 +216,15 @@ class WorkoutBuilderTool(BaseTool):
                         )
 
                     # Validate segment type
-                    valid_types = ["warmup", "interval", "work", "recovery", "cooldown", "steady", "tempo"]
+                    valid_types = [
+                        "warmup",
+                        "interval",
+                        "work",
+                        "recovery",
+                        "cooldown",
+                        "steady",
+                        "tempo",
+                    ]
                     if seg_type not in valid_types:
                         return ToolExecutionResult(
                             success=False,

@@ -4,6 +4,7 @@ Generate command for comprehensive report generation.
 Orchestrates multi-agent workflow to produce comprehensive HTML reports
 from cycling data in a single command.
 """
+
 from __future__ import annotations
 
 import logging
@@ -82,7 +83,7 @@ class PhaseProgressTracker:
         table.add_column("Phase", style="cyan", width=30)
         table.add_column("Status", width=20)
 
-        for phase_id, phase_info in self.phases.items():
+        for _phase_id, phase_info in self.phases.items():
             name = phase_info["name"]
             status = phase_info["status"]
 
@@ -150,33 +151,19 @@ def create_rag_config(
             "\n[yellow]⚠️  Warning: RAG enabled but vectorstore not found[/yellow]",
             style="bold",
         )
-        console.print(
-            f"[yellow]   Expected location: {project_vectorstore}[/yellow]"
-        )
-        console.print(
-            "\n[yellow]   To populate the vectorstore, run:[/yellow]"
-        )
-        console.print(
-            "[yellow]      cycling-ai index domain[/yellow]"
-        )
-        console.print(
-            "[yellow]      cycling-ai index templates[/yellow]"
-        )
-        console.print(
-            "\n[yellow]   RAG will be disabled for this run.[/yellow]\n"
-        )
+        console.print(f"[yellow]   Expected location: {project_vectorstore}[/yellow]")
+        console.print("\n[yellow]   To populate the vectorstore, run:[/yellow]")
+        console.print("[yellow]      cycling-ai index domain[/yellow]")
+        console.print("[yellow]      cycling-ai index templates[/yellow]")
+        console.print("\n[yellow]   RAG will be disabled for this run.[/yellow]\n")
 
     # Create configuration
     rag_config = RAGConfig(
         enabled=enabled and project_vectorstore.exists(),  # Disable if vectorstore missing
         top_k=top_k,
         min_score=min_score,
-        project_vectorstore_path=(
-            project_vectorstore if project_vectorstore.exists() else None
-        ),
-        user_vectorstore_path=(
-            user_vectorstore if user_vectorstore.exists() else None
-        ),
+        project_vectorstore_path=(project_vectorstore if project_vectorstore.exists() else None),
+        user_vectorstore_path=(user_vectorstore if user_vectorstore.exists() else None),
         embedding_provider="local",
         embedding_model=None,  # Use provider defaults
     )
@@ -184,10 +171,7 @@ def create_rag_config(
     # Log RAG status
     if enabled:
         if rag_config.enabled:
-            console.print(
-                f"[green]✓[/green] RAG enabled with top_k={top_k}, "
-                f"min_score={min_score}"
-            )
+            console.print(f"[green]✓[/green] RAG enabled with top_k={top_k}, min_score={min_score}")
         else:
             console.print("[yellow]⚠️  RAG disabled (vectorstore not found)[/yellow]")
 
@@ -288,10 +272,7 @@ def create_rag_config(
     "--workout-source",
     type=click.Choice(["library", "llm"]),
     default="library",
-    help=(
-        "Source for training plan workouts: 'library' (fast, deterministic) "
-        "or 'llm' (flexible, uses tokens)"
-    ),
+    help=("Source for training plan workouts: 'library' (fast, deterministic) or 'llm' (flexible, uses tokens)"),
 )
 @click.option(
     "--enable-rag/--disable-rag",
@@ -362,14 +343,15 @@ def generate(
         # Load athlete profile early to check for raw_training_data_path
         try:
             import json
+
             with open(profile_file) as f:
                 athlete_profile = json.load(f)
         except Exception as e:
             console.print(f"[red]Error loading athlete profile: {str(e)}[/red]")
-            raise click.Abort()
+            raise click.Abort() from None
 
         # Read training_plan_weeks from profile (required field)
-        training_plan_weeks = athlete_profile.get('training_plan_weeks')
+        training_plan_weeks = athlete_profile.get("training_plan_weeks")
         if training_plan_weeks is None:
             console.print("[red]Error: 'training_plan_weeks' not found in athlete profile.[/red]")
             console.print("[yellow]Please add 'training_plan_weeks' field to your athlete_profile.json[/yellow]")
@@ -382,7 +364,7 @@ def generate(
             raise click.Abort()
 
         # Determine data sources (CLI args override profile)
-        profile_data_path = athlete_profile.get('raw_training_data_path')
+        profile_data_path = athlete_profile.get("raw_training_data_path")
 
         # Use profile path as fallback if CLI args not provided
         if fit_dir is None and profile_data_path:
@@ -448,9 +430,7 @@ def generate(
         try:
             config = load_config()
         except Exception as e:
-            console.print(
-                f"[yellow]Warning: Could not load config file (.cycling-ai.yaml): {str(e)}[/yellow]"
-            )
+            console.print(f"[yellow]Warning: Could not load config file (.cycling-ai.yaml): {str(e)}[/yellow]")
             console.print("[dim]Continuing with defaults and environment variables...[/dim]")
             config = None
 
@@ -460,9 +440,7 @@ def generate(
             provider_instance = _initialize_provider(
                 provider, model, config, aws_region, aws_profile, guardrail_id, guardrail_version
             )
-            console.print(
-                f"[green]✓ Provider initialized: {provider} ({provider_instance.config.model})[/green]"
-            )
+            console.print(f"[green]✓ Provider initialized: {provider} ({provider_instance.config.model})[/green]")
         except ValueError as e:
             console.print(f"[red]Provider initialization failed: {str(e)}[/red]")
             _print_provider_help(provider)
@@ -481,13 +459,9 @@ def generate(
             version=prompt_version,
         )
         if prompts_dir:
-            console.print(
-                f"[cyan]Using prompts from: {prompts_dir}/{prompt_model}/{prompt_version}[/cyan]"
-            )
+            console.print(f"[cyan]Using prompts from: {prompts_dir}/{prompt_model}/{prompt_version}[/cyan]")
         else:
-            console.print(
-                f"[cyan]Using default prompts: {prompt_model}/{prompt_version}[/cyan]"
-            )
+            console.print(f"[cyan]Using default prompts: {prompt_model}/{prompt_version}[/cyan]")
         console.print()
 
         # Setup RAG configuration
@@ -542,7 +516,9 @@ def generate(
         try:
             # Temporarily suppress console logging during Live display to prevent flickering
             root_logger = logging.getLogger()
-            console_handlers = [h for h in root_logger.handlers if isinstance(h, logging.StreamHandler) and h.stream.name == '<stderr>']
+            console_handlers = [
+                h for h in root_logger.handlers if isinstance(h, logging.StreamHandler) and h.stream.name == "<stderr>"
+            ]
             original_levels = {}
 
             # Store original levels and set to WARNING (suppress INFO/DEBUG)
@@ -562,7 +538,7 @@ def generate(
         except KeyboardInterrupt:
             console.print()
             console.print("[yellow]Workflow interrupted by user[/yellow]")
-            raise click.Abort()
+            raise click.Abort() from None
         except Exception as e:
             console.print()
             console.print(f"[red]Workflow execution error: {str(e)}[/red]")
@@ -596,7 +572,7 @@ def generate(
         raise
     except KeyboardInterrupt:
         console.print("\n[yellow]Interrupted by user[/yellow]")
-        raise click.Abort()
+        raise click.Abort() from None
     except Exception as e:
         console.print(f"\n[red]Unexpected error: {str(e)}[/red]")
         console.print("\n[dim]If this error persists, please report it as an issue.[/dim]")
@@ -622,10 +598,7 @@ def _generate_html_report(output_dir: Path, result: WorkflowResult) -> Path | No
     from cycling_ai.tools.performance_report_generator import generate_performance_html_from_json
 
     # Find report_data.json path from Phase 4 result
-    phase4_result = next(
-        (r for r in result.phase_results if r.phase_name == "report_data_preparation"),
-        None
-    )
+    phase4_result = next((r for r in result.phase_results if r.phase_name == "report_data_preparation"), None)
 
     if not phase4_result or not phase4_result.success:
         return None
@@ -645,10 +618,7 @@ def _generate_html_report(output_dir: Path, result: WorkflowResult) -> Path | No
 
     # Generate HTML
     output_html_path = output_dir / "performance_report.html"
-    generate_performance_html_from_json(
-        report_data=report_data,
-        output_path=output_html_path
-    )
+    generate_performance_html_from_json(report_data=report_data, output_path=output_html_path)
 
     return output_html_path
 
@@ -791,9 +761,7 @@ def _display_config_summary(config: WorkflowConfig) -> None:
     table.add_row("Analysis Period", f"{config.period_months} months")
     table.add_row(
         "Training Plan",
-        f"{config.training_plan_weeks} weeks"
-        if config.generate_training_plan
-        else "[dim]Disabled[/dim]",
+        f"{config.training_plan_weeks} weeks" if config.generate_training_plan else "[dim]Disabled[/dim]",
     )
 
     # Show workout library location when using library-based workouts
@@ -845,9 +813,7 @@ def _display_success_results(result: WorkflowResult) -> None:
             "[yellow]⚠[/yellow] [bold yellow]Warning:[/bold yellow] "
             "No report files were generated. The LLM may not have called the report generation tool."
         )
-        console.print(
-            "[dim]This is a known issue. Check the logs for more details or try again.[/dim]"
-        )
+        console.print("[dim]This is a known issue. Check the logs for more details or try again.[/dim]")
 
 
 def _display_failure_results(result: WorkflowResult) -> None:
@@ -894,20 +860,14 @@ def _validate_output_directory(output_dir: Path) -> None:
         output_dir.mkdir(parents=True, exist_ok=True)
     except PermissionError as e:
         raise ValueError(
-            f"Cannot create output directory: {output_dir}. "
-            "Permission denied. Try a different location."
+            f"Cannot create output directory: {output_dir}. Permission denied. Try a different location."
         ) from e
     except Exception as e:
-        raise ValueError(
-            f"Cannot create output directory: {output_dir}. Error: {str(e)}"
-        ) from e
+        raise ValueError(f"Cannot create output directory: {output_dir}. Error: {str(e)}") from e
 
     # Check if writable
     if not os.access(output_dir, os.W_OK):
-        raise ValueError(
-            f"Output directory is not writable: {output_dir}. "
-            "Check permissions."
-        )
+        raise ValueError(f"Output directory is not writable: {output_dir}. Check permissions.")
 
 
 def _print_provider_help(provider_name: str) -> None:

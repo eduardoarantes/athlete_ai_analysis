@@ -33,7 +33,7 @@ from __future__ import annotations
 
 import json
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -135,7 +135,7 @@ class KnowledgeIndexer:
             category = md_file.parent.name
 
             # Read file content
-            with open(md_file, "r", encoding="utf-8") as f:
+            with open(md_file, encoding="utf-8") as f:
                 content = f.read()
 
             # Parse YAML frontmatter
@@ -195,13 +195,11 @@ class KnowledgeIndexer:
             raise FileNotFoundError(f"Templates file not found: {templates_file}")
 
         # Read and parse JSON
-        with open(templates_file, "r", encoding="utf-8") as f:
+        with open(templates_file, encoding="utf-8") as f:
             data = json.load(f)
 
         if "templates" not in data:
-            raise ValueError(
-                f"Invalid template file: missing 'templates' key in {templates_file}"
-            )
+            raise ValueError(f"Invalid template file: missing 'templates' key in {templates_file}")
 
         templates = data["templates"]
         documents: list[Document] = []
@@ -355,9 +353,7 @@ class KnowledgeIndexer:
             True
         """
         # Regex to match YAML frontmatter
-        frontmatter_pattern = re.compile(
-            r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL | re.MULTILINE
-        )
+        frontmatter_pattern = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL | re.MULTILINE)
         match = frontmatter_pattern.match(content)
 
         if match:

@@ -3,7 +3,9 @@ Session context constants and utilities.
 
 Centralized constants for session context keys to prevent typos and ensure consistency.
 """
+
 from enum import Enum
+from typing import Any
 
 
 class SessionContextKey(str, Enum):
@@ -41,4 +43,4 @@ class SessionMode(str, Enum):
 
 
 # Type hints for common context structures
-SessionContext = dict[str, any]
+SessionContext = dict[str, Any]

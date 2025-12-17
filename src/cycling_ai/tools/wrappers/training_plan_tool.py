@@ -5,6 +5,7 @@ Wraps core.training.finalize_training_plan() as a BaseTool for LLM provider inte
 The LLM designs the plan using create_workout and calculate_power_zones tools,
 then uses this tool to save the complete plan.
 """
+
 from __future__ import annotations
 
 import json
@@ -53,9 +54,7 @@ class TrainingPlanTool(BaseTool):
                 ToolParameter(
                     name="athlete_profile_json",
                     type="string",
-                    description=(
-                        "Path to athlete_profile.json. Required for athlete metadata and validation."
-                    ),
+                    description=("Path to athlete_profile.json. Required for athlete metadata and validation."),
                     required=True,
                 ),
                 ToolParameter(
@@ -100,15 +99,15 @@ class TrainingPlanTool(BaseTool):
                         "properties": {
                             "week_number": {
                                 "type": "INTEGER",
-                                "description": "Week number (1 to total_weeks)"
+                                "description": "Week number (1 to total_weeks)",
                             },
                             "phase": {
                                 "type": "STRING",
-                                "description": "Training phase (e.g., Foundation, Build, Recovery, Peak)"
+                                "description": "Training phase (e.g., Foundation, Build, Recovery, Peak)",
                             },
                             "phase_rationale": {
                                 "type": "STRING",
-                                "description": "Explanation of why this phase for this week"
+                                "description": "Explanation of why this phase for this week",
                             },
                             "workouts": {
                                 "type": "ARRAY",
@@ -118,11 +117,11 @@ class TrainingPlanTool(BaseTool):
                                     "properties": {
                                         "weekday": {
                                             "type": "STRING",
-                                            "description": "Day of the week (Monday-Sunday)"
+                                            "description": "Day of the week (Monday-Sunday)",
                                         },
                                         "name": {
                                             "type": "STRING",
-                                            "description": "Short workout name (3-10 words). Examples: 'VO2 Max intervals', 'Threshold repeats', 'Endurance base'"
+                                            "description": "Short workout name (3-10 words). Examples: 'VO2 Max intervals', 'Threshold repeats', 'Endurance base'",
                                         },
                                         "detailed_description": {
                                             "type": "STRING",
@@ -132,11 +131,11 @@ class TrainingPlanTool(BaseTool):
                                                 "2) Physiological target (what system this trains), "
                                                 "3) Training benefits (how this improves performance), "
                                                 "4) Execution guidance (how to perform effectively). REQUIRED for all workouts."
-                                            )
+                                            ),
                                         },
                                         "description": {
                                             "type": "STRING",
-                                            "description": "DEPRECATED: Use 'name' instead. Kept for backward compatibility."
+                                            "description": "DEPRECATED: Use 'name' instead. Kept for backward compatibility.",
                                         },
                                         "segments": {
                                             "type": "ARRAY",
@@ -146,44 +145,49 @@ class TrainingPlanTool(BaseTool):
                                                 "properties": {
                                                     "type": {
                                                         "type": "STRING",
-                                                        "description": "Segment type (warmup/interval/recovery/cooldown/steady/work/tempo)"
+                                                        "description": "Segment type (warmup/interval/recovery/cooldown/steady/work/tempo)",
                                                     },
                                                     "duration_min": {
                                                         "type": "INTEGER",
-                                                        "description": "Duration in minutes"
+                                                        "description": "Duration in minutes",
                                                     },
                                                     "power_low_pct": {
                                                         "type": "NUMBER",
-                                                        "description": "Lower power bound as percentage of FTP"
+                                                        "description": "Lower power bound as percentage of FTP",
                                                     },
                                                     "power_high_pct": {
                                                         "type": "NUMBER",
-                                                        "description": "Upper power bound as percentage of FTP (optional)"
+                                                        "description": "Upper power bound as percentage of FTP (optional)",
                                                     },
                                                     "description": {
                                                         "type": "STRING",
-                                                        "description": "Purpose and guidance for this segment"
-                                                    }
+                                                        "description": "Purpose and guidance for this segment",
+                                                    },
                                                 },
-                                                "required": ["type", "duration_min", "power_low_pct", "description"]
-                                            }
-                                        }
+                                                "required": [
+                                                    "type",
+                                                    "duration_min",
+                                                    "power_low_pct",
+                                                    "description",
+                                                ],
+                                            },
+                                        },
                                     },
-                                    "required": ["weekday", "segments"]
+                                    "required": ["weekday", "segments"],
                                     # Note: name and description are optional to support both old and new formats
                                     # Validation will check that at least one is present
-                                }
+                                },
                             },
                             "weekly_focus": {
                                 "type": "STRING",
-                                "description": "Key training focus for the week"
+                                "description": "Key training focus for the week",
                             },
                             "weekly_watch_points": {
                                 "type": "STRING",
-                                "description": "What athlete should watch for this week"
-                            }
+                                "description": "What athlete should watch for this week",
+                            },
                         },
-                        "required": ["week_number", "phase", "workouts", "weekly_focus"]
+                        "required": ["week_number", "phase", "workouts", "weekly_focus"],
                     },
                 ),
                 ToolParameter(
@@ -249,11 +253,13 @@ class TrainingPlanTool(BaseTool):
             coaching_notes = kwargs["coaching_notes"]
             monitoring_guidance = kwargs["monitoring_guidance"]
 
-            logger.info(f"[TRAINING PLAN TOOL] Extracted parameters:")
+            logger.info("[TRAINING PLAN TOOL] Extracted parameters:")
             logger.info(f"[TRAINING PLAN TOOL]   - athlete_profile: {athlete_profile_json}")
             logger.info(f"[TRAINING PLAN TOOL]   - total_weeks: {total_weeks}")
             logger.info(f"[TRAINING PLAN TOOL]   - target_ftp: {target_ftp}")
-            logger.info(f"[TRAINING PLAN TOOL]   - weekly_plan length: {len(weekly_plan) if isinstance(weekly_plan, list) else 'N/A'}")
+            logger.info(
+                f"[TRAINING PLAN TOOL]   - weekly_plan length: {len(weekly_plan) if isinstance(weekly_plan, list) else 'N/A'}"
+            )
             logger.debug(f"[TRAINING PLAN TOOL]   - coaching_notes length: {len(coaching_notes)} chars")
             logger.debug(f"[TRAINING PLAN TOOL]   - monitoring_guidance length: {len(monitoring_guidance)} chars")
 
@@ -264,9 +270,7 @@ class TrainingPlanTool(BaseTool):
                     success=False,
                     data=None,
                     format="json",
-                    errors=[
-                        f"Athlete profile not found at path: {athlete_profile_json}"
-                    ],
+                    errors=[f"Athlete profile not found at path: {athlete_profile_json}"],
                 )
 
             # Load athlete profile
@@ -294,7 +298,7 @@ class TrainingPlanTool(BaseTool):
                     errors=["weekly_plan must be an array of week objects"],
                 )
 
-            logger.info(f"[TRAINING PLAN TOOL] Validating plan structure...")
+            logger.info("[TRAINING PLAN TOOL] Validating plan structure...")
 
             # Validate workout fields (name/description)
             for week in weekly_plan:
@@ -372,7 +376,9 @@ class TrainingPlanTool(BaseTool):
                     coaching_notes=coaching_notes,
                     monitoring_guidance=monitoring_guidance,
                 )
-                logger.info(f"[TRAINING PLAN TOOL] finalize_training_plan() returned JSON of length: {len(result_json)}")
+                logger.info(
+                    f"[TRAINING PLAN TOOL] finalize_training_plan() returned JSON of length: {len(result_json)}"
+                )
                 logger.debug(f"[TRAINING PLAN TOOL] First 200 chars of result: {result_json[:200]}")
             except ValueError as e:
                 logger.error(f"[TRAINING PLAN TOOL] Plan validation error: {str(e)}")
@@ -408,7 +414,7 @@ class TrainingPlanTool(BaseTool):
 
             # Return successful result wrapped in 'training_plan' key for Phase 4
             logger.info("[TRAINING PLAN TOOL] Creating ToolExecutionResult with 'training_plan' wrapper")
-            logger.debug(f"[TRAINING PLAN TOOL] Result data keys after wrapping: ['training_plan']")
+            logger.debug("[TRAINING PLAN TOOL] Result data keys after wrapping: ['training_plan']")
             logger.debug(f"[TRAINING PLAN TOOL] Inner training_plan keys: {list(result_data.keys())}")
 
             return ToolExecutionResult(

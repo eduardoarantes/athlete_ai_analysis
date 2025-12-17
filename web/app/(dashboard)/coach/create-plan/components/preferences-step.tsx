@@ -17,7 +17,14 @@ interface PreferencesStepProps {
   onUpdate: (data: any) => void
 }
 
-const WORKOUT_TYPE_IDS = ['intervals', 'endurance', 'recovery', 'tempo', 'sweet-spot', 'vo2max'] as const
+const WORKOUT_TYPE_IDS = [
+  'intervals',
+  'endurance',
+  'recovery',
+  'tempo',
+  'sweet-spot',
+  'vo2max',
+] as const
 
 export function PreferencesStep({ data, onUpdate }: PreferencesStepProps) {
   const t = useTranslations('createPlan.preferencesStep')
@@ -62,9 +69,7 @@ export function PreferencesStep({ data, onUpdate }: PreferencesStepProps) {
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-semibold mb-2">{t('title')}</h3>
-        <p className="text-sm text-muted-foreground">
-          {t('description')}
-        </p>
+        <p className="text-sm text-muted-foreground">{t('description')}</p>
       </div>
 
       {/* Days per week */}
@@ -83,7 +88,9 @@ export function PreferencesStep({ data, onUpdate }: PreferencesStepProps) {
           />
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">{t('daysMin')}</span>
-            <span className="font-semibold text-primary">{t('daysValue', { days: preferences.daysPerWeek })}</span>
+            <span className="font-semibold text-primary">
+              {t('daysValue', { days: preferences.daysPerWeek })}
+            </span>
             <span className="text-muted-foreground">{t('daysMax')}</span>
           </div>
         </div>
@@ -104,7 +111,9 @@ export function PreferencesStep({ data, onUpdate }: PreferencesStepProps) {
                 <Label htmlFor={typeId} className="font-medium cursor-pointer">
                   {t(`workoutTypeOptions.${typeId}.label`)}
                 </Label>
-                <p className="text-sm text-muted-foreground">{t(`workoutTypeOptions.${typeId}.description`)}</p>
+                <p className="text-sm text-muted-foreground">
+                  {t(`workoutTypeOptions.${typeId}.description`)}
+                </p>
               </div>
             </div>
           ))}
@@ -115,9 +124,7 @@ export function PreferencesStep({ data, onUpdate }: PreferencesStepProps) {
       <div className="flex items-center justify-between p-4 border rounded-lg">
         <div className="space-y-0.5">
           <Label htmlFor="indoorOnly">{t('indoorOnly')}</Label>
-          <p className="text-sm text-muted-foreground">
-            {t('indoorOnlyDescription')}
-          </p>
+          <p className="text-sm text-muted-foreground">{t('indoorOnlyDescription')}</p>
         </div>
         <Switch
           id="indoorOnly"

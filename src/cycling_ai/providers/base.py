@@ -4,6 +4,7 @@ Base abstractions for LLM provider adapters.
 This module defines the interface that all provider adapters must implement,
 ensuring consistent behavior across different LLM providers.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

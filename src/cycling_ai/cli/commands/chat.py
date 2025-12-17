@@ -4,6 +4,7 @@ Chat command for interactive AI conversations.
 Provides a conversational interface where users can interact with an AI assistant
 that has access to cycling analysis tools.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -63,9 +64,7 @@ def _detect_existing_profile(profile_path: Path | None) -> Path | None:
     # Priority 1: Use explicit path if provided
     if profile_path is not None:
         if not profile_path.exists():
-            raise FileNotFoundError(
-                f"Profile not found at specified path: {profile_path}"
-            )
+            raise FileNotFoundError(f"Profile not found at specified path: {profile_path}")
         return profile_path
 
     # Priority 2: Search for profiles in data/ directory
@@ -203,10 +202,7 @@ def _check_onboarding_completion(session: ConversationSession) -> bool:
 
     # Profile file must exist
     profile_path = Path(profile_path_str)
-    if not profile_path.exists() or not profile_path.is_file():
-        return False
-
-    return True
+    return profile_path.exists() and profile_path.is_file()
 
 
 def _transition_to_normal_mode(session: ConversationSession) -> None:
@@ -433,9 +429,7 @@ def chat(
         raise
 
 
-def _build_session_context(
-    profile: Path | None, data_dir: Path | None
-) -> dict[str, Any]:
+def _build_session_context(profile: Path | None, data_dir: Path | None) -> dict[str, Any]:
     """
     Build session context from provided paths.
 
@@ -562,9 +556,7 @@ def _initialize_provider(
         return provider
     except Exception as e:
         console.print(f"[red]Failed to initialize provider: {str(e)}[/red]")
-        console.print(
-            f"[yellow]Tip: Make sure you have set the API key for {provider_name}[/yellow]"
-        )
+        console.print(f"[yellow]Tip: Make sure you have set the API key for {provider_name}[/yellow]")
         raise click.Abort() from e
 
 
@@ -601,7 +593,7 @@ def _display_welcome(session: ConversationSession, provider: str) -> None:
             f"""[bold cyan]Welcome to Cycling AI Chat![/bold cyan]
 
 [white]Provider:[/white] [green]{provider}[/green]
-[white]Model:[/white] [green]{session.model or 'default'}[/green]
+[white]Model:[/white] [green]{session.model or "default"}[/green]
 [white]Session:[/white] [dim]{session.session_id}[/dim]{profile_info}
 
 [yellow]Type your questions about cycling performance, training, or analysis.[/yellow]
@@ -636,18 +628,14 @@ def _interactive_loop(
 
             # Handle special commands
             if user_input.startswith("/"):
-                command_result = _handle_command(
-                    user_input, agent, session, session_manager
-                )
+                command_result = _handle_command(user_input, agent, session, session_manager)
                 if command_result == "quit":
                     break
                 continue
 
             # Process message through agent
             console.print()
-            with console.status(
-                "[bold yellow]🤔 Thinking...[/bold yellow]", spinner="dots"
-            ):
+            with console.status("[bold yellow]🤔 Thinking...[/bold yellow]", spinner="dots"):
                 response = agent.process_message(user_input)
 
             # Display response
@@ -801,9 +789,7 @@ def _display_session_info(session: ConversationSession) -> None:
     info_table.add_row("Provider", session.provider_name)
     info_table.add_row("Model", session.model or "default")
     info_table.add_row("Created", session.created_at.strftime("%Y-%m-%d %H:%M:%S"))
-    info_table.add_row(
-        "Last Activity", session.last_activity.strftime("%Y-%m-%d %H:%M:%S")
-    )
+    info_table.add_row("Last Activity", session.last_activity.strftime("%Y-%m-%d %H:%M:%S"))
     info_table.add_row("Messages", str(len(session.messages)))
 
     # Display context if available

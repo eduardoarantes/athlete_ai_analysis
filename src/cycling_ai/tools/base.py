@@ -4,6 +4,7 @@ Base abstractions for tool definitions and execution.
 This module provides the foundation for defining provider-agnostic tools
 that can be used across different LLM providers (OpenAI, Anthropic, Gemini, etc.).
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -35,9 +36,7 @@ class ToolParameter:
         """Validate parameter definition."""
         valid_types = {"string", "integer", "number", "boolean", "object", "array"}
         if self.type not in valid_types:
-            raise ValueError(
-                f"Invalid parameter type '{self.type}'. Must be one of {valid_types}"
-            )
+            raise ValueError(f"Invalid parameter type '{self.type}'. Must be one of {valid_types}")
 
         if self.enum is not None and not self.enum:
             raise ValueError("enum must be non-empty if provided")
@@ -68,9 +67,7 @@ class ToolDefinition:
 
         valid_categories = {"data_prep", "analysis", "reporting"}
         if self.category not in valid_categories:
-            raise ValueError(
-                f"Invalid category '{self.category}'. Must be one of {valid_categories}"
-            )
+            raise ValueError(f"Invalid category '{self.category}'. Must be one of {valid_categories}")
 
     def get_required_parameters(self) -> list[ToolParameter]:
         """Get list of required parameters."""
@@ -100,9 +97,7 @@ class ToolExecutionResult:
         """Validate execution result."""
         valid_formats = {"json", "markdown", "html", "text"}
         if self.format not in valid_formats:
-            raise ValueError(
-                f"Invalid format '{self.format}'. Must be one of {valid_formats}"
-            )
+            raise ValueError(f"Invalid format '{self.format}'. Must be one of {valid_formats}")
 
         if not self.success and not self.errors:
             raise ValueError("Failed execution must include error messages")
@@ -182,14 +177,8 @@ class BaseTool(ABC):
                     raise ValueError(f"Parameter '{param.name}' must be one of {param.enum}")
 
                 # Validate min/max values for numeric parameters
-                if param.min_value is not None and isinstance(value, (int, float)):
-                    if value < param.min_value:
-                        raise ValueError(
-                            f"Parameter '{param.name}' must be >= {param.min_value}, got {value}"
-                        )
+                if param.min_value is not None and isinstance(value, (int, float)) and value < param.min_value:
+                    raise ValueError(f"Parameter '{param.name}' must be >= {param.min_value}, got {value}")
 
-                if param.max_value is not None and isinstance(value, (int, float)):
-                    if value > param.max_value:
-                        raise ValueError(
-                            f"Parameter '{param.name}' must be <= {param.max_value}, got {value}"
-                        )
+                if param.max_value is not None and isinstance(value, (int, float)) and value > param.max_value:
+                    raise ValueError(f"Parameter '{param.name}' must be <= {param.max_value}, got {value}")

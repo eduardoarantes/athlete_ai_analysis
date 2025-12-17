@@ -26,10 +26,7 @@ import { HTTP_STATUS, MESSAGES } from '@/lib/constants'
  * Response:
  * AdminUser object with full details
  */
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     // 1. Check admin authentication
     const supabase = await createClient()
@@ -81,18 +78,15 @@ export async function GET(
     )
 
     if (userError) {
-      errorLogger.logError(
-        new Error(`get_admin_user_by_id failed: ${userError.message}`),
-        {
-          ...(auth.userId && { userId: auth.userId }),
-          path: '/api/admin/users/[id]',
-          method: 'GET',
-          metadata: {
-            targetUserId: userId,
-            dbError: userError,
-          },
-        }
-      )
+      errorLogger.logError(new Error(`get_admin_user_by_id failed: ${userError.message}`), {
+        ...(auth.userId && { userId: auth.userId }),
+        path: '/api/admin/users/[id]',
+        method: 'GET',
+        metadata: {
+          targetUserId: userId,
+          dbError: userError,
+        },
+      })
 
       return NextResponse.json(
         { error: MESSAGES.ADMIN_USERS_FETCH_FAILED },
@@ -164,10 +158,7 @@ export async function GET(
  *   message: 'User subscription updated successfully'
  * }
  */
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     // 1. Check admin authentication
     const supabase = await createClient()

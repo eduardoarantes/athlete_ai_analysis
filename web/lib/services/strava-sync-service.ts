@@ -68,8 +68,7 @@ export class StravaSyncService {
           params.after = options.after
         }
 
-        const activities =
-          await this.stravaService.getActivitiesWithRefresh(userId, params)
+        const activities = await this.stravaService.getActivitiesWithRefresh(userId, params)
 
         if (activities.length === 0) {
           hasMore = false
@@ -96,8 +95,7 @@ export class StravaSyncService {
         activitiesSynced: totalSynced,
       }
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error'
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
 
       // Try to update sync status to 'error'
       // Don't throw if this fails to avoid masking the original error
@@ -174,10 +172,7 @@ export class StravaSyncService {
    * Uses upsert to handle both new activities and updates
    * Also calculates and stores TSS for each activity
    */
-  private async storeActivities(
-    userId: string,
-    activities: StravaActivity[]
-  ): Promise<number> {
+  private async storeActivities(userId: string, activities: StravaActivity[]): Promise<number> {
     const supabase = await createClient()
 
     // Fetch athlete data for TSS calculation

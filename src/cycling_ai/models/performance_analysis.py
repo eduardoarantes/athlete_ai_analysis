@@ -1,4 +1,5 @@
 """Pydantic models for performance analysis JSON output."""
+
 from __future__ import annotations
 
 from typing import Literal
@@ -62,9 +63,7 @@ class RecommendationCategories(BaseModel):
     short_term: list[Recommendation] = Field(
         default_factory=list, description="Short-term focus recommendations (next 4 weeks)"
     )
-    long_term: list[Recommendation] = Field(
-        default_factory=list, description="Long-term goals (3-6 months)"
-    )
+    long_term: list[Recommendation] = Field(default_factory=list, description="Long-term goals (3-6 months)")
     recovery_nutrition: list[Recommendation] = Field(
         default_factory=list, description="Recovery and nutrition recommendations"
     )
@@ -107,9 +106,7 @@ class CrossTrainingAnalysis(BaseModel):
     activity_distribution: list[ActivityDistribution] = Field(
         default_factory=list, description="Distribution of activities by category"
     )
-    load_balance: LoadBalance | None = Field(
-        None, description="Training load balance across categories"
-    )
+    load_balance: LoadBalance | None = Field(None, description="Training load balance across categories")
     interference_events: list[InterferenceEvent] = Field(
         default_factory=list, description="Detected activity interference events"
     )
@@ -122,21 +119,16 @@ class PerformanceAnalysis(BaseModel):
     """Complete performance analysis report structure."""
 
     athlete_profile: AthleteProfile = Field(..., description="Athlete profile information")
-    performance_comparison: list[PerformanceMetric] = Field(
-        ..., description="Performance metrics comparison"
-    )
-    time_in_zones: list[ZoneDistribution] = Field(
-        ..., description="Training zone distribution"
-    )
+    performance_comparison: list[PerformanceMetric] = Field(..., description="Performance metrics comparison")
+    time_in_zones: list[ZoneDistribution] = Field(..., description="Training zone distribution")
     key_trends: list[KeyTrend] = Field(..., description="Key performance trends")
     insights: list[Insight] = Field(..., description="Training insights")
     recommendations: RecommendationCategories = Field(..., description="Training recommendations")
     cross_training: CrossTrainingAnalysis | None = Field(
-        None, description="Cross-training impact analysis (optional, only if athlete does multiple sports)"
+        None,
+        description="Cross-training impact analysis (optional, only if athlete does multiple sports)",
     )
-    analysis_period_months: int = Field(
-        default=6, description="Number of months analyzed"
-    )
+    analysis_period_months: int = Field(default=6, description="Number of months analyzed")
 
     class Config:
         """Pydantic configuration."""
@@ -181,15 +173,9 @@ class PerformanceAnalysis(BaseModel):
                     }
                 ],
                 "recommendations": {
-                    "short_term": [
-                        {"text": "Maintain current Zone 2 volume to continue aerobic development"}
-                    ],
-                    "long_term": [
-                        {"text": "Target FTP increase of 10-15W through focused threshold work"}
-                    ],
-                    "recovery_nutrition": [
-                        {"text": "Prioritize 8+ hours of sleep during high-load weeks"}
-                    ],
+                    "short_term": [{"text": "Maintain current Zone 2 volume to continue aerobic development"}],
+                    "long_term": [{"text": "Target FTP increase of 10-15W through focused threshold work"}],
+                    "recovery_nutrition": [{"text": "Prioritize 8+ hours of sleep during high-load weeks"}],
                 },
                 "analysis_period_months": 6,
             }

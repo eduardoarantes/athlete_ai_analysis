@@ -85,7 +85,7 @@ def needs_cache_refresh(csv_file_path: str, cache_dir: Path) -> bool:
 
         # Check if CSV file has been modified since cache was created
         csv_mtime = os.path.getmtime(csv_file_path)
-        cache_mtime = datetime.fromisoformat(metadata['source_file_mtime']).timestamp()
+        cache_mtime = datetime.fromisoformat(metadata["source_file_mtime"]).timestamp()
 
         return csv_mtime > cache_mtime
 
@@ -112,33 +112,31 @@ def load_csv_data(csv_file_path: str) -> pd.DataFrame:
 
     # Map columns by position to handle duplicate column names
     df_clean = pd.DataFrame()
-    df_clean['date'] = pd.to_datetime(df.iloc[:, 1])
-    df_clean['name'] = df.iloc[:, 2].astype(str)
-    df_clean['type'] = df.iloc[:, 3].astype('category')
-    df_clean['elapsed_time'] = pd.to_numeric(df.iloc[:, 15], errors='coerce').fillna(0)
-    df_clean['moving_time'] = pd.to_numeric(df.iloc[:, 16], errors='coerce').fillna(0)
-    df_clean['distance'] = pd.to_numeric(df.iloc[:, 17], errors='coerce').fillna(0)
-    df_clean['elevation'] = pd.to_numeric(df.iloc[:, 20], errors='coerce').fillna(0)
-    df_clean['avg_hr'] = pd.to_numeric(df.iloc[:, 31], errors='coerce').fillna(0)
-    df_clean['max_hr'] = pd.to_numeric(df.iloc[:, 30], errors='coerce').fillna(0)
-    df_clean['avg_watts'] = pd.to_numeric(df.iloc[:, 33], errors='coerce').fillna(0)
-    df_clean['max_watts'] = pd.to_numeric(df.iloc[:, 32], errors='coerce').fillna(0)
-    df_clean['avg_cadence'] = pd.to_numeric(df.iloc[:, 29], errors='coerce').fillna(0)
-    df_clean['avg_speed'] = pd.to_numeric(df.iloc[:, 19], errors='coerce').fillna(0)
-    df_clean['weighted_power'] = pd.to_numeric(df.iloc[:, 46], errors='coerce').fillna(0)
+    df_clean["date"] = pd.to_datetime(df.iloc[:, 1])
+    df_clean["name"] = df.iloc[:, 2].astype(str)
+    df_clean["type"] = df.iloc[:, 3].astype("category")
+    df_clean["elapsed_time"] = pd.to_numeric(df.iloc[:, 15], errors="coerce").fillna(0)
+    df_clean["moving_time"] = pd.to_numeric(df.iloc[:, 16], errors="coerce").fillna(0)
+    df_clean["distance"] = pd.to_numeric(df.iloc[:, 17], errors="coerce").fillna(0)
+    df_clean["elevation"] = pd.to_numeric(df.iloc[:, 20], errors="coerce").fillna(0)
+    df_clean["avg_hr"] = pd.to_numeric(df.iloc[:, 31], errors="coerce").fillna(0)
+    df_clean["max_hr"] = pd.to_numeric(df.iloc[:, 30], errors="coerce").fillna(0)
+    df_clean["avg_watts"] = pd.to_numeric(df.iloc[:, 33], errors="coerce").fillna(0)
+    df_clean["max_watts"] = pd.to_numeric(df.iloc[:, 32], errors="coerce").fillna(0)
+    df_clean["avg_cadence"] = pd.to_numeric(df.iloc[:, 29], errors="coerce").fillna(0)
+    df_clean["avg_speed"] = pd.to_numeric(df.iloc[:, 19], errors="coerce").fillna(0)
+    df_clean["weighted_power"] = pd.to_numeric(df.iloc[:, 46], errors="coerce").fillna(0)
 
     # Add activity_category if present (column 47)
     if df.shape[1] > 47:
-        df_clean['activity_category'] = df.iloc[:, 47].astype(str)
+        df_clean["activity_category"] = df.iloc[:, 47].astype(str)
     else:
         # Fallback: derive from activity type
-        df_clean['activity_category'] = df_clean['type'].apply(
-            lambda x: 'Cycling' if 'Ride' in str(x) else 'Other'
-        )
+        df_clean["activity_category"] = df_clean["type"].apply(lambda x: "Cycling" if "Ride" in str(x) else "Other")
 
     # Clean up - remove invalid dates and sort
-    df_clean = df_clean.dropna(subset=['date'])
-    df_clean = df_clean.sort_values('date', ascending=False)
+    df_clean = df_clean.dropna(subset=["date"])
+    df_clean = df_clean.sort_values("date", ascending=False)
 
     return df_clean
 
@@ -168,7 +166,7 @@ def create_cache(csv_file_path: str) -> tuple[Path, dict[str, Any]]:
 
     # Save to Parquet format
     parquet_path = cache_dir / "activities_processed.parquet"
-    df_clean.to_parquet(parquet_path, engine='pyarrow', compression='snappy', index=False)
+    df_clean.to_parquet(parquet_path, engine="pyarrow", compression="snappy", index=False)
 
     # Create metadata
     csv_path = Path(csv_file_path)
@@ -182,19 +180,19 @@ def create_cache(csv_file_path: str) -> tuple[Path, dict[str, Any]]:
         "cache_created": datetime.now().isoformat(),
         "total_activities": len(df_clean),
         "date_range": {
-            "first": df_clean['date'].min().strftime('%Y-%m-%d'),
-            "last": df_clean['date'].max().strftime('%Y-%m-%d')
-        }
+            "first": df_clean["date"].min().strftime("%Y-%m-%d"),
+            "last": df_clean["date"].max().strftime("%Y-%m-%d"),
+        },
     }
 
     # Save metadata
     metadata_path = cache_dir / "cache_metadata.json"
-    with open(metadata_path, 'w') as f:
+    with open(metadata_path, "w") as f:
         json.dump(metadata, f, indent=2)
 
     # Create README
     readme_path = cache_dir / "README.txt"
-    with open(readme_path, 'w') as f:
+    with open(readme_path, "w") as f:
         f.write("Performance Analyzer MCP Cache Directory\n")
         f.write("=" * 50 + "\n\n")
         f.write("This directory contains cached, processed activity data\n")
@@ -234,7 +232,7 @@ def load_activities_data(csv_file_path: str) -> pd.DataFrame:
     """
     # Check if we're given a direct parquet path (FIT-only mode)
     csv_path = Path(csv_file_path)
-    if csv_path.suffix == '.parquet':
+    if csv_path.suffix == ".parquet":
         # Direct parquet cache path provided
         parquet_path = csv_path
     else:
@@ -251,51 +249,52 @@ def load_activities_data(csv_file_path: str) -> pd.DataFrame:
 
     try:
         # Load from Phase 1 enriched Parquet cache
-        df_parquet = pd.read_parquet(parquet_path, engine='pyarrow')
+        df_parquet = pd.read_parquet(parquet_path, engine="pyarrow")
 
         # Map Phase 1 Parquet columns to expected column names for analysis tools
         # This ensures compatibility with existing analysis code
         df_clean = pd.DataFrame()
-        df_clean['date'] = pd.to_datetime(df_parquet['Activity Date'])
-        df_clean['name'] = df_parquet['Activity Name']
-        df_clean['type'] = df_parquet['Activity Type'].astype('category')
-        df_clean['elapsed_time'] = pd.to_numeric(df_parquet['Elapsed Time'], errors='coerce').fillna(0)
-        df_clean['moving_time'] = pd.to_numeric(df_parquet['Moving Time'], errors='coerce').fillna(0)
-        df_clean['distance'] = pd.to_numeric(df_parquet['Distance'], errors='coerce').fillna(0)
-        df_clean['elevation'] = pd.to_numeric(df_parquet['Elevation Gain'], errors='coerce').fillna(0)
-        df_clean['avg_hr'] = pd.to_numeric(df_parquet['Average Heart Rate'], errors='coerce').fillna(0)
-        df_clean['max_hr'] = pd.to_numeric(df_parquet['Max Heart Rate'], errors='coerce').fillna(0)
-        df_clean['avg_watts'] = pd.to_numeric(df_parquet['Average Watts'], errors='coerce').fillna(0)
-        df_clean['max_watts'] = pd.to_numeric(df_parquet['Max Watts'], errors='coerce').fillna(0)
-        df_clean['avg_cadence'] = pd.to_numeric(df_parquet['Average Cadence'], errors='coerce').fillna(0)
-        df_clean['avg_speed'] = pd.to_numeric(df_parquet['Average Speed'], errors='coerce').fillna(0)
-        df_clean['weighted_power'] = pd.to_numeric(df_parquet['Weighted Average Power'], errors='coerce').fillna(0)
+        df_clean["date"] = pd.to_datetime(df_parquet["Activity Date"])
+        df_clean["name"] = df_parquet["Activity Name"]
+        df_clean["type"] = df_parquet["Activity Type"].astype("category")
+        df_clean["elapsed_time"] = pd.to_numeric(df_parquet["Elapsed Time"], errors="coerce").fillna(0)
+        df_clean["moving_time"] = pd.to_numeric(df_parquet["Moving Time"], errors="coerce").fillna(0)
+        df_clean["distance"] = pd.to_numeric(df_parquet["Distance"], errors="coerce").fillna(0)
+        df_clean["elevation"] = pd.to_numeric(df_parquet["Elevation Gain"], errors="coerce").fillna(0)
+        df_clean["avg_hr"] = pd.to_numeric(df_parquet["Average Heart Rate"], errors="coerce").fillna(0)
+        df_clean["max_hr"] = pd.to_numeric(df_parquet["Max Heart Rate"], errors="coerce").fillna(0)
+        df_clean["avg_watts"] = pd.to_numeric(df_parquet["Average Watts"], errors="coerce").fillna(0)
+        df_clean["max_watts"] = pd.to_numeric(df_parquet["Max Watts"], errors="coerce").fillna(0)
+        df_clean["avg_cadence"] = pd.to_numeric(df_parquet["Average Cadence"], errors="coerce").fillna(0)
+        df_clean["avg_speed"] = pd.to_numeric(df_parquet["Average Speed"], errors="coerce").fillna(0)
+        df_clean["weighted_power"] = pd.to_numeric(df_parquet["Weighted Average Power"], errors="coerce").fillna(0)
 
         # Derive activity_category from Activity Type
-        df_clean['activity_category'] = df_clean['type'].apply(
-            lambda x: 'Cycling' if 'Ride' in str(x) else 'Other'
-        )
+        df_clean["activity_category"] = df_clean["type"].apply(lambda x: "Cycling" if "Ride" in str(x) else "Other")
 
         # Include zone enrichment columns if available (from Phase 1 zone enrichment)
         zone_columns = [
-            'z1_active_recovery_sec', 'z2_endurance_sec', 'z3_tempo_sec',
-            'z4_threshold_sec', 'z5_vo2max_sec', 'z6_anaerobic_sec',
-            'total_power_sec', 'normalized_power'
+            "z1_active_recovery_sec",
+            "z2_endurance_sec",
+            "z3_tempo_sec",
+            "z4_threshold_sec",
+            "z5_vo2max_sec",
+            "z6_anaerobic_sec",
+            "total_power_sec",
+            "normalized_power",
         ]
         for col in zone_columns:
             if col in df_parquet.columns:
                 df_clean[col] = df_parquet[col]
 
         # Clean up - remove invalid dates and sort
-        df_clean = df_clean.dropna(subset=['date'])
-        df_clean = df_clean.sort_values('date', ascending=False)
+        df_clean = df_clean.dropna(subset=["date"])
+        df_clean = df_clean.sort_values("date", ascending=False)
 
         return df_clean
 
     except Exception as e:
-        raise RuntimeError(
-            f"Failed to load Phase 1 Parquet cache from {parquet_path}: {str(e)}"
-        ) from e
+        raise RuntimeError(f"Failed to load Phase 1 Parquet cache from {parquet_path}: {str(e)}") from e
 
 
 def analyze_period(data: pd.DataFrame, period_name: str) -> dict[str, Any]:
@@ -320,87 +319,87 @@ def analyze_period(data: pd.DataFrame, period_name: str) -> dict[str, Any]:
     """
     # Initialize basic volume statistics
     stats: dict[str, Any] = {
-        'period': period_name,
-        'total_rides': len(data),
-        'total_distance_km': data['distance'].sum() / 1000,
-        'total_time_hours': data['moving_time'].sum() / 3600,
-        'total_elevation_m': data['elevation'].sum(),
+        "period": period_name,
+        "total_rides": len(data),
+        "total_distance_km": data["distance"].sum() / 1000,
+        "total_time_hours": data["moving_time"].sum() / 3600,
+        "total_elevation_m": data["elevation"].sum(),
     }
 
     # Calculate average metrics if there are any rides in this period
     if len(data) > 0:
-        stats['avg_distance_km'] = data['distance'].mean() / 1000
-        stats['avg_time_hours'] = data['moving_time'].mean() / 3600
-        stats['avg_speed_kmh'] = data['avg_speed'].mean() * 3.6 if data['avg_speed'].mean() > 0 else 0
-        stats['max_distance_km'] = data['distance'].max() / 1000
+        stats["avg_distance_km"] = data["distance"].mean() / 1000
+        stats["avg_time_hours"] = data["moving_time"].mean() / 3600
+        stats["avg_speed_kmh"] = data["avg_speed"].mean() * 3.6 if data["avg_speed"].mean() > 0 else 0
+        stats["max_distance_km"] = data["distance"].max() / 1000
     else:
         # Set defaults for periods with no rides
-        stats['avg_distance_km'] = 0
-        stats['avg_time_hours'] = 0
-        stats['avg_speed_kmh'] = 0
-        stats['max_distance_km'] = 0
+        stats["avg_distance_km"] = 0
+        stats["avg_time_hours"] = 0
+        stats["avg_speed_kmh"] = 0
+        stats["max_distance_km"] = 0
 
     # Power analysis - only analyze rides that have power data (power meter equipped)
-    power_data = data[data['avg_watts'] > 0]
+    power_data = data[data["avg_watts"] > 0]
     if len(power_data) > 0:
-        stats['avg_power'] = power_data['avg_watts'].mean()
-        stats['max_power'] = power_data['max_watts'].max()
-        stats['weighted_avg_power'] = power_data['weighted_power'].mean()
-        stats['power_rides'] = len(power_data)
-        stats['normalized_power'] = power_data['weighted_power'].mean()
+        stats["avg_power"] = power_data["avg_watts"].mean()
+        stats["max_power"] = power_data["max_watts"].max()
+        stats["weighted_avg_power"] = power_data["weighted_power"].mean()
+        stats["power_rides"] = len(power_data)
+        stats["normalized_power"] = power_data["weighted_power"].mean()
     else:
-        stats['avg_power'] = 0
-        stats['max_power'] = 0
-        stats['weighted_avg_power'] = 0
-        stats['power_rides'] = 0
-        stats['normalized_power'] = 0
+        stats["avg_power"] = 0
+        stats["max_power"] = 0
+        stats["weighted_avg_power"] = 0
+        stats["power_rides"] = 0
+        stats["normalized_power"] = 0
 
     # Heart rate analysis - only analyze rides with HR monitor data
-    hr_data = data[data['avg_hr'] > 0]
+    hr_data = data[data["avg_hr"] > 0]
     if len(hr_data) > 0:
-        stats['avg_hr'] = hr_data['avg_hr'].mean()
-        stats['max_hr'] = hr_data['max_hr'].max()
-        stats['hr_rides'] = len(hr_data)
+        stats["avg_hr"] = hr_data["avg_hr"].mean()
+        stats["max_hr"] = hr_data["max_hr"].max()
+        stats["hr_rides"] = len(hr_data)
     else:
-        stats['avg_hr'] = 0
-        stats['max_hr'] = 0
-        stats['hr_rides'] = 0
+        stats["avg_hr"] = 0
+        stats["max_hr"] = 0
+        stats["hr_rides"] = 0
 
     # Cadence analysis - only analyze rides with cadence sensor data
-    cadence_data = data[data['avg_cadence'] > 0]
+    cadence_data = data[data["avg_cadence"] > 0]
     if len(cadence_data) > 0:
-        stats['avg_cadence'] = cadence_data['avg_cadence'].mean()
-        stats['cadence_rides'] = len(cadence_data)
+        stats["avg_cadence"] = cadence_data["avg_cadence"].mean()
+        stats["cadence_rides"] = len(cadence_data)
     else:
-        stats['avg_cadence'] = 0
-        stats['cadence_rides'] = 0
+        stats["avg_cadence"] = 0
+        stats["cadence_rides"] = 0
 
     # Consistency analysis - calculate average rides per week over the period
     if len(data) > 0:
-        date_range = (data['date'].max() - data['date'].min()).days
+        date_range = (data["date"].max() - data["date"].min()).days
         weeks = max(date_range / 7, 1)
-        stats['rides_per_week'] = len(data) / weeks
+        stats["rides_per_week"] = len(data) / weeks
 
         # Calculate weekly averages for all key metrics
-        stats['weekly_distance_km'] = stats['total_distance_km'] / weeks
-        stats['weekly_time_hours'] = stats['total_time_hours'] / weeks
-        stats['weekly_elevation_m'] = stats['total_elevation_m'] / weeks
+        stats["weekly_distance_km"] = stats["total_distance_km"] / weeks
+        stats["weekly_time_hours"] = stats["total_time_hours"] / weeks
+        stats["weekly_elevation_m"] = stats["total_elevation_m"] / weeks
     else:
-        stats['rides_per_week'] = 0
-        stats['weekly_distance_km'] = 0
-        stats['weekly_time_hours'] = 0
-        stats['weekly_elevation_m'] = 0
+        stats["rides_per_week"] = 0
+        stats["weekly_distance_km"] = 0
+        stats["weekly_time_hours"] = 0
+        stats["weekly_elevation_m"] = 0
 
     # Ride distribution by distance - categorize rides into long/medium/short
     # Long rides: > 80km, Medium: 40-80km, Short: < 40km
-    stats['long_rides'] = len(data[data['distance'] > 80000])
-    stats['medium_rides'] = len(data[(data['distance'] >= 40000) & (data['distance'] <= 80000)])
-    stats['short_rides'] = len(data[data['distance'] < 40000])
+    stats["long_rides"] = len(data[data["distance"] > 80000])
+    stats["medium_rides"] = len(data[(data["distance"] >= 40000) & (data["distance"] <= 80000)])
+    stats["short_rides"] = len(data[data["distance"] < 40000])
 
     # Indoor vs Outdoor split - useful for understanding training environment preferences
     # Virtual Ride is indoor, all other cycling types are outdoor
-    stats['indoor_rides'] = len(data[data['type'] == 'Virtual Ride'])
-    stats['outdoor_rides'] = len(data[data['type'] != 'Virtual Ride'])
+    stats["indoor_rides"] = len(data[data["type"] == "Virtual Ride"])
+    stats["outdoor_rides"] = len(data[data["type"] != "Virtual Ride"])
 
     return stats
 
@@ -425,14 +424,18 @@ def format_stats_text(stats: dict[str, Any]) -> str:
     text += f"⛰️ Elevation: {stats['total_elevation_m']:.0f} m total, {stats['weekly_elevation_m']:.0f} m/week\n"
     text += f"🚀 Speed: {stats['avg_speed_kmh']:.1f} km/h avg\n"
 
-    if stats['power_rides'] > 0:
-        text += f"⚡ Power: {stats['avg_power']:.0f} W avg, {stats['max_power']:.0f} W max ({stats['power_rides']} rides)\n"
+    if stats["power_rides"] > 0:
+        text += (
+            f"⚡ Power: {stats['avg_power']:.0f} W avg, {stats['max_power']:.0f} W max ({stats['power_rides']} rides)\n"
+        )
         text += f"💪 Normalized Power: {stats['normalized_power']:.0f} W\n"
 
-    if stats['hr_rides'] > 0:
-        text += f"❤️ Heart Rate: {stats['avg_hr']:.0f} bpm avg, {stats['max_hr']:.0f} bpm max ({stats['hr_rides']} rides)\n"
+    if stats["hr_rides"] > 0:
+        text += (
+            f"❤️ Heart Rate: {stats['avg_hr']:.0f} bpm avg, {stats['max_hr']:.0f} bpm max ({stats['hr_rides']} rides)\n"
+        )
 
-    if stats['cadence_rides'] > 0:
+    if stats["cadence_rides"] > 0:
         text += f"🔄 Cadence: {stats['avg_cadence']:.0f} rpm avg ({stats['cadence_rides']} rides)\n"
 
     text += f"📊 Frequency: {stats['rides_per_week']:.1f} rides/week\n"
@@ -461,13 +464,16 @@ def load_and_categorize_activities(csv_file_path: str) -> pd.DataFrame:
     df = load_activities_data(csv_file_path)
 
     # Verify activity_category exists (should be added by load_csv_data)
-    if 'activity_category' not in df.columns:
+    if "activity_category" not in df.columns:
         # Fallback: create category based on type
-        df['activity_category'] = df['type'].apply(
-            lambda x: 'Cycling' if 'Ride' in str(x) else
-                      'Strength' if str(x) in ['Weight Training', 'Workout'] else
-                      'Cardio' if str(x) in ['Run', 'Swim', 'Rowing'] else
-                      'Other'
+        df["activity_category"] = df["type"].apply(
+            lambda x: "Cycling"
+            if "Ride" in str(x)
+            else "Strength"
+            if str(x) in ["Weight Training", "Workout"]
+            else "Cardio"
+            if str(x) in ["Run", "Swim", "Rowing"]
+            else "Other"
         )
 
     return df

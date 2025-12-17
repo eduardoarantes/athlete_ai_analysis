@@ -5,11 +5,12 @@ JSON Workout Parser - Parse workout JSON files into library format.
 Parses workout definitions from JSON files (TrainingPeaks, Garmin, etc.) and
 converts them to the workout library schema.
 """
+
 from __future__ import annotations
 
 import json
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -97,36 +98,25 @@ class JsonWorkoutParser:
         # Limit length
         return id_str[:50]
 
-    def _infer_workout_type(
-        self, title: str, description: str, tags: str
-    ) -> str:
+    def _infer_workout_type(self, title: str, description: str, tags: str) -> str:
         """Infer workout type from title, description, and tags."""
         combined = (title + " " + description + " " + tags).lower()
 
         # Check for keywords
         if any(kw in combined for kw in ["vo2", "vo2max", "40/20", "30/30", "MAP"]):
             return "vo2max"
-        elif any(
-            kw in combined
-            for kw in ["threshold", "FTP", "sweet spot", "sweetspot", "tempo"]
-        ):
+        elif any(kw in combined for kw in ["threshold", "FTP", "sweet spot", "sweetspot", "tempo"]):
             if "sweet spot" in combined or "sweetspot" in combined:
                 return "sweet_spot"
             elif "tempo" in combined:
                 return "tempo"
             else:
                 return "threshold"
-        elif any(
-            kw in combined
-            for kw in ["endurance", "aerobic", "z2", "zone 2", "easy"]
-        ):
+        elif any(kw in combined for kw in ["endurance", "aerobic", "z2", "zone 2", "easy"]):
             return "endurance"
         elif any(kw in combined for kw in ["recovery", "z1", "zone 1"]):
             return "recovery"
-        elif any(
-            kw in combined
-            for kw in ["sprint", "neuromuscular", "max power", "anaerobic"]
-        ):
+        elif any(kw in combined for kw in ["sprint", "neuromuscular", "max power", "anaerobic"]):
             return "sprint"
         else:
             # Default based on power targets in workout
@@ -149,9 +139,7 @@ class JsonWorkoutParser:
             else:
                 return "easy"
 
-    def _parse_workout_structure(
-        self, workout_structure: list[dict[str, Any]]
-    ) -> list[dict[str, Any]]:
+    def _parse_workout_structure(self, workout_structure: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Parse workout_structure array into segments."""
         segments: list[dict[str, Any]] = []
 
@@ -262,9 +250,7 @@ class JsonWorkoutParser:
 
         return int(round(total_duration))
 
-    def _calculate_tss(
-        self, segments: list[dict[str, Any]], duration_min: int
-    ) -> float:
+    def _calculate_tss(self, segments: list[dict[str, Any]], duration_min: int) -> float:
         """
         Calculate Training Stress Score (TSS).
 
@@ -282,10 +268,7 @@ class JsonWorkoutParser:
             if segment["type"] == "interval":
                 # Work intervals
                 work_dur = segment["work"]["duration_min"]
-                work_power_avg = (
-                    segment["work"]["power_low_pct"]
-                    + segment["work"]["power_high_pct"]
-                ) / 2
+                work_power_avg = (segment["work"]["power_low_pct"] + segment["work"]["power_high_pct"]) / 2
                 sets = segment["sets"]
 
                 total_power_weighted += work_power_avg * work_dur * sets
@@ -293,19 +276,14 @@ class JsonWorkoutParser:
 
                 # Recovery intervals
                 recovery_dur = segment["recovery"]["duration_min"]
-                recovery_power_avg = (
-                    segment["recovery"]["power_low_pct"]
-                    + segment["recovery"]["power_high_pct"]
-                ) / 2
+                recovery_power_avg = (segment["recovery"]["power_low_pct"] + segment["recovery"]["power_high_pct"]) / 2
 
                 total_power_weighted += recovery_power_avg * recovery_dur * sets
                 total_time += recovery_dur * sets
             else:
                 # Simple segment
                 dur = segment["duration_min"]
-                power_avg = (
-                    segment["power_low_pct"] + segment["power_high_pct"]
-                ) / 2
+                power_avg = (segment["power_low_pct"] + segment["power_high_pct"]) / 2
 
                 total_power_weighted += power_avg * dur
                 total_time += dur
@@ -322,9 +300,7 @@ class JsonWorkoutParser:
 
         return round(tss, 1)
 
-    def _infer_suitable_phases(
-        self, workout_type: str, intensity: str
-    ) -> list[str]:
+    def _infer_suitable_phases(self, workout_type: str, intensity: str) -> list[str]:
         """Infer suitable training phases for this workout."""
         if workout_type == "recovery" or intensity == "easy":
             return ["Foundation", "Recovery", "Taper"]
@@ -339,9 +315,7 @@ class JsonWorkoutParser:
         else:
             return ["Build"]
 
-    def _infer_suitable_weekdays(
-        self, workout_type: str, intensity: str
-    ) -> list[str]:
+    def _infer_suitable_weekdays(self, workout_type: str, intensity: str) -> list[str]:
         """Infer suitable weekdays for this workout."""
         if intensity == "hard":
             # Hard workouts: mid-week
@@ -364,9 +338,7 @@ class JsonWorkoutParser:
                 "Sunday",
             ]
 
-    def _identify_variable_components(
-        self, segments: list[dict[str, Any]]
-    ) -> dict[str, Any] | None:
+    def _identify_variable_components(self, segments: list[dict[str, Any]]) -> dict[str, Any] | None:
         """Identify which components can be adjusted."""
         # Look for interval segments
         for segment in segments:
@@ -376,20 +348,12 @@ class JsonWorkoutParser:
                 recovery_dur = segment["recovery"]["duration_min"]
 
                 # Estimate TSS per set
-                work_power = (
-                    segment["work"]["power_low_pct"]
-                    + segment["work"]["power_high_pct"]
-                ) / 2
-                recovery_power = (
-                    segment["recovery"]["power_low_pct"]
-                    + segment["recovery"]["power_high_pct"]
-                ) / 2
+                work_power = (segment["work"]["power_low_pct"] + segment["work"]["power_high_pct"]) / 2
+                recovery_power = (segment["recovery"]["power_low_pct"] + segment["recovery"]["power_high_pct"]) / 2
 
                 # Simple TSS estimate for one set
                 set_duration_hours = (work_dur + recovery_dur) / 60
-                avg_power_pct = (
-                    work_power * work_dur + recovery_power * recovery_dur
-                ) / (work_dur + recovery_dur)
+                avg_power_pct = (work_power * work_dur + recovery_power * recovery_dur) / (work_dur + recovery_dur)
                 if_per_set = avg_power_pct / 100
                 tss_per_set = set_duration_hours * (if_per_set**2) * 100
 

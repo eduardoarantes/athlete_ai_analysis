@@ -1,6 +1,7 @@
 # FIT File Storage Testing Guide
 
 ## Prerequisites
+
 1. Supabase running: `supabase start`
 2. Dev server running: `pnpm dev`
 3. Logged in to the app at `http://localhost:3000`
@@ -11,6 +12,7 @@
 ### 1. Upload FIT File(s)
 
 **Using curl:**
+
 ```bash
 # While logged in, copy session cookie from browser DevTools
 # (Application → Cookies → sb-127-auth-token)
@@ -30,6 +32,7 @@ curl -X POST http://localhost:3000/api/fit-files/upload \
 ```
 
 **Expected Response:**
+
 ```json
 {
   "success": true,
@@ -43,12 +46,14 @@ curl -X POST http://localhost:3000/api/fit-files/upload \
 **URL:** http://localhost:3000/api/fit-files
 
 **Using curl:**
+
 ```bash
 curl http://localhost:3000/api/fit-files \
   -H "Cookie: sb-127-auth-token=YOUR_SESSION_TOKEN"
 ```
 
 **Expected Response:**
+
 ```json
 {
   "files": [
@@ -68,6 +73,7 @@ curl http://localhost:3000/api/fit-files \
 **URL:** `GET /api/fit-files/download?filename=activity.fit`
 
 **Using curl:**
+
 ```bash
 # Get signed URL
 curl "http://localhost:3000/api/fit-files/download?filename=activity.fit" \
@@ -88,12 +94,14 @@ curl -o downloaded-activity.fit "<signed-url>"
 **URL:** `DELETE /api/fit-files?filename=activity.fit`
 
 **Using curl:**
+
 ```bash
 curl -X DELETE "http://localhost:3000/api/fit-files?filename=activity.fit" \
   -H "Cookie: sb-127-auth-token=YOUR_SESSION_TOKEN"
 ```
 
 **Expected Response:**
+
 ```json
 {
   "success": true
@@ -103,6 +111,7 @@ curl -X DELETE "http://localhost:3000/api/fit-files?filename=activity.fit" \
 ### 5. Verify in Supabase Storage
 
 **Using Supabase CLI:**
+
 ```bash
 # List storage buckets
 supabase storage ls
@@ -115,6 +124,7 @@ supabase storage ls "fit-files/<user-id>"
 ```
 
 **Using SQL:**
+
 ```sql
 -- Connect to database
 psql postgresql://postgres:postgres@127.0.0.1:54322/postgres
@@ -137,18 +147,22 @@ ORDER BY created_at DESC;
 ## Troubleshooting
 
 ### Error: "Unauthorized"
+
 - **Cause:** Not logged in to the app
 - **Fix:** Log in at `http://localhost:3000` first
 
 ### Error: "All files must be FIT files"
+
 - **Cause:** Uploaded file doesn't have .fit extension
 - **Fix:** Rename file to have .fit extension or upload valid FIT file
 
 ### Error: "File not found"
+
 - **Cause:** File doesn't exist or belongs to different user
 - **Fix:** Check filename and ensure file was uploaded successfully
 
 ### Files not uploading
+
 - **Check:** Storage bucket exists
   ```sql
   SELECT * FROM storage.buckets WHERE id = 'fit-files';
@@ -161,6 +175,7 @@ ORDER BY created_at DESC;
 ## Storage Organization
 
 Files are organized by user:
+
 ```
 fit-files/
 ├── <user-id-1>/
@@ -192,6 +207,7 @@ fit-files/
 ## Next Steps
 
 After successful FIT file storage:
+
 - Integrate FIT file upload with Strava sync (download FIT files from Strava)
 - Build UI for FIT file management
 - Implement FIT file processing/analysis

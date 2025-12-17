@@ -56,19 +56,24 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                   href={item.href}
                   className={cn(
                     'flex items-center gap-3 px-2 py-2 rounded-md transition-colors',
-                    isActive
-                      ? 'bg-muted'
-                      : 'hover:bg-muted/50'
+                    isActive ? 'bg-muted' : 'hover:bg-muted/50'
                   )}
                 >
-                  <div className={cn('h-8 w-8 rounded-md flex items-center justify-center', item.color)}>
+                  <div
+                    className={cn(
+                      'h-8 w-8 rounded-md flex items-center justify-center',
+                      item.color
+                    )}
+                  >
                     <Icon className="h-4 w-4" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className={cn(
-                      'text-sm',
-                      isActive ? 'font-semibold' : 'font-medium text-muted-foreground'
-                    )}>
+                    <p
+                      className={cn(
+                        'text-sm',
+                        isActive ? 'font-semibold' : 'font-medium text-muted-foreground'
+                      )}
+                    >
                       {t(`nav.${item.key}`)}
                     </p>
                   </div>

@@ -18,7 +18,9 @@ test.describe('Onboarding Validation Flow', () => {
     await page.waitForURL('**/onboarding**', { timeout: 10000 })
   })
 
-  test('Step 1: Should show validation errors when clicking Next without filling required fields', async ({ page }) => {
+  test('Step 1: Should show validation errors when clicking Next without filling required fields', async ({
+    page,
+  }) => {
     console.log('Testing Step 1 validation...')
 
     // Click Next without filling any fields

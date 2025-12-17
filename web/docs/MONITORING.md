@@ -27,16 +27,9 @@ export async function POST(request: NextRequest) {
   try {
     // Your code here
   } catch (error) {
-    errorLogger.logApiError(
-      error as Error,
-      { path: '/api/strava/sync', method: 'POST' },
-      user?.id
-    )
+    errorLogger.logApiError(error as Error, { path: '/api/strava/sync', method: 'POST' }, user?.id)
 
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 ```
@@ -47,11 +40,7 @@ export async function POST(request: NextRequest) {
 try {
   await supabase.from('profiles').insert(data)
 } catch (error) {
-  errorLogger.logDatabaseError(
-    error as Error,
-    'insert_profile',
-    userId
-  )
+  errorLogger.logDatabaseError(error as Error, 'insert_profile', userId)
   throw error
 }
 ```
@@ -62,11 +51,7 @@ try {
 try {
   await stravaService.syncActivities(userId)
 } catch (error) {
-  errorLogger.logIntegrationError(
-    error as Error,
-    'strava',
-    userId
-  )
+  errorLogger.logIntegrationError(error as Error, 'strava', userId)
   throw error
 }
 ```
@@ -89,11 +74,13 @@ const syncActivities = withErrorLogging(
 ### Sentry (Recommended)
 
 **Installation:**
+
 ```bash
 pnpm add @sentry/nextjs
 ```
 
 **Setup:**
+
 ```typescript
 // sentry.client.config.ts
 import * as Sentry from '@sentry/nextjs'
@@ -110,11 +97,12 @@ Sentry.init({
       delete event.request.cookies
     }
     return event
-  }
+  },
 })
 ```
 
 **Update Error Logger:**
+
 ```typescript
 // lib/monitoring/error-logger.ts
 import * as Sentry from '@sentry/nextjs'
@@ -143,11 +131,13 @@ private async sendToMonitoring(error: StructuredError): Promise<void> {
 ### Datadog
 
 **Installation:**
+
 ```bash
 pnpm add dd-trace
 ```
 
 **Setup:**
+
 ```typescript
 // instrumentation.ts
 import tracer from 'dd-trace'
@@ -242,6 +232,7 @@ export default function RootLayout({ children }: { children: React.Node }) {
 ### Operations Dashboard
 
 **Metrics:**
+
 - Request volume (requests/minute)
 - Error rate (errors/minute)
 - Response time distribution (p50, p95, p99)
@@ -251,6 +242,7 @@ export default function RootLayout({ children }: { children: React.Node }) {
 ### Business Dashboard
 
 **Metrics:**
+
 - New user registrations
 - Strava connections created
 - Activities synced (total, per user)
@@ -260,6 +252,7 @@ export default function RootLayout({ children }: { children: React.Node }) {
 ### Error Dashboard
 
 **Metrics:**
+
 - Error breakdown by type
 - Error rate by endpoint
 - Top error messages
@@ -276,6 +269,7 @@ export default function RootLayout({ children }: { children: React.Node }) {
 ### Runbook
 
 **Service Down:**
+
 1. Check Vercel deployment status
 2. Check Supabase status
 3. Review recent deployments
@@ -283,12 +277,14 @@ export default function RootLayout({ children }: { children: React.Node }) {
 5. Rollback if needed
 
 **Database Issues:**
+
 1. Check Supabase dashboard
 2. Review slow query logs
 3. Check connection pool stats
 4. Scale up if needed
 
 **High Error Rate:**
+
 1. Identify error pattern
 2. Check recent code changes
 3. Review affected endpoints
@@ -326,17 +322,20 @@ export default function RootLayout({ children }: { children: React.Node }) {
 ## Current Status
 
 **Implemented:**
+
 - ✅ Structured error logging
 - ✅ Error context tracking
 - ✅ Categorized error types
 
 **Pending:**
+
 - ❌ Monitoring service integration (Sentry/Datadog)
 - ❌ Alert rules configuration
 - ❌ Dashboard creation
 - ❌ On-call rotation setup
 
 **Recommended Next Steps:**
+
 1. Set up Sentry for error tracking
 2. Configure critical alerts
 3. Create operations dashboard

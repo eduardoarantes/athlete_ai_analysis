@@ -4,6 +4,7 @@ Finalize training plan tool - Phase 3 of two-phase plan generation.
 Assembles complete training plan from overview + all week details.
 Called once after all weeks have been added.
 """
+
 from __future__ import annotations
 
 import json
@@ -77,7 +78,7 @@ class FinalizePlanTool(BaseTool):
             # Extract parameters
             plan_id = kwargs.get("plan_id")
 
-            logger.info(f"Parameters:")
+            logger.info("Parameters:")
             logger.info(f"  - plan_id: {plan_id}")
 
             # Validate required parameters
@@ -90,12 +91,11 @@ class FinalizePlanTool(BaseTool):
 
             if not overview_file.exists():
                 raise ValueError(
-                    f"Plan overview not found for plan_id={plan_id}. "
-                    f"You must call create_plan_overview first."
+                    f"Plan overview not found for plan_id={plan_id}. You must call create_plan_overview first."
                 )
 
             logger.info(f"Loading overview from: {overview_file}")
-            with open(overview_file, "r") as f:
+            with open(overview_file) as f:
                 overview_data = json.load(f)
 
             # Convert to int (LLM may pass as float)
@@ -117,13 +117,10 @@ class FinalizePlanTool(BaseTool):
                 week_file = temp_dir / f"{plan_id}_week_{week_num}.json"
 
                 if not week_file.exists():
-                    raise ValueError(
-                        f"Week {week_num} details not found. "
-                        f"Call add_week_details for week {week_num}."
-                    )
+                    raise ValueError(f"Week {week_num} details not found. Call add_week_details for week {week_num}.")
 
                 logger.info(f"Loading week {week_num} from: {week_file}")
-                with open(week_file, "r") as f:
+                with open(week_file) as f:
                     week_data = json.load(f)
 
                 # Merge overview metadata with week details
@@ -159,14 +156,10 @@ class FinalizePlanTool(BaseTool):
             weekly_hours = athlete_profile.get_weekly_training_hours()
 
             valid, errors = validate_training_plan(
-                complete_plan,
-                available_days=available_days,
-                weekly_hours=weekly_hours
+                complete_plan, available_days=available_days, weekly_hours=weekly_hours
             )
             if not valid:
-                error_msg = "Plan validation failed:\n" + "\n".join(
-                    f"  - {err}" for err in errors
-                )
+                error_msg = "Plan validation failed:\n" + "\n".join(f"  - {err}" for err in errors)
                 raise ValueError(error_msg)
 
             logger.info("Plan validation passed")

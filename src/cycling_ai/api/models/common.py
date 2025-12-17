@@ -3,6 +3,7 @@ Common Pydantic models for API requests and responses.
 
 Provides shared models used across multiple endpoints.
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -19,9 +20,7 @@ class ErrorResponse(BaseModel):
 
     error: str = Field(..., description="Error message")
     details: str | None = Field(None, description="Additional error details")
-    validation_errors: list[str] | None = Field(
-        None, description="List of validation errors"
-    )
+    validation_errors: list[str] | None = Field(None, description="List of validation errors")
 
     model_config = {
         "json_schema_extra": {

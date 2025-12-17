@@ -33,6 +33,7 @@ export function AppearanceSettings() {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Intentional hydration pattern
     setMounted(true)
     const storedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null
     if (storedTheme) {

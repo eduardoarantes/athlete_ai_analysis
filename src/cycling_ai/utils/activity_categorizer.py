@@ -4,6 +4,7 @@ Activity categorization for cross-training analysis.
 Maps activity types from FIT files to training categories with metadata
 for interference detection and load balancing.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -23,128 +24,47 @@ class ActivityCategory:
 # Sport-to-category mapping based on FIT sport types
 SPORT_CATEGORY_MAP: dict[str, ActivityCategory] = {
     # Cycling variants
-    "cycling": ActivityCategory(
-        category="Cycling",
-        muscle_focus="Legs",
-        fatigue_impact="Medium",
-        recovery_hours=24
-    ),
+    "cycling": ActivityCategory(category="Cycling", muscle_focus="Legs", fatigue_impact="Medium", recovery_hours=24),
     "virtual_ride": ActivityCategory(
-        category="Cycling",
-        muscle_focus="Legs",
-        fatigue_impact="Medium",
-        recovery_hours=24
+        category="Cycling", muscle_focus="Legs", fatigue_impact="Medium", recovery_hours=24
     ),
     "indoor_cycling": ActivityCategory(
-        category="Cycling",
-        muscle_focus="Legs",
-        fatigue_impact="Medium",
-        recovery_hours=24
+        category="Cycling", muscle_focus="Legs", fatigue_impact="Medium", recovery_hours=24
     ),
-
     # Running variants (leg-focused cardio)
-    "running": ActivityCategory(
-        category="Cardio",
-        muscle_focus="Legs",
-        fatigue_impact="High",
-        recovery_hours=48
-    ),
-    "trail_running": ActivityCategory(
-        category="Cardio",
-        muscle_focus="Legs",
-        fatigue_impact="High",
-        recovery_hours=48
-    ),
+    "running": ActivityCategory(category="Cardio", muscle_focus="Legs", fatigue_impact="High", recovery_hours=48),
+    "trail_running": ActivityCategory(category="Cardio", muscle_focus="Legs", fatigue_impact="High", recovery_hours=48),
     "treadmill_running": ActivityCategory(
-        category="Cardio",
-        muscle_focus="Legs",
-        fatigue_impact="Medium",
-        recovery_hours=36
+        category="Cardio", muscle_focus="Legs", fatigue_impact="Medium", recovery_hours=36
     ),
-
     # Swimming (upper body cardio)
-    "swimming": ActivityCategory(
-        category="Cardio",
-        muscle_focus="Upper",
-        fatigue_impact="Low",
-        recovery_hours=12
-    ),
-    "lap_swimming": ActivityCategory(
-        category="Cardio",
-        muscle_focus="Upper",
-        fatigue_impact="Low",
-        recovery_hours=12
-    ),
+    "swimming": ActivityCategory(category="Cardio", muscle_focus="Upper", fatigue_impact="Low", recovery_hours=12),
+    "lap_swimming": ActivityCategory(category="Cardio", muscle_focus="Upper", fatigue_impact="Low", recovery_hours=12),
     "open_water_swimming": ActivityCategory(
-        category="Cardio",
-        muscle_focus="Upper",
-        fatigue_impact="Medium",
-        recovery_hours=24
+        category="Cardio", muscle_focus="Upper", fatigue_impact="Medium", recovery_hours=24
     ),
-
     # Strength training
     "strength_training": ActivityCategory(
-        category="Strength",
-        muscle_focus="Full Body",
-        fatigue_impact="High",
-        recovery_hours=48
+        category="Strength", muscle_focus="Full Body", fatigue_impact="High", recovery_hours=48
     ),
     "training": ActivityCategory(  # Generic training
-        category="Strength",
-        muscle_focus="Full Body",
-        fatigue_impact="Medium",
-        recovery_hours=36
+        category="Strength", muscle_focus="Full Body", fatigue_impact="Medium", recovery_hours=36
     ),
     "generic": ActivityCategory(  # Fallback
-        category="Other",
-        muscle_focus="Full Body",
-        fatigue_impact="Medium",
-        recovery_hours=24
+        category="Other", muscle_focus="Full Body", fatigue_impact="Medium", recovery_hours=24
     ),
-
     # Walking/hiking (low-impact cardio)
-    "walking": ActivityCategory(
-        category="Cardio",
-        muscle_focus="Legs",
-        fatigue_impact="Low",
-        recovery_hours=12
-    ),
-    "hiking": ActivityCategory(
-        category="Cardio",
-        muscle_focus="Legs",
-        fatigue_impact="Medium",
-        recovery_hours=24
-    ),
-
+    "walking": ActivityCategory(category="Cardio", muscle_focus="Legs", fatigue_impact="Low", recovery_hours=12),
+    "hiking": ActivityCategory(category="Cardio", muscle_focus="Legs", fatigue_impact="Medium", recovery_hours=24),
     # Yoga/flexibility
-    "yoga": ActivityCategory(
-        category="Other",
-        muscle_focus="Full Body",
-        fatigue_impact="Low",
-        recovery_hours=0
-    ),
+    "yoga": ActivityCategory(category="Other", muscle_focus="Full Body", fatigue_impact="Low", recovery_hours=0),
     "flexibility_training": ActivityCategory(
-        category="Other",
-        muscle_focus="Full Body",
-        fatigue_impact="Low",
-        recovery_hours=0
+        category="Other", muscle_focus="Full Body", fatigue_impact="Low", recovery_hours=0
     ),
-
     # Rowing
-    "rowing": ActivityCategory(
-        category="Cardio",
-        muscle_focus="Full Body",
-        fatigue_impact="Medium",
-        recovery_hours=24
-    ),
-
+    "rowing": ActivityCategory(category="Cardio", muscle_focus="Full Body", fatigue_impact="Medium", recovery_hours=24),
     # Elliptical
-    "elliptical": ActivityCategory(
-        category="Cardio",
-        muscle_focus="Legs",
-        fatigue_impact="Low",
-        recovery_hours=12
-    ),
+    "elliptical": ActivityCategory(category="Cardio", muscle_focus="Legs", fatigue_impact="Low", recovery_hours=12),
 }
 
 # Sub-sport specific overrides for strength training focus
@@ -194,7 +114,7 @@ def categorize_activity(sport: str, sub_sport: str | None = None) -> ActivityCat
             category=base_category.category,
             muscle_focus=SUB_SPORT_MUSCLE_FOCUS[sub_sport],
             fatigue_impact=base_category.fatigue_impact,
-            recovery_hours=base_category.recovery_hours
+            recovery_hours=base_category.recovery_hours,
         )
 
     return base_category
@@ -205,7 +125,7 @@ def estimate_tss_from_activity(
     duration_seconds: int,
     avg_hr: int | None = None,
     max_hr: int | None = None,
-    athlete_max_hr: int = 185
+    athlete_max_hr: int = 185,
 ) -> float:
     """
     Estimate Training Stress Score (TSS) for non-cycling activities.
@@ -237,7 +157,7 @@ def estimate_tss_from_activity(
         # TRIMP-based TSS estimation
         # TSS = duration (hours) * intensity_factor^1.92 * 100
         # This matches how Strava calculates "Suffer Score" for non-cycling
-        tss = duration_hours * (hr_intensity ** 1.92) * 100
+        tss = duration_hours * (hr_intensity**1.92) * 100
 
         # Apply category modifier
         if category.category == "Strength":
@@ -247,18 +167,18 @@ def estimate_tss_from_activity(
         elif category.fatigue_impact == "Low":
             tss *= 0.7  # Low-fatigue activities reduced
 
-        return round(tss, 1)
+        return float(round(tss, 1))
 
     # Method 2: Duration-based TSS (fallback when no HR data)
     # Assume moderate intensity (similar to Z2 cycling = ~50 TSS/hour)
     base_tss_per_hour = {
         "Cycling": 50,  # Should not be used (power-based preferred)
-        "Cardio": 45,   # Cardio slightly lower than cycling
+        "Cardio": 45,  # Cardio slightly lower than cycling
         "Strength": 35,  # Strength lower TSS per hour but high fatigue
-        "Other": 30,     # Recovery/flexibility lowest
+        "Other": 30,  # Recovery/flexibility lowest
     }
 
-    tss_rate = base_tss_per_hour.get(category.category, 40)
+    tss_rate: float = float(base_tss_per_hour.get(category.category, 40))
 
     # Adjust for fatigue impact
     if category.fatigue_impact == "High":
@@ -266,4 +186,4 @@ def estimate_tss_from_activity(
     elif category.fatigue_impact == "Low":
         tss_rate *= 0.7
 
-    return round(duration_hours * tss_rate, 1)
+    return float(round(duration_hours * tss_rate, 1))

@@ -50,10 +50,7 @@ def _normalize_schema_types(schema: dict[str, Any]) -> dict[str, Any]:
             result[key] = value.lower()
         elif key == "properties" and isinstance(value, dict):
             # Recursively normalize nested properties
-            result[key] = {
-                prop_name: _normalize_schema_types(prop_value)
-                for prop_name, prop_value in value.items()
-            }
+            result[key] = {prop_name: _normalize_schema_types(prop_value) for prop_name, prop_value in value.items()}
         elif key == "items" and isinstance(value, dict):
             # Recursively normalize array item schemas
             result[key] = _normalize_schema_types(value)
@@ -283,9 +280,7 @@ class BedrockProvider(BaseProvider):
                 logger.warning(f"[BEDROCK PROVIDER] Tool {tool_name} errors: {result.errors}")
             return result
         except Exception as e:
-            logger.error(
-                f"[BEDROCK PROVIDER] Tool {tool_name} execution failed: {e}", exc_info=True
-            )
+            logger.error(f"[BEDROCK PROVIDER] Tool {tool_name} execution failed: {e}", exc_info=True)
             raise
 
     def format_response(self, result: ToolExecutionResult) -> dict[str, Any]:
@@ -374,8 +369,7 @@ class BedrockProvider(BaseProvider):
                     request_params["guardrailConfig"]["trace"] = "enabled"
             elif guardrail_id and tools:
                 logger.warning(
-                    "Guardrails are not compatible with tool use in Bedrock. "
-                    "Skipping guardrail configuration."
+                    "Guardrails are not compatible with tool use in Bedrock. Skipping guardrail configuration."
                 )
 
             # Call Bedrock Converse API

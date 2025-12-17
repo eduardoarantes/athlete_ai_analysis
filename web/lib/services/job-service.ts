@@ -5,12 +5,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { errorLogger } from '@/lib/monitoring/error-logger'
-import type {
-  CreateJobParams,
-  UpdateJobParams,
-  SyncJob,
-  JobStatus,
-} from '@/lib/types/jobs'
+import type { CreateJobParams, UpdateJobParams, SyncJob, JobStatus } from '@/lib/types/jobs'
 
 export class JobService {
   /**
@@ -133,14 +128,11 @@ export class JobService {
 
     if (options?.limit) {
       query = query.limit(options.limit)
+    } else {
+      query = query.limit(50)
     }
 
-    const { data, error } = await supabase
-      .from('sync_jobs')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(options?.limit || 50)
+    const { data, error } = await query
 
     if (error) {
       console.error(`[JobService] Failed to get jobs for user ${userId}:`, error)
@@ -164,10 +156,7 @@ export class JobService {
   /**
    * Mark job as completed
    */
-  async markJobAsCompleted(
-    jobId: string,
-    result: Record<string, unknown>
-  ): Promise<void> {
+  async markJobAsCompleted(jobId: string, result: Record<string, unknown>): Promise<void> {
     await this.updateJob({
       id: jobId,
       status: 'completed',

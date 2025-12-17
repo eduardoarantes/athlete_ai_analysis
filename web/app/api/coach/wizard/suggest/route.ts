@@ -21,16 +21,14 @@ export async function POST(request: NextRequest) {
     // TODO: Implement AI-powered suggestions using Python backend
     // For now, return step-specific placeholder suggestions
     const suggestions = {
-      goal:
-        "Based on your training history, improving FTP would be a great goal. Your recent activities show consistent effort!",
+      goal: 'Based on your training history, improving FTP would be a great goal. Your recent activities show consistent effort!',
       timeline:
-        "A 12-week plan is ideal for building sustainable improvements. Consider planning around your schedule.",
-      profile:
-        currentData.profile?.ftp
-          ? `Your current FTP of ${currentData.profile.ftp}W gives you a power-to-weight ratio to build on. Training 4-5 days per week typically yields the best results.`
-          : "Complete your profile for personalized recommendations.",
+        'A 12-week plan is ideal for building sustainable improvements. Consider planning around your schedule.',
+      profile: currentData.profile?.ftp
+        ? `Your current FTP of ${currentData.profile.ftp}W gives you a power-to-weight ratio to build on. Training 4-5 days per week typically yields the best results.`
+        : 'Complete your profile for personalized recommendations.',
       review:
-        "Your plan looks great! This balanced approach will help you reach your goals effectively.",
+        'Your plan looks great! This balanced approach will help you reach your goals effectively.',
     }
 
     return NextResponse.json({
@@ -38,9 +36,6 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Suggestion error:', error)
-    return NextResponse.json(
-      { error: 'Failed to get suggestion' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to get suggestion' }, { status: 500 })
   }
 }

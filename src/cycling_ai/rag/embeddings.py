@@ -19,6 +19,8 @@ from __future__ import annotations
 import os
 from typing import TYPE_CHECKING
 
+from pydantic import SecretStr
+
 if TYPE_CHECKING:
     from langchain_core.embeddings import Embeddings
 
@@ -101,11 +103,10 @@ class EmbeddingFactory:
         effective_api_key = api_key or os.getenv("OPENAI_API_KEY")
         if not effective_api_key:
             raise ValueError(
-                "OpenAI API key required. "
-                "Provide api_key parameter or set OPENAI_API_KEY environment variable."
+                "OpenAI API key required. Provide api_key parameter or set OPENAI_API_KEY environment variable."
             )
 
         return OpenAIEmbeddings(
-            api_key=effective_api_key,
+            api_key=SecretStr(effective_api_key),
             model=model,
         )

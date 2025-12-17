@@ -83,9 +83,7 @@ class WorkoutSelector:
         """
         if library_path is None:
             # Default to data/workout_library.json in project root
-            library_path = (
-                Path(__file__).parent.parent.parent.parent / "data" / "workout_library.json"
-            )
+            library_path = Path(__file__).parent.parent.parent.parent / "data" / "workout_library.json"
 
         self.library_path = Path(library_path)
         self.workouts = self._load_library()
@@ -96,14 +94,14 @@ class WorkoutSelector:
         """Load workout library from JSON file."""
         if not self.library_path.exists():
             raise FileNotFoundError(
-                f"Workout library not found: {self.library_path}\n"
-                f"Please ensure the library file exists."
+                f"Workout library not found: {self.library_path}\nPlease ensure the library file exists."
             )
 
         with open(self.library_path) as f:
             library = json.load(f)
 
-        return library.get("workouts", [])
+        workouts: list[dict[str, Any]] = library.get("workouts", [])
+        return workouts
 
     def select_workout(self, requirements: WorkoutRequirements) -> SelectedWorkout | None:
         """
@@ -150,24 +148,15 @@ class WorkoutSelector:
         candidates = self.workouts
 
         # Filter by phase
-        candidates = [
-            w for w in candidates
-            if requirements.phase in w.get("suitable_phases", [])
-        ]
+        candidates = [w for w in candidates if requirements.phase in w.get("suitable_phases", [])]
 
         # Filter by workout type (if specified)
         if requirements.workout_type:
-            candidates = [
-                w for w in candidates
-                if w.get("type") == requirements.workout_type
-            ]
+            candidates = [w for w in candidates if w.get("type") == requirements.workout_type]
 
         # Filter by intensity (if specified)
         if requirements.intensity:
-            candidates = [
-                w for w in candidates
-                if w.get("intensity") == requirements.intensity
-            ]
+            candidates = [w for w in candidates if w.get("intensity") == requirements.intensity]
 
         return candidates
 
@@ -229,15 +218,11 @@ class WorkoutSelector:
 
         best_score, best_workout = scored_candidates[0]
 
-        logger.debug(
-            f"Selected workout '{best_workout['name']}' with score {best_score:.1f}"
-        )
+        logger.debug(f"Selected workout '{best_workout['name']}' with score {best_score:.1f}")
 
         return best_workout
 
-    def _adjust_workout(
-        self, workout: dict[str, Any], requirements: WorkoutRequirements
-    ) -> SelectedWorkout:
+    def _adjust_workout(self, workout: dict[str, Any], requirements: WorkoutRequirements) -> SelectedWorkout:
         """
         Adjust workout variable components to fit duration constraints.
 
@@ -324,9 +309,7 @@ class WorkoutSelector:
         new_duration = base_duration + (units_delta * duration_per_unit)
 
         # Apply adjustment to segments
-        adjusted_segments = self._apply_adjustment(
-            workout["segments"], adjustable_field, adjusted_value
-        )
+        adjusted_segments = self._apply_adjustment(workout["segments"], adjustable_field, adjusted_value)
 
         return SelectedWorkout(
             workout_id=workout["id"],
@@ -340,9 +323,7 @@ class WorkoutSelector:
             adjusted=True,
             adjustment_details={
                 "field": adjustable_field,
-                "original_value": self._calculate_base_value(
-                    workout, adjustable_field
-                ),
+                "original_value": self._calculate_base_value(workout, adjustable_field),
                 "adjusted_value": adjusted_value,
                 "original_duration_min": base_duration,
                 "adjusted_duration_min": new_duration,
@@ -364,7 +345,8 @@ class WorkoutSelector:
             # Find the interval segment and get its sets
             for segment in workout["segments"]:
                 if segment.get("type") == "interval":
-                    return segment.get("sets", 1)
+                    sets_value: int = int(segment.get("sets", 1))
+                    return sets_value
             return 1  # Default if no interval segment found
 
         elif adjustable_field == "duration":
@@ -464,9 +446,7 @@ class WorkoutSelector:
         Returns:
             List of workouts suitable for the phase
         """
-        return [
-            w for w in self.workouts if phase in w.get("suitable_phases", [])
-        ]
+        return [w for w in self.workouts if phase in w.get("suitable_phases", [])]
 
     def get_workout_stats(self) -> dict[str, Any]:
         """
@@ -490,11 +470,8 @@ class WorkoutSelector:
             "by_type": dict(types),
             "by_intensity": dict(intensities),
             "by_phase": phases,
-            "avg_duration_min": sum(w.get("base_duration_min", 0) for w in self.workouts)
-            / len(self.workouts)
+            "avg_duration_min": sum(w.get("base_duration_min", 0) for w in self.workouts) / len(self.workouts)
             if self.workouts
             else 0,
-            "avg_tss": sum(w.get("base_tss", 0) for w in self.workouts) / len(self.workouts)
-            if self.workouts
-            else 0,
+            "avg_tss": sum(w.get("base_tss", 0) for w in self.workouts) / len(self.workouts) if self.workouts else 0,
         }

@@ -3,7 +3,11 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslations } from 'next-intl'
-import { completeProfileSchema, type CompleteProfileData, PRESET_GOALS } from '@/lib/validations/profile'
+import {
+  completeProfileSchema,
+  type CompleteProfileData,
+  PRESET_GOALS,
+} from '@/lib/validations/profile'
 import { useAutoSave, type SaveStatus } from '@/lib/hooks/use-auto-save'
 import {
   Form,
@@ -31,7 +35,13 @@ interface ProfileFormProps {
   onSave: (data: CompleteProfileData) => Promise<void>
 }
 
-const SaveStatusIndicator = ({ status, lastSaved }: { status: SaveStatus; lastSaved: Date | null }) => {
+const SaveStatusIndicator = ({
+  status,
+  lastSaved,
+}: {
+  status: SaveStatus
+  lastSaved: Date | null
+}) => {
   const t = useTranslations('profile')
 
   if (status === 'saving') {
@@ -207,7 +217,9 @@ export function ProfileForm({ initialData, onSave }: ProfileFormProps) {
                           <SelectItem value="male">{tStep1('male')}</SelectItem>
                           <SelectItem value="female">{tStep1('female')}</SelectItem>
                           <SelectItem value="other">{tStep1('other')}</SelectItem>
-                          <SelectItem value="prefer_not_to_say">{tStep1('preferNotToSay')}</SelectItem>
+                          <SelectItem value="prefer_not_to_say">
+                            {tStep1('preferNotToSay')}
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />

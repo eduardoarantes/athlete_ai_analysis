@@ -1,4 +1,5 @@
 """Configuration management for cycling AI analysis."""
+
 from __future__ import annotations
 
 from .loader import create_default_config, get_api_key, get_config_path, load_config

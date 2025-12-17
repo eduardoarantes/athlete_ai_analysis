@@ -3,6 +3,7 @@ LLM agent orchestration.
 
 Coordinates LLM-powered tool execution with multi-turn conversation support.
 """
+
 from __future__ import annotations
 
 import json
@@ -74,9 +75,7 @@ class LLMAgent:
             RuntimeError: If max iterations exceeded
         """
         # Add user message to session
-        self.session.add_message(
-            ConversationMessage(role="user", content=user_message)
-        )
+        self.session.add_message(ConversationMessage(role="user", content=user_message))
 
         # Get available tools (filtered if allowed_tools is set)
         all_tools = self.executor.registry.list_tools()
@@ -84,10 +83,7 @@ class LLMAgent:
         # Filter tools if allowed_tools is specified
         if self.allowed_tools is not None:
             all_tool_names = [tool.name for tool in all_tools]
-            tools = [
-                tool for tool in all_tools
-                if tool.name in self.allowed_tools and tool.name in all_tool_names
-            ]
+            tools = [tool for tool in all_tools if tool.name in self.allowed_tools and tool.name in all_tool_names]
         else:
             tools = all_tools
 
@@ -99,6 +95,7 @@ class LLMAgent:
 
             # DEBUG: Log iteration start
             import logging
+
             logger = logging.getLogger(__name__)
             logger.info(f"[AGENT LOOP] Iteration {iteration}/{self.max_iterations}")
             logger.info(f"[AGENT LOOP] Current session messages: {len(self.session.messages)}")
@@ -106,9 +103,7 @@ class LLMAgent:
 
             # Get messages formatted for LLM and convert to ProviderMessage
             messages_data = self.session.get_messages_for_llm()
-            messages = [
-                self._convert_to_provider_message(msg) for msg in messages_data
-            ]
+            messages = [self._convert_to_provider_message(msg) for msg in messages_data]
 
             logger.info(f"[AGENT LOOP] Sending {len(messages)} messages to LLM")
 
@@ -120,7 +115,7 @@ class LLMAgent:
             )
 
             # Comprehensive response logging for observability
-            logger.info(f"[AGENT LOOP] Response received from LLM")
+            logger.info("[AGENT LOOP] Response received from LLM")
             logger.debug(f"[AGENT LOOP] Response type: {type(response)}")
             logger.debug(f"[AGENT LOOP] Response content type: {type(response.content)}")
             logger.info(f"[AGENT LOOP] Content length: {len(response.content) if response.content else 0}")
@@ -138,34 +133,32 @@ class LLMAgent:
                 # Check for duplicate tool calls with same arguments
                 duplicate_detected = False
                 for tc in response.tool_calls:
-                    tool_name = tc.get('name', 'unknown')
-                    tool_args = tc.get('arguments', {})
+                    tool_name = tc.get("name", "unknown")
+                    tool_args = tc.get("arguments", {})
                     logger.info(f"[AGENT LOOP]   - Tool: {tool_name}")
                     logger.debug(f"[AGENT LOOP]     Arguments: {tool_args}")
 
                     # Create a hash of the tool call (name + sorted args JSON)
                     import json
+
                     args_hash = json.dumps(tool_args, sort_keys=True)
 
                     # Check if this exact tool call was made before
-                    if tool_name in called_tools_with_args:
-                        if args_hash in called_tools_with_args[tool_name]:
-                            logger.warning(
-                                f"[AGENT LOOP] DUPLICATE TOOL CALL DETECTED: {tool_name} "
-                                f"with same arguments was already called in iteration "
-                                f"{called_tools_with_args[tool_name].index(args_hash) + 1}"
-                            )
-                            logger.warning(
-                                f"[AGENT LOOP] LLM is stuck in a loop. Forcing response generation."
-                            )
-                            duplicate_detected = True
-                            break
+                    if tool_name in called_tools_with_args and args_hash in called_tools_with_args[tool_name]:
+                        logger.warning(
+                            f"[AGENT LOOP] DUPLICATE TOOL CALL DETECTED: {tool_name} "
+                            f"with same arguments was already called in iteration "
+                            f"{called_tools_with_args[tool_name].index(args_hash) + 1}"
+                        )
+                        logger.warning("[AGENT LOOP] LLM is stuck in a loop. Forcing response generation.")
+                        duplicate_detected = True
+                        break
 
                 # If duplicate detected, skip tool execution and force final response
                 if duplicate_detected:
                     logger.warning(
-                        f"[AGENT LOOP] Stopping tool execution due to duplicate call. "
-                        f"Requesting final response from LLM."
+                        "[AGENT LOOP] Stopping tool execution due to duplicate call. "
+                        "Requesting final response from LLM."
                     )
                     # Add a message telling LLM to provide final response
                     self.session.add_message(
@@ -181,19 +174,19 @@ class LLMAgent:
                     continue  # Go to next iteration to get final response
 
                 # Execute tools and add results to session
-                logger.debug(f"[AGENT LOOP] Calling _execute_tool_calls()...")
+                logger.debug("[AGENT LOOP] Calling _execute_tool_calls()...")
                 try:
                     tool_results = self._execute_tool_calls(response.tool_calls)
                     logger.info(f"[AGENT LOOP] Tool execution completed successfully. {len(tool_results)} results.")
                     for i, result in enumerate(tool_results):
-                        logger.debug(f"[AGENT LOOP]   Result {i+1}: success={result.success}, format={result.format}")
+                        logger.debug(f"[AGENT LOOP]   Result {i + 1}: success={result.success}, format={result.format}")
                         if not result.success:
-                            logger.warning(f"[AGENT LOOP]   Result {i+1} errors: {result.errors}")
+                            logger.warning(f"[AGENT LOOP]   Result {i + 1} errors: {result.errors}")
                 except Exception as e:
                     logger.error(f"[AGENT LOOP] Tool execution failed with exception: {e}", exc_info=True)
                     raise
 
-                logger.debug(f"[AGENT LOOP] Adding tool call and result messages to session...")
+                logger.debug("[AGENT LOOP] Adding tool call and result messages to session...")
 
                 # Add assistant message with tool calls
                 self.session.add_message(
@@ -205,21 +198,21 @@ class LLMAgent:
                 )
 
                 # Add tool results as separate messages
-                for tool_call, result in zip(response.tool_calls, tool_results):
-                    tool_result_msg = self._format_tool_result_message(
-                        tool_call, result
-                    )
+                for tool_call, result in zip(response.tool_calls, tool_results, strict=True):
+                    tool_result_msg = self._format_tool_result_message(tool_call, result)
                     self.session.add_message(tool_result_msg)
 
                     # Track this tool call to prevent duplicates
-                    tool_name = tool_call.get('name', 'unknown')
-                    tool_args = tool_call.get('arguments', {})
+                    tool_name = tool_call.get("name", "unknown")
+                    tool_args = tool_call.get("arguments", {})
                     args_hash = json.dumps(tool_args, sort_keys=True)
 
                     if tool_name not in called_tools_with_args:
                         called_tools_with_args[tool_name] = []
                     called_tools_with_args[tool_name].append(args_hash)
-                    logger.debug(f"[AGENT LOOP] Tracked tool call: {tool_name} (call #{len(called_tools_with_args[tool_name])})")
+                    logger.debug(
+                        f"[AGENT LOOP] Tracked tool call: {tool_name} (call #{len(called_tools_with_args[tool_name])})"
+                    )
 
                 # Check for phase-completion tools (single-call phases should exit immediately)
                 phase_completion_tools = {
@@ -240,9 +233,7 @@ class LLMAgent:
                         tool_result = tool_results[tool_idx]
                         if tool_result.success:
                             logger.info(f"[AGENT LOOP] {tool_name} succeeded. Forcing completion.")
-                            self.session.add_message(
-                                ConversationMessage(role="assistant", content=completion_msg)
-                            )
+                            self.session.add_message(ConversationMessage(role="assistant", content=completion_msg))
                             return completion_msg
                         else:
                             logger.warning(
@@ -266,32 +257,25 @@ class LLMAgent:
                                     f"({weeks_completed}/{total_weeks}). Forcing completion."
                                 )
                                 completion_msg = f"All {total_weeks} weeks generated successfully. Phase 3b complete."
-                                self.session.add_message(
-                                    ConversationMessage(role="assistant", content=completion_msg)
-                                )
+                                self.session.add_message(ConversationMessage(role="assistant", content=completion_msg))
                                 return completion_msg
 
-                logger.info(f"[AGENT LOOP] Session now has {len(self.session.messages)} messages. Continuing to next iteration...")
+                logger.info(
+                    f"[AGENT LOOP] Session now has {len(self.session.messages)} messages. Continuing to next iteration..."
+                )
 
                 # Continue loop to let LLM process results
                 continue
 
             # No tool calls - this is the final response
-            logger.info(f"[AGENT LOOP] No tool calls. Final response received. Exiting loop.")
-            self.session.add_message(
-                ConversationMessage(role="assistant", content=response.content)
-            )
+            logger.info("[AGENT LOOP] No tool calls. Final response received. Exiting loop.")
+            self.session.add_message(ConversationMessage(role="assistant", content=response.content))
 
             return response.content
 
-        raise RuntimeError(
-            f"Maximum iterations ({self.max_iterations}) exceeded. "
-            "Agent may be stuck in a loop."
-        )
+        raise RuntimeError(f"Maximum iterations ({self.max_iterations}) exceeded. Agent may be stuck in a loop.")
 
-    def _execute_tool_calls(
-        self, tool_calls: list[dict[str, Any]]
-    ) -> list[ToolExecutionResult]:
+    def _execute_tool_calls(self, tool_calls: list[dict[str, Any]]) -> list[ToolExecutionResult]:
         """
         Execute tools requested by LLM.
 
@@ -407,9 +391,7 @@ class LLMAgent:
         """
         if keep_system and self.session.messages:
             # Keep only system message if it exists
-            system_messages = [
-                msg for msg in self.session.messages if msg.role == "system"
-            ]
+            system_messages = [msg for msg in self.session.messages if msg.role == "system"]
             self.session.messages = system_messages
         else:
             self.session.messages = []
@@ -447,9 +429,7 @@ class AgentFactory:
         if system_prompt:
             has_system = any(msg.role == "system" for msg in session.messages)
             if not has_system:
-                session.add_message(
-                    ConversationMessage(role="system", content=system_prompt)
-                )
+                session.add_message(ConversationMessage(role="system", content=system_prompt))
 
         # Create executor with session and tool filtering
         executor = ToolExecutor(session=session, allowed_tools=allowed_tools)

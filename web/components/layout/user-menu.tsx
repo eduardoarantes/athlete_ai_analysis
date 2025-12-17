@@ -59,7 +59,9 @@ export function UserMenu() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => router.push('/profile')}>{t('profile')}</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => router.push('/settings')}>{t('settings')}</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => router.push('/settings')}>
+          {t('settings')}
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout} className="text-red-600">
           {t('logout')}

@@ -4,57 +4,45 @@ Prepare Report Command
 Extract training plan data from interaction logs and create report_data.json
 """
 
-import click
-from pathlib import Path
 import sys
+from pathlib import Path
 
-from cycling_ai.cli.prepare_report import prepare_report, setup_logging
+import click
+
 from cycling_ai.cli.formatting import console
+from cycling_ai.cli.prepare_report import prepare_report, setup_logging
 
 
 @click.command(name="prepare-report")
+@click.option("--session", type=click.Path(exists=True), help="Single session JSONL file")
 @click.option(
-    '--session',
-    type=click.Path(exists=True),
-    help='Single session JSONL file'
-)
-@click.option(
-    '--sessions',
+    "--sessions",
     type=click.Path(exists=True),
     multiple=True,
-    help='Multiple session files (can be specified multiple times)'
+    help="Multiple session files (can be specified multiple times)",
 )
 @click.option(
-    '--athlete-dir',
+    "--athlete-dir",
     type=click.Path(exists=True, file_okay=False, dir_okay=True),
-    help='Directory containing athlete profiles (e.g., data/)'
+    help="Directory containing athlete profiles (e.g., data/)",
 )
 @click.option(
-    '--output',
-    '-o',
+    "--output",
+    "-o",
     type=click.Path(),
-    default='logs/report_data.json',
-    help='Output file path (default: logs/report_data.json)',
-    show_default=True
+    default="logs/report_data.json",
+    help="Output file path (default: logs/report_data.json)",
+    show_default=True,
 )
-@click.option(
-    '--no-validate',
-    is_flag=True,
-    help='Skip validation against schema'
-)
-@click.option(
-    '--verbose',
-    '-v',
-    is_flag=True,
-    help='Verbose output'
-)
+@click.option("--no-validate", is_flag=True, help="Skip validation against schema")
+@click.option("--verbose", "-v", is_flag=True, help="Verbose output")
 def prepare_report_cmd(
     session: str | None,
     sessions: tuple[str, ...],
     athlete_dir: str | None,
     output: str,
     no_validate: bool,
-    verbose: bool
+    verbose: bool,
 ) -> None:
     """
     Prepare training plan report data from interaction logs.
@@ -110,11 +98,11 @@ def prepare_report_cmd(
             session_patterns=session_patterns,
             output_path=output_path,
             athlete_dir=athlete_dir_path,
-            validate=not no_validate
+            validate=not no_validate,
         )
 
     if success:
         console.print(f"\n[green]✓[/green] Report data saved to: {output_path}")
     else:
-        console.print(f"\n[red]✗[/red] Failed to prepare report data")
+        console.print("\n[red]✗[/red] Failed to prepare report data")
         sys.exit(1)

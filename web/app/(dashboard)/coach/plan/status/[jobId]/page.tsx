@@ -124,9 +124,7 @@ export default function PlanStatusPage() {
             <AlertCircle className="h-12 w-12 text-red-600 mx-auto mb-4" />
             <h2 className="text-xl font-semibold mb-2">{t('errorTitle')}</h2>
             <p className="text-muted-foreground mb-4">{error}</p>
-            <Button onClick={() => router.push('/coach/create-plan')}>
-              {t('tryAgain')}
-            </Button>
+            <Button onClick={() => router.push('/coach/create-plan')}>{t('tryAgain')}</Button>
           </CardContent>
         </Card>
       </div>
@@ -167,17 +165,13 @@ export default function PlanStatusPage() {
 
             <div className="flex justify-center gap-4">
               {job?.status === 'completed' && job.result?.plan_id && (
-                <Button
-                  onClick={() => router.push(`/training-plans/${job.result?.plan_id}`)}
-                >
+                <Button onClick={() => router.push(`/training-plans/${job.result?.plan_id}`)}>
                   {t('viewPlan')}
                 </Button>
               )}
 
               {job?.status === 'failed' && (
-                <Button onClick={() => router.push('/coach/create-plan')}>
-                  {t('tryAgain')}
-                </Button>
+                <Button onClick={() => router.push('/coach/create-plan')}>{t('tryAgain')}</Button>
               )}
 
               {(job?.status === 'queued' || job?.status === 'running') && (

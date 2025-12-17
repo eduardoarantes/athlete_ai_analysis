@@ -3,6 +3,7 @@ FastAPI dependency injection functions.
 
 Provides reusable dependencies for routes (auth, config, etc.).
 """
+
 from __future__ import annotations
 
 from typing import Annotated

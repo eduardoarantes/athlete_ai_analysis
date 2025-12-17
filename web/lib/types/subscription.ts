@@ -140,31 +140,15 @@ export function checkFeatureLimit(
 export function createFeatureGate(): SubscriptionFeatureGate {
   return {
     canAddActivity: (sub, currentActivityCount) =>
-      checkFeatureLimit(
-        sub.plan.limits.max_activities ?? -1,
-        currentActivityCount,
-        sub.plan.name
-      ),
+      checkFeatureLimit(sub.plan.limits.max_activities ?? -1, currentActivityCount, sub.plan.name),
 
     canCreateTrainingPlan: (sub, currentPlanCount) =>
-      checkFeatureLimit(
-        sub.plan.limits.max_training_plans ?? -1,
-        currentPlanCount,
-        sub.plan.name
-      ),
+      checkFeatureLimit(sub.plan.limits.max_training_plans ?? -1, currentPlanCount, sub.plan.name),
 
     canGenerateReport: (sub, currentReportCount) =>
-      checkFeatureLimit(
-        sub.plan.limits.max_reports ?? -1,
-        currentReportCount,
-        sub.plan.name
-      ),
+      checkFeatureLimit(sub.plan.limits.max_reports ?? -1, currentReportCount, sub.plan.name),
 
     canAddAthlete: (sub, currentAthleteCount) =>
-      checkFeatureLimit(
-        sub.plan.limits.max_athletes ?? 0,
-        currentAthleteCount,
-        sub.plan.name
-      ),
+      checkFeatureLimit(sub.plan.limits.max_athletes ?? 0, currentAthleteCount, sub.plan.name),
   }
 }

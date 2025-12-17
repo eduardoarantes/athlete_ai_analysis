@@ -25,12 +25,7 @@ export const userRoleSchema = z.enum(['user', 'admin'])
  * Subscription status schema
  * Validates subscription status values
  */
-export const subscriptionStatusSchema = z.enum([
-  'active',
-  'suspended',
-  'cancelled',
-  'expired',
-])
+export const subscriptionStatusSchema = z.enum(['active', 'suspended', 'cancelled', 'expired'])
 
 /**
  * Query parameters schema for GET /api/admin/users
@@ -62,13 +57,7 @@ export const adminUsersQuerySchema = z.object({
     .optional()
     .default('20')
     .transform((val) => parseInt(val, 10))
-    .pipe(
-      z
-        .number()
-        .int()
-        .min(1, 'Limit must be at least 1')
-        .max(100, 'Limit cannot exceed 100')
-    ),
+    .pipe(z.number().int().min(1, 'Limit must be at least 1').max(100, 'Limit cannot exceed 100')),
 
   offset: z
     .string()
@@ -100,12 +89,9 @@ export const updateUserSubscriptionSchema = z
     // Update subscription plan
     planId: uuidSchema.optional(),
   })
-  .refine(
-    (data) => data.subscriptionStatus !== undefined || data.planId !== undefined,
-    {
-      message: 'At least one field (subscriptionStatus or planId) must be provided',
-    }
-  )
+  .refine((data) => data.subscriptionStatus !== undefined || data.planId !== undefined, {
+    message: 'At least one field (subscriptionStatus or planId) must be provided',
+  })
 
 export type UpdateUserSubscription = z.infer<typeof updateUserSubscriptionSchema>
 

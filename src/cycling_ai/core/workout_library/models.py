@@ -57,12 +57,10 @@ class Workout(BaseModel):
     detailed_description: str | None = None  # Optional for new workouts
     type: Literal["endurance", "tempo", "sweet_spot", "threshold", "vo2max", "recovery", "mixed"]
     intensity: Literal["easy", "moderate", "hard", "very_hard"]
-    suitable_phases: (
-        list[Literal["Base", "Build", "Peak", "Taper", "Foundation", "Recovery"]] | None
+    suitable_phases: list[Literal["Base", "Build", "Peak", "Taper", "Foundation", "Recovery"]] | None = None  # Optional
+    suitable_weekdays: (
+        list[Literal["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]] | None
     ) = None  # Optional
-    suitable_weekdays: list[
-        Literal["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-    ] | None = None  # Optional
     segments: list[WorkoutSegment]
     base_duration_min: float
     base_tss: float

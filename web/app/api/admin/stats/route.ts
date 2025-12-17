@@ -49,9 +49,7 @@ export async function GET() {
     }
 
     // 2. Call database function to get statistics
-    const { data: statsData, error: statsError } = await supabase.rpc(
-      'get_admin_stats' as never
-    )
+    const { data: statsData, error: statsError } = await supabase.rpc('get_admin_stats' as never)
 
     if (statsError) {
       errorLogger.logError(new Error(`get_admin_stats failed: ${statsError.message}`), {

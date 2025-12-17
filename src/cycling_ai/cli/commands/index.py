@@ -85,9 +85,7 @@ def domain(
 
         # Validate knowledge directory
         if not knowledge_dir.exists():
-            console.print(
-                f"[red]Error:[/red] Knowledge directory not found: {knowledge_dir}"
-            )
+            console.print(f"[red]Error:[/red] Knowledge directory not found: {knowledge_dir}")
             raise SystemExit(1)
 
         # Initialize RAG manager
@@ -122,7 +120,7 @@ def domain(
 
     except Exception as e:
         console.print(f"[red]Error during indexing:[/red] {str(e)}")
-        raise SystemExit(1)
+        raise SystemExit(1) from None
 
 
 @index.command()
@@ -180,9 +178,7 @@ def templates(
 
         # Validate templates file
         if not templates_file.exists():
-            console.print(
-                f"[red]Error:[/red] Templates file not found: {templates_file}"
-            )
+            console.print(f"[red]Error:[/red] Templates file not found: {templates_file}")
             raise SystemExit(1)
 
         # Initialize RAG manager
@@ -206,7 +202,7 @@ def templates(
 
     except Exception as e:
         console.print(f"[red]Error during indexing:[/red] {str(e)}")
-        raise SystemExit(1)
+        raise SystemExit(1) from None
 
 
 @index.command()
@@ -272,15 +268,11 @@ def all(
 
         # Validate inputs
         if not knowledge_dir.exists():
-            console.print(
-                f"[red]Error:[/red] Knowledge directory not found: {knowledge_dir}"
-            )
+            console.print(f"[red]Error:[/red] Knowledge directory not found: {knowledge_dir}")
             raise SystemExit(1)
 
         if not templates_file.exists():
-            console.print(
-                f"[red]Error:[/red] Templates file not found: {templates_file}"
-            )
+            console.print(f"[red]Error:[/red] Templates file not found: {templates_file}")
             raise SystemExit(1)
 
         # Initialize RAG manager
@@ -295,14 +287,14 @@ def all(
         indexer = KnowledgeIndexer(rag_manager=rag_manager)
 
         # Index domain knowledge
-        console.print(f"\n[bold cyan]1. Indexing domain knowledge[/bold cyan]")
+        console.print("\n[bold cyan]1. Indexing domain knowledge[/bold cyan]")
         console.print(f"Scanning markdown files in: {knowledge_dir}")
         domain_stats = indexer.index_domain_knowledge(knowledge_dir)
         total_domain_chunks = sum(domain_stats.values())
         console.print(f"[green]✓[/green] Indexed {total_domain_chunks} domain knowledge chunks")
 
         # Index templates
-        console.print(f"\n[bold cyan]2. Indexing training templates[/bold cyan]")
+        console.print("\n[bold cyan]2. Indexing training templates[/bold cyan]")
         console.print(f"Reading templates from: {templates_file}")
         template_count = indexer.index_training_templates(templates_file)
         console.print(f"[green]✓[/green] Indexed {template_count} training templates")
@@ -324,7 +316,7 @@ def all(
         console.print(table)
 
         # Summary stats
-        console.print(f"\n[bold]Summary:[/bold]")
+        console.print("\n[bold]Summary:[/bold]")
         console.print(f"  Domain knowledge chunks: {total_domain_chunks}")
         console.print(f"  Training templates: {template_count}")
         console.print(f"  Total documents: {total_domain_chunks + template_count}")
@@ -332,4 +324,4 @@ def all(
 
     except Exception as e:
         console.print(f"[red]Error during indexing:[/red] {str(e)}")
-        raise SystemExit(1)
+        raise SystemExit(1) from None

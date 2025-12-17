@@ -25,21 +25,18 @@ export async function POST(_request: NextRequest) {
     }
 
     // Create subscription with Strava
-    const response = await fetch(
-      'https://www.strava.com/api/v3/push_subscriptions',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          client_id: STRAVA_CLIENT_ID,
-          client_secret: STRAVA_CLIENT_SECRET,
-          callback_url: CALLBACK_URL,
-          verify_token: WEBHOOK_VERIFY_TOKEN,
-        }),
-      }
-    )
+    const response = await fetch('https://www.strava.com/api/v3/push_subscriptions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        client_id: STRAVA_CLIENT_ID,
+        client_secret: STRAVA_CLIENT_SECRET,
+        callback_url: CALLBACK_URL,
+        verify_token: WEBHOOK_VERIFY_TOKEN,
+      }),
+    })
 
     if (!response.ok) {
       const error = await response.json()
@@ -56,15 +53,16 @@ export async function POST(_request: NextRequest) {
     const subscription = await response.json()
 
     // Store subscription in database
-    await supabase
-      .from('strava_webhook_subscriptions')
-      .upsert({
+    await supabase.from('strava_webhook_subscriptions').upsert(
+      {
         subscription_id: subscription.id,
         callback_url: CALLBACK_URL,
         verify_token: WEBHOOK_VERIFY_TOKEN,
-      } as never, {
+      } as never,
+      {
         onConflict: 'subscription_id',
-      })
+      }
+    )
 
     return NextResponse.json({
       success: true,
@@ -149,10 +147,7 @@ export async function DELETE(request: NextRequest) {
     const subscriptionId = searchParams.get('id')
 
     if (!subscriptionId) {
-      return NextResponse.json(
-        { error: 'Subscription ID required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Subscription ID required' }, { status: 400 })
     }
 
     // Delete subscription from Strava

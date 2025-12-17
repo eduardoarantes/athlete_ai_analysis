@@ -39,16 +39,8 @@ interface UseSyncPollingOptions {
  * @param options - Polling options
  * @returns Job status, loading state, and control functions
  */
-export function useSyncPolling(
-  jobId: string | null,
-  options: UseSyncPollingOptions = {}
-) {
-  const {
-    interval = 2000,
-    enabled = true,
-    onComplete,
-    onError,
-  } = options
+export function useSyncPolling(jobId: string | null, options: UseSyncPollingOptions = {}) {
+  const { interval = 2000, enabled = true, onComplete, onError } = options
 
   const [status, setStatus] = useState<SyncJobStatus | null>(null)
   const [isPolling, setIsPolling] = useState(false)

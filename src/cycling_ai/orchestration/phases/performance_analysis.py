@@ -12,7 +12,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from cycling_ai.orchestration.base import PhaseContext, PhaseResult, PhaseStatus
+from cycling_ai.orchestration.base import PhaseContext
 from cycling_ai.orchestration.phases.base_phase import BasePhase
 from cycling_ai.orchestration.session import ConversationSession
 
@@ -120,9 +120,7 @@ class PerformanceAnalysisPhase(BasePhase):
                     results["cross_training_analysis"] = ct_result.data
                     logger.info("[PHASE 2] analyze_cross_training_impact executed successfully")
                 else:
-                    logger.warning(
-                        f"[PHASE 2] analyze_cross_training_impact failed: {ct_result.errors}"
-                    )
+                    logger.warning(f"[PHASE 2] analyze_cross_training_impact failed: {ct_result.errors}")
 
             return results
 
@@ -182,9 +180,7 @@ class PerformanceAnalysisPhase(BasePhase):
                     f"Available fields: {list(context.previous_phase_data.keys())}"
                 )
 
-    def _get_system_prompt(
-        self, config: dict[str, Any], context: PhaseContext
-    ) -> str:
+    def _get_system_prompt(self, config: dict[str, Any], context: PhaseContext) -> str:
         """
         Get system prompt for performance analysis.
 
@@ -198,9 +194,7 @@ class PerformanceAnalysisPhase(BasePhase):
         prompt: str = context.prompts_manager.get_performance_analysis_prompt()
         return prompt
 
-    def _get_user_message(
-        self, config: dict[str, Any], context: PhaseContext
-    ) -> str:
+    def _get_user_message(self, config: dict[str, Any], context: PhaseContext) -> str:
         """
         Build user message with conditional cross-training section.
 
@@ -280,9 +274,7 @@ class PerformanceAnalysisPhase(BasePhase):
                             logger.debug("[PHASE 2] Extracted cross_training_analysis")
 
                     except json.JSONDecodeError:
-                        logger.warning(
-                            f"[PHASE 2] Failed to parse JSON from tool {tool_name}"
-                        )
+                        logger.warning(f"[PHASE 2] Failed to parse JSON from tool {tool_name}")
                         continue
 
         return extracted
@@ -389,10 +381,7 @@ Use concrete numbers and percentages in all descriptions. Be encouraging but hon
                 "zones_data": parsed.get("time_in_zones", []),  # Phase 4 expects zones_data
             }
         except json.JSONDecodeError as e:
-            logger.warning(
-                f"[PHASE 2] Failed to parse LLM response as JSON: {e}. "
-                f"Falling back to prefetched data."
-            )
+            logger.warning(f"[PHASE 2] Failed to parse LLM response as JSON: {e}. Falling back to prefetched data.")
             # Fall back to prefetched data, add performance_data and zones_data keys
             result = dict(prefetched_data)
             if "performance_analysis_json" in result:
@@ -512,9 +501,7 @@ Use concrete numbers and percentages in all descriptions. Be encouraging but hon
             # Load cache
             cache_path = Path(cache_file_path)
             if not cache_path.exists():
-                logger.warning(
-                    f"Cache file not found for cross-training detection: {cache_file_path}"
-                )
+                logger.warning(f"Cache file not found for cross-training detection: {cache_file_path}")
                 return False
 
             df = pd.read_parquet(cache_path)
@@ -522,17 +509,13 @@ Use concrete numbers and percentages in all descriptions. Be encouraging but hon
             # Check minimum activity count
             if len(df) < min_activities:
                 logger.info(
-                    f"Cross-training analysis skipped: only {len(df)} activities "
-                    f"(minimum {min_activities} required)"
+                    f"Cross-training analysis skipped: only {len(df)} activities (minimum {min_activities} required)"
                 )
                 return False
 
             # Check for activity_category column (added by cache preparation)
             if "activity_category" not in df.columns:
-                logger.warning(
-                    "Cache missing 'activity_category' column - "
-                    "cross-training analysis not available"
-                )
+                logger.warning("Cache missing 'activity_category' column - cross-training analysis not available")
                 return False
 
             # Count activities by category

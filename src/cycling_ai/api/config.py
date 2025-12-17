@@ -3,6 +3,7 @@ FastAPI application configuration.
 
 Manages environment variables and application settings using Pydantic.
 """
+
 from __future__ import annotations
 
 from pydantic_settings import BaseSettings, SettingsConfigDict

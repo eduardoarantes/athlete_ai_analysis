@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
       units_system: profileData.unitsSystem,
     }
 
-    const { data: profile, error: createError} = await supabase
+    const { data: profile, error: createError } = await supabase
       .from('athlete_profiles')
       .insert(insertData)
       .select()

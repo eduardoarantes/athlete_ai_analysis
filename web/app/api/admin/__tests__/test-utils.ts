@@ -134,10 +134,7 @@ export const createMockSupabaseClient = (options: {
 /**
  * Create a mock NextRequest
  */
-export const createMockRequest = (
-  url: string,
-  options?: { method?: string; body?: unknown }
-) => {
+export const createMockRequest = (url: string, options?: { method?: string; body?: unknown }) => {
   return {
     url,
     method: options?.method ?? 'GET',

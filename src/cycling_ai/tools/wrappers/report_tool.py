@@ -3,6 +3,7 @@ Report generation tool wrapper.
 
 Generates HTML reports from JSON analysis results.
 """
+
 from __future__ import annotations
 
 from datetime import datetime

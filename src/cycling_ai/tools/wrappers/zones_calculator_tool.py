@@ -3,6 +3,7 @@ Power zones calculator tool wrapper.
 
 Calculates training power zones based on FTP for workout design.
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -84,10 +85,10 @@ class ZonesCalculatorTool(BaseTool):
             zones = calculate_power_zones(ftp)
 
             # Add percentage strings for display
-            for zone_key, zone_data in zones.items():
-                pct_min = int(zone_data['ftp_pct_min'] * 100)
-                pct_max = int(zone_data['ftp_pct_max'] * 100)
-                zone_data['ftp_percentage'] = f"{pct_min}-{pct_max}%"
+            for _zone_key, zone_data in zones.items():
+                pct_min = int(zone_data["ftp_pct_min"] * 100)
+                pct_max = int(zone_data["ftp_pct_max"] * 100)
+                zone_data["ftp_percentage"] = f"{pct_min}-{pct_max}%"
 
             # Add summary information
             result_data = {

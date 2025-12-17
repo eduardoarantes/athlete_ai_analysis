@@ -6,6 +6,7 @@ Supports two modes:
 - FIT-only mode (RECOMMENDED): Builds activities DataFrame directly from FIT files
 - CSV mode (LEGACY): Reads activities CSV file and optionally enriches with FIT zone data
 """
+
 from __future__ import annotations
 
 import json
@@ -107,11 +108,18 @@ class CachePreparationTool(BaseTool):
                     success=False,
                     data={"success": False, "error": "FIT-only mode requires output_dir_path"},
                     format="json",
-                    errors=["FIT-only mode requires output_dir_path parameter"]
+                    errors=["FIT-only mode requires output_dir_path parameter"],
                 )
             cache_dir = Path(output_dir_path) / "cache"
         else:
             # CSV mode: use CSV parent dir / cache
+            if csv_path is None:
+                return ToolExecutionResult(
+                    success=False,
+                    data={"success": False, "error": "csv_path is required in non-FIT-only mode"},
+                    format="json",
+                    errors=["csv_path is required when not in FIT-only mode"],
+                )
             cache_dir = csv_path.parent / "cache"
 
         cache_dir.mkdir(parents=True, exist_ok=True)
@@ -128,7 +136,7 @@ class CachePreparationTool(BaseTool):
                         success=False,
                         data={"success": False, "error": "FIT-only mode requires fit_dir_path"},
                         format="json",
-                        errors=["FIT-only mode requires fit_dir_path parameter"]
+                        errors=["FIT-only mode requires fit_dir_path parameter"],
                     )
 
                 from cycling_ai.utils.fit_metadata_extractor import scan_fit_directory
@@ -138,9 +146,12 @@ class CachePreparationTool(BaseTool):
                 if not activities_list:
                     return ToolExecutionResult(
                         success=False,
-                        data={"success": False, "error": "No FIT files found or metadata extraction failed"},
+                        data={
+                            "success": False,
+                            "error": "No FIT files found or metadata extraction failed",
+                        },
                         format="json",
-                        errors=["No valid FIT files found in directory"]
+                        errors=["No valid FIT files found in directory"],
                     )
 
                 df = pd.DataFrame(activities_list)
@@ -148,32 +159,41 @@ class CachePreparationTool(BaseTool):
                 original_size = 0  # No CSV file to measure
             else:
                 # CSV mode: read from CSV
+                assert csv_path is not None  # Checked above at line 116-122
                 df = pd.read_csv(csv_path)
                 original_count = len(df)
                 original_size = csv_path.stat().st_size
 
             # Parse Activity Date as datetime
             if "Activity Date" in df.columns:
-                df["Activity Date"] = pd.to_datetime(df["Activity Date"], format='mixed', errors='coerce')
+                df["Activity Date"] = pd.to_datetime(df["Activity Date"], format="mixed", errors="coerce")
 
             # Convert numeric columns with proper handling
             numeric_columns = [
-                "Distance", "Moving Time", "Elapsed Time",
-                "Elevation Gain", "Elevation Loss",
-                "Average Speed", "Max Speed",
-                "Average Heart Rate", "Max Heart Rate",
-                "Average Watts", "Max Watts", "Weighted Average Power",
-                "Average Cadence", "Max Cadence",
-                "Calories"
+                "Distance",
+                "Moving Time",
+                "Elapsed Time",
+                "Elevation Gain",
+                "Elevation Loss",
+                "Average Speed",
+                "Max Speed",
+                "Average Heart Rate",
+                "Max Heart Rate",
+                "Average Watts",
+                "Max Watts",
+                "Weighted Average Power",
+                "Average Cadence",
+                "Max Cadence",
+                "Calories",
             ]
 
             for col in numeric_columns:
                 if col in df.columns:
-                    df[col] = pd.to_numeric(df[col], errors='coerce')
+                    df[col] = pd.to_numeric(df[col], errors="coerce")
 
             # Load profile for FTP
             try:
-                with open(profile_path, 'r') as f:
+                with open(profile_path) as f:
                     profile = json.load(f)
 
                 # Handle different FTP field names and formats
@@ -191,7 +211,7 @@ class CachePreparationTool(BaseTool):
             try:
                 from cycling_ai.utils.activity_categorizer import (
                     categorize_activity,
-                    estimate_tss_from_activity
+                    estimate_tss_from_activity,
                 )
 
                 # Add cross-training metadata columns
@@ -220,7 +240,7 @@ class CachePreparationTool(BaseTool):
                                 duration_seconds=row.get("Elapsed Time", 0),
                                 avg_hr=row.get("Average Heart Rate"),
                                 max_hr=row.get("Max Heart Rate"),
-                                athlete_max_hr=profile.get("max_hr", 185)
+                                athlete_max_hr=profile.get("max_hr", 185),
                             )
                             estimated_tss_list.append(tss)
                         else:
@@ -235,7 +255,9 @@ class CachePreparationTool(BaseTool):
 
                     # Count activities by category
                     category_counts = df["activity_category"].value_counts().to_dict()
-                    categorization_summary = f"Categorized: {', '.join([f'{count} {cat}' for cat, count in category_counts.items()])}"
+                    categorization_summary = (
+                        f"Categorized: {', '.join([f'{count} {cat}' for cat, count in category_counts.items()])}"
+                    )
                 else:
                     categorization_summary = "No sport metadata available for categorization"
 
@@ -298,17 +320,12 @@ class CachePreparationTool(BaseTool):
                             intensity_categories.append("Moderate")  # Default
 
                 df["intensity_category"] = intensity_categories
-            except Exception as e:
+            except Exception:
                 # Intensity categorization is optional
                 df["intensity_category"] = "Moderate"  # Default fallback
 
             # Write to Parquet with compression
-            df.to_parquet(
-                parquet_path,
-                engine='pyarrow',
-                compression='snappy',
-                index=False
-            )
+            df.to_parquet(parquet_path, engine="pyarrow", compression="snappy", index=False)
 
             parquet_size = parquet_path.stat().st_size
             compression_ratio = (1 - parquet_size / original_size) * 100 if original_size > 0 else 0
@@ -325,20 +342,21 @@ class CachePreparationTool(BaseTool):
                 "original_size_bytes": original_size,
                 "cache_size_bytes": parquet_size,
                 "compression_ratio_percent": round(compression_ratio, 1) if original_size > 0 else 0,
-                "cross_training_categorized": categorization_summary is not None and "failed" not in categorization_summary.lower(),
+                "cross_training_categorized": categorization_summary is not None
+                and "failed" not in categorization_summary.lower(),
                 "categorization_summary": categorization_summary,
                 "zone_enriched": zone_enriched,
                 "ftp_watts": ftp,
                 "enrichment_summary": enrichment_summary,
             }
 
-            with open(metadata_path, 'w') as f:
+            with open(metadata_path, "w") as f:
                 json.dump(metadata, f, indent=2)
 
             # Get date range
             if "Activity Date" in df.columns and not df["Activity Date"].isna().all():
-                min_date = df["Activity Date"].min().strftime('%Y-%m-%d')
-                max_date = df["Activity Date"].max().strftime('%Y-%m-%d')
+                min_date = df["Activity Date"].min().strftime("%Y-%m-%d")
+                max_date = df["Activity Date"].max().strftime("%Y-%m-%d")
             else:
                 min_date = "Unknown"
                 max_date = "Unknown"
@@ -347,13 +365,13 @@ class CachePreparationTool(BaseTool):
             if fit_only_mode:
                 message_parts = [
                     f"✅ Cache created successfully from FIT files! {original_count} activities cached.",
-                    f"Cache size: {round(parquet_size/1024, 1)}KB."
+                    f"Cache size: {round(parquet_size / 1024, 1)}KB.",
                 ]
             else:
                 message_parts = [
                     f"✅ Cache created successfully! {original_count} activities cached.",
                     f"Compression: {compression_ratio:.1f}% reduction "
-                    f"({round(original_size/1024, 1)}KB → {round(parquet_size/1024, 1)}KB)."
+                    f"({round(original_size / 1024, 1)}KB → {round(parquet_size / 1024, 1)}KB).",
                 ]
 
             # Add categorization info
@@ -366,8 +384,7 @@ class CachePreparationTool(BaseTool):
             elif fit_dir_path and ftp > 0 and not fit_only_mode:
                 # Only mention "attempted" for CSV mode with optional FIT enrichment
                 message_parts.append(
-                    f"Zone enrichment attempted but no power data found. "
-                    f"Reason: {enrichment_summary or 'Unknown'}"
+                    f"Zone enrichment attempted but no power data found. Reason: {enrichment_summary or 'Unknown'}"
                 )
             elif not fit_dir_path and not fit_only_mode:
                 message_parts.append("Zone enrichment skipped (no FIT directory provided).")
@@ -385,26 +402,17 @@ class CachePreparationTool(BaseTool):
                 "compression_percent": round(compression_ratio, 1),
                 "zone_enriched": zone_enriched,
                 "enrichment_summary": enrichment_summary,
-                "message": " ".join(message_parts)
+                "message": " ".join(message_parts),
             }
-            return ToolExecutionResult(
-                success=True,
-                data=result_data,
-                format="json"
-            )
+            return ToolExecutionResult(success=True, data=result_data, format="json")
 
         except Exception as e:
             error_data = {
                 "success": False,
                 "error": str(e),
-                "message": f"❌ Failed to create cache: {str(e)}"
+                "message": f"❌ Failed to create cache: {str(e)}",
             }
-            return ToolExecutionResult(
-                success=False,
-                data=error_data,
-                format="json",
-                errors=[str(e)]
-            )
+            return ToolExecutionResult(success=False, data=error_data, format="json", errors=[str(e)])
 
 
 # Register tool on module import

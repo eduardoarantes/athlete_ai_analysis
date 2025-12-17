@@ -10,7 +10,6 @@ from __future__ import annotations
 import json
 import logging
 from datetime import datetime
-from pathlib import Path
 from typing import Any
 
 from cycling_ai.orchestration.base import (
@@ -91,9 +90,7 @@ class ReportPreparationPhase(BasePhase):
 
             # Update execution time if not already set
             if result.execution_time_seconds == 0:
-                result.execution_time_seconds = (
-                    datetime.now() - phase_start
-                ).total_seconds()
+                result.execution_time_seconds = (datetime.now() - phase_start).total_seconds()
 
             # Notify completion or failure
             if context.progress_callback:
@@ -106,10 +103,7 @@ class ReportPreparationPhase(BasePhase):
             execution_time = (datetime.now() - phase_start).total_seconds()
             error_msg = f"{type(e).__name__}: {str(e)}"
 
-            logger.error(
-                f"Phase {self.phase_name} failed after {execution_time:.2f}s: "
-                f"{error_msg}"
-            )
+            logger.error(f"Phase {self.phase_name} failed after {execution_time:.2f}s: {error_msg}")
 
             result = PhaseResult(
                 phase_name=self.phase_name,
@@ -142,8 +136,7 @@ class ReportPreparationPhase(BasePhase):
         for key in required_keys:
             if key not in context.previous_phase_data:
                 raise ValueError(
-                    f"Missing required data from previous phases: {key}. "
-                    f"Phase 4 requires data from Phases 2 and 3."
+                    f"Missing required data from previous phases: {key}. Phase 4 requires data from Phases 2 and 3."
                 )
 
     def _execute_phase_logic(self, context: PhaseContext) -> PhaseResult:
@@ -159,8 +152,8 @@ class ReportPreparationPhase(BasePhase):
         from cycling_ai.tools.report_data_extractor import (
             consolidate_athlete_data,
             create_report_data,
-            load_athlete_profile,
             find_athlete_id_from_path,
+            load_athlete_profile,
         )
 
         phase_start = datetime.now()
@@ -180,9 +173,7 @@ class ReportPreparationPhase(BasePhase):
 
         # Validate training_plan is a dict (required by consolidate_athlete_data)
         if not isinstance(training_plan_raw, dict):
-            raise ValueError(
-                f"Training plan data must be a dict, got {type(training_plan_raw)}"
-            )
+            raise ValueError(f"Training plan data must be a dict, got {type(training_plan_raw)}")
 
         training_plan: dict[str, Any] = training_plan_raw
 
@@ -192,9 +183,7 @@ class ReportPreparationPhase(BasePhase):
         athlete_id = find_athlete_id_from_path(context.config.athlete_profile_path)
         athlete_name = context.config.athlete_profile_path.parent.name
 
-        logger.info(
-            f"[PHASE 4] Athlete: {athlete_name} (ID: {athlete_id}), FTP: {profile.get('ftp', 'N/A')}"
-        )
+        logger.info(f"[PHASE 4] Athlete: {athlete_name} (ID: {athlete_id}), FTP: {profile.get('ftp', 'N/A')}")
 
         # Create a session for traceability
         report_session = context.session_manager.create_session(
@@ -239,10 +228,7 @@ class ReportPreparationPhase(BasePhase):
         with open(output_path, "w") as f:
             json.dump(report_data, f, indent=2)
 
-        logger.info(
-            f"[PHASE 4] report_data.json saved successfully, "
-            f"size: {output_path.stat().st_size} bytes"
-        )
+        logger.info(f"[PHASE 4] report_data.json saved successfully, size: {output_path.stat().st_size} bytes")
 
         # Build execution result
         execution_time = (datetime.now() - phase_start).total_seconds()
@@ -274,9 +260,7 @@ class ReportPreparationPhase(BasePhase):
 
     # Abstract method implementations (required by BasePhase, but not used by Phase 4)
 
-    def _get_system_prompt(
-        self, config: dict[str, Any], context: PhaseContext
-    ) -> str:
+    def _get_system_prompt(self, config: dict[str, Any], context: PhaseContext) -> str:
         """
         Get system prompt (not used by Phase 4).
 
@@ -289,9 +273,7 @@ class ReportPreparationPhase(BasePhase):
         """
         return ""
 
-    def _get_user_message(
-        self, config: dict[str, Any], context: PhaseContext
-    ) -> str:
+    def _get_user_message(self, config: dict[str, Any], context: PhaseContext) -> str:
         """
         Get user message (not used by Phase 4).
 

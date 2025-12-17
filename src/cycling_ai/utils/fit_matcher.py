@@ -3,16 +3,13 @@ Utility for matching CSV activity records with FIT files.
 
 Handles different file naming conventions and directory structures.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
 
 
-def find_fit_file(
-    activity_id: int | str,
-    fit_base_dir: Path,
-    filename_hint: str | None = None
-) -> Path | None:
+def find_fit_file(activity_id: int | str, fit_base_dir: Path, filename_hint: str | None = None) -> Path | None:
     """
     Find FIT file for a given activity.
 

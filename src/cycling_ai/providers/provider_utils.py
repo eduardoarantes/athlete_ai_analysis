@@ -4,6 +4,7 @@ Shared utilities for LLM provider adapters.
 Common functionality used by multiple provider implementations including
 retry logic, error handling, and schema conversion helpers.
 """
+
 from __future__ import annotations
 
 import functools

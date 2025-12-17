@@ -25,10 +25,6 @@ from cycling_ai.core.athlete_validation import (
     validate_training_availability,
     validate_weight,
 )
-from cycling_ai.orchestration.profile_onboarding import (
-    PartialProfile,
-    ProfileOnboardingManager,
-)
 from cycling_ai.tools.base import (
     BaseTool,
     ToolDefinition,
@@ -154,9 +150,7 @@ class UpdateProfileFieldTool(BaseTool):
                 format="json",
                 metadata={
                     "message": f"Updated {field_name}",
-                    "context_updates": {
-                        "partial_profile": session_context["partial_profile"]
-                    },
+                    "context_updates": {"partial_profile": session_context["partial_profile"]},
                 },
             )
 
@@ -227,9 +221,7 @@ class UpdateProfileFieldTool(BaseTool):
             try:
                 max_hr_val = int(value)
             except (TypeError, ValueError):
-                raise ValueError(
-                    f"Maximum heart rate must be a whole number, got: {value}"
-                ) from None
+                raise ValueError(f"Maximum heart rate must be a whole number, got: {value}") from None
             is_valid, error_msg = validate_max_hr(max_hr_val)
             if not is_valid:
                 raise ValueError(error_msg)

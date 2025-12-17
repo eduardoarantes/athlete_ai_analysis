@@ -4,9 +4,10 @@ Athlete profile validation logic.
 Single source of truth for all athlete profile field validation.
 Consolidates validation from profile_onboarding.py and profile_creation_tools.py.
 """
+
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Any
 
 
 class ValidationResult:
@@ -145,9 +146,15 @@ def validate_max_hr(max_hr: int) -> tuple[bool, str]:
     if not isinstance(max_hr, int):
         return False, "Maximum heart rate must be a whole number"
     if max_hr < MAX_HR_MIN_BPM:
-        return False, f"Maximum heart rate must be between {MAX_HR_MIN_BPM} and {MAX_HR_MAX_BPM} BPM"
+        return (
+            False,
+            f"Maximum heart rate must be between {MAX_HR_MIN_BPM} and {MAX_HR_MAX_BPM} BPM",
+        )
     if max_hr > MAX_HR_MAX_BPM:
-        return False, f"Maximum heart rate must be between {MAX_HR_MIN_BPM} and {MAX_HR_MAX_BPM} BPM"
+        return (
+            False,
+            f"Maximum heart rate must be between {MAX_HR_MIN_BPM} and {MAX_HR_MAX_BPM} BPM",
+        )
     return True, ""
 
 
@@ -171,9 +178,15 @@ def validate_training_availability(hours: float) -> tuple[bool, str]:
     if not isinstance(hours, (int, float)):
         return False, "Training availability must be a number"
     if hours < TRAINING_HOURS_MIN:
-        return False, f"Training availability must be between {TRAINING_HOURS_MIN} and {TRAINING_HOURS_MAX} hours per week"
+        return (
+            False,
+            f"Training availability must be between {TRAINING_HOURS_MIN} and {TRAINING_HOURS_MAX} hours per week",
+        )
     if hours > TRAINING_HOURS_MAX:
-        return False, f"Training availability must be between {TRAINING_HOURS_MIN} and {TRAINING_HOURS_MAX} hours per week"
+        return (
+            False,
+            f"Training availability must be between {TRAINING_HOURS_MIN} and {TRAINING_HOURS_MAX} hours per week",
+        )
     return True, ""
 
 
@@ -337,7 +350,8 @@ def validate_field(field_name: str, value: Any) -> tuple[bool, str]:
         raise ValueError(f"No validator registered for field: {field_name}")
 
     validator = VALIDATORS[field_name]
-    return validator(value)
+    result: tuple[bool, str] = validator(value)
+    return result
 
 
 def get_field_constraints(field_name: str) -> dict[str, Any]:
@@ -378,4 +392,5 @@ def get_field_constraints(field_name: str) -> dict[str, Any]:
     if field_name not in constraints_map:
         raise ValueError(f"No constraints defined for field: {field_name}")
 
-    return constraints_map[field_name]
+    result: dict[str, Any] = dict(constraints_map[field_name])  # type: ignore[call-overload]
+    return result

@@ -56,9 +56,7 @@ export interface AdminAuthResult {
  * }
  * ```
  */
-export async function requireAdmin(
-  supabase: SupabaseClient
-): Promise<AdminAuthResult> {
+export async function requireAdmin(supabase: SupabaseClient): Promise<AdminAuthResult> {
   try {
     // Check if user is authenticated
     const {

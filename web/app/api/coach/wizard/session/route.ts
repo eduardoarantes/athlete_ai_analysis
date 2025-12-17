@@ -44,10 +44,7 @@ export async function GET() {
     })
   } catch (error) {
     console.error('Load session error:', error)
-    return NextResponse.json(
-      { error: 'Failed to load session' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to load session' }, { status: 500 })
   }
 }
 
@@ -124,10 +121,7 @@ export async function POST(request: Request) {
     }
   } catch (error) {
     console.error('Save session error:', error)
-    return NextResponse.json(
-      { error: 'Failed to save session' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to save session' }, { status: 500 })
   }
 }
 
@@ -160,9 +154,6 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Clear session error:', error)
-    return NextResponse.json(
-      { error: 'Failed to clear session' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to clear session' }, { status: 500 })
   }
 }

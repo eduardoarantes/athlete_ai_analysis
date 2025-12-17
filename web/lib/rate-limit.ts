@@ -136,9 +136,6 @@ export const rateLimiters = {
 /**
  * Helper function to get client identifier (user ID or IP address)
  */
-export function getClientIdentifier(
-  userId: string | null,
-  ipAddress: string | null
-): string {
+export function getClientIdentifier(userId: string | null, ipAddress: string | null): string {
   return userId || ipAddress || 'anonymous'
 }

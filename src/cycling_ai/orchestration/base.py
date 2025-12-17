@@ -205,10 +205,7 @@ class WorkflowConfig:
 
         # Validate FIT-only mode requirements
         if self.fit_only_mode and self.csv_file_path is not None:
-            raise ValueError(
-                "fit_only_mode=True but csv_file_path was provided. "
-                "Remove CSV or set fit_only_mode=False"
-            )
+            raise ValueError("fit_only_mode=True but csv_file_path was provided. Remove CSV or set fit_only_mode=False")
 
         if self.fit_only_mode and self.fit_dir_path is None:
             raise ValueError("fit_only_mode=True requires fit_dir_path to be provided")
@@ -261,9 +258,7 @@ class WorkflowResult:
 
         Workflow is successful if all non-skipped phases completed.
         """
-        return all(
-            r.success for r in self.phase_results if r.status != PhaseStatus.SKIPPED
-        )
+        return all(r.success for r in self.phase_results if r.status != PhaseStatus.SKIPPED)
 
     def get_phase_result(self, phase_name: str) -> PhaseResult | None:
         """

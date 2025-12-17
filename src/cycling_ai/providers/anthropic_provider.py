@@ -4,6 +4,7 @@ Anthropic provider adapter.
 Implements the provider interface for Anthropic's Claude models.
 Supports native tool use via the Messages API.
 """
+
 from __future__ import annotations
 
 import json
@@ -47,10 +48,7 @@ def _normalize_schema_types(schema: dict[str, Any]) -> dict[str, Any]:
             result[key] = value.lower()
         elif key == "properties" and isinstance(value, dict):
             # Recursively normalize nested properties
-            result[key] = {
-                prop_name: _normalize_schema_types(prop_value)
-                for prop_name, prop_value in value.items()
-            }
+            result[key] = {prop_name: _normalize_schema_types(prop_value) for prop_name, prop_value in value.items()}
         elif key == "items" and isinstance(value, dict):
             # Recursively normalize array item schemas
             result[key] = _normalize_schema_types(value)
@@ -228,14 +226,18 @@ class AnthropicProvider(BaseProvider):
                     if msg.tool_results and len(msg.tool_results) > 0:
                         tool_call_id = msg.tool_results[0].get("tool_call_id", "unknown")
 
-                    user_messages.append({
-                        "role": "user",
-                        "content": [{
-                            "type": "tool_result",
-                            "tool_use_id": tool_call_id,
-                            "content": json.dumps(tool_data),
-                        }]
-                    })
+                    user_messages.append(
+                        {
+                            "role": "user",
+                            "content": [
+                                {
+                                    "type": "tool_result",
+                                    "tool_use_id": tool_call_id,
+                                    "content": json.dumps(tool_data),
+                                }
+                            ],
+                        }
+                    )
                 elif msg.role == "assistant":
                     # Assistant messages with tool calls need special handling
                     if msg.tool_calls:
@@ -248,17 +250,21 @@ class AnthropicProvider(BaseProvider):
 
                         # Add tool_use blocks
                         for tc in msg.tool_calls:
-                            content_blocks.append({
-                                "type": "tool_use",
-                                "id": tc.get("id"),
-                                "name": tc.get("name"),
-                                "input": tc.get("arguments", {}),
-                            })
+                            content_blocks.append(
+                                {
+                                    "type": "tool_use",
+                                    "id": tc.get("id"),
+                                    "name": tc.get("name"),
+                                    "input": tc.get("arguments", {}),
+                                }
+                            )
 
-                        user_messages.append({
-                            "role": "assistant",
-                            "content": content_blocks,
-                        })
+                        user_messages.append(
+                            {
+                                "role": "assistant",
+                                "content": content_blocks,
+                            }
+                        )
                     else:
                         # Regular assistant message (skip if empty to avoid API errors)
                         if msg.content:

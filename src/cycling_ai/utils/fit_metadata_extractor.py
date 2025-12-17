@@ -8,6 +8,7 @@ without requiring a CSV export from Strava. It extracts all essential metadata
 Uses fitdecode library for metadata extraction. fitdecode handles corrupted files
 from devices like Coros Dura better than fitparse.
 """
+
 from __future__ import annotations
 
 import gzip
@@ -54,7 +55,7 @@ def extract_fit_metadata(fit_file_path: str | Path) -> dict[str, Any] | None:
 
     try:
         if fit_path.suffix == ".gz":
-            temp_file = tempfile.NamedTemporaryFile(suffix=".fit", delete=False)
+            temp_file = tempfile.NamedTemporaryFile(suffix=".fit", delete=False)  # noqa: SIM115
             with gzip.open(fit_path, "rb") as f_in:
                 temp_file.write(f_in.read())
             temp_file.close()
@@ -65,7 +66,7 @@ def extract_fit_metadata(fit_file_path: str | Path) -> dict[str, Any] | None:
         fit_reader = fitdecode.FitReader(
             file_to_parse,
             check_crc=fitdecode.CrcCheck.DISABLED,
-            error_handling=fitdecode.ErrorHandling.IGNORE
+            error_handling=fitdecode.ErrorHandling.IGNORE,
         )
 
         # Get session message (contains summary data)
@@ -99,16 +100,16 @@ def extract_fit_metadata(fit_file_path: str | Path) -> dict[str, Any] | None:
         sub_sport_raw = get_value("sub_sport", None)
 
         # Convert sport enum to string if needed
-        if isinstance(sport_raw, (int, float)):
-            sport = "cycling"  # Default if numeric
-        else:
-            sport = str(sport_raw).lower() if sport_raw else "cycling"
+        sport = (
+            "cycling" if isinstance(sport_raw, (int, float)) else (str(sport_raw).lower() if sport_raw else "cycling")
+        )
 
         # Convert sub_sport enum to string if needed
+        sub_sport: str | None
         if sub_sport_raw and not isinstance(sub_sport_raw, str):
             sub_sport = str(sub_sport_raw).lower()
         else:
-            sub_sport = sub_sport_raw if sub_sport_raw else None
+            sub_sport = str(sub_sport_raw) if sub_sport_raw else None
 
         # Determine Activity Type for display (like Strava CSV format)
         # Map sport to Strava-style activity type names
@@ -145,7 +146,9 @@ def extract_fit_metadata(fit_file_path: str | Path) -> dict[str, Any] | None:
         return {
             "Activity ID": int(activity_id) if activity_id.isdigit() else activity_id,
             "Activity Date": activity_date,
-            "Activity Name": f"{activity_type_display} - {activity_date.strftime('%B %d, %Y')}" if isinstance(activity_date, datetime) else activity_type_display,
+            "Activity Name": f"{activity_type_display} - {activity_date.strftime('%B %d, %Y')}"
+            if isinstance(activity_date, datetime)
+            else activity_type_display,
             "Activity Type": activity_type_display,  # Strava-style display name
             "sport": sport,  # Raw sport type (lowercase, normalized)
             "sub_sport": sub_sport,  # Sub-sport detail (e.g., road, mountain, indoor)
@@ -218,7 +221,7 @@ def scan_fit_directory(fit_dir: str | Path) -> list[dict[str, Any]]:
         return []
 
     # Find all FIT files recursively
-    fit_files = []
+    fit_files: list[Path] = []
     for pattern in ["**/*.fit", "**/*.fit.gz"]:
         fit_files.extend(fit_dir_path.glob(pattern))
 

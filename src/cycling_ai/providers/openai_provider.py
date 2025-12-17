@@ -4,6 +4,7 @@ OpenAI provider adapter.
 Implements the provider interface for OpenAI's GPT models (GPT-4, GPT-3.5-turbo).
 Supports native function calling and tool use.
 """
+
 from __future__ import annotations
 
 import json
@@ -193,6 +194,7 @@ class OpenAIProvider(BaseProvider):
             >>> result = provider.invoke_tool("analyze_performance", {"period_months": 6})
         """
         import logging
+
         from cycling_ai.tools.registry import get_global_registry
 
         logger = logging.getLogger(__name__)
@@ -261,9 +263,9 @@ class OpenAIProvider(BaseProvider):
         """
         try:
             # Convert messages to OpenAI format
-            openai_messages = []
+            openai_messages: list[dict[str, Any]] = []
             for m in messages:
-                msg = {"role": m.role, "content": m.content}
+                msg: dict[str, Any] = {"role": m.role, "content": m.content}
 
                 # If assistant message has tool_calls, include them
                 if m.role == "assistant" and m.tool_calls:
@@ -304,19 +306,27 @@ class OpenAIProvider(BaseProvider):
             # IMPORTANT: Check reasoning models FIRST before checking gpt-4o/gpt-5
             # (since "gpt-4o-reasoning" contains "gpt-4o")
 
-             # --- Token parameter logic ---
-            if any(m in model_name for m in [
-                "gpt-3.5",          # legacy models
-                "gpt-4-0613",
-                "gpt-4-turbo-1106"
-            ]):
+            # --- Token parameter logic ---
+            if any(
+                m in model_name
+                for m in [
+                    "gpt-3.5",  # legacy models
+                    "gpt-4-0613",
+                    "gpt-4-turbo-1106",
+                ]
+            ):
                 request_params["max_tokens"] = self.config.max_tokens
 
-            elif any(m in model_name for m in [
-                "gpt-4.1",          # modern unified API
-                "gpt-4o", "gpt-4o-mini",
-                "gpt-5", "gpt-5-mini"
-            ]):
+            elif any(
+                m in model_name
+                for m in [
+                    "gpt-4.1",  # modern unified API
+                    "gpt-4o",
+                    "gpt-4o-mini",
+                    "gpt-5",
+                    "gpt-5-mini",
+                ]
+            ):
                 request_params["max_completion_tokens"] = self.config.max_tokens
 
             elif "reasoning" in model_name:
@@ -328,7 +338,7 @@ class OpenAIProvider(BaseProvider):
 
             # --- Temperature logic ---
             # Reasoning models only accept temperature=1
-            if "reasoning" in model_name or any(m in model_name for m in ["o1", "o3"])  or model_name == "gpt-5-mini":
+            if "reasoning" in model_name or any(m in model_name for m in ["o1", "o3"]) or model_name == "gpt-5-mini":
                 request_params["temperature"] = 1
             else:
                 request_params["temperature"] = self.config.temperature
@@ -362,16 +372,16 @@ class OpenAIProvider(BaseProvider):
                 for tc in response.choices[0].message.tool_calls:
                     try:
                         arguments = json.loads(tc.function.arguments)
-                        tool_calls.append({
-                            "name": tc.function.name,
-                            "arguments": arguments,
-                            "id": tc.id,
-                        })
+                        tool_calls.append(
+                            {
+                                "name": tc.function.name,
+                                "arguments": arguments,
+                                "id": tc.id,
+                            }
+                        )
                     except json.JSONDecodeError as e:
                         # Log the malformed JSON for debugging
-                        logger.error(
-                            f"Failed to parse tool call arguments for {tc.function.name}: {e}"
-                        )
+                        logger.error(f"Failed to parse tool call arguments for {tc.function.name}: {e}")
                         logger.error(f"Malformed JSON (first 500 chars): {tc.function.arguments[:500]}")
                         logger.error(f"Malformed JSON (last 500 chars): {tc.function.arguments[-500:]}")
                         logger.error(f"JSON length: {len(tc.function.arguments)} characters")
@@ -406,6 +416,7 @@ class OpenAIProvider(BaseProvider):
             except Exception as e:
                 # Don't fail the request if logging fails
                 import logging as log
+
                 log.warning(f"Failed to log LLM interaction: {e}")
 
             return completion_response

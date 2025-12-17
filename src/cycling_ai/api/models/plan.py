@@ -3,6 +3,7 @@ Pydantic models for training plan generation.
 
 Defines request/response models for plan-related endpoints.
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -18,16 +19,10 @@ class AthleteProfileData(BaseModel):
     max_hr: int | None = Field(None, gt=0, le=220, description="Maximum heart rate")
     age: int = Field(..., gt=0, le=120, description="Athlete age")
     goals: list[str] | None = Field(None, description="Training goals")
-    training_availability: dict[str, Any] | None = Field(
-        None, description="Available training days and hours"
-    )
+    training_availability: dict[str, Any] | None = Field(None, description="Available training days and hours")
     experience_level: str | None = Field(None, description="Experience level")
-    weekly_hours_available: float | None = Field(
-        None, gt=0, description="Available training hours per week"
-    )
-    training_days_per_week: int | None = Field(
-        None, ge=3, le=7, description="Number of training days per week"
-    )
+    weekly_hours_available: float | None = Field(None, gt=0, description="Available training hours per week")
+    training_days_per_week: int | None = Field(None, ge=3, le=7, description="Number of training days per week")
 
     model_config = {
         "json_schema_extra": {
@@ -54,9 +49,7 @@ class AthleteProfileData(BaseModel):
 class TrainingPlanRequest(BaseModel):
     """Request model for training plan generation."""
 
-    athlete_profile: AthleteProfileData = Field(
-        ..., description="Athlete profile information"
-    )
+    athlete_profile: AthleteProfileData = Field(..., description="Athlete profile information")
     weeks: int = Field(..., ge=4, le=24, description="Plan duration in weeks")
     target_ftp: float | None = Field(None, gt=0, description="Target FTP in watts")
 

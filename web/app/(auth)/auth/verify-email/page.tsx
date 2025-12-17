@@ -16,8 +16,8 @@ export default function VerifyEmailPage() {
 
             <div className="rounded-lg bg-blue-50 p-4 dark:bg-blue-950">
               <p className="text-sm text-blue-800 dark:text-blue-200">
-                <strong>Note:</strong> The link expires in 24 hours. If you don&apos;t see the email,
-                check your spam folder.
+                <strong>Note:</strong> The link expires in 24 hours. If you don&apos;t see the
+                email, check your spam folder.
               </p>
             </div>
           </div>

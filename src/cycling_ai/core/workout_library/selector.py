@@ -162,10 +162,7 @@ class WorkoutSelector:
 
         # Duration match (15 points, inverse of percentage difference)
         if target_duration_min > 0:
-            duration_diff_pct = (
-                abs(workout.base_duration_min - target_duration_min)
-                / target_duration_min
-            )
+            duration_diff_pct = abs(workout.base_duration_min - target_duration_min) / target_duration_min
             # Score inversely proportional to difference (0% diff = 15 pts, 100% diff = 0 pts)
             duration_score = max(0, 15 * (1 - min(duration_diff_pct, 1.0)))
             score += duration_score
@@ -248,10 +245,7 @@ class WorkoutSelector:
 
         # Check if workout has variable components
         if workout.variable_components is None:
-            logger.warning(
-                f"Workout {workout.id} cannot be adjusted "
-                f"(no variable_components), using original TSS"
-            )
+            logger.warning(f"Workout {workout.id} cannot be adjusted (no variable_components), using original TSS")
             return deepcopy(workout)
 
         # Calculate adjustment needed
@@ -287,9 +281,7 @@ class WorkoutSelector:
             duration_per_unit = var_comp.duration_per_unit_min or 0
 
             if tss_per_unit == 0:
-                logger.warning(
-                    f"Workout {workout.id} has tss_per_unit=0, cannot adjust TSS"
-                )
+                logger.warning(f"Workout {workout.id} has tss_per_unit=0, cannot adjust TSS")
                 return deepcopy(workout)
 
             # Calculate units needed
@@ -318,9 +310,7 @@ class WorkoutSelector:
             )
             return adjusted_workout
         else:
-            logger.warning(
-                f"Unknown adjustable_field: {adjustable_field}, using original"
-            )
+            logger.warning(f"Unknown adjustable_field: {adjustable_field}, using original")
             return deepcopy(workout)
 
     def _get_current_value(self, workout: Workout) -> float:
@@ -395,17 +385,10 @@ class WorkoutSelector:
         # Normalize phase name using mapping (Base → Foundation, etc.)
         normalized_phase = PHASE_NAME_MAPPING.get(target_phase, target_phase)
         if normalized_phase != target_phase:
-            logger.info(
-                f"Mapped phase '{target_phase}' → '{normalized_phase}' "
-                f"for library compatibility"
-            )
+            logger.info(f"Mapped phase '{target_phase}' → '{normalized_phase}' for library compatibility")
 
         # Filter candidates by phase (mandatory)
-        candidates = [
-            w
-            for w in self.library.workouts
-            if w.suitable_phases and normalized_phase in w.suitable_phases
-        ]
+        candidates = [w for w in self.library.workouts if w.suitable_phases and normalized_phase in w.suitable_phases]
 
         # Filter out excluded workout IDs (hard constraint for same-week duplicates)
         if exclude_ids:
@@ -413,10 +396,7 @@ class WorkoutSelector:
             logger.debug(f"Filtered out {len(exclude_ids)} excluded workout IDs")
 
         if not candidates:
-            logger.warning(
-                f"No workouts found for phase={normalized_phase} "
-                f"(original: {target_phase})"
-            )
+            logger.warning(f"No workouts found for phase={normalized_phase} (original: {target_phase})")
             return None
 
         # Score all candidates
@@ -444,8 +424,7 @@ class WorkoutSelector:
         )
 
         logger.info(
-            f"Selected workout: {selected.name} "
-            f"(type={selected.type}, duration={selected.base_duration_min:.0f}min)"
+            f"Selected workout: {selected.name} (type={selected.type}, duration={selected.base_duration_min:.0f}min)"
         )
 
         return selected

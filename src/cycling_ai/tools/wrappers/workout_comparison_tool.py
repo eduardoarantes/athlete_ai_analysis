@@ -8,7 +8,6 @@ to LLM agents.
 
 from __future__ import annotations
 
-import json
 import logging
 from datetime import datetime
 from pathlib import Path
@@ -120,9 +119,7 @@ class CompareWorkoutTool(BaseTool):
                     success=False,
                     data=None,
                     format="json",
-                    errors=[
-                        f"Invalid date format: {date}. Expected format: YYYY-MM-DD (e.g., 2024-11-04)"
-                    ],
+                    errors=[f"Invalid date format: {date}. Expected format: YYYY-MM-DD (e.g., 2024-11-04)"],
                 )
 
             # Validate file paths
@@ -309,9 +306,7 @@ class CompareWeeklyWorkoutsTool(BaseTool):
             activities_csv_path = kwargs.get("activities_csv_path")
             athlete_profile_path = kwargs.get("athlete_profile_path")
 
-            if not all(
-                [week_start_date, training_plan_path, activities_csv_path, athlete_profile_path]
-            ):
+            if not all([week_start_date, training_plan_path, activities_csv_path, athlete_profile_path]):
                 return ToolExecutionResult(
                     success=False,
                     data=None,
@@ -319,9 +314,7 @@ class CompareWeeklyWorkoutsTool(BaseTool):
                     errors=["Missing required parameters. All parameters are required."],
                 )
 
-            logger.info(
-                f"[COMPARE WEEKLY WORKOUTS TOOL] Comparing week starting: {week_start_date}"
-            )
+            logger.info(f"[COMPARE WEEKLY WORKOUTS TOOL] Comparing week starting: {week_start_date}")
 
             # Validate date format
             try:
@@ -332,9 +325,7 @@ class CompareWeeklyWorkoutsTool(BaseTool):
                     success=False,
                     data=None,
                     format="json",
-                    errors=[
-                        f"Invalid date format: {week_start_date}. Expected format: YYYY-MM-DD (e.g., 2024-11-04)"
-                    ],
+                    errors=[f"Invalid date format: {week_start_date}. Expected format: YYYY-MM-DD (e.g., 2024-11-04)"],
                 )
 
             # Validate file paths
@@ -410,9 +401,7 @@ class CompareWeeklyWorkoutsTool(BaseTool):
                         "pattern_type": pattern.pattern_type,
                         "description": pattern.description,
                         "severity": pattern.severity,
-                        "affected_workouts": [
-                            date.strftime("%Y-%m-%d") for date in pattern.affected_workouts
-                        ],
+                        "affected_workouts": [date.strftime("%Y-%m-%d") for date in pattern.affected_workouts],
                     }
                     for pattern in weekly_comparison.patterns
                 ],

@@ -23,31 +23,33 @@ export function StravaSyncStatus() {
   const [error, setError] = useState<string | null>(null)
 
   // Use polling hook for background job status
-  const { status: jobStatus, isPolling, startPolling, reset: resetPolling } = useSyncPolling(
-    currentJobId,
-    {
-      onComplete: (completedJob) => {
-        if (completedJob.status === 'completed' && completedJob.result) {
-          const message = `Synced ${completedJob.result.activitiesSynced} activities`
-          toast.success(message, {
-            duration: 5000,
-            icon: '✅',
-          })
-          loadStatus() // Reload status to get updated counts
-        } else if (completedJob.status === 'failed') {
-          const errorMsg = completedJob.error || 'Sync failed'
-          setError(errorMsg)
-          toast.error(errorMsg)
-        }
-        setCurrentJobId(null)
-      },
-      onError: (errorMsg) => {
+  const {
+    status: jobStatus,
+    isPolling,
+    startPolling,
+    reset: resetPolling,
+  } = useSyncPolling(currentJobId, {
+    onComplete: (completedJob) => {
+      if (completedJob.status === 'completed' && completedJob.result) {
+        const message = `Synced ${completedJob.result.activitiesSynced} activities`
+        toast.success(message, {
+          duration: 5000,
+          icon: '✅',
+        })
+        loadStatus() // Reload status to get updated counts
+      } else if (completedJob.status === 'failed') {
+        const errorMsg = completedJob.error || 'Sync failed'
         setError(errorMsg)
         toast.error(errorMsg)
-        setCurrentJobId(null)
-      },
-    }
-  )
+      }
+      setCurrentJobId(null)
+    },
+    onError: (errorMsg) => {
+      setError(errorMsg)
+      toast.error(errorMsg)
+      setCurrentJobId(null)
+    },
+  })
 
   useEffect(() => {
     loadStatus()
@@ -104,7 +106,7 @@ export function StravaSyncStatus() {
         setError(error)
         toast.error(error)
       }
-    } catch (err) {
+    } catch {
       const error = 'Failed to start sync'
       setError(error)
       toast.error(error)

@@ -4,15 +4,15 @@ Plan Service Layer.
 Service that wraps TrainingPlanTool for FastAPI integration.
 Converts API request models to tool parameters and handles async execution.
 """
+
 from __future__ import annotations
 
-import json
 import logging
 from pathlib import Path
 from typing import Any
 
 from cycling_ai.api.models.plan import AthleteProfileData, TrainingPlanRequest
-from cycling_ai.core.athlete import AthleteProfile, load_athlete_profile
+from cycling_ai.core.athlete import load_athlete_profile
 from cycling_ai.tools.wrappers.training_plan_tool import TrainingPlanTool
 
 logger = logging.getLogger(__name__)
@@ -51,17 +51,12 @@ class PlanService:
 
         # Validate profile path exists
         if not athlete_profile_path.exists():
-            raise ValueError(
-                f"Athlete profile not found at path: {athlete_profile_path}"
-            )
+            raise ValueError(f"Athlete profile not found at path: {athlete_profile_path}")
 
         # Load athlete profile to get current FTP
         try:
             athlete_profile = load_athlete_profile(athlete_profile_path)
-            logger.info(
-                f"[PLAN SERVICE] Loaded athlete profile: {athlete_profile.name}, "
-                f"FTP: {athlete_profile.ftp}"
-            )
+            logger.info(f"[PLAN SERVICE] Loaded athlete profile: {athlete_profile.name}, FTP: {athlete_profile.ftp}")
         except Exception as e:
             logger.error(f"[PLAN SERVICE] Failed to load athlete profile: {str(e)}")
             raise ValueError(f"Error loading athlete profile: {str(e)}") from e

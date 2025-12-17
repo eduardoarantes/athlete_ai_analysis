@@ -111,9 +111,7 @@ export default function ActivitiesPage() {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">{t('title')}</h1>
-          <p className="text-muted-foreground mt-2">
-            {t('subtitle')}
-          </p>
+          <p className="text-muted-foreground mt-2">{t('subtitle')}</p>
         </div>
 
         {/* Filters */}
@@ -197,9 +195,7 @@ export default function ActivitiesPage() {
                   <label className="text-sm font-medium">{t('order')}:</label>
                   <select
                     value={sortOrder}
-                    onChange={(e) =>
-                      setSortOrder(e.target.value as 'asc' | 'desc')
-                    }
+                    onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
                     className="px-3 py-1 border rounded-md text-sm"
                   >
                     <option value="desc">{t('descending')}</option>
@@ -217,14 +213,10 @@ export default function ActivitiesPage() {
 
         {/* Activities View */}
         {loading ? (
-          <Card className="p-8 text-center text-muted-foreground">
-            {t('loading')}
-          </Card>
+          <Card className="p-8 text-center text-muted-foreground">{t('loading')}</Card>
         ) : activities.length === 0 ? (
           <Card className="p-8 text-center">
-            <p className="text-muted-foreground">
-              {t('noActivities')}
-            </p>
+            <p className="text-muted-foreground">{t('noActivities')}</p>
           </Card>
         ) : viewMode === 'table' ? (
           <Card className="overflow-hidden">
@@ -232,36 +224,16 @@ export default function ActivitiesPage() {
               <table className="w-full">
                 <thead className="bg-muted">
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-medium">
-                      {t('date')}
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium">
-                      {t('activity')}
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium">
-                      {t('type')}
-                    </th>
-                    <th className="px-4 py-3 text-right text-sm font-medium">
-                      {t('distance')}
-                    </th>
-                    <th className="px-4 py-3 text-right text-sm font-medium">
-                      {t('duration')}
-                    </th>
-                    <th className="px-4 py-3 text-right text-sm font-medium">
-                      {t('elevation')}
-                    </th>
-                    <th className="px-4 py-3 text-right text-sm font-medium">
-                      {t('power')}
-                    </th>
-                    <th className="px-4 py-3 text-right text-sm font-medium">
-                      {t('hr')}
-                    </th>
-                    <th className="px-4 py-3 text-right text-sm font-medium">
-                      {t('tss')}
-                    </th>
-                    <th className="px-4 py-3 text-center text-sm font-medium">
-                      {t('source')}
-                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">{t('date')}</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">{t('activity')}</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">{t('type')}</th>
+                    <th className="px-4 py-3 text-right text-sm font-medium">{t('distance')}</th>
+                    <th className="px-4 py-3 text-right text-sm font-medium">{t('duration')}</th>
+                    <th className="px-4 py-3 text-right text-sm font-medium">{t('elevation')}</th>
+                    <th className="px-4 py-3 text-right text-sm font-medium">{t('power')}</th>
+                    <th className="px-4 py-3 text-right text-sm font-medium">{t('hr')}</th>
+                    <th className="px-4 py-3 text-right text-sm font-medium">{t('tss')}</th>
+                    <th className="px-4 py-3 text-center text-sm font-medium">{t('source')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -273,9 +245,7 @@ export default function ActivitiesPage() {
                       <td className="px-4 py-3 text-sm text-muted-foreground">
                         {formatDate(activity.start_date)}
                       </td>
-                      <td className="px-4 py-3 text-sm font-medium">
-                        {activity.name}
-                      </td>
+                      <td className="px-4 py-3 text-sm font-medium">{activity.name}</td>
                       <td className="px-4 py-3 text-sm text-muted-foreground">
                         {activity.sport_type}
                       </td>
@@ -300,7 +270,9 @@ export default function ActivitiesPage() {
                       </td>
                       <td className="px-4 py-3 text-sm text-right">
                         {activity.tss != null ? (
-                          <span title={activity.tss_method ? t(`tssMethod.${activity.tss_method}`) : ''}>
+                          <span
+                            title={activity.tss_method ? t(`tssMethod.${activity.tss_method}`) : ''}
+                          >
                             {Math.round(activity.tss)}
                           </span>
                         ) : (
@@ -335,9 +307,7 @@ export default function ActivitiesPage() {
         {viewMode === 'table' && pagination.totalPages > 1 && (
           <div className="flex justify-center gap-2">
             <Button
-              onClick={() =>
-                setPagination((p) => ({ ...p, page: p.page - 1 }))
-              }
+              onClick={() => setPagination((p) => ({ ...p, page: p.page - 1 }))}
               disabled={pagination.page === 1}
               variant="outline"
             >
@@ -347,9 +317,7 @@ export default function ActivitiesPage() {
               {t('pageOf', { current: pagination.page, total: pagination.totalPages })}
             </div>
             <Button
-              onClick={() =>
-                setPagination((p) => ({ ...p, page: p.page + 1 }))
-              }
+              onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}
               disabled={pagination.page === pagination.totalPages}
               variant="outline"
             >

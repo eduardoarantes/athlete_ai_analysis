@@ -8,19 +8,17 @@ into the report_data.json format.
 
 import json
 import logging
-from pathlib import Path
-from typing import Dict, Any, List, Optional
-from datetime import datetime
 import re
+from datetime import datetime
+from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
 def extract_tool_result_from_jsonl(
-    jsonl_path: Path,
-    tool_name: str,
-    result_key: Optional[str] = None
-) -> Optional[Dict[str, Any]]:
+    jsonl_path: Path, tool_name: str, result_key: str | None = None
+) -> dict[str, Any] | None:
     """
     Extract tool result from JSONL interaction log.
 
@@ -35,7 +33,7 @@ def extract_tool_result_from_jsonl(
         Dict with tool result data or None if not found
     """
     try:
-        with open(jsonl_path, 'r') as f:
+        with open(jsonl_path) as f:
             interactions = []
             for line in f:
                 try:
@@ -49,10 +47,10 @@ def extract_tool_result_from_jsonl(
         tool_call_interaction_id = None
         for interaction in interactions:
             # Check output.tool_calls for the tool call
-            if 'output' in interaction and interaction['output'].get('tool_calls'):
-                for tool_call in interaction['output']['tool_calls']:
-                    if tool_call.get('name') == tool_name:
-                        tool_call_interaction_id = interaction.get('interaction_id')
+            if "output" in interaction and interaction["output"].get("tool_calls"):
+                for tool_call in interaction["output"]["tool_calls"]:
+                    if tool_call.get("name") == tool_name:
+                        tool_call_interaction_id = interaction.get("interaction_id")
                         # Don't break - keep looking for the last one
 
         if not tool_call_interaction_id:
@@ -65,30 +63,33 @@ def extract_tool_result_from_jsonl(
 
         # First check if the result is in the SAME interaction's output
         for interaction in interactions:
-            if interaction.get('interaction_id') == tool_call_interaction_id:
-                # Check if output.content has JSON data
-                if 'output' in interaction and interaction['output'].get('content'):
-                    content = interaction['output']['content']
-                    # Check if content contains the expected key (if provided)
-                    if result_key and result_key in content:
-                        try:
-                            tool_data = json.loads(content)
-                            return tool_data
-                        except json.JSONDecodeError:
-                            pass  # Fall through to check next interaction
+            # Check if this is the interaction we're looking for and it has output content
+            if (
+                interaction.get("interaction_id") == tool_call_interaction_id
+                and "output" in interaction
+                and interaction["output"].get("content")
+            ):
+                content = interaction["output"]["content"]
+                # Check if content contains the expected key (if provided)
+                if result_key and result_key in content:
+                    try:
+                        tool_data: dict[str, Any] = json.loads(content)
+                        return tool_data
+                    except json.JSONDecodeError:
+                        pass  # Fall through to check next interaction
 
         # If not found in same interaction, check NEXT interaction
         next_interaction_id = tool_call_interaction_id + 1
 
         for interaction in interactions:
-            if interaction.get('interaction_id') == next_interaction_id:
+            if interaction.get("interaction_id") == next_interaction_id:
                 # First try the output.content (for direct JSON responses)
-                if 'output' in interaction and interaction['output'].get('content'):
-                    content = interaction['output']['content']
+                if "output" in interaction and interaction["output"].get("content"):
+                    content = interaction["output"]["content"]
                     if result_key and result_key in content:
                         try:
-                            tool_data = json.loads(content)
-                            return tool_data
+                            inner_tool_data: dict[str, Any] = json.loads(content)
+                            return inner_tool_data
                         except json.JSONDecodeError:
                             pass  # Fall through to check input messages
 
@@ -105,7 +106,7 @@ def extract_tool_result_from_jsonl(
         return None
 
 
-def extract_training_plan_from_jsonl(jsonl_path: Path) -> Optional[Dict[str, Any]]:
+def extract_training_plan_from_jsonl(jsonl_path: Path) -> dict[str, Any] | None:
     """
     Extract training plan from JSONL interaction log.
 
@@ -117,10 +118,10 @@ def extract_training_plan_from_jsonl(jsonl_path: Path) -> Optional[Dict[str, Any
     Returns:
         Dict with training plan data or None if not found
     """
-    return extract_tool_result_from_jsonl(jsonl_path, 'finalize_training_plan', 'weekly_plan')
+    return extract_tool_result_from_jsonl(jsonl_path, "finalize_training_plan", "weekly_plan")
 
 
-def extract_performance_analysis_from_jsonl(jsonl_path: Path) -> Optional[Dict[str, Any]]:
+def extract_performance_analysis_from_jsonl(jsonl_path: Path) -> dict[str, Any] | None:
     """
     Extract performance analysis from JSONL interaction log.
 
@@ -132,14 +133,10 @@ def extract_performance_analysis_from_jsonl(jsonl_path: Path) -> Optional[Dict[s
     Returns:
         Dict with performance analysis data or None if not found
     """
-    return extract_tool_result_from_jsonl(jsonl_path, 'analyze_performance', 'key_trends')
+    return extract_tool_result_from_jsonl(jsonl_path, "analyze_performance", "key_trends")
 
 
-def _parse_tool_output(
-    interaction: Dict[str, Any],
-    source_path: Path,
-    result_key: Optional[str] = None
-) -> Dict[str, Any]:
+def _parse_tool_output(interaction: dict[str, Any], source_path: Path, result_key: str | None = None) -> dict[str, Any] | None:
     """
     Parse tool output from interaction.
 
@@ -154,13 +151,13 @@ def _parse_tool_output(
         Parsed tool output data
     """
     # Look for tool result in input messages
-    if 'input' in interaction and 'messages' in interaction['input']:
-        messages = interaction['input']['messages']
+    if "input" in interaction and "messages" in interaction["input"]:
+        messages = interaction["input"]["messages"]
 
         # Search for assistant messages containing the tool result
         for msg in messages:
-            if msg.get('role') == 'assistant' and msg.get('content'):
-                content = msg['content']
+            if msg.get("role") == "assistant" and msg.get("content"):
+                content = msg["content"]
 
                 # Check if content contains the expected key (if provided)
                 if result_key and result_key not in content:
@@ -168,18 +165,18 @@ def _parse_tool_output(
 
                 try:
                     # Parse the JSON from content
-                    tool_data = json.loads(content)
+                    tool_data: dict[str, Any] = json.loads(content)
 
                     # Add metadata
-                    tool_data['metadata'] = {
-                        'sources': {
-                            'interaction_log': str(source_path),
-                            'interaction_id': interaction.get('interaction_id')
+                    tool_data["metadata"] = {
+                        "sources": {
+                            "interaction_log": str(source_path),
+                            "interaction_id": interaction.get("interaction_id"),
                         },
-                        'generated_at': interaction.get('timestamp'),
-                        'llm_provider': interaction.get('provider'),
-                        'llm_model': interaction.get('model'),
-                        'generation_duration_ms': interaction.get('duration_ms')
+                        "generated_at": interaction.get("timestamp"),
+                        "llm_provider": interaction.get("provider"),
+                        "llm_model": interaction.get("model"),
+                        "generation_duration_ms": interaction.get("duration_ms"),
                     }
 
                     return tool_data
@@ -192,7 +189,7 @@ def _parse_tool_output(
     return None
 
 
-def load_athlete_profile(profile_path: Path) -> Dict[str, Any]:
+def load_athlete_profile(profile_path: Path) -> dict[str, Any]:
     """
     Load athlete profile from JSON file.
 
@@ -203,35 +200,35 @@ def load_athlete_profile(profile_path: Path) -> Dict[str, Any]:
         Athlete profile dict
     """
     try:
-        with open(profile_path, 'r') as f:
+        with open(profile_path) as f:
             profile = json.load(f)
 
         # Normalize the profile to match our format
         normalized = {
-            'age': profile.get('age'),
-            'gender': profile.get('gender'),
-            'ftp': _parse_power_value(profile.get('FTP', profile.get('ftp'))),
-            'weight_kg': _parse_weight_value(profile.get('weight', profile.get('weight_kg'))),
-            'max_hr': profile.get('critical_HR', profile.get('max_hr')),
-            'training_availability': profile.get('training_availability', {}),
-            'goals': profile.get('goals'),
-            'current_training_status': profile.get('current_training_status')
+            "age": profile.get("age"),
+            "gender": profile.get("gender"),
+            "ftp": _parse_power_value(profile.get("FTP", profile.get("ftp"))),
+            "weight_kg": _parse_weight_value(profile.get("weight", profile.get("weight_kg"))),
+            "max_hr": profile.get("critical_HR", profile.get("max_hr")),
+            "training_availability": profile.get("training_availability", {}),
+            "goals": profile.get("goals"),
+            "current_training_status": profile.get("current_training_status"),
         }
 
         # Calculate power to weight
-        if normalized['ftp'] and normalized['weight_kg']:
-            normalized['power_to_weight'] = round(normalized['ftp'] / normalized['weight_kg'], 3)
+        if normalized["ftp"] and normalized["weight_kg"]:
+            normalized["power_to_weight"] = round(normalized["ftp"] / normalized["weight_kg"], 3)
 
         # Normalize training availability
-        if 'training_availability' in normalized:
-            avail = normalized['training_availability']
-            if 'week_days' in avail and 'available_training_days' not in avail:
+        if "training_availability" in normalized:
+            avail = normalized["training_availability"]
+            if "week_days" in avail and "available_training_days" not in avail:
                 # Parse week_days string into list
-                days_str = avail['week_days']
-                avail['available_training_days'] = [d.strip() for d in days_str.split(',')]
+                days_str = avail["week_days"]
+                avail["available_training_days"] = [d.strip() for d in days_str.split(",")]
 
-            if 'hours_per_week' in avail and 'weekly_training_hours' not in avail:
-                avail['weekly_training_hours'] = avail['hours_per_week']
+            if "hours_per_week" in avail and "weekly_training_hours" not in avail:
+                avail["weekly_training_hours"] = avail["hours_per_week"]
 
         return normalized
 
@@ -243,7 +240,7 @@ def load_athlete_profile(profile_path: Path) -> Dict[str, Any]:
         return {}
 
 
-def _parse_power_value(value: Any) -> Optional[int]:
+def _parse_power_value(value: Any) -> int | None:
     """Parse power value from various formats (260, '260w', '260W')."""
     if value is None:
         return None
@@ -251,13 +248,13 @@ def _parse_power_value(value: Any) -> Optional[int]:
         return int(value)
     if isinstance(value, str):
         # Remove 'w' or 'W' suffix
-        match = re.match(r'(\d+)', value.lower().replace('w', ''))
+        match = re.match(r"(\d+)", value.lower().replace("w", ""))
         if match:
             return int(match.group(1))
     return None
 
 
-def _parse_weight_value(value: Any) -> Optional[float]:
+def _parse_weight_value(value: Any) -> float | None:
     """Parse weight value from various formats (84, '84kg', '84.5 kg')."""
     if value is None:
         return None
@@ -265,7 +262,7 @@ def _parse_weight_value(value: Any) -> Optional[float]:
         return float(value)
     if isinstance(value, str):
         # Remove 'kg' suffix and whitespace
-        match = re.match(r'([\d.]+)', value.lower().replace('kg', '').strip())
+        match = re.match(r"([\d.]+)", value.lower().replace("kg", "").strip())
         if match:
             return float(match.group(1))
     return None
@@ -284,16 +281,17 @@ def find_athlete_id_from_path(profile_path: Path) -> str:
     # Get the parent directory name
     athlete_dir = profile_path.parent.name
     # Convert to lowercase with underscores
-    athlete_id = athlete_dir.lower().replace(' ', '_').replace('-', '_')
+    athlete_id = athlete_dir.lower().replace(" ", "_").replace("-", "_")
     return athlete_id
 
+
 def consolidate_athlete_data(
-    training_plan_data: Dict[str, Any],
-    profile: Dict[str, Any],
+    training_plan_data: dict[str, Any],
+    profile: dict[str, Any],
     athlete_id: str,
     athlete_name: str,
-    performance_analysis: Optional[Dict[str, Any]] = None
-) -> Dict[str, Any]:
+    performance_analysis: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """
     Consolidate all athlete data into report format.
 
@@ -315,10 +313,12 @@ def consolidate_athlete_data(
     """
     logger.info(f"[CONSOLIDATE] Starting consolidation for athlete: {athlete_name} (id={athlete_id})")
     logger.debug(f"[CONSOLIDATE] training_plan_data type: {type(training_plan_data)}")
-    logger.debug(f"[CONSOLIDATE] training_plan_data keys: {list(training_plan_data.keys()) if isinstance(training_plan_data, dict) else 'N/A'}")
+    logger.debug(
+        f"[CONSOLIDATE] training_plan_data keys: {list(training_plan_data.keys()) if isinstance(training_plan_data, dict) else 'N/A'}"
+    )
 
     # Validate NEW format structure (required fields)
-    if 'plan_metadata' not in training_plan_data or 'weekly_plan' not in training_plan_data:
+    if "plan_metadata" not in training_plan_data or "weekly_plan" not in training_plan_data:
         raise ValueError(
             f"Invalid training plan format. Expected 'plan_metadata' and 'weekly_plan', "
             f"got keys: {list(training_plan_data.keys())}. "
@@ -326,50 +326,49 @@ def consolidate_athlete_data(
         )
 
     # Extract NEW format data
-    plan_metadata = training_plan_data['plan_metadata']
-    weekly_plan = training_plan_data['weekly_plan']
-    coaching_notes = training_plan_data.get('coaching_notes', '')
-    monitoring_guidance = training_plan_data.get('monitoring_guidance', '')
+    plan_metadata = training_plan_data["plan_metadata"]
+    weekly_plan = training_plan_data["weekly_plan"]
+    coaching_notes = training_plan_data.get("coaching_notes", "")
+    monitoring_guidance = training_plan_data.get("monitoring_guidance", "")
 
-    logger.info(f"[CONSOLIDATE] Processing NEW format: {len(weekly_plan)} weeks, "
-                f"target_ftp={plan_metadata.get('target_ftp')}")
+    logger.info(
+        f"[CONSOLIDATE] Processing NEW format: {len(weekly_plan)} weeks, target_ftp={plan_metadata.get('target_ftp')}"
+    )
     logger.debug(f"[CONSOLIDATE] plan_metadata keys: {list(plan_metadata.keys())}")
     logger.debug(f"[CONSOLIDATE] coaching_notes length: {len(coaching_notes)} chars")
     logger.debug(f"[CONSOLIDATE] monitoring_guidance length: {len(monitoring_guidance)} chars")
 
     # Create athlete object with training plan data
     athlete_obj = {
-        'id': athlete_id,
-        'name': athlete_name,
-        'profile': profile,
-        'training_plan': {
-            'athlete_profile': training_plan_data.get('athlete_profile', {}),
-            'plan_metadata': plan_metadata,
-            'coaching_notes': coaching_notes,
-            'monitoring_guidance': monitoring_guidance,
-            'weekly_plan': weekly_plan,
+        "id": athlete_id,
+        "name": athlete_name,
+        "profile": profile,
+        "training_plan": {
+            "athlete_profile": training_plan_data.get("athlete_profile", {}),
+            "plan_metadata": plan_metadata,
+            "coaching_notes": coaching_notes,
+            "monitoring_guidance": monitoring_guidance,
+            "weekly_plan": weekly_plan,
         },
-        'metadata': {}
+        "metadata": {},
     }
 
     # Add performance analysis if provided
     if performance_analysis:
         logger.info("[CONSOLIDATE] Adding performance_analysis to athlete_obj")
-        athlete_obj['performance_analysis'] = performance_analysis
+        athlete_obj["performance_analysis"] = performance_analysis
     else:
         logger.info("[CONSOLIDATE] No performance_analysis provided")
 
     logger.info(f"[CONSOLIDATE] Final athlete_obj keys: {list(athlete_obj.keys())}")
-    logger.debug(f"[CONSOLIDATE] Returning consolidated athlete data")
+    logger.debug("[CONSOLIDATE] Returning consolidated athlete data")
 
     return athlete_obj
 
 
 def create_report_data(
-    athletes: List[Dict[str, Any]],
-    generator_info: Dict[str, str],
-    session_id: Optional[str] = None
-) -> Dict[str, Any]:
+    athletes: list[dict[str, Any]], generator_info: dict[str, str], session_id: str | None = None
+) -> dict[str, Any]:
     """
     Create final report_data.json structure.
 
@@ -384,37 +383,38 @@ def create_report_data(
     logger.info(f"[CREATE_REPORT] Creating report_data with {len(athletes)} athlete(s)")
 
     for i, athlete in enumerate(athletes):
-        logger.debug(f"[CREATE_REPORT] Athlete {i+1}: id={athlete.get('id', 'N/A')}, name={athlete.get('name', 'N/A')}")
-        if 'training_plan' in athlete:
-            tp = athlete['training_plan']
-            logger.debug(f"[CREATE_REPORT] Athlete {i+1} training_plan keys: {list(tp.keys())}")
+        logger.debug(
+            f"[CREATE_REPORT] Athlete {i + 1}: id={athlete.get('id', 'N/A')}, name={athlete.get('name', 'N/A')}"
+        )
+        if "training_plan" in athlete:
+            tp = athlete["training_plan"]
+            logger.debug(f"[CREATE_REPORT] Athlete {i + 1} training_plan keys: {list(tp.keys())}")
             # Check for weekly_plan in training_plan (NEW format)
-            if 'weekly_plan' in tp:
-                plan_metadata = tp.get('plan_metadata', {})
-                target_ftp = plan_metadata.get('target_ftp', 'N/A')
-                logger.info(f"[CREATE_REPORT] Athlete {i+1} has {len(tp['weekly_plan'])} weeks, target_ftp={target_ftp}")
+            if "weekly_plan" in tp:
+                plan_metadata = tp.get("plan_metadata", {})
+                target_ftp = plan_metadata.get("target_ftp", "N/A")
+                logger.info(
+                    f"[CREATE_REPORT] Athlete {i + 1} has {len(tp['weekly_plan'])} weeks, target_ftp={target_ftp}"
+                )
             else:
-                logger.warning(f"[CREATE_REPORT] Athlete {i+1} missing weekly_plan in training_plan")
+                logger.warning(f"[CREATE_REPORT] Athlete {i + 1} missing weekly_plan in training_plan")
 
     report_data = {
-        'version': '1.0',
-        'generated_timestamp': datetime.utcnow().isoformat() + 'Z',
-        'generator': generator_info,
-        'athletes': athletes
+        "version": "1.0",
+        "generated_timestamp": datetime.utcnow().isoformat() + "Z",
+        "generator": generator_info,
+        "athletes": athletes,
     }
 
     # Add session_id if provided
     if session_id:
-        report_data['session_id'] = session_id
+        report_data["session_id"] = session_id
 
     logger.info("[CREATE_REPORT] report_data structure created successfully")
     return report_data
 
 
-def extract_from_session_file(
-    session_path: Path,
-    athlete_profile_path: Optional[Path] = None
-) -> Optional[Dict[str, Any]]:
+def extract_from_session_file(session_path: Path, athlete_profile_path: Path | None = None) -> dict[str, Any] | None:
     """
     Extract complete athlete data from a single session file.
 
@@ -440,18 +440,18 @@ def extract_from_session_file(
 
     # Load athlete profile
     profile = {}
-    athlete_id = 'athlete'
-    athlete_name = 'Athlete'
+    athlete_id = "athlete"
+    athlete_name = "Athlete"
 
     if athlete_profile_path and athlete_profile_path.exists():
         profile = load_athlete_profile(athlete_profile_path)
         athlete_id = find_athlete_id_from_path(athlete_profile_path)
         athlete_name = athlete_profile_path.parent.name
-    elif 'athlete_profile' in training_plan_data:
+    elif "athlete_profile" in training_plan_data:
         # Use profile from training plan data
-        profile = training_plan_data['athlete_profile']
-        athlete_id = profile.get('name', 'athlete').lower().replace(' ', '_')
-        athlete_name = profile.get('name', 'Athlete')
+        profile = training_plan_data["athlete_profile"]
+        athlete_id = profile.get("name", "athlete").lower().replace(" ", "_")
+        athlete_name = profile.get("name", "Athlete")
 
     # Consolidate
     athlete_data = consolidate_athlete_data(
@@ -459,7 +459,7 @@ def extract_from_session_file(
         profile=profile,
         athlete_id=athlete_id,
         athlete_name=athlete_name,
-        performance_analysis=performance_analysis
+        performance_analysis=performance_analysis,
     )
 
     return athlete_data

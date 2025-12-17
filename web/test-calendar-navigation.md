@@ -1,11 +1,13 @@
 # Testing Calendar Month Navigation
 
 ## Bug Fixed
+
 Calendar now properly fetches and displays activities when navigating between months.
 
 ## Manual Test Steps
 
 ### Prerequisites
+
 1. Dev server running: `pnpm dev`
 2. Supabase running: `supabase start`
 3. User logged in with synced Strava activities from multiple months
@@ -64,6 +66,7 @@ You can verify the API calls are correct by checking the Network tab in browser 
    - `sortOrder`: asc
 
 Example request:
+
 ```
 /api/activities?startDate=2024-11-01T00:00:00.000Z&endDate=2024-11-30T23:59:59.000Z&sortBy=start_date&sortOrder=asc&limit=1000
 ```
@@ -71,11 +74,13 @@ Example request:
 ## What Changed
 
 ### Before (Bug)
+
 - Calendar component received activities as a prop
 - Activities were from current paginated dataset (20 activities)
 - Navigating to different months showed empty calendar or wrong activities
 
 ### After (Fixed)
+
 - Calendar component fetches its own data
 - `useEffect` triggers on `currentDate` change
 - Fetches all activities for the selected month

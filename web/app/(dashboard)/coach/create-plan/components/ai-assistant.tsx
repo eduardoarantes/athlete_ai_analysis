@@ -31,9 +31,7 @@ export function AIAssistant({ suggestion, wizardData }: AIAssistantProps) {
           {suggestion ? (
             <p className="text-sm leading-relaxed">{suggestion}</p>
           ) : (
-            <p className="text-sm text-muted-foreground italic">
-              {t('noSuggestion')}
-            </p>
+            <p className="text-sm text-muted-foreground italic">{t('noSuggestion')}</p>
           )}
         </CardContent>
       </Card>
@@ -98,7 +96,10 @@ export function AIAssistant({ suggestion, wizardData }: AIAssistantProps) {
   )
 }
 
-function deriveInsights(wizardData: any, t: (key: string, params?: Record<string, string | number>) => string): Array<{
+function deriveInsights(
+  wizardData: any,
+  t: (key: string, params?: Record<string, string | number>) => string
+): Array<{
   type: 'success' | 'warning' | 'info'
   message: string
 }> {

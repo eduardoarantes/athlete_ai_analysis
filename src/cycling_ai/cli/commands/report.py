@@ -3,12 +3,13 @@ Report generation commands for CLI.
 
 Commands for generating comprehensive reports.
 """
+
 from __future__ import annotations
 
 import click
 
-from ..formatting import console
 from ...tools.wrappers import ReportGenerationTool
+from ..formatting import console
 
 
 @click.group()

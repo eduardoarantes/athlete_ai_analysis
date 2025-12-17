@@ -3,6 +3,7 @@ Data validation tool for Phase 1: Data Preparation.
 
 Validates that required data files exist and have correct structure.
 """
+
 from __future__ import annotations
 
 import json
@@ -78,8 +79,8 @@ class DataValidationTool(BaseTool):
         profile_path = Path(kwargs["athlete_profile_path"])
         fit_dir = Path(kwargs.get("fit_dir_path", "")) if kwargs.get("fit_dir_path") else None
 
-        issues = []
-        warnings = []
+        issues: list[str] = []
+        warnings: list[str] = []
 
         # Check that we have at least one data source
         if csv_path is None and fit_dir is None:
@@ -87,7 +88,7 @@ class DataValidationTool(BaseTool):
             return ToolExecutionResult(
                 success=False,
                 data={"success": False, "issues": issues, "warnings": warnings},
-                format="json"
+                format="json",
             )
 
         # Validate CSV file (if provided)
@@ -121,7 +122,7 @@ class DataValidationTool(BaseTool):
             issues.append(f"Profile path is not a file: {profile_path}")
         else:
             try:
-                with open(profile_path, 'r') as f:
+                with open(profile_path) as f:
                     profile_data = json.load(f)
 
                 # Check for key fields
@@ -185,8 +186,7 @@ class DataValidationTool(BaseTool):
         if success:
             if fit_only_mode:
                 result["message"] = (
-                    f"✅ Data validation passed (FIT-only mode)! "
-                    f"Found {fit_files_count} FIT files for processing."
+                    f"✅ Data validation passed (FIT-only mode)! Found {fit_files_count} FIT files for processing."
                 )
             else:
                 result["message"] = (
@@ -196,11 +196,7 @@ class DataValidationTool(BaseTool):
         else:
             result["message"] = f"❌ Validation failed with {len(issues)} issue(s)"
 
-        return ToolExecutionResult(
-            success=success,
-            data=result,
-            format="json"
-        )
+        return ToolExecutionResult(success=success, data=result, format="json")
 
 
 # Register tool on module import

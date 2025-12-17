@@ -56,6 +56,7 @@ class RetrievalResult:
         query: Original query string
         collection: Collection name that was searched
     """
+
     documents: list[str]
     metadata: list[dict[str, Any]]
     scores: list[float]
@@ -122,9 +123,7 @@ class RAGManager:
         )
 
         # Initialize user vectorstore (athlete history)
-        user_path = user_vectorstore_path or (
-            Path.home() / ".cycling-ai" / "athlete_history"
-        )
+        user_path = user_vectorstore_path or (Path.home() / ".cycling-ai" / "athlete_history")
         self.user_vectorstore = ChromaVectorStore(
             persist_directory=user_path,
             embedding_function=self.embedding_function,
@@ -196,26 +195,17 @@ class RAGManager:
         logger.debug(f"RAG: Raw retrieval found {len(results)} documents")
 
         # Filter by score and extract data
-        filtered_results = [
-            (doc, score) for doc, score in results
-            if score >= min_score
-        ]
+        filtered_results = [(doc, score) for doc, score in results if score >= min_score]
 
         if len(filtered_results) < len(results):
-            logger.info(
-                f"RAG: Filtered to {len(filtered_results)}/{len(results)} documents "
-                f"(min_score={min_score})"
-            )
+            logger.info(f"RAG: Filtered to {len(filtered_results)}/{len(results)} documents (min_score={min_score})")
 
         documents = [doc.page_content for doc, _ in filtered_results]
         metadata = [doc.metadata for doc, _ in filtered_results]
         scores = [score for _, score in filtered_results]
 
         if documents:
-            logger.info(
-                f"RAG: Retrieved {len(documents)} documents with scores: "
-                f"{[f'{s:.3f}' for s in scores]}"
-            )
+            logger.info(f"RAG: Retrieved {len(documents)} documents with scores: {[f'{s:.3f}' for s in scores]}")
         else:
             logger.warning(f"RAG: No documents retrieved from '{collection}'")
 
@@ -227,9 +217,7 @@ class RAGManager:
             collection=collection,
         )
 
-    def _get_vectorstore_for_collection(
-        self, collection: str
-    ) -> ChromaVectorStore:
+    def _get_vectorstore_for_collection(self, collection: str) -> ChromaVectorStore:
         """
         Route collection to appropriate vectorstore.
 
@@ -251,10 +239,7 @@ class RAGManager:
             return self.user_vectorstore
         else:
             all_collections = self.PROJECT_COLLECTIONS | self.USER_COLLECTIONS
-            raise ValueError(
-                f"Unknown collection: '{collection}'. "
-                f"Must be one of: {sorted(all_collections)}"
-            )
+            raise ValueError(f"Unknown collection: '{collection}'. Must be one of: {sorted(all_collections)}")
 
     def _create_embedding_function(
         self, provider: str, model: str | None
@@ -273,15 +258,8 @@ class RAGManager:
             ValueError: If provider is unknown
         """
         if provider == "local":
-            return EmbeddingFactory.create_local(
-                model_name=model or "sentence-transformers/all-MiniLM-L6-v2"
-            )
+            return EmbeddingFactory.create_local(model_name=model or "sentence-transformers/all-MiniLM-L6-v2")
         elif provider == "openai":
-            return EmbeddingFactory.create_openai(
-                model=model or "text-embedding-3-small"
-            )
+            return EmbeddingFactory.create_openai(model=model or "text-embedding-3-small")
         else:
-            raise ValueError(
-                f"Unknown embedding provider: '{provider}'. "
-                f"Must be 'local' or 'openai'."
-            )
+            raise ValueError(f"Unknown embedding provider: '{provider}'. Must be 'local' or 'openai'.")

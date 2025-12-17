@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Mountain, Bike, Footprints, Waves, Activity, Dumbbell } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -112,23 +112,26 @@ export function StatsPanel({
   const activeSport = selectedSport ?? (topSports[0] || null)
 
   // Filter activities by selected sport
-  const filterBySport = (activities: ActivityStats[]) => {
-    if (!activeSport) return activities
-    return activities.filter((a) => getGroupedSport(a.sport_type) === activeSport)
-  }
+  const filterBySport = useCallback(
+    (activities: ActivityStats[]) => {
+      if (!activeSport) return activities
+      return activities.filter((a) => getGroupedSport(a.sport_type) === activeSport)
+    },
+    [activeSport]
+  )
 
   // Calculate filtered stats
   const yearStats = useMemo(
     () => calculateStats(filterBySport(yearActivities)),
-    [yearActivities, activeSport]
+    [yearActivities, filterBySport]
   )
   const monthStats = useMemo(
     () => calculateStats(filterBySport(monthActivities)),
-    [monthActivities, activeSport]
+    [monthActivities, filterBySport]
   )
   const lastWeekStats = useMemo(
     () => calculateStats(filterBySport(lastWeekActivities)),
-    [lastWeekActivities, activeSport]
+    [lastWeekActivities, filterBySport]
   )
 
   if (topSports.length === 0) {
@@ -148,9 +151,7 @@ export function StatsPanel({
                 onClick={() => setSelectedSport(sport)}
                 className={cn(
                   'p-1.5 rounded-md transition-colors',
-                  activeSport === sport
-                    ? 'bg-primary/10'
-                    : 'hover:bg-muted'
+                  activeSport === sport ? 'bg-primary/10' : 'hover:bg-muted'
                 )}
                 title={sport}
               >
@@ -170,7 +171,9 @@ export function StatsPanel({
               <p className="text-[10px] text-muted-foreground">activities</p>
             </div>
             <div>
-              <p className="text-lg font-bold">{formatNumber(Math.round(yearStats.distance / 1000))}</p>
+              <p className="text-lg font-bold">
+                {formatNumber(Math.round(yearStats.distance / 1000))}
+              </p>
               <p className="text-[10px] text-muted-foreground">km</p>
             </div>
             <div className="flex flex-col items-center">
@@ -192,13 +195,17 @@ export function StatsPanel({
               <p className="text-[10px] text-muted-foreground">activities</p>
             </div>
             <div>
-              <p className="text-lg font-bold">{formatNumber(Math.round(monthStats.distance / 1000))}</p>
+              <p className="text-lg font-bold">
+                {formatNumber(Math.round(monthStats.distance / 1000))}
+              </p>
               <p className="text-[10px] text-muted-foreground">km</p>
             </div>
             <div className="flex flex-col items-center">
               <div className="flex items-center gap-0.5">
                 <Mountain className="h-3 w-3 text-muted-foreground" />
-                <p className="text-lg font-bold">{formatNumber(Math.round(monthStats.elevation))}</p>
+                <p className="text-lg font-bold">
+                  {formatNumber(Math.round(monthStats.elevation))}
+                </p>
               </div>
               <p className="text-[10px] text-muted-foreground">m</p>
             </div>
@@ -214,13 +221,17 @@ export function StatsPanel({
               <p className="text-[10px] text-muted-foreground">activities</p>
             </div>
             <div>
-              <p className="text-lg font-bold">{formatNumber(Math.round(lastWeekStats.distance / 1000))}</p>
+              <p className="text-lg font-bold">
+                {formatNumber(Math.round(lastWeekStats.distance / 1000))}
+              </p>
               <p className="text-[10px] text-muted-foreground">km</p>
             </div>
             <div className="flex flex-col items-center">
               <div className="flex items-center gap-0.5">
                 <Mountain className="h-3 w-3 text-muted-foreground" />
-                <p className="text-lg font-bold">{formatNumber(Math.round(lastWeekStats.elevation))}</p>
+                <p className="text-lg font-bold">
+                  {formatNumber(Math.round(lastWeekStats.elevation))}
+                </p>
               </div>
               <p className="text-[10px] text-muted-foreground">m</p>
             </div>

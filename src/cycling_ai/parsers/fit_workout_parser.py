@@ -9,6 +9,7 @@ Usage:
     workout = parser.parse_workout_file("workout.fit", ftp=260)
     library_format = workout.to_library_format()
 """
+
 from __future__ import annotations
 
 import re
@@ -142,9 +143,7 @@ class FitWorkoutStep:
         Returns:
             True if step targets a specific wattage range
         """
-        return (
-            self.custom_power_low is not None and self.custom_power_high is not None
-        )
+        return self.custom_power_low is not None and self.custom_power_high is not None
 
     def __post_init__(self) -> None:
         """Validate step data after initialization."""
@@ -155,13 +154,8 @@ class FitWorkoutStep:
             raise ValueError(f"Invalid duration_value: {self.duration_value}")
 
         # Validate repeat step has repeat_steps
-        if self.is_repeat_step() and (
-            self.repeat_steps is None or self.repeat_steps <= 0
-        ):
-            raise ValueError(
-                f"Repeat step at index {self.message_index} "
-                f"missing valid repeat_steps value"
-            )
+        if self.is_repeat_step() and (self.repeat_steps is None or self.repeat_steps <= 0):
+            raise ValueError(f"Repeat step at index {self.message_index} missing valid repeat_steps value")
 
 
 @dataclass
@@ -196,12 +190,8 @@ class FitRepeatStructure:
             "sets": self.repeat_count,
             "work": {
                 "duration_min": float(self.work_step.duration_value / 60),
-                "power_low_pct": self._calculate_power_pct(
-                    self.work_step.custom_power_low or 0, ftp
-                ),
-                "power_high_pct": self._calculate_power_pct(
-                    self.work_step.custom_power_high or 0, ftp
-                ),
+                "power_low_pct": self._calculate_power_pct(self.work_step.custom_power_low or 0, ftp),
+                "power_high_pct": self._calculate_power_pct(self.work_step.custom_power_high or 0, ftp),
                 "description": self.work_step.step_name or "Work",
             },
         }
@@ -209,12 +199,8 @@ class FitRepeatStructure:
         if self.recovery_step:
             segment["recovery"] = {
                 "duration_min": float(self.recovery_step.duration_value / 60),
-                "power_low_pct": self._calculate_power_pct(
-                    self.recovery_step.custom_power_low or 0, ftp
-                ),
-                "power_high_pct": self._calculate_power_pct(
-                    self.recovery_step.custom_power_high or 0, ftp
-                ),
+                "power_low_pct": self._calculate_power_pct(self.recovery_step.custom_power_low or 0, ftp),
+                "power_high_pct": self._calculate_power_pct(self.recovery_step.custom_power_high or 0, ftp),
                 "description": self.recovery_step.step_name or "Recovery",
             }
 
@@ -544,16 +530,10 @@ class FitWorkoutParser:
 
         # Validate required fields
         if not name:
-            raise ValueError(
-                "Workout name not found in FIT file. "
-                "This may not be a valid workout file."
-            )
+            raise ValueError("Workout name not found in FIT file. This may not be a valid workout file.")
 
         if num_steps == 0:
-            raise ValueError(
-                "Number of steps not found in FIT file. "
-                "This may not be a valid workout file."
-            )
+            raise ValueError("Number of steps not found in FIT file. This may not be a valid workout file.")
 
         return FitWorkoutMetadata(
             name=name,
@@ -764,19 +744,19 @@ class FitWorkoutParser:
             watts = step.custom_power_low if is_low else step.custom_power_high
             if watts is None:
                 return 75  # Default to moderate effort
-            
+
             # Handle common offset of 1000 (e.g., 1150 = 150W)
             # If watts are unreasonably high (>1000) and not a sprint (<30s), assume offset
             # Or if > 1000 and > 400% FTP, definitely offset
             if watts >= 1000:
                 # Check if it's likely an offset
-                # 1000W is very high for sustained power. 
+                # 1000W is very high for sustained power.
                 # If it's > 1000, it's almost certainly an offset for most riders
                 # unless it's a very short sprint.
                 # But even for sprints, 1000+ is rare for average riders.
                 # Safe heuristic: if > 1000, subtract 1000.
                 watts -= 1000
-                
+
             return int((watts / ftp) * 100)
 
         elif step.has_power_zone():
@@ -960,9 +940,7 @@ class FitWorkoutParser:
             segment["recovery"] = {
                 "duration_min": float(recovery_step.duration_value / 60),
                 "power_low_pct": self._get_power_pct(recovery_step, ftp, is_low=True),
-                "power_high_pct": self._get_power_pct(
-                    recovery_step, ftp, is_low=False
-                ),
+                "power_high_pct": self._get_power_pct(recovery_step, ftp, is_low=False),
                 "description": recovery_step.step_name or "Recovery",
             }
 
@@ -1026,13 +1004,9 @@ class FitWorkoutParser:
                 recovery_tss = 0.0
                 if recovery:
                     recovery_min = recovery["duration_min"]
-                    recovery_power_pct = (
-                        recovery["power_low_pct"] + recovery["power_high_pct"]
-                    ) / 2
+                    recovery_power_pct = (recovery["power_low_pct"] + recovery["power_high_pct"]) / 2
                     recovery_if = recovery_power_pct / 100.0
-                    recovery_tss = (
-                        (recovery_min / 60.0) * recovery_if * recovery_if * 100
-                    )
+                    recovery_tss = (recovery_min / 60.0) * recovery_if * recovery_if * 100
 
                 # Total for all sets
                 sets = seg["sets"]
@@ -1040,9 +1014,7 @@ class FitWorkoutParser:
             else:
                 # Simple segment
                 duration_min = seg.get("duration_min", 0)
-                power_pct = (
-                    seg.get("power_low_pct", 75) + seg.get("power_high_pct", 75)
-                ) / 2
+                power_pct = (seg.get("power_low_pct", 75) + seg.get("power_high_pct", 75)) / 2
                 intensity_factor = power_pct / 100.0
                 tss = (duration_min / 60.0) * intensity_factor * intensity_factor * 100
                 total_tss += tss

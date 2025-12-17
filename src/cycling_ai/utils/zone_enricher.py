@@ -6,6 +6,7 @@ Handles the complete workflow of:
 2. Parsing FIT files for power/zone data
 3. Adding zone columns to DataFrame
 """
+
 from __future__ import annotations
 
 import logging
@@ -89,7 +90,7 @@ class ZoneEnricher:
 
         # Process each activity
         for idx, row in df.iterrows():
-            stats["processed_count"] += 1
+            stats["processed_count"] += 1  # type: ignore[operator]
             activity_id = row["Activity ID"]
 
             try:
@@ -104,7 +105,7 @@ class ZoneEnricher:
                 if not fit_file:
                     continue
 
-                stats["fit_found_count"] += 1
+                stats["fit_found_count"] += 1  # type: ignore[operator]
 
                 # Parse FIT file for zone data
                 zone_data = parse_fit_zones(fit_file, self.ftp)
@@ -112,22 +113,22 @@ class ZoneEnricher:
                 if not has_power_data(zone_data):
                     continue
 
-                stats["power_data_count"] += 1
+                stats["power_data_count"] += 1  # type: ignore[operator]
 
                 # Add zone data to DataFrame
-                df.at[idx, "z1_active_recovery_sec"] = zone_data["z1_active_recovery"]
-                df.at[idx, "z2_endurance_sec"] = zone_data["z2_endurance"]
-                df.at[idx, "z3_tempo_sec"] = zone_data["z3_tempo"]
-                df.at[idx, "z4_threshold_sec"] = zone_data["z4_threshold"]
-                df.at[idx, "z5_vo2max_sec"] = zone_data["z5_vo2max"]
-                df.at[idx, "z6_anaerobic_sec"] = zone_data["z6_anaerobic"]
-                df.at[idx, "total_power_sec"] = zone_data["total_power_seconds"]
-                df.at[idx, "normalized_power"] = zone_data["normalized_power"]
+                df.at[idx, "z1_active_recovery_sec"] = zone_data["z1_active_recovery"]  # type: ignore[index]
+                df.at[idx, "z2_endurance_sec"] = zone_data["z2_endurance"]  # type: ignore[index]
+                df.at[idx, "z3_tempo_sec"] = zone_data["z3_tempo"]  # type: ignore[index]
+                df.at[idx, "z4_threshold_sec"] = zone_data["z4_threshold"]  # type: ignore[index]
+                df.at[idx, "z5_vo2max_sec"] = zone_data["z5_vo2max"]  # type: ignore[index]
+                df.at[idx, "z6_anaerobic_sec"] = zone_data["z6_anaerobic"]  # type: ignore[index]
+                df.at[idx, "total_power_sec"] = zone_data["total_power_seconds"]  # type: ignore[index]
+                df.at[idx, "normalized_power"] = zone_data["normalized_power"]  # type: ignore[index]
 
             except Exception as e:
                 error_msg = f"Activity {activity_id}: {str(e)}"
                 logger.warning(error_msg)
-                stats["errors"].append(error_msg)
+                stats["errors"].append(error_msg)  # type: ignore[attr-defined]
 
         logger.info(
             f"Zone enrichment complete: {stats['power_data_count']}/{stats['processed_count']} "

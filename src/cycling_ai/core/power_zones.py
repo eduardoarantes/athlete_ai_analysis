@@ -5,10 +5,10 @@ Provides centralized, consistent power zone calculations based on FTP.
 All zone calculations should use these functions to ensure consistency across the codebase.
 """
 
-from typing import Dict, Tuple
+from typing import Any
 
 
-def calculate_power_zones(ftp: float) -> Dict[str, Dict[str, float]]:
+def calculate_power_zones(ftp: float) -> dict[str, dict[str, Any]]:
     """
     Calculate standard cycling power zones based on FTP.
 
@@ -27,58 +27,58 @@ def calculate_power_zones(ftp: float) -> Dict[str, Dict[str, float]]:
         {'name': 'Endurance', 'min': 146, 'max': 208, 'ftp_pct_min': 0.56, 'ftp_pct_max': 0.80}
     """
     return {
-        'z1': {
-            'name': 'Active Recovery',
-            'min': 0,
-            'max': int(ftp * 0.55),
-            'ftp_pct_min': 0.00,
-            'ftp_pct_max': 0.55,
-            'description': 'Very easy, recovery pace. Conversational.',
+        "z1": {
+            "name": "Active Recovery",
+            "min": 0,
+            "max": int(ftp * 0.55),
+            "ftp_pct_min": 0.00,
+            "ftp_pct_max": 0.55,
+            "description": "Very easy, recovery pace. Conversational.",
         },
-        'z2': {
-            'name': 'Endurance',
-            'min': int(ftp * 0.56),
-            'max': int(ftp * 0.75),
-            'ftp_pct_min': 0.56,
-            'ftp_pct_max': 0.75,
-            'description': 'Aerobic base building. Long rides, comfortable pace.',
+        "z2": {
+            "name": "Endurance",
+            "min": int(ftp * 0.56),
+            "max": int(ftp * 0.75),
+            "ftp_pct_min": 0.56,
+            "ftp_pct_max": 0.75,
+            "description": "Aerobic base building. Long rides, comfortable pace.",
         },
-        'z3': {
-            'name': 'Tempo',
-            'min': int(ftp * 0.76),
-            'max': int(ftp * 0.90),
-            'ftp_pct_min': 0.76,
-            'ftp_pct_max': 0.90,
-            'description': 'Moderate intensity. Sustainable but requires focus.',
+        "z3": {
+            "name": "Tempo",
+            "min": int(ftp * 0.76),
+            "max": int(ftp * 0.90),
+            "ftp_pct_min": 0.76,
+            "ftp_pct_max": 0.90,
+            "description": "Moderate intensity. Sustainable but requires focus.",
         },
-        'z4': {
-            'name': 'Threshold',
-            'min': int(ftp * 0.91),
-            'max': int(ftp * 1.05),
-            'ftp_pct_min': 0.91,
-            'ftp_pct_max': 1.05,
-            'description': 'FTP intensity. Hard, sustainable for 20-60 minutes.',
+        "z4": {
+            "name": "Threshold",
+            "min": int(ftp * 0.91),
+            "max": int(ftp * 1.05),
+            "ftp_pct_min": 0.91,
+            "ftp_pct_max": 1.05,
+            "description": "FTP intensity. Hard, sustainable for 20-60 minutes.",
         },
-        'z5': {
-            'name': 'VO2 Max',
-            'min': int(ftp * 1.06),
-            'max': int(ftp * 1.20),  # Practical upper bound
-            'ftp_pct_min': 1.06,
-            'ftp_pct_max': 1.20,
-            'description': 'Very hard, short intervals. Maximum aerobic power.',
+        "z5": {
+            "name": "VO2 Max",
+            "min": int(ftp * 1.06),
+            "max": int(ftp * 1.20),  # Practical upper bound
+            "ftp_pct_min": 1.06,
+            "ftp_pct_max": 1.20,
+            "description": "Very hard, short intervals. Maximum aerobic power.",
         },
-        'sweet_spot': {
-            'name': 'Sweet Spot',
-            'min': int(ftp * 0.88),
-            'max': int(ftp * 0.93),
-            'ftp_pct_min': 0.88,
-            'ftp_pct_max': 0.93,
-            'description': 'Sub-threshold training. Effective for FTP development.',
+        "sweet_spot": {
+            "name": "Sweet Spot",
+            "min": int(ftp * 0.88),
+            "max": int(ftp * 0.93),
+            "ftp_pct_min": 0.88,
+            "ftp_pct_max": 0.93,
+            "description": "Sub-threshold training. Effective for FTP development.",
         },
     }
 
 
-def get_zone_bounds_for_analysis(ftp: float) -> Dict[str, Tuple[float, float]]:
+def get_zone_bounds_for_analysis(ftp: float) -> dict[str, tuple[float, float]]:
     """
     Get zone boundaries for time-in-zones analysis.
 
@@ -99,11 +99,11 @@ def get_zone_bounds_for_analysis(ftp: float) -> Dict[str, Tuple[float, float]]:
     zones = calculate_power_zones(ftp)
 
     return {
-        'Z1 (Active Recovery)': (0, zones['z1']['max']),
-        'Z2 (Endurance)': (zones['z2']['min'], zones['z2']['max']),
-        'Z3 (Tempo)': (zones['z3']['min'], zones['z3']['max']),
-        'Z4 (Threshold)': (zones['z4']['min'], zones['z4']['max']),
-        'Z5 (VO2 Max)': (zones['z5']['min'], float('inf')),
+        "Z1 (Active Recovery)": (0, zones["z1"]["max"]),
+        "Z2 (Endurance)": (zones["z2"]["min"], zones["z2"]["max"]),
+        "Z3 (Tempo)": (zones["z3"]["min"], zones["z3"]["max"]),
+        "Z4 (Threshold)": (zones["z4"]["min"], zones["z4"]["max"]),
+        "Z5 (VO2 Max)": (zones["z5"]["min"], float("inf")),
     }
 
 
@@ -129,10 +129,10 @@ def get_zone_for_power(power: float, ftp: float) -> str:
             return zone_name
 
     # Power is above all zones (> Z5 max)
-    return 'Z5 (VO2 Max)'
+    return "Z5 (VO2 Max)"
 
 
-def get_workout_power_targets(ftp: float) -> Dict[str, int]:
+def get_workout_power_targets(ftp: float) -> dict[str, Any]:
     """
     Get common power targets for workout building.
 
@@ -155,27 +155,25 @@ def get_workout_power_targets(ftp: float) -> Dict[str, int]:
 
     return {
         # Zone maximums
-        'z1_max': zones['z1']['max'],
-        'z2_min': zones['z2']['min'],
-        'z2_max': zones['z2']['max'],
-        'z3_min': zones['z3']['min'],
-        'z3_max': zones['z3']['max'],
-        'z4_min': zones['z4']['min'],
-        'z4_max': zones['z4']['max'],
-        'z5_min': zones['z5']['min'],
-
+        "z1_max": zones["z1"]["max"],
+        "z2_min": zones["z2"]["min"],
+        "z2_max": zones["z2"]["max"],
+        "z3_min": zones["z3"]["min"],
+        "z3_max": zones["z3"]["max"],
+        "z4_min": zones["z4"]["min"],
+        "z4_max": zones["z4"]["max"],
+        "z5_min": zones["z5"]["min"],
         # Sweet Spot
-        'sweet_spot_low': zones['sweet_spot']['min'],
-        'sweet_spot_high': zones['sweet_spot']['max'],
-
+        "sweet_spot_low": zones["sweet_spot"]["min"],
+        "sweet_spot_high": zones["sweet_spot"]["max"],
         # Common workout targets
-        'recovery': zones['z1']['max'],
-        'endurance_low': zones['z2']['min'],
-        'endurance_high': zones['z2']['max'],
-        'tempo_low': zones['z3']['min'],
-        'tempo_high': zones['z3']['max'],
-        'threshold_low': int(ftp * 0.90),  # Low end of threshold work
-        'threshold_high': int(ftp * 0.95),  # High end of threshold work
-        'vo2_low': int(ftp * 1.06),
-        'vo2_high': int(ftp * 1.15),
+        "recovery": zones["z1"]["max"],
+        "endurance_low": zones["z2"]["min"],
+        "endurance_high": zones["z2"]["max"],
+        "tempo_low": zones["z3"]["min"],
+        "tempo_high": zones["z3"]["max"],
+        "threshold_low": int(ftp * 0.90),  # Low end of threshold work
+        "threshold_high": int(ftp * 0.95),  # High end of threshold work
+        "vo2_low": int(ftp * 1.06),
+        "vo2_high": int(ftp * 1.15),
     }

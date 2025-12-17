@@ -25,16 +25,11 @@ export async function POST(request: NextRequest) {
     const files = formData.getAll('files') as File[]
 
     if (files.length === 0) {
-      return NextResponse.json(
-        { error: 'No files provided' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'No files provided' }, { status: 400 })
     }
 
     // Validate files are .fit files
-    const invalidFiles = files.filter(
-      (file) => !file.name.toLowerCase().endsWith('.fit')
-    )
+    const invalidFiles = files.filter((file) => !file.name.toLowerCase().endsWith('.fit'))
     if (invalidFiles.length > 0) {
       return NextResponse.json(
         {

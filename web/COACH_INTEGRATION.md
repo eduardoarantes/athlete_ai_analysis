@@ -82,6 +82,7 @@ This document describes the integration between the Next.js web application and 
 
 1. **Add Missing UI Components**
    Need to add these shadcn/ui components (if not already present):
+
    ```bash
    cd web
    pnpx shadcn@latest add progress
@@ -94,6 +95,7 @@ This document describes the integration between the Next.js web application and 
    ```
 
 2. **Run Database Migration**
+
    ```bash
    # Apply the migration
    supabase db push
@@ -103,6 +105,7 @@ This document describes the integration between the Next.js web application and 
 
 3. **Configure Environment Variables**
    Add to `web/.env.local`:
+
    ```env
    # Python CLI path (adjust for your environment)
    CYCLING_AI_CLI_PATH=/Users/eduardo/Documents/projects/cycling-ai-analysis/.venv/bin/cycling-ai
@@ -174,6 +177,7 @@ This document describes the integration between the Next.js web application and 
 ## Data Flow: Supabase → Python → Results
 
 ### 1. Export Activities to CSV
+
 ```typescript
 // From: strava_activities table
 // To: /tmp/cycling-ai-jobs/{jobId}/activities.csv
@@ -183,6 +187,7 @@ Activity Date,Activity Name,Activity Type,Distance,Moving Time,...
 ```
 
 ### 2. Export Profile to JSON
+
 ```typescript
 // From: profiles table + wizard data
 // To: /tmp/cycling-ai-jobs/{jobId}/athlete_profile.json
@@ -199,6 +204,7 @@ Activity Date,Activity Name,Activity Type,Distance,Moving Time,...
 ```
 
 ### 3. Execute Python CLI
+
 ```bash
 cycling-ai plan generate \
   --profile /tmp/cycling-ai-jobs/{jobId}/athlete_profile.json \
@@ -208,6 +214,7 @@ cycling-ai plan generate \
 ```
 
 ### 4. Parse Results
+
 ```typescript
 // Python outputs: training_plan.json
 {
@@ -233,18 +240,21 @@ cycling-ai plan generate \
 ## AI-Powered Features
 
 ### 1. **Pre-population & Smart Defaults**
+
 - Auto-detects FTP from recent power data
 - Suggests FTP updates based on activity analysis
 - Determines experience level from activity history
 - Pre-fills profile from Supabase
 
 ### 2. **Step-by-Step AI Guidance**
+
 - Each wizard step gets personalized suggestions
 - Validates inputs (e.g., timeline too short for goal)
 - Provides insights on W/kg, training volume, etc.
 - Recommends adjustments for optimal results
 
 ### 3. **Conversational Chat** (Future Enhancement)
+
 - Natural language questions: "How should I train for a century?"
 - Context-aware: Knows your FTP, recent activities, goals
 - Tool-calling: Can analyze your data on the fly
@@ -253,16 +263,19 @@ cycling-ai plan generate \
 ## Integration with Existing Features
 
 ### Strava Integration
+
 - Activities auto-sync from Strava → `strava_activities`
 - Used for FTP detection, activity history, experience level
 - Training plan can reference Strava workouts
 
 ### FIT File Processing
+
 - FIT files provide detailed power data
 - Used for more accurate FTP detection
 - Enables advanced zone analysis
 
 ### Profile Management
+
 - User profile stores core athlete data
 - Wizard pre-populates from profile
 - Generated plans update profile (e.g., suggested FTP)
@@ -270,17 +283,20 @@ cycling-ai plan generate \
 ## Performance Considerations
 
 ### Job Processing
+
 - Training plan generation: 30-60 seconds (Python CLI)
 - Uses background processes (no blocking)
 - Job status polling: 2-second intervals
 - Automatic cleanup of old job data (24 hours)
 
 ### Data Export
+
 - Activities limited to last 500 (performance)
 - CSV generation: < 1 second for 500 activities
 - Profile export: instant
 
 ### Database Queries
+
 - Indexed on `user_id` for fast lookups
 - RLS ensures users only see their data
 - Efficient pagination for activities
@@ -332,6 +348,7 @@ cycling-ai plan generate \
 ## Troubleshooting
 
 ### Python CLI Not Found
+
 ```bash
 # Verify cycling-ai is installed
 which cycling-ai
@@ -343,12 +360,14 @@ pip install -e .
 ```
 
 ### Jobs Stuck in "Running"
+
 - Check Python CLI logs: `logs/cycling-ai.log`
 - Verify API keys are set
 - Check disk space in temp directory
 - Manually kill process: `ps aux | grep cycling-ai`
 
 ### Missing UI Components
+
 ```bash
 cd web
 pnpm install
@@ -356,6 +375,7 @@ pnpx shadcn@latest add [component-name]
 ```
 
 ### Database Migration Issues
+
 ```bash
 # Check migration status
 supabase migration list

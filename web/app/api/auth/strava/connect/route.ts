@@ -50,9 +50,6 @@ export async function GET(_request: NextRequest) {
     return response
   } catch (error) {
     console.error('Strava connect error:', error)
-    return NextResponse.json(
-      { error: 'Failed to initiate Strava connection' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to initiate Strava connection' }, { status: 500 })
   }
 }

@@ -3,13 +3,14 @@ Tool execution coordinator.
 
 Simple orchestration layer for executing tools by name and managing results.
 """
+
 from __future__ import annotations
 
 import inspect
 from typing import TYPE_CHECKING, Any
 
 import cycling_ai.tools  # Trigger tool registration via load_all_tools()
-from cycling_ai.tools.base import ToolExecutionResult
+from cycling_ai.tools.base import ToolDefinition, ToolExecutionResult
 from cycling_ai.tools.registry import get_global_registry
 
 if TYPE_CHECKING:
@@ -46,9 +47,7 @@ class ToolExecutor:
         self.session = session
         self.allowed_tools = allowed_tools
 
-    def execute_tool(
-        self, tool_name: str, parameters: dict[str, Any]
-    ) -> ToolExecutionResult:
+    def execute_tool(self, tool_name: str, parameters: dict[str, Any]) -> ToolExecutionResult:
         """
         Execute a tool by name.
 
@@ -84,20 +83,21 @@ class ToolExecutor:
             if self.session is not None:
                 # Check if tool's execute method accepts session_context parameter
                 tool_execute_sig = inspect.signature(tool.execute)
-                if "session_context" in tool_execute_sig.parameters:
-                    # Only inject if not already provided (allow explicit override)
-                    if "session_context" not in parameters_with_context:
-                        parameters_with_context["session_context"] = self.session.context
+                # Inject session context if tool accepts it and it's not already provided
+                if (
+                    "session_context" in tool_execute_sig.parameters
+                    and "session_context" not in parameters_with_context
+                ):
+                    parameters_with_context["session_context"] = self.session.context
 
             # Execute tool
             result = tool.execute(**parameters_with_context)
 
             # Update session context from tool result metadata
-            if self.session is not None and result.success:
-                if result.metadata and "context_updates" in result.metadata:
-                    context_updates = result.metadata["context_updates"]
-                    if isinstance(context_updates, dict):
-                        self.session.context.update(context_updates)
+            if self.session is not None and result.success and result.metadata and "context_updates" in result.metadata:
+                context_updates = result.metadata["context_updates"]
+                if isinstance(context_updates, dict):
+                    self.session.context.update(context_updates)
 
             return result
 
@@ -116,7 +116,7 @@ class ToolExecutor:
                 errors=[f"Execution error: {str(e)}"],
             )
 
-    def list_available_tools(self) -> list:
+    def list_available_tools(self) -> list[ToolDefinition]:
         """
         List available tool definitions.
 
@@ -132,7 +132,4 @@ class ToolExecutor:
             return all_tools
 
         # Filter to only allowed tools that exist in registry
-        return [
-            tool for tool in all_tools
-            if tool.name in self.allowed_tools
-        ]
+        return [tool for tool in all_tools if tool.name in self.allowed_tools]
