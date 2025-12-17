@@ -3,16 +3,25 @@ import createNextIntlPlugin from 'next-intl/plugin'
 
 const withNextIntl = createNextIntlPlugin('./i18n/request.ts')
 
+// Build modes:
+// - NEXT_EXPORT=true: Static export for S3/CloudFront (no API routes)
+// - NEXT_STANDALONE=true: Standalone build for Lambda deployment (includes API routes)
+// - Neither: Development mode with full SSR
+const isStaticExport = process.env.NEXT_EXPORT === 'true'
+const isStandalone = process.env.NEXT_STANDALONE === 'true'
+
 const nextConfig: NextConfig = {
-  // Enable static export for S3/CloudFront deployment
-  // Note: Set NEXT_EXPORT=true in CI/CD to enable static export
-  // Local development keeps SSR for better DX
-  output: process.env.NEXT_EXPORT === 'true' ? 'export' : undefined,
+  // Configure output mode based on environment
+  ...(isStaticExport
+    ? { output: 'export' as const }
+    : isStandalone
+      ? { output: 'standalone' as const }
+      : {}),
   // Required for static export
   trailingSlash: true,
   // Disable image optimization for static export (use unoptimized images)
   images: {
-    unoptimized: process.env.NEXT_EXPORT === 'true',
+    unoptimized: isStaticExport,
   },
   reactCompiler: true, // Enable React Compiler for automatic memoization
   async headers() {

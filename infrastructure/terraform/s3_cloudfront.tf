@@ -1,5 +1,6 @@
-# Cycling AI Analysis - S3 and CloudFront for Next.js Static Hosting
-# Also serves as a proxy for the Lambda API at /api/*
+# Cycling AI Analysis - S3 and CloudFront Configuration
+# Serves Next.js app via Lambda SSR with static assets from S3
+# Routes /api/* to Python FastAPI Lambda
 
 # S3 bucket for static Next.js files
 resource "aws_s3_bucket" "web" {
@@ -64,10 +65,23 @@ resource "aws_cloudfront_distribution" "web" {
     origin_access_control_id = aws_cloudfront_origin_access_control.web.id
   }
 
-  # API Gateway origin
+  # API Gateway origin (Python FastAPI)
   origin {
     domain_name = replace(aws_apigatewayv2_api.api.api_endpoint, "https://", "")
     origin_id   = "APIGatewayOrigin"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  # Next.js SSR origin (API Gateway)
+  origin {
+    domain_name = replace(aws_apigatewayv2_api.web.api_endpoint, "https://", "")
+    origin_id   = "NextJSOrigin"
 
     custom_origin_config {
       http_port              = 80
@@ -91,19 +105,7 @@ resource "aws_cloudfront_distribution" "web" {
     origin_request_policy_id = aws_cloudfront_origin_request_policy.api.id
   }
 
-  default_cache_behavior {
-    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
-    cached_methods         = ["GET", "HEAD"]
-    target_origin_id       = "S3Origin"
-    viewer_protocol_policy = "redirect-to-https"
-    compress               = true
-
-    # Cache policy for static assets
-    cache_policy_id          = aws_cloudfront_cache_policy.web.id
-    origin_request_policy_id = aws_cloudfront_origin_request_policy.web.id
-  }
-
-  # Cache behavior for _next/static (immutable assets)
+  # Static assets from S3 (_next/static - immutable, long cache)
   ordered_cache_behavior {
     path_pattern           = "_next/static/*"
     allowed_methods        = ["GET", "HEAD"]
@@ -115,7 +117,43 @@ resource "aws_cloudfront_distribution" "web" {
     cache_policy_id = aws_cloudfront_cache_policy.immutable.id
   }
 
-  # SPA routing - return index.html for 404s
+  # Static files from S3 (favicon, robots, etc.)
+  ordered_cache_behavior {
+    path_pattern           = "*.ico"
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "S3Origin"
+    viewer_protocol_policy = "redirect-to-https"
+    compress               = true
+
+    cache_policy_id = aws_cloudfront_cache_policy.web.id
+  }
+
+  ordered_cache_behavior {
+    path_pattern           = "*.svg"
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "S3Origin"
+    viewer_protocol_policy = "redirect-to-https"
+    compress               = true
+
+    cache_policy_id = aws_cloudfront_cache_policy.web.id
+  }
+
+  # Default behavior - S3 static hosting (Next.js SSR disabled due to open-next compatibility issues)
+  # TODO: Re-enable Next.js SSR once open-next supports Next.js 16
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "S3Origin"
+    viewer_protocol_policy = "redirect-to-https"
+    compress               = true
+
+    cache_policy_id          = aws_cloudfront_cache_policy.web.id
+    origin_request_policy_id = aws_cloudfront_origin_request_policy.web.id
+  }
+
+  # SPA routing - return index.html for 404s (for client-side routing)
   custom_error_response {
     error_code         = 404
     response_code      = 200
@@ -222,6 +260,25 @@ resource "aws_cloudfront_origin_request_policy" "api" {
     headers {
       # Note: Authorization is handled separately by OAC, don't include it here
       items = ["Content-Type", "Accept", "Origin", "Referer", "Accept-Language"]
+    }
+  }
+  query_strings_config {
+    query_string_behavior = "all"
+  }
+}
+
+# Origin request policy for Next.js SSR - forward headers, cookies, and query strings
+resource "aws_cloudfront_origin_request_policy" "nextjs" {
+  name    = "${local.name_prefix}-nextjs-origin-policy"
+  comment = "Origin request policy for ${local.name_prefix} Next.js SSR"
+
+  cookies_config {
+    cookie_behavior = "all"
+  }
+  headers_config {
+    header_behavior = "whitelist"
+    headers {
+      items = ["Host", "Accept", "Accept-Language", "Content-Type", "Origin", "Referer", "X-Forwarded-Host"]
     }
   }
   query_strings_config {

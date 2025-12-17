@@ -65,3 +65,8 @@ infrastructure/terraform/.terraform.lock.hcl
 
 # Lambda build artifacts
 dist/
+infrastructure/terraform/tfplan
+
+# Next.js open-next build artifacts
+web/.open-next/
+web/web-lambda.zip

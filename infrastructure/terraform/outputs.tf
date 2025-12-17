@@ -11,30 +11,46 @@ output "name_prefix" {
   value       = local.name_prefix
 }
 
-# Lambda outputs
+# Python API Lambda outputs
 output "lambda_function_name" {
-  description = "Name of the Lambda function"
+  description = "Name of the Python API Lambda function"
   value       = aws_lambda_function.api.function_name
 }
 
 output "lambda_function_arn" {
-  description = "ARN of the Lambda function"
+  description = "ARN of the Python API Lambda function"
   value       = aws_lambda_function.api.arn
 }
 
 output "lambda_url" {
-  description = "Lambda Function URL (internal, blocked by account policy)"
+  description = "Python API Lambda Function URL (internal, blocked by account policy)"
   value       = aws_lambda_function_url.api.function_url
 }
 
 output "api_gateway_url" {
-  description = "API Gateway URL (direct access)"
+  description = "Python API Gateway URL (direct access)"
   value       = aws_apigatewayv2_api.api.api_endpoint
 }
 
 output "api_url" {
-  description = "API URL via CloudFront (recommended)"
+  description = "Python API URL via CloudFront (recommended)"
   value       = "https://${aws_cloudfront_distribution.web.domain_name}/api"
+}
+
+# Next.js Web Lambda outputs
+output "web_lambda_function_name" {
+  description = "Name of the Next.js Web Lambda function"
+  value       = aws_lambda_function.web.function_name
+}
+
+output "web_lambda_url" {
+  description = "Next.js Lambda Function URL (internal)"
+  value       = aws_lambda_function_url.web.function_url
+}
+
+output "web_api_gateway_url" {
+  description = "Next.js API Gateway URL (direct access)"
+  value       = aws_apigatewayv2_api.web.api_endpoint
 }
 
 # S3 outputs
