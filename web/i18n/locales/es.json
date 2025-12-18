@@ -429,7 +429,19 @@
       "beginner": "Principiante (< 6 meses)",
       "intermediate": "Intermedio (6-24 meses)",
       "advanced": "Avanzado (2+ años)",
-      "expert": "Experto/Competitivo (5+ años)"
+      "expert": "Experto/Competitivo (5+ años)",
+      "trainingDays": "Días de Entrenamiento",
+      "trainingDaysDescription": "Selecciona los días en que estás disponible para entrenar",
+      "selectedDays": "{count, plural, =0 {Ningún día seleccionado} =1 {1 día seleccionado} other {# días seleccionados}}",
+      "days": {
+        "monday": "Lun",
+        "tuesday": "Mar",
+        "wednesday": "Mié",
+        "thursday": "Jue",
+        "friday": "Vie",
+        "saturday": "Sáb",
+        "sunday": "Dom"
+      }
     },
     "preferencesStep": {
       "title": "Preferencias de Entrenamiento",
@@ -485,6 +497,7 @@
       "wkg": "W/kg",
       "weeklyTrainingTime": "Tiempo de Entrenamiento Semanal",
       "experienceLevel": "Nivel de Experiencia",
+      "trainingDays": "Días de Entrenamiento",
       "trainingPreferences": "Preferencias de Entrenamiento",
       "trainingDaysPerWeek": "Días de Entrenamiento por Semana",
       "daysValue": "{days} días",
