@@ -526,6 +526,23 @@
       "insightGreatTimeline": "¡Gran cronograma! Esto nos da suficiente tiempo para una periodización adecuada."
     }
   },
+  "planStatus": {
+    "title": "Creando Tu Plan de Entrenamiento",
+    "subtitle": "Nuestro coach IA está construyendo un plan personalizado solo para ti",
+    "loading": "Cargando...",
+    "queued": "En Cola",
+    "generating": "Generando tu plan...",
+    "completed": "¡Plan Listo!",
+    "failed": "Error en la Generación",
+    "pleaseWait": "Esto generalmente toma 1-2 minutos. Siéntete libre de navegar mientras trabajamos.",
+    "inQueue": "Tu plan está en la cola y comenzará a procesarse pronto.",
+    "readyToView": "¡Tu plan de entrenamiento personalizado está listo para ver!",
+    "somethingWentWrong": "No pudimos generar tu plan. Por favor, intenta de nuevo.",
+    "errorTitle": "Algo salió mal",
+    "tryAgain": "Intentar de Nuevo",
+    "viewPlan": "Ver Plan de Entrenamiento",
+    "continueBrowsing": "Continuar Navegando"
+  },
   "aboutPage": {
     "backToHome": "Volver al Inicio",
     "hero": {

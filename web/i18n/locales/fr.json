@@ -526,6 +526,42 @@
       "insightGreatTimeline": "Excellent calendrier ! Cela nous donne suffisamment de temps pour une périodisation appropriée."
     }
   },
+  "planStatus": {
+    "title": "Génération du Plan",
+    "subtitle": "Suivi de la progression de la génération de votre plan d'entraînement",
+    "generating": "Génération de votre plan d'entraînement personnalisé...",
+    "status": {
+      "pending": "En attente",
+      "processing": "En cours",
+      "completed": "Terminé",
+      "failed": "Échoué"
+    },
+    "progress": {
+      "initializing": "Initialisation de l'analyse...",
+      "analyzingProfile": "Analyse de votre profil d'athlète...",
+      "creatingPlan": "Création du plan d'entraînement...",
+      "optimizing": "Optimisation des entraînements...",
+      "finalizing": "Finalisation de votre plan..."
+    },
+    "result": {
+      "success": "Votre plan d'entraînement est prêt !",
+      "successDescription": "Nous avons créé un plan personnalisé basé sur votre profil et vos objectifs.",
+      "viewPlan": "Voir le Plan",
+      "createAnother": "Créer un Autre Plan"
+    },
+    "error": {
+      "title": "Échec de la génération du plan",
+      "description": "Une erreur s'est produite lors de la génération de votre plan.",
+      "retry": "Réessayer",
+      "contact": "Si le problème persiste, veuillez nous contacter."
+    },
+    "timeout": {
+      "title": "La génération prend plus de temps que prévu",
+      "description": "Ne vous inquiétez pas, votre plan est toujours en cours de génération. Vous pouvez attendre ou revenir plus tard.",
+      "wait": "Continuer à attendre",
+      "backToDashboard": "Retour au tableau de bord"
+    }
+  },
   "aboutPage": {
     "backToHome": "Retour à l'accueil",
     "hero": {
