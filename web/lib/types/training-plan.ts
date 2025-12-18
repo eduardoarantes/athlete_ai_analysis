@@ -74,6 +74,26 @@ export interface PlanMetadata {
   start_date?: string
 }
 
+/**
+ * Source metadata for tracking how the plan was generated
+ */
+export interface PlanSourceMetadata {
+  /** Source system that generated the plan */
+  source: 'cycling-ai-python-api' | 'manual' | 'imported'
+  /** AI provider used (e.g., 'anthropic', 'openai', 'gemini', 'ollama') */
+  ai_provider?: string | undefined
+  /** Specific AI model used (e.g., 'claude-3-sonnet', 'gpt-4') */
+  ai_model?: string | undefined
+  /** Version of the cycling-ai library */
+  library_version?: string | undefined
+  /** Timestamp when the plan was generated */
+  generated_at: string
+  /** Job ID from the generation process */
+  job_id?: string | undefined
+  /** Any additional provider-specific metadata */
+  provider_metadata?: Record<string, unknown> | undefined
+}
+
 export interface TrainingPlanData {
   athlete_profile: AthleteProfile
   plan_metadata: PlanMetadata
@@ -90,6 +110,8 @@ export interface TrainingPlan {
   start_date: string
   end_date: string
   plan_data: TrainingPlanData
+  /** Source metadata tracking how the plan was generated */
+  metadata: PlanSourceMetadata | null
   status: string | null
   created_at: string
   updated_at: string

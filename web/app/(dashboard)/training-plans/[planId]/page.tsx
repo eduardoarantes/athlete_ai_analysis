@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Calendar, Target, TrendingUp, Zap } from 'lucide-react'
 import { TrainingPlanCalendar } from '@/components/training/training-plan-calendar'
-import type { TrainingPlan, TrainingPlanData } from '@/lib/types/training-plan'
+import type { TrainingPlan, TrainingPlanData, PlanSourceMetadata } from '@/lib/types/training-plan'
 
 interface TrainingPlanPageProps {
   params: Promise<{ planId: string }>
@@ -42,6 +42,7 @@ export default async function TrainingPlanPage({ params }: TrainingPlanPageProps
   const plan: TrainingPlan = {
     ...planRow,
     plan_data: planData,
+    metadata: (planRow.metadata as PlanSourceMetadata | null) ?? null,
   }
 
   const startDate = new Date(plan.start_date)

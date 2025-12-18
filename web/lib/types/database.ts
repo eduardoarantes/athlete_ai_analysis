@@ -522,6 +522,7 @@ export type Database = {
           description: string | null
           end_date: string
           id: string
+          metadata: Json | null
           name: string
           plan_data: Json
           start_date: string
@@ -534,6 +535,7 @@ export type Database = {
           description?: string | null
           end_date: string
           id?: string
+          metadata?: Json | null
           name: string
           plan_data: Json
           start_date: string
@@ -546,6 +548,7 @@ export type Database = {
           description?: string | null
           end_date?: string
           id?: string
+          metadata?: Json | null
           name?: string
           plan_data?: Json
           start_date?: string
