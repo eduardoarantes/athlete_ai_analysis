@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test'
 test.describe('Simple Validation Test', () => {
   test('Check if validation messages appear on Step 1', async ({ page }) => {
     // Navigate to signup page
-    await page.goto('http://localhost:3000/en/signup')
+    await page.goto('http://localhost:3000/signup')
 
     // Fill signup form
     const testEmail = `test-validation-${Date.now()}@example.com`
