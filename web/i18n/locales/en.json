@@ -506,6 +506,49 @@
     "viewPlan": "View Training Plan",
     "continueBrowsing": "Continue Browsing"
   },
+  "trainingPlan": {
+    "title": "Training Plan",
+    "weekOf": "Week {week} of {total}",
+    "phase": "Phase: {phase}",
+    "weeklyTss": "{tss} TSS",
+    "workout": "Workout",
+    "duration": "Duration",
+    "tss": "TSS",
+    "type": "Type",
+    "restDay": "Rest Day",
+    "noWorkout": "No workout scheduled",
+    "today": "Today",
+    "previousWeek": "Previous Week",
+    "nextWeek": "Next Week",
+    "backToPlans": "Back to Plans",
+    "planOverview": "Plan Overview",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "totalWeeks": "Total Weeks",
+    "totalTss": "Total TSS",
+    "avgWeeklyTss": "Avg Weekly TSS",
+    "ftpGoal": "FTP Goal",
+    "ftpGain": "FTP Gain",
+    "currentWeek": "Current Week",
+    "weekFocus": "Week Focus",
+    "workoutTypes": {
+      "endurance": "Endurance",
+      "tempo": "Tempo",
+      "sweet_spot": "Sweet Spot",
+      "threshold": "Threshold",
+      "vo2max": "VO2 Max",
+      "recovery": "Recovery",
+      "rest": "Rest",
+      "mixed": "Mixed"
+    },
+    "loading": "Loading training plan...",
+    "notFound": "Training plan not found",
+    "planStatus": {
+      "active": "Active",
+      "completed": "Completed",
+      "paused": "Paused"
+    }
+  },
   "aboutPage": {
     "backToHome": "Back to Home",
     "hero": {

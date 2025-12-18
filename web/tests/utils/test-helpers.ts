@@ -22,8 +22,8 @@ function getServiceKey(): string {
   }
   throw new Error(
     'SUPABASE_SERVICE_ROLE_KEY environment variable is required for Supabase Cloud.\n' +
-    'Get it from: Supabase Dashboard > Project Settings > API > service_role key\n' +
-    'Then run tests with: SUPABASE_SERVICE_ROLE_KEY=your-key pnpm test:headed'
+      'Get it from: Supabase Dashboard > Project Settings > API > service_role key\n' +
+      'Then run tests with: SUPABASE_SERVICE_ROLE_KEY=your-key pnpm test:headed'
   )
 }
 
@@ -124,7 +124,11 @@ export async function deleteTestUser(
 /**
  * Selects an option from a shadcn/ui Select component
  */
-export async function selectOption(page: Page, triggerSelector: string, optionText: string): Promise<void> {
+export async function selectOption(
+  page: Page,
+  triggerSelector: string,
+  optionText: string
+): Promise<void> {
   // Click the trigger to open the dropdown
   await page.click(triggerSelector)
   await page.waitForTimeout(300) // Wait for animation
