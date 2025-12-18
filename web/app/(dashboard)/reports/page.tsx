@@ -1,5 +1,7 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -13,6 +15,7 @@ import {
   TrendingUp,
   Activity,
 } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 interface Report {
   id: string
@@ -34,22 +37,30 @@ interface Report {
   } | null
 }
 
-export default async function ReportsPage() {
-  const supabase = await createClient()
+export default function ReportsPage() {
+  const t = useTranslations('reports')
+  const [reports, setReports] = useState<Report[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  useEffect(() => {
+    loadReports()
+  }, [])
 
-  if (!user) {
-    redirect('/login')
+  const loadReports = async () => {
+    try {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('reports')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (data) {
+        setReports(data as Report[])
+      }
+    } finally {
+      setLoading(false)
+    }
   }
-
-  const { data: reports } = await supabase
-    .from('reports')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -57,21 +68,21 @@ export default async function ReportsPage() {
         return (
           <Badge className="bg-green-500">
             <CheckCircle className="h-3 w-3 mr-1" />
-            Completed
+            {t('status.completed')}
           </Badge>
         )
       case 'processing':
         return (
           <Badge className="bg-blue-500">
             <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-            Processing
+            {t('status.processing')}
           </Badge>
         )
       case 'failed':
         return (
           <Badge variant="destructive">
             <XCircle className="h-3 w-3 mr-1" />
-            Failed
+            {t('status.failed')}
           </Badge>
         )
       default:
@@ -95,25 +106,36 @@ export default async function ReportsPage() {
     }
   }
 
-  const formatReportType = (type: string) => {
+  const getReportTypeLabel = (type: string) => {
+    if (type === 'performance' || type === 'training_plan') {
+      return t(`reportType.${type}`)
+    }
     return type
       .split('_')
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ')
   }
 
+  if (loading) {
+    return (
+      <div className="container mx-auto py-6 flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Performance Reports</h1>
-          <p className="text-muted-foreground">Your AI-generated performance analysis reports</p>
+          <h1 className="text-3xl font-bold">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
       </div>
 
-      {reports && reports.length > 0 ? (
+      {reports.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {(reports as Report[]).map((report) => {
+          {reports.map((report) => {
             const activitiesAnalyzed = report.report_data?.activities_analyzed
             const summary = report.report_data?.performance_analysis?.ai_insights?.summary
             const trainingFocus = report.report_data?.performance_analysis?.ai_insights?.training_focus
@@ -132,7 +154,7 @@ export default async function ReportsPage() {
                       <div className="flex items-center gap-2">
                         {getReportTypeIcon(report.report_type)}
                         <CardTitle className="text-lg">
-                          {formatReportType(report.report_type)} Report
+                          {getReportTypeLabel(report.report_type)} Report
                         </CardTitle>
                       </div>
                       {getStatusBadge(report.status)}
@@ -157,7 +179,7 @@ export default async function ReportsPage() {
                       {activitiesAnalyzed && (
                         <span className="flex items-center gap-1">
                           <Activity className="h-4 w-4" />
-                          {activitiesAnalyzed} activities
+                          {t('activitiesCount', { count: activitiesAnalyzed })}
                         </span>
                       )}
                       {trainingFocus && (
@@ -169,9 +191,9 @@ export default async function ReportsPage() {
                     </div>
 
                     <div className="text-xs text-muted-foreground">
-                      Created {new Date(report.created_at).toLocaleDateString()}
+                      {t('created', { date: new Date(report.created_at).toLocaleDateString() })}
                       {report.completed_at && (
-                        <> &bull; Completed {new Date(report.completed_at).toLocaleDateString()}</>
+                        <> &bull; {t('completedOn', { date: new Date(report.completed_at).toLocaleDateString() })}</>
                       )}
                     </div>
                   </CardContent>
@@ -184,10 +206,8 @@ export default async function ReportsPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h2 className="text-xl font-semibold mb-2">No reports yet</h2>
-            <p className="text-muted-foreground mb-4">
-              Performance reports will appear here once generated.
-            </p>
+            <h2 className="text-xl font-semibold mb-2">{t('noReportsTitle')}</h2>
+            <p className="text-muted-foreground mb-4">{t('noReportsDescription')}</p>
           </CardContent>
         </Card>
       )}
