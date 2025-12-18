@@ -28,18 +28,60 @@ class APISettings(BaseSettings):
     # Job storage
     job_storage_path: str = "/tmp/cycling-ai-jobs"
 
+    # Supabase configuration
+    supabase_url: str | None = None
+    supabase_service_role_key: str | None = None
+
     # API metadata
     title: str = "Cycling AI API"
     description: str = "REST API for AI-powered cycling performance analysis"
     version: str = "1.0.0"
 
+    # AI Provider configuration
+    ai_provider: str = "anthropic"  # anthropic, openai, gemini, ollama
+    ai_model: str | None = None  # Default model per provider if not specified
+    anthropic_api_key: str | None = None
+    openai_api_key: str | None = None
+    google_api_key: str | None = None
+    ollama_base_url: str = "http://localhost:11434"
+
+    # AI generation settings
+    ai_max_tokens: int = 16384  # Increased for longer training plans
+    ai_temperature: float = 0.7
+
     # Model configuration
     model_config = SettingsConfigDict(
-        env_prefix="FASTAPI_",
+        env_prefix="",  # No prefix - use direct env var names
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
     )
+
+    def get_provider_api_key(self) -> str:
+        """Get the API key for the configured provider."""
+        provider = self.ai_provider.lower()
+        if provider == "anthropic":
+            return self.anthropic_api_key or ""
+        elif provider == "openai":
+            return self.openai_api_key or ""
+        elif provider == "gemini":
+            return self.google_api_key or ""
+        elif provider == "ollama":
+            return "ollama"  # Ollama doesn't need API key
+        return ""
+
+    def get_default_model(self) -> str:
+        """Get the default model for the configured provider."""
+        if self.ai_model:
+            return self.ai_model
+        provider = self.ai_provider.lower()
+        defaults = {
+            "anthropic": "claude-sonnet-4-20250514",
+            "openai": "gpt-4o",
+            "gemini": "gemini-2.0-flash",
+            "ollama": "llama3.1:8b",
+        }
+        return defaults.get(provider, "claude-sonnet-4-20250514")
 
 
 # Global settings instance

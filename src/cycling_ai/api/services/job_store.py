@@ -63,14 +63,17 @@ class JobStore:
         self._jobs: dict[str, Job] = {}
         self._lock = asyncio.Lock()
 
-    async def create_job(self) -> str:
+    async def create_job(self, prefix: str = "plan") -> str:
         """
         Create a new job and return its ID.
+
+        Args:
+            prefix: Job ID prefix (default: "plan")
 
         Returns:
             Job ID string
         """
-        job_id = f"plan_{int(datetime.now().timestamp())}_{uuid4().hex[:8]}"
+        job_id = f"{prefix}_{int(datetime.now().timestamp())}_{uuid4().hex[:8]}"
 
         async with self._lock:
             job = Job(

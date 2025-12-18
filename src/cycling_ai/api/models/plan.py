@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 class AthleteProfileData(BaseModel):
     """Athlete profile embedded in requests."""
 
+    name: str | None = Field(None, description="Athlete name")
     ftp: float = Field(..., gt=0, description="Functional Threshold Power in watts")
     weight_kg: float = Field(..., gt=0, description="Athlete weight in kilograms")
     max_hr: int | None = Field(None, gt=0, le=220, description="Maximum heart rate")

@@ -234,19 +234,20 @@ export class CyclingCoachService {
           const endDate = new Date()
           endDate.setDate(endDate.getDate() + weeks * 7)
 
+          // Extract AI metadata from job result
+          const aiMetadata = (jobStatus.result as Record<string, unknown>)?.ai_metadata as
+            | Record<string, unknown>
+            | undefined
+
           // Build source metadata for tracking plan generation
           const sourceMetadata: PlanSourceMetadata = {
             source: 'cycling-ai-python-api',
             generated_at: new Date().toISOString(),
             job_id: apiJobId,
-            // AI provider info will be populated from Python API response when available
-            ai_provider: (jobStatus.result as Record<string, unknown>)?.ai_provider as
-              | string
-              | undefined,
-            ai_model: (jobStatus.result as Record<string, unknown>)?.ai_model as string | undefined,
-            library_version: (jobStatus.result as Record<string, unknown>)?.library_version as
-              | string
-              | undefined,
+            // AI provider info from Python API response
+            ai_provider: (aiMetadata?.ai_provider as string | undefined) || undefined,
+            ai_model: (aiMetadata?.ai_model as string | undefined) || undefined,
+            library_version: (aiMetadata?.library_version as string | undefined) || undefined,
           }
 
           // Store plan in database

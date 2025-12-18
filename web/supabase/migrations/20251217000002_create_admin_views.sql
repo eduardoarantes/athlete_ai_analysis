@@ -15,7 +15,7 @@ CREATE OR REPLACE VIEW public.admin_user_view AS
 SELECT
   -- User identity
   u.id AS user_id,
-  u.email,
+  u.email::TEXT AS email,
   u.raw_user_meta_data->>'role' AS role,
 
   -- Account dates

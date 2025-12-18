@@ -18,6 +18,7 @@ import {
   Target,
 } from 'lucide-react'
 import { UserSubscriptionForm } from '@/components/admin/user-subscription-form'
+import { GenerateAnalysisButton } from '@/components/admin/generate-analysis-button'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -292,6 +293,15 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
             </div>
           </CardContent>
         </Card>
+
+        {/* Admin Actions: Generate Analysis */}
+        <div className="md:col-span-2">
+          <GenerateAnalysisButton
+            userId={user.user_id}
+            hasProfile={user.profile.exists}
+            hasActivities={user.counts.total_activities > 0}
+          />
+        </div>
       </div>
     </div>
   )
