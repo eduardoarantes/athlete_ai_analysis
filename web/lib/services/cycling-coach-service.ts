@@ -134,7 +134,9 @@ export class CyclingCoachService {
       })
 
       if (response.statusCode >= 400) {
-        throw new Error(`Python API returned ${response.statusCode}: ${JSON.stringify(response.body)}`)
+        throw new Error(
+          `Python API returned ${response.statusCode}: ${JSON.stringify(response.body)}`
+        )
       }
 
       const { job_id: apiJobId } = response.body
@@ -216,13 +218,24 @@ export class CyclingCoachService {
             throw new Error('No plan data in completed job')
           }
 
+          // Get the full user_id from the job record
+          const { data: jobRecord } = await supabase
+            .from('plan_generation_jobs')
+            .select('user_id')
+            .eq('id', dbJobId)
+            .single()
+
+          const userId = jobRecord?.user_id
+          if (!userId) {
+            throw new Error('Could not find user_id for job')
+          }
+
           // Calculate end date
           const endDate = new Date()
           endDate.setDate(endDate.getDate() + weeks * 7)
 
           // Store plan in database
-          const userId = dbJobId.split('_')[2] ?? ''
-          const { data: plan } = await supabase
+          const { data: plan, error: planError } = await supabase
             .from('training_plans')
             .insert({
               user_id: userId,
@@ -233,15 +246,21 @@ export class CyclingCoachService {
               plan_data: planData as never,
               status: 'active',
             } as never)
-            .select()
+            .select('id')
             .single()
 
-          // Update job status
+          if (planError || !plan?.id) {
+            throw new Error(
+              `Failed to save training plan: ${planError?.message || 'No plan ID returned'}`
+            )
+          }
+
+          // Update job status with plan_id
           await supabase
             .from('plan_generation_jobs')
             .update({
               status: 'completed',
-              result: { plan_id: plan?.id, plan_data: planData } as unknown as Record<
+              result: { plan_id: plan.id, plan_data: planData } as unknown as Record<
                 string,
                 unknown
               >,

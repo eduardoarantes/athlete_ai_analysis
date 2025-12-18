@@ -429,7 +429,19 @@
       "beginner": "Débutant (< 6 mois)",
       "intermediate": "Intermédiaire (6-24 mois)",
       "advanced": "Avancé (2+ ans)",
-      "expert": "Expert/Compétitif (5+ ans)"
+      "expert": "Expert/Compétitif (5+ ans)",
+      "trainingDays": "Jours d'Entraînement",
+      "trainingDaysDescription": "Sélectionnez les jours où vous êtes disponible pour vous entraîner",
+      "selectedDays": "{count, plural, =0 {Aucun jour sélectionné} =1 {1 jour sélectionné} other {# jours sélectionnés}}",
+      "days": {
+        "monday": "Lun",
+        "tuesday": "Mar",
+        "wednesday": "Mer",
+        "thursday": "Jeu",
+        "friday": "Ven",
+        "saturday": "Sam",
+        "sunday": "Dim"
+      }
     },
     "preferencesStep": {
       "title": "Préférences d'Entraînement",
@@ -485,6 +497,7 @@
       "wkg": "W/kg",
       "weeklyTrainingTime": "Temps d'Entraînement Hebdomadaire",
       "experienceLevel": "Niveau d'Expérience",
+      "trainingDays": "Jours d'Entraînement",
       "trainingPreferences": "Préférences d'Entraînement",
       "trainingDaysPerWeek": "Jours d'Entraînement par Semaine",
       "daysValue": "{days} jours",
@@ -511,6 +524,85 @@
       "insightFtpDays": "L'amélioration du FTP nécessite généralement 4-5 jours d'entraînement par semaine. Envisagez d'augmenter la fréquence d'entraînement pour des résultats optimaux.",
       "insightFtpWeeks": "Les gains de FTP nécessitent généralement 8-12 semaines. Envisagez d'étendre la durée de votre plan.",
       "insightGreatTimeline": "Excellent calendrier ! Cela nous donne suffisamment de temps pour une périodisation appropriée."
+    }
+  },
+  "planStatus": {
+    "title": "Génération du Plan",
+    "subtitle": "Suivi de la progression de la génération de votre plan d'entraînement",
+    "generating": "Génération de votre plan d'entraînement personnalisé...",
+    "status": {
+      "pending": "En attente",
+      "processing": "En cours",
+      "completed": "Terminé",
+      "failed": "Échoué"
+    },
+    "progress": {
+      "initializing": "Initialisation de l'analyse...",
+      "analyzingProfile": "Analyse de votre profil d'athlète...",
+      "creatingPlan": "Création du plan d'entraînement...",
+      "optimizing": "Optimisation des entraînements...",
+      "finalizing": "Finalisation de votre plan..."
+    },
+    "result": {
+      "success": "Votre plan d'entraînement est prêt !",
+      "successDescription": "Nous avons créé un plan personnalisé basé sur votre profil et vos objectifs.",
+      "viewPlan": "Voir le Plan",
+      "createAnother": "Créer un Autre Plan"
+    },
+    "error": {
+      "title": "Échec de la génération du plan",
+      "description": "Une erreur s'est produite lors de la génération de votre plan.",
+      "retry": "Réessayer",
+      "contact": "Si le problème persiste, veuillez nous contacter."
+    },
+    "timeout": {
+      "title": "La génération prend plus de temps que prévu",
+      "description": "Ne vous inquiétez pas, votre plan est toujours en cours de génération. Vous pouvez attendre ou revenir plus tard.",
+      "wait": "Continuer à attendre",
+      "backToDashboard": "Retour au tableau de bord"
+    }
+  },
+  "trainingPlan": {
+    "title": "Plan d'Entraînement",
+    "weekOf": "Semaine {week} sur {total}",
+    "phase": "Phase : {phase}",
+    "weeklyTss": "{tss} TSS",
+    "workout": "Entraînement",
+    "duration": "Durée",
+    "tss": "TSS",
+    "type": "Type",
+    "restDay": "Jour de Repos",
+    "noWorkout": "Aucun entraînement prévu",
+    "today": "Aujourd'hui",
+    "previousWeek": "Semaine Précédente",
+    "nextWeek": "Semaine Suivante",
+    "backToPlans": "Retour aux Plans",
+    "planOverview": "Aperçu du Plan",
+    "startDate": "Date de Début",
+    "endDate": "Date de Fin",
+    "totalWeeks": "Semaines Totales",
+    "totalTss": "TSS Total",
+    "avgWeeklyTss": "TSS Hebdomadaire Moyen",
+    "ftpGoal": "Objectif FTP",
+    "ftpGain": "Gain de FTP",
+    "currentWeek": "Semaine Actuelle",
+    "weekFocus": "Focus de la Semaine",
+    "workoutTypes": {
+      "endurance": "Endurance",
+      "tempo": "Tempo",
+      "sweet_spot": "Sweet Spot",
+      "threshold": "Seuil",
+      "vo2max": "VO2 Max",
+      "recovery": "Récupération",
+      "rest": "Repos",
+      "mixed": "Mixte"
+    },
+    "loading": "Chargement du plan d'entraînement...",
+    "notFound": "Plan d'entraînement introuvable",
+    "planStatus": {
+      "active": "Actif",
+      "completed": "Terminé",
+      "paused": "En Pause"
     }
   },
   "aboutPage": {

@@ -1,14 +1,23 @@
+import { FlatCompat } from '@eslint/eslintrc'
 import { defineConfig, globalIgnores } from 'eslint/config'
-import nextVitals from 'eslint-config-next/core-web-vitals'
-import nextTs from 'eslint-config-next/typescript'
 import prettierConfig from 'eslint-config-prettier'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+})
 
 const eslintConfig = defineConfig([
-  ...nextVitals,
-  ...nextTs,
+  ...compat.extends('next/core-web-vitals', 'next/typescript'),
   prettierConfig,
   {
     rules: {
+      // Disable React Compiler experimental rules from react-hooks rc
+      'react-hooks/preserve-manual-memoization': 'off',
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
@@ -34,6 +43,7 @@ const eslintConfig = defineConfig([
   globalIgnores([
     // Default ignores of eslint-config-next:
     '.next/**',
+    '.open-next/**',
     'out/**',
     'build/**',
     'next-env.d.ts',

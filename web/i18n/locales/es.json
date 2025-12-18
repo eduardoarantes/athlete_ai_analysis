@@ -429,7 +429,19 @@
       "beginner": "Principiante (< 6 meses)",
       "intermediate": "Intermedio (6-24 meses)",
       "advanced": "Avanzado (2+ años)",
-      "expert": "Experto/Competitivo (5+ años)"
+      "expert": "Experto/Competitivo (5+ años)",
+      "trainingDays": "Días de Entrenamiento",
+      "trainingDaysDescription": "Selecciona los días en que estás disponible para entrenar",
+      "selectedDays": "{count, plural, =0 {Ningún día seleccionado} =1 {1 día seleccionado} other {# días seleccionados}}",
+      "days": {
+        "monday": "Lun",
+        "tuesday": "Mar",
+        "wednesday": "Mié",
+        "thursday": "Jue",
+        "friday": "Vie",
+        "saturday": "Sáb",
+        "sunday": "Dom"
+      }
     },
     "preferencesStep": {
       "title": "Preferencias de Entrenamiento",
@@ -485,6 +497,7 @@
       "wkg": "W/kg",
       "weeklyTrainingTime": "Tiempo de Entrenamiento Semanal",
       "experienceLevel": "Nivel de Experiencia",
+      "trainingDays": "Días de Entrenamiento",
       "trainingPreferences": "Preferencias de Entrenamiento",
       "trainingDaysPerWeek": "Días de Entrenamiento por Semana",
       "daysValue": "{days} días",
@@ -511,6 +524,66 @@
       "insightFtpDays": "La mejora del FTP típicamente requiere 4-5 días de entrenamiento por semana. Considera aumentar la frecuencia de entrenamiento para resultados óptimos.",
       "insightFtpWeeks": "Las ganancias de FTP típicamente requieren 8-12 semanas. Considera extender la duración de tu plan.",
       "insightGreatTimeline": "¡Gran cronograma! Esto nos da suficiente tiempo para una periodización adecuada."
+    }
+  },
+  "planStatus": {
+    "title": "Creando Tu Plan de Entrenamiento",
+    "subtitle": "Nuestro coach IA está construyendo un plan personalizado solo para ti",
+    "loading": "Cargando...",
+    "queued": "En Cola",
+    "generating": "Generando tu plan...",
+    "completed": "¡Plan Listo!",
+    "failed": "Error en la Generación",
+    "pleaseWait": "Esto generalmente toma 1-2 minutos. Siéntete libre de navegar mientras trabajamos.",
+    "inQueue": "Tu plan está en la cola y comenzará a procesarse pronto.",
+    "readyToView": "¡Tu plan de entrenamiento personalizado está listo para ver!",
+    "somethingWentWrong": "No pudimos generar tu plan. Por favor, intenta de nuevo.",
+    "errorTitle": "Algo salió mal",
+    "tryAgain": "Intentar de Nuevo",
+    "viewPlan": "Ver Plan de Entrenamiento",
+    "continueBrowsing": "Continuar Navegando"
+  },
+  "trainingPlan": {
+    "title": "Plan de Entrenamiento",
+    "weekOf": "Semana {week} de {total}",
+    "phase": "Fase: {phase}",
+    "weeklyTss": "{tss} TSS",
+    "workout": "Entrenamiento",
+    "duration": "Duración",
+    "tss": "TSS",
+    "type": "Tipo",
+    "restDay": "Día de Descanso",
+    "noWorkout": "Sin entrenamiento programado",
+    "today": "Hoy",
+    "previousWeek": "Semana Anterior",
+    "nextWeek": "Próxima Semana",
+    "backToPlans": "Volver a Planes",
+    "planOverview": "Resumen del Plan",
+    "startDate": "Fecha de Inicio",
+    "endDate": "Fecha de Fin",
+    "totalWeeks": "Semanas Totales",
+    "totalTss": "TSS Total",
+    "avgWeeklyTss": "TSS Semanal Promedio",
+    "ftpGoal": "Meta de FTP",
+    "ftpGain": "Ganancia de FTP",
+    "currentWeek": "Semana Actual",
+    "weekFocus": "Enfoque de la Semana",
+    "workoutTypes": {
+      "endurance": "Resistencia",
+      "tempo": "Tempo",
+      "sweet_spot": "Sweet Spot",
+      "threshold": "Umbral",
+      "vo2max": "VO2 Máx",
+      "recovery": "Recuperación",
+      "rest": "Descanso",
+      "mixed": "Mixto"
+    },
+    "loading": "Cargando plan de entrenamiento...",
+    "notFound": "Plan de entrenamiento no encontrado",
+    "planStatus": {
+      "active": "Activo",
+      "completed": "Completado",
+      "paused": "Pausado"
     }
   },
   "aboutPage": {
