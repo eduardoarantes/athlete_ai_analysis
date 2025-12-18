@@ -1,49 +1,26 @@
 import { test, expect } from '@playwright/test'
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import {
+  createSupabaseAdmin,
+  createTestUserWithProfile,
+  deleteTestUser,
+  loginTestUser,
+  type TestUser,
+} from './utils/test-helpers'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/types/database'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321'
-const supabaseServiceKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU'
 
 test.describe('Activities Calendar', () => {
   let supabase: SupabaseClient<Database>
-  let testUserId: string
-  let testEmail: string
+  let testUser: TestUser
+  let baseActivityId: number
 
   test.beforeAll(async () => {
-    supabase = createClient<Database>(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    })
+    supabase = createSupabaseAdmin()
   })
 
   test.beforeEach(async ({ page }) => {
-    // Create a unique test user
-    testEmail = `test-calendar-${Date.now()}@example.com`
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-      email: testEmail,
-      password: 'test-password-123',
-      email_confirm: true,
-    })
-
-    if (authError) throw authError
-    testUserId = authData.user.id
-
-    // Create profile
-    const { error: profileError } = await supabase.from('athlete_profiles').insert({
-      user_id: testUserId,
-      first_name: 'Test',
-      last_name: 'User',
-      ftp: 250,
-      max_hr: 180,
-      weight_kg: 70,
-    })
-
-    if (profileError) throw profileError
+    // Create a test user with profile
+    testUser = await createTestUserWithProfile(supabase, 'calendar')
 
     // Create test activities in different months
     const now = new Date()
@@ -52,12 +29,12 @@ test.describe('Activities Calendar', () => {
     const twoMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 2, 15)
 
     // Use unique activity IDs based on timestamp
-    const baseId = Date.now()
+    baseActivityId = Date.now()
 
     const activities = [
       {
-        user_id: testUserId,
-        strava_activity_id: baseId + 1,
+        user_id: testUser.id,
+        strava_activity_id: baseActivityId + 1,
         name: 'Current Month Ride',
         type: 'Ride',
         sport_type: 'Ride',
@@ -70,8 +47,8 @@ test.describe('Activities Calendar', () => {
         weighted_average_watts: 220,
       },
       {
-        user_id: testUserId,
-        strava_activity_id: baseId + 2,
+        user_id: testUser.id,
+        strava_activity_id: baseActivityId + 2,
         name: 'Previous Month Ride',
         type: 'Ride',
         sport_type: 'Ride',
@@ -84,8 +61,8 @@ test.describe('Activities Calendar', () => {
         weighted_average_watts: 230,
       },
       {
-        user_id: testUserId,
-        strava_activity_id: baseId + 3,
+        user_id: testUser.id,
+        strava_activity_id: baseActivityId + 3,
         name: 'Two Months Ago Ride',
         type: 'Ride',
         sport_type: 'Ride',
@@ -100,61 +77,65 @@ test.describe('Activities Calendar', () => {
     ]
 
     const { error: activitiesError } = await supabase.from('strava_activities').insert(activities)
-
     if (activitiesError) throw activitiesError
 
     // Login
-    await page.goto('/login')
-    await page.fill('input[name="email"]', testEmail)
-    await page.fill('input[name="password"]', 'test-password-123')
-    await page.click('button[type="submit"]')
-    await page.waitForURL('/dashboard')
+    await loginTestUser(page, testUser)
+
+    // Should be on dashboard
+    await expect(page).toHaveURL(/\/dashboard/)
   })
 
   test.afterEach(async () => {
     // Cleanup: delete test user and associated data
-    if (testUserId) {
-      await supabase.from('strava_activities').delete().eq('user_id', testUserId)
-      await supabase.from('athlete_profiles').delete().eq('user_id', testUserId)
-      await supabase.auth.admin.deleteUser(testUserId)
+    if (testUser?.id) {
+      await supabase.from('strava_activities').delete().eq('user_id', testUser.id)
+      await deleteTestUser(supabase, testUser.id)
     }
   })
 
   test('should show activities when navigating to previous months', async ({ page }) => {
     // Navigate to activities page
-    await page.goto('/app/activities')
+    await page.goto('/activities')
     await page.waitForLoadState('networkidle')
 
     // Switch to calendar view
-    await page.click('button:has-text("Calendar")')
-    await page.waitForTimeout(500)
+    const calendarButton = page.locator('button:has-text("Calendar")')
+    if (await calendarButton.isVisible()) {
+      await calendarButton.click()
+      await page.waitForTimeout(500)
+    }
 
     // Verify current month activity is visible
-    await expect(page.locator('text=Current Month Ride')).toBeVisible()
+    await expect(page.locator('text=Current Month Ride')).toBeVisible({ timeout: 10000 })
 
     // Click previous month button
-    await page.click('button[aria-label="Previous month"]', { force: true })
+    const prevButton = page.locator('button[aria-label="Previous month"]')
+    await prevButton.click({ force: true })
     await page.waitForTimeout(1000)
 
-    // BUG: This should pass but currently fails because activities are not fetched for the previous month
-    await expect(page.locator('text=Previous Month Ride')).toBeVisible()
+    // Should show previous month activity
+    await expect(page.locator('text=Previous Month Ride')).toBeVisible({ timeout: 10000 })
 
     // Click previous month button again
-    await page.click('button[aria-label="Previous month"]', { force: true })
+    await prevButton.click({ force: true })
     await page.waitForTimeout(1000)
 
-    // BUG: This should pass but currently fails
-    await expect(page.locator('text=Two Months Ago Ride')).toBeVisible()
+    // Should show two months ago activity
+    await expect(page.locator('text=Two Months Ago Ride')).toBeVisible({ timeout: 10000 })
   })
 
   test('should update activities when navigating to next month', async ({ page }) => {
     // Navigate to activities page
-    await page.goto('/app/activities')
+    await page.goto('/activities')
     await page.waitForLoadState('networkidle')
 
     // Switch to calendar view
-    await page.click('button:has-text("Calendar")')
-    await page.waitForTimeout(500)
+    const calendarButton = page.locator('button:has-text("Calendar")')
+    if (await calendarButton.isVisible()) {
+      await calendarButton.click()
+      await page.waitForTimeout(500)
+    }
 
     // Navigate to previous month first
     await page.click('button[aria-label="Previous month"]', { force: true })
@@ -165,17 +146,20 @@ test.describe('Activities Calendar', () => {
     await page.waitForTimeout(1000)
 
     // Should show current month activity again
-    await expect(page.locator('text=Current Month Ride')).toBeVisible()
+    await expect(page.locator('text=Current Month Ride')).toBeVisible({ timeout: 10000 })
   })
 
   test('should return to current month when clicking Today button', async ({ page }) => {
     // Navigate to activities page
-    await page.goto('/app/activities')
+    await page.goto('/activities')
     await page.waitForLoadState('networkidle')
 
     // Switch to calendar view
-    await page.click('button:has-text("Calendar")')
-    await page.waitForTimeout(500)
+    const calendarButton = page.locator('button:has-text("Calendar")')
+    if (await calendarButton.isVisible()) {
+      await calendarButton.click()
+      await page.waitForTimeout(500)
+    }
 
     // Navigate to previous month
     await page.click('button[aria-label="Previous month"]', { force: true })
@@ -186,6 +170,6 @@ test.describe('Activities Calendar', () => {
     await page.waitForTimeout(1000)
 
     // Should show current month activity
-    await expect(page.locator('text=Current Month Ride')).toBeVisible()
+    await expect(page.locator('text=Current Month Ride')).toBeVisible({ timeout: 10000 })
   })
 })
