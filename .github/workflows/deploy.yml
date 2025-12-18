@@ -1,16 +1,17 @@
 name: Deploy
 
 on:
+  # Push to main: Only build and test, no automatic deployment
   push:
     branches:
       - main
     paths:
-      # Only deploy when relevant files change
       - 'src/**'
       - 'web/**'
       - 'infrastructure/**'
       - 'requirements-lambda.txt'
       - '.github/workflows/deploy.yml'
+  # Manual deployment trigger (required for actual deployment)
   workflow_dispatch:
     inputs:
       environment:
@@ -43,8 +44,9 @@ env:
   PYTHON_VERSION: '3.11'
   NODE_VERSION: '20'
   TERRAFORM_VERSION: '1.6.0'
-  # Default to prod for push events, use input for workflow_dispatch
   TF_WORKSPACE: ${{ github.event.inputs.environment || 'prod' }}
+  # Flag to check if this is a manual deployment trigger
+  IS_MANUAL_DEPLOY: ${{ github.event_name == 'workflow_dispatch' }}
 
 jobs:
   # Run tests first before deploying
@@ -193,12 +195,13 @@ jobs:
           path: web/out
           retention-days: 1
 
-  # Deploy infrastructure with Terraform
+  # Deploy infrastructure with Terraform (manual trigger only)
   terraform:
     name: Terraform (${{ github.event.inputs.environment || 'prod' }})
     runs-on: ubuntu-latest
     needs: [build-lambda]
-    if: github.event_name == 'push' || github.event.inputs.terraform_apply == 'true'
+    # Only run on manual trigger with terraform_apply enabled
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.terraform_apply == 'true'
     environment: ${{ github.event.inputs.environment || 'prod' }}
     defaults:
       run:
@@ -247,12 +250,13 @@ jobs:
         if: github.ref == 'refs/heads/main'
         run: terraform apply -auto-approve tfplan
 
-  # Deploy Lambda function
+  # Deploy Lambda function (manual trigger only)
   deploy-lambda:
     name: Deploy Lambda (${{ github.event.inputs.environment || 'prod' }})
     runs-on: ubuntu-latest
     needs: [build-lambda, terraform]
-    if: always() && needs.build-lambda.result == 'success' && (github.event_name == 'push' || github.event.inputs.deploy_lambda == 'true')
+    # Only run on manual trigger - no automatic deployment
+    if: always() && needs.build-lambda.result == 'success' && github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_lambda == 'true'
     environment: ${{ github.event.inputs.environment || 'prod' }}
     steps:
       - name: Download Lambda artifact
@@ -283,12 +287,13 @@ jobs:
           aws lambda wait function-updated \
             --function-name "$FUNCTION_NAME"
 
-  # Deploy web to S3/CloudFront
+  # Deploy web to S3/CloudFront (manual trigger only)
   deploy-web:
-    name: Deploy Web
+    name: Deploy Web (${{ github.event.inputs.environment || 'prod' }})
     runs-on: ubuntu-latest
     needs: [build-web, terraform]
-    if: always() && needs.build-web.result == 'success' && (github.event_name == 'push' || github.event.inputs.deploy_web == 'true')
+    # Only run on manual trigger - no automatic deployment
+    if: always() && needs.build-web.result == 'success' && github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_web == 'true'
     environment: ${{ github.event.inputs.environment || 'prod' }}
     steps:
       - name: Checkout code
