@@ -1,6 +1,6 @@
 -- Create table for storing Strava webhook events
 CREATE TABLE IF NOT EXISTS public.strava_webhook_events (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   event_id BIGINT NOT NULL,
   object_type TEXT NOT NULL, -- 'activity' or 'athlete'
   aspect_type TEXT NOT NULL, -- 'create', 'update', 'delete'
@@ -48,7 +48,7 @@ USING (
 
 -- Create table for storing webhook subscription info
 CREATE TABLE IF NOT EXISTS public.strava_webhook_subscriptions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   subscription_id BIGINT UNIQUE NOT NULL,
   callback_url TEXT NOT NULL,
   verify_token TEXT NOT NULL,

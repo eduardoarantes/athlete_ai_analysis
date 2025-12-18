@@ -1,4 +1,5 @@
 # Cycling AI Analysis - Lambda Function Configuration
+# Python FastAPI backend - PRIVATE (only accessible via EC2 IAM role)
 
 # S3 bucket for Lambda code (needed for packages > 50MB)
 resource "aws_s3_bucket" "lambda_code" {
@@ -27,16 +28,16 @@ resource "aws_s3_object" "lambda_zip" {
 
 # Lambda function for Python FastAPI backend
 resource "aws_lambda_function" "api" {
-  s3_bucket        = aws_s3_bucket.lambda_code.id
-  s3_key           = aws_s3_object.lambda_zip.key
+  s3_bucket         = aws_s3_bucket.lambda_code.id
+  s3_key            = aws_s3_object.lambda_zip.key
   s3_object_version = aws_s3_object.lambda_zip.version_id
-  function_name    = "${local.name_prefix}-api"
-  role             = aws_iam_role.lambda_exec.arn
-  handler          = "cycling_ai.api.lambda_handler.handler"
-  runtime          = "python3.11"
-  timeout          = local.config.lambda_timeout
-  memory_size      = local.config.lambda_memory
-  source_code_hash = filebase64sha256("${path.module}/../../dist/lambda.zip")
+  function_name     = "${local.name_prefix}-api"
+  role              = aws_iam_role.lambda_exec.arn
+  handler           = "cycling_ai.api.lambda_handler.handler"
+  runtime           = "python3.11"
+  timeout           = local.config.lambda_timeout
+  memory_size       = local.config.lambda_memory
+  source_code_hash  = filebase64sha256("${path.module}/../../dist/lambda.zip")
 
   environment {
     variables = {
@@ -63,21 +64,6 @@ resource "aws_lambda_function" "api" {
   }
 }
 
-# Lambda Function URL (accessed via CloudFront as custom origin)
-resource "aws_lambda_function_url" "api" {
-  function_name      = aws_lambda_function.api.function_name
-  authorization_type = "NONE" # CloudFront accesses as custom origin
-
-  cors {
-    allow_credentials = true
-    allow_origins     = var.custom_domain != "" ? ["https://${var.custom_domain}"] : ["*"]
-    allow_methods     = ["*"]
-    allow_headers     = ["*"]
-    expose_headers    = ["*"]
-    max_age           = 86400
-  }
-}
-
 # CloudWatch Log Group for Lambda
 resource "aws_cloudwatch_log_group" "lambda" {
   name              = "/aws/lambda/${local.name_prefix}-api"
@@ -97,11 +83,6 @@ resource "aws_lambda_permission" "cloudwatch" {
   source_arn    = "${aws_cloudwatch_log_group.lambda.arn}:*"
 }
 
-# Lambda permission for Function URL public access (CloudFront accesses this)
-resource "aws_lambda_permission" "function_url" {
-  statement_id           = "FunctionURLAllowPublicAccess"
-  action                 = "lambda:InvokeFunctionUrl"
-  function_name          = aws_lambda_function.api.function_name
-  principal              = "*"
-  function_url_auth_type = "NONE"
-}
+# NOTE: Lambda is now PRIVATE - no public URL or API Gateway
+# EC2 instance invokes Lambda directly using AWS SDK via IAM role
+# See ec2_web.tf for the IAM policy that grants invoke permission

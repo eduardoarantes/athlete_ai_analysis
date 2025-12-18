@@ -1,14 +1,15 @@
 /**
  * Cycling Coach Service
  * Integrates Next.js web API with Python cycling-ai FastAPI backend
+ * Uses AWS Lambda SDK in production, HTTP in development
  */
 
 import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { createClient } from '@/lib/supabase/server'
+import { invokePythonApi } from '@/lib/services/lambda-client'
 
 // Configuration
-const FASTAPI_URL = process.env.FASTAPI_URL || 'http://localhost:8000'
 const TEMP_DATA_DIR = process.env.TEMP_DATA_DIR || '/tmp/cycling-ai-jobs'
 
 import { errorLogger } from '@/lib/monitoring/error-logger'
@@ -109,11 +110,11 @@ export class CyclingCoachService {
         .map((day) => day.charAt(0).toUpperCase() + day.slice(1))
         .join(', ')
 
-      // Call FastAPI to generate plan
-      const response = await fetch(`${FASTAPI_URL}/api/v1/plan/generate`, {
+      // Call Python API to generate plan (via Lambda in production, HTTP in dev)
+      const response = await invokePythonApi<{ job_id: string }>({
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        path: '/api/v1/plan/generate',
+        body: {
           athlete_profile: {
             ftp: params.profile.ftp,
             weight_kg: params.profile.weight,
@@ -129,14 +130,14 @@ export class CyclingCoachService {
           },
           weeks,
           target_ftp: params.profile.ftp * 1.05, // 5% improvement target
-        }),
+        },
       })
 
-      if (!response.ok) {
-        throw new Error(`FastAPI returned ${response.status}: ${await response.text()}`)
+      if (response.statusCode >= 400) {
+        throw new Error(`Python API returned ${response.statusCode}: ${JSON.stringify(response.body)}`)
       }
 
-      const { job_id: apiJobId } = await response.json()
+      const { job_id: apiJobId } = response.body
 
       errorLogger.logInfo('Plan generation started via FastAPI', {
         metadata: {
@@ -180,13 +181,21 @@ export class CyclingCoachService {
 
     const poll = async (): Promise<void> => {
       try {
-        const response = await fetch(`${FASTAPI_URL}/api/v1/plan/status/${apiJobId}`)
+        const response = await invokePythonApi<{
+          status: string
+          progress?: { phase: string; percentage: number }
+          result?: { training_plan: unknown }
+          error?: string
+        }>({
+          method: 'GET',
+          path: `/api/v1/plan/status/${apiJobId}`,
+        })
 
-        if (!response.ok) {
-          throw new Error(`Failed to get job status: ${response.status}`)
+        if (response.statusCode >= 400) {
+          throw new Error(`Failed to get job status: ${response.statusCode}`)
         }
 
-        const jobStatus = await response.json()
+        const jobStatus = response.body
 
         // Update progress in database
         if (jobStatus.progress) {

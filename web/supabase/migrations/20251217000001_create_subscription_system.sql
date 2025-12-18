@@ -8,7 +8,7 @@
 -- Defines available subscription tiers (Free, Pro, Team)
 
 CREATE TABLE public.subscription_plans (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
   -- Plan identification
   name TEXT NOT NULL UNIQUE CHECK (name ~ '^[a-z0-9_]+$'), -- Slug-friendly name (e.g., 'free', 'pro', 'team')
@@ -40,7 +40,7 @@ CREATE INDEX idx_subscription_plans_active ON public.subscription_plans(is_activ
 -- Tracks each user's subscription status and billing information
 
 CREATE TABLE public.user_subscriptions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
   -- User reference
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,

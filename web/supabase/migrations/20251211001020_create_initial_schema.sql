@@ -1,9 +1,6 @@
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
 -- Athlete Profiles
 CREATE TABLE public.athlete_profiles (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
 
   -- Profile data
@@ -30,7 +27,7 @@ CREATE TABLE public.athlete_profiles (
 
 -- Strava Connections
 CREATE TABLE public.strava_connections (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
 
   -- Strava OAuth data
@@ -55,7 +52,7 @@ CREATE TABLE public.strava_connections (
 
 -- Activities (synced from Strava)
 CREATE TABLE public.activities (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
 
   -- Strava reference
@@ -103,7 +100,7 @@ CREATE INDEX idx_activities_type ON public.activities(user_id, type);
 
 -- Training Plans
 CREATE TABLE public.training_plans (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
 
   -- Plan details
@@ -127,7 +124,7 @@ CREATE INDEX idx_training_plans_user ON public.training_plans(user_id, status);
 
 -- Reports (AI-generated reports)
 CREATE TABLE public.reports (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
 
   -- Report details

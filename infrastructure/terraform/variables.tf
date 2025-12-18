@@ -41,6 +41,20 @@ variable "supabase_jwt_secret" {
   sensitive   = true
 }
 
+# Strava Configuration
+variable "strava_client_id" {
+  description = "Strava OAuth client ID"
+  type        = string
+  default     = ""
+}
+
+variable "strava_client_secret" {
+  description = "Strava OAuth client secret"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
 # API Keys
 variable "anthropic_api_key" {
   description = "Anthropic API key for Claude"
