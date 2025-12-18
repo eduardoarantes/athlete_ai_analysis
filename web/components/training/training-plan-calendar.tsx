@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, Fragment } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -155,12 +155,9 @@ export function TrainingPlanCalendar({ plan }: TrainingPlanCalendarProps) {
             const workoutsByDay = getWorkoutsByDay(weekData)
 
             return (
-              <>
+              <Fragment key={weekData.week_number}>
                 {/* Week Label Cell */}
-                <div
-                  key={`label-${weekData.week_number}`}
-                  className="bg-background p-2 text-xs border-r"
-                >
+                <div className="bg-background p-2 text-xs border-r">
                   <div className="font-semibold">Week {weekData.week_number}</div>
                   <Badge variant="outline" className="text-[10px] mt-1 capitalize">
                     {weekData.phase}
@@ -197,7 +194,7 @@ export function TrainingPlanCalendar({ plan }: TrainingPlanCalendarProps) {
                     </div>
                   )
                 })}
-              </>
+              </Fragment>
             )
           })}
         </div>
