@@ -10,7 +10,6 @@ import logging
 from datetime import datetime, timedelta
 
 import httpx
-
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from fastapi.responses import JSONResponse
 
@@ -221,7 +220,7 @@ async def _execute_performance_analysis(
 async def analyze_performance(
     request: PerformanceAnalysisRequest,
     background_tasks: BackgroundTasks,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),  # noqa: B008
 ) -> AnalysisJobStatusResponse:
     """
     Start performance analysis as background job.
@@ -269,10 +268,7 @@ async def analyze_performance(
     """
     # Verify user can only request analysis for themselves (prevent IDOR)
     if request.user_id != current_user.id:
-        logger.warning(
-            f"[ANALYSIS ROUTER] User {current_user.id} attempted to access "
-            f"data for user {request.user_id}"
-        )
+        logger.warning(f"[ANALYSIS ROUTER] User {current_user.id} attempted to access data for user {request.user_id}")
         raise HTTPException(
             status_code=403,
             detail="Cannot request analysis for other users",
@@ -315,7 +311,7 @@ async def analyze_performance(
 @router.get("/status/{job_id}")
 async def get_analysis_status(
     job_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),  # noqa: B008
 ) -> JSONResponse:
     """
     Get status of performance analysis job.
@@ -368,8 +364,7 @@ async def get_analysis_status(
     # Verify job ownership
     if job.user_id is not None and job.user_id != current_user.id:
         logger.warning(
-            f"[ANALYSIS ROUTER] User {current_user.id} attempted to access "
-            f"job {job_id} owned by {job.user_id}"
+            f"[ANALYSIS ROUTER] User {current_user.id} attempted to access job {job_id} owned by {job.user_id}"
         )
         raise HTTPException(
             status_code=403,

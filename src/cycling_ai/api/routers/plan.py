@@ -10,11 +10,11 @@ import json
 import logging
 import tempfile
 from pathlib import Path
+from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 
-from cycling_ai.api.config import settings
 from cycling_ai.api.middleware.auth import User, get_current_user
 from cycling_ai.api.models.common import ErrorResponse
 from cycling_ai.api.models.plan import JobStatusResponse, TrainingPlanRequest
@@ -184,15 +184,11 @@ async def _execute_skeleton_plan_generation(
             profile_path.unlink()
 
 
-# Import Any for type hints
-from typing import Any
-
-
 @router.post("/generate", response_model=JobStatusResponse, status_code=202)
 async def generate_plan(
     request: TrainingPlanRequest,
     background_tasks: BackgroundTasks,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),  # noqa: B008
     use_ai: bool = Query(
         default=True,
         description="Use AI-powered plan generation. Set to false for skeleton templates.",
@@ -268,7 +264,7 @@ async def generate_plan(
 @router.get("/status/{job_id}")
 async def get_job_status(
     job_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),  # noqa: B008
 ) -> JSONResponse:
     """
     Get status of plan generation job.
@@ -319,10 +315,7 @@ async def get_job_status(
 
     # Verify job ownership
     if job.user_id is not None and job.user_id != current_user.id:
-        logger.warning(
-            f"[PLAN ROUTER] User {current_user.id} attempted to access "
-            f"job {job_id} owned by {job.user_id}"
-        )
+        logger.warning(f"[PLAN ROUTER] User {current_user.id} attempted to access job {job_id} owned by {job.user_id}")
         raise HTTPException(
             status_code=403,
             detail="Access denied: you can only access your own jobs",
