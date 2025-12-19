@@ -140,11 +140,20 @@ jobs:
           retention-days: 1
 
   # Build Next.js static export
+  # NOTE: Static export (output: 'export') is incompatible with Next.js API routes.
+  # The app has 26 API routes that require server-side execution.
+  # This job only runs on manual deployment trigger, not on push.
+  # CI workflow validates builds work (without static export mode).
+  # TODO: Consider alternative deployment strategies:
+  #   - Deploy Next.js as standalone to Lambda/EC2
+  #   - Move API routes to Python Lambda
+  #   - Use Vercel/Amplify for proper Next.js hosting
   build-web:
     name: Build Web Application
     runs-on: ubuntu-latest
     needs: test
-    if: github.event_name == 'push' || github.event.inputs.deploy_web == 'true'
+    # Only run on manual trigger - static export won't work with API routes
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_web == 'true'
     outputs:
       artifact-name: web-build
     steps:
