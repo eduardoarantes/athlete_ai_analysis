@@ -9,30 +9,23 @@ import { errorLogger } from '@/lib/monitoring/error-logger'
 import type { Json } from '@/lib/types/database'
 import type {
   PlanInstance,
-  TrainingPlan,
   CreatePlanInstanceInput,
   OverlapCheckResult,
 } from '@/lib/types/training-plan'
-
-/**
- * Calculate end date from start date and weeks
- */
-function calculateEndDate(startDate: string, weeks: number): string {
-  const start = new Date(startDate)
-  const end = new Date(start)
-  end.setDate(end.getDate() + weeks * 7)
-  return end.toISOString().split('T')[0]!
-}
+import {
+  assertPlanInstance,
+  assertTrainingPlan,
+  asPlanInstance,
+  asPlanInstances,
+} from '@/lib/types/type-guards'
+import { calculateEndDate } from '@/lib/utils/date-utils'
 
 export class PlanInstanceService {
   /**
    * Create a new plan instance from a template
    * @throws Error if template not found or overlap detected
    */
-  async createInstance(
-    userId: string,
-    input: CreatePlanInstanceInput
-  ): Promise<PlanInstance> {
+  async createInstance(userId: string, input: CreatePlanInstanceInput): Promise<PlanInstance> {
     const supabase = await createClient()
 
     // 1. Fetch the template
@@ -47,10 +40,11 @@ export class PlanInstanceService {
       throw new Error('Training plan template not found')
     }
 
-    const typedTemplate = template as unknown as TrainingPlan
+    const typedTemplate = assertTrainingPlan(template, 'createInstance')
 
     // 2. Calculate end date
-    const weeksTotal = typedTemplate.weeks_total || typedTemplate.plan_data?.plan_metadata?.total_weeks || 12
+    const weeksTotal =
+      typedTemplate.weeks_total || typedTemplate.plan_data?.plan_metadata?.total_weeks || 12
     const endDate = calculateEndDate(input.start_date, weeksTotal)
 
     // 3. Check for overlaps (before attempting insert)
@@ -89,7 +83,7 @@ export class PlanInstanceService {
       throw new Error('Failed to create plan instance')
     }
 
-    const createdInstance = instance as unknown as PlanInstance
+    const createdInstance = assertPlanInstance(instance, 'createInstance')
 
     errorLogger.logInfo('Plan instance created', {
       userId,
@@ -140,7 +134,7 @@ export class PlanInstanceService {
       throw new Error('Failed to fetch plan instances')
     }
 
-    return (instances || []) as unknown as PlanInstance[]
+    return asPlanInstances(instances || [])
   }
 
   /**
@@ -168,7 +162,7 @@ export class PlanInstanceService {
       throw new Error('Failed to fetch plan instance')
     }
 
-    return instance as unknown as PlanInstance
+    return asPlanInstance(instance)
   }
 
   /**
@@ -209,7 +203,7 @@ export class PlanInstanceService {
       metadata: { instanceId },
     })
 
-    return instance as unknown as PlanInstance
+    return assertPlanInstance(instance, 'cancelInstance')
   }
 
   /**
@@ -248,9 +242,10 @@ export class PlanInstanceService {
       throw new Error('Failed to check for schedule conflicts')
     }
 
+    const validConflicts = asPlanInstances(conflicts || [])
     return {
-      hasOverlap: (conflicts || []).length > 0,
-      conflicts: (conflicts || []) as unknown as PlanInstance[],
+      hasOverlap: validConflicts.length > 0,
+      conflicts: validConflicts,
     }
   }
 
@@ -279,7 +274,7 @@ export class PlanInstanceService {
       throw new Error('Failed to activate plan instance')
     }
 
-    return instance as unknown as PlanInstance
+    return assertPlanInstance(instance, 'activateInstance')
   }
 
   /**
@@ -306,7 +301,7 @@ export class PlanInstanceService {
       throw new Error('Failed to complete plan instance')
     }
 
-    return instance as unknown as PlanInstance
+    return assertPlanInstance(instance, 'completeInstance')
   }
 }
 

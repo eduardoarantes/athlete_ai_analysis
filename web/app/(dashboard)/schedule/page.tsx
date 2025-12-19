@@ -1,4 +1,4 @@
-import { getTranslations } from 'next-intl/server'
+import { getTranslations, getLocale } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
@@ -7,9 +7,12 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Calendar, Plus, Zap, CalendarDays, Clock } from 'lucide-react'
 import type { PlanInstance } from '@/lib/types/training-plan'
+import { asPlanInstances } from '@/lib/types/type-guards'
+import { parseLocalDate } from '@/lib/utils/date-utils'
 
 export default async function SchedulePage() {
   const t = await getTranslations('schedule')
+  const locale = await getLocale()
   const supabase = await createClient()
 
   const {
@@ -28,7 +31,7 @@ export default async function SchedulePage() {
     .in('status', ['scheduled', 'active', 'completed'])
     .order('start_date', { ascending: true })
 
-  const typedInstances = (instances || []) as unknown as PlanInstance[]
+  const typedInstances = asPlanInstances(instances || [])
 
   // Group instances by status
   const activeInstances = typedInstances.filter((i) => i.status === 'active')
@@ -58,12 +61,12 @@ export default async function SchedulePage() {
   }
 
   const formatDateRange = (start: string, end: string) => {
-    const startDate = new Date(start)
-    const endDate = new Date(end)
-    return `${startDate.toLocaleDateString('en-US', {
+    const startDate = parseLocalDate(start)
+    const endDate = parseLocalDate(end)
+    return `${startDate.toLocaleDateString(locale, {
       month: 'short',
       day: 'numeric',
-    })} - ${endDate.toLocaleDateString('en-US', {
+    })} - ${endDate.toLocaleDateString(locale, {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -73,18 +76,14 @@ export default async function SchedulePage() {
   const InstanceCard = ({ instance }: { instance: PlanInstance }) => {
     const totalTss = calculateTotalTss(instance)
     const today = new Date()
-    const startDate = new Date(instance.start_date)
-    const endDate = new Date(instance.end_date)
+    const startDate = parseLocalDate(instance.start_date)
+    const endDate = parseLocalDate(instance.end_date)
 
     // Calculate progress for active plans
     let progressPercent = 0
     if (instance.status === 'active') {
-      const totalDays = Math.ceil(
-        (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
-      )
-      const elapsedDays = Math.ceil(
-        (today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
-      )
+      const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+      const elapsedDays = Math.ceil((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
       progressPercent = Math.min(100, Math.max(0, (elapsedDays / totalDays) * 100))
     }
 
@@ -104,7 +103,9 @@ export default async function SchedulePage() {
                 {t(`status.${instance.status}`)}
               </Badge>
             </div>
-            <CardDescription>{formatDateRange(instance.start_date, instance.end_date)}</CardDescription>
+            <CardDescription>
+              {formatDateRange(instance.start_date, instance.end_date)}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">

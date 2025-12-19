@@ -20,7 +20,10 @@ const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'F
 const DAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const WEEKS_PER_PAGE = 4
 
-export function TrainingPlanCalendar({ plan, templateMode: _templateMode = false }: TrainingPlanCalendarProps) {
+export function TrainingPlanCalendar({
+  plan,
+  templateMode: _templateMode = false,
+}: TrainingPlanCalendarProps) {
   const t = useTranslations('trainingPlan')
   const planData = plan.plan_data
   const totalWeeks = planData.weekly_plan.length

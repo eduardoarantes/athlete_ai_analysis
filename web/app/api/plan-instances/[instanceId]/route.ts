@@ -3,6 +3,13 @@ import { createClient } from '@/lib/supabase/server'
 import { errorLogger } from '@/lib/monitoring/error-logger'
 import { planInstanceService } from '@/lib/services/plan-instance-service'
 
+// UUID v4 validation regex
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+function isValidUUID(id: string): boolean {
+  return UUID_REGEX.test(id)
+}
+
 /**
  * Get a specific plan instance by ID
  * GET /api/plan-instances/[instanceId]
@@ -12,6 +19,11 @@ export async function GET(
   { params }: { params: Promise<{ instanceId: string }> }
 ) {
   const { instanceId } = await params
+
+  // Validate instanceId format
+  if (!isValidUUID(instanceId)) {
+    return NextResponse.json({ error: 'Invalid instance ID format' }, { status: 400 })
+  }
 
   try {
     const supabase = await createClient()
@@ -51,6 +63,11 @@ export async function DELETE(
   { params }: { params: Promise<{ instanceId: string }> }
 ) {
   const { instanceId } = await params
+
+  // Validate instanceId format
+  if (!isValidUUID(instanceId)) {
+    return NextResponse.json({ error: 'Invalid instance ID format' }, { status: 400 })
+  }
 
   try {
     const supabase = await createClient()

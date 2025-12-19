@@ -257,7 +257,7 @@ export class CyclingCoachService {
               weeks_total: weeks,
               plan_data: planData as never,
               metadata: sourceMetadata as never,
-              status: 'draft',  // Templates start as draft until scheduled
+              status: 'draft', // Templates start as draft until scheduled
             } as never)
             .select('id')
             .single()

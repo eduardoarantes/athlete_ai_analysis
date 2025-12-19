@@ -158,7 +158,7 @@ export interface PlanInstance {
  */
 export interface CreatePlanInstanceInput {
   template_id: string
-  start_date: string  // ISO date string (YYYY-MM-DD)
+  start_date: string // ISO date string (YYYY-MM-DD)
 }
 
 /**

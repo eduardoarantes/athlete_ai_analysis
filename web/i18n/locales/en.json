@@ -592,7 +592,13 @@
     "cancelConfirmDescription": "Are you sure you want to cancel \"{planName}\"? This will remove it from your schedule. You can always schedule it again later.",
     "keepPlan": "Keep Plan",
     "confirmCancel": "Yes, Cancel Plan",
-    "cancelling": "Cancelling..."
+    "cancelling": "Cancelling...",
+    "error": {
+      "title": "Something went wrong",
+      "description": "We couldn't load your schedule. Please try again.",
+      "retry": "Try Again",
+      "goHome": "Go to Dashboard"
+    }
   },
   "reports": {
     "title": "Performance Reports",

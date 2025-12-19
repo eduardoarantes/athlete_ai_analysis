@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { CalendarPlus, AlertTriangle, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import type { PlanInstance } from '@/lib/types/training-plan'
+import { calculateEndDate, getTomorrowDateString, parseLocalDate } from '@/lib/utils/date-utils'
 
 interface SchedulePlanButtonProps {
   templateId: string
@@ -31,6 +32,7 @@ export function SchedulePlanButton({
   weeksTotal,
 }: SchedulePlanButtonProps) {
   const t = useTranslations('schedule')
+  const locale = useLocale()
   const router = useRouter()
 
   const [open, setOpen] = useState(false)
@@ -40,15 +42,7 @@ export function SchedulePlanButton({
   const [conflicts, setConflicts] = useState<PlanInstance[]>([])
 
   // Calculate end date based on start date and weeks
-  const calculateEndDate = (start: string): string => {
-    if (!start) return ''
-    const startDateObj = new Date(start)
-    const endDateObj = new Date(startDateObj)
-    endDateObj.setDate(endDateObj.getDate() + weeksTotal * 7)
-    return endDateObj.toISOString().split('T')[0]!
-  }
-
-  const endDate = calculateEndDate(startDate)
+  const endDate = startDate ? calculateEndDate(startDate, weeksTotal) : ''
 
   const handleSchedule = async () => {
     if (!startDate) {
@@ -104,9 +98,7 @@ export function SchedulePlanButton({
   }
 
   // Get tomorrow's date as minimum
-  const tomorrow = new Date()
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  const minDate = tomorrow.toISOString().split('T')[0]
+  const minDate = getTomorrowDateString()
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -144,15 +136,13 @@ export function SchedulePlanButton({
             <div className="grid gap-2">
               <Label>{t('endDate')}</Label>
               <div className="text-sm text-muted-foreground bg-muted p-2 rounded">
-                {new Date(endDate).toLocaleDateString('en-US', {
+                {parseLocalDate(endDate).toLocaleDateString(locale, {
                   weekday: 'long',
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric',
                 })}
-                <span className="block text-xs mt-1">
-                  ({weeksTotal} weeks from start)
-                </span>
+                <span className="block text-xs mt-1">({weeksTotal} weeks from start)</span>
               </div>
             </div>
           )}
@@ -172,8 +162,9 @@ export function SchedulePlanButton({
                 <ul className="list-disc list-inside space-y-1">
                   {conflicts.map((conflict) => (
                     <li key={conflict.id}>
-                      {conflict.name} ({new Date(conflict.start_date).toLocaleDateString()} -{' '}
-                      {new Date(conflict.end_date).toLocaleDateString()})
+                      {conflict.name} (
+                      {parseLocalDate(conflict.start_date).toLocaleDateString(locale)} -{' '}
+                      {parseLocalDate(conflict.end_date).toLocaleDateString(locale)})
                     </li>
                   ))}
                 </ul>

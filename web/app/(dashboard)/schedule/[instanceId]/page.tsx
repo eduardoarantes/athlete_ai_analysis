@@ -40,9 +40,7 @@ export default async function InstancePage({ params }: InstancePageProps) {
 
   // Parse plan_data
   const planData: TrainingPlanData =
-    typeof instance.plan_data === 'string'
-      ? JSON.parse(instance.plan_data)
-      : instance.plan_data
+    typeof instance.plan_data === 'string' ? JSON.parse(instance.plan_data) : instance.plan_data
 
   const startDate = new Date(instance.start_date)
   const endDate = new Date(instance.end_date)
