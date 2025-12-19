@@ -230,10 +230,6 @@ export class CyclingCoachService {
             throw new Error('Could not find user_id for job')
           }
 
-          // Calculate end date
-          const endDate = new Date()
-          endDate.setDate(endDate.getDate() + weeks * 7)
-
           // Extract AI metadata from job result
           const aiMetadata = (jobStatus.result as Record<string, unknown>)?.ai_metadata as
             | Record<string, unknown>
@@ -250,18 +246,18 @@ export class CyclingCoachService {
             library_version: (aiMetadata?.library_version as string | undefined) || undefined,
           }
 
-          // Store plan in database
+          // Store plan as template in database (no dates - templates are date-agnostic)
           const { data: plan, error: planError } = await supabase
             .from('training_plans')
             .insert({
               user_id: userId,
               name: `${params.goal} - ${weeks} weeks`,
+              goal: params.goal,
               description: `Training plan for ${params.goal}`,
-              start_date: new Date().toISOString().split('T')[0] ?? '',
-              end_date: endDate.toISOString().split('T')[0] ?? '',
+              weeks_total: weeks,
               plan_data: planData as never,
               metadata: sourceMetadata as never,
-              status: 'active',
+              status: 'draft', // Templates start as draft until scheduled
             } as never)
             .select('id')
             .single()

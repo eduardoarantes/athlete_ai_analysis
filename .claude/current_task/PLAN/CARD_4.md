@@ -1,395 +1,262 @@
-# CARD 4: Plan Router (API Endpoints)
+# CARD 4: Add Error Handling and Logging for Webhook TSS
 
-**Status:** Pending
-**Estimated Time:** 2 hours
+**Phase:** 1 - Fix Webhook Processing
+**Priority:** Medium
+**Estimated Effort:** 20 minutes
 **Dependencies:** CARD_3
-**Assignee:** Implementation Agent
 
 ---
 
 ## Objective
 
-Create FastAPI router with endpoints for training plan generation and job status retrieval.
+Add comprehensive error handling and logging for TSS calculation failures in the webhook handler. This ensures visibility into TSS calculation issues and provides graceful degradation when TSS cannot be calculated.
 
 ---
 
-## Tasks
+## Changes Required
 
-### 1. Create `src/cycling_ai/api/routers/plan.py`
+### File: `web/app/api/webhooks/strava/route.ts`
 
-```python
-"""
-Training plan API router.
+**Wrap TSS calculation in try-catch (in `processWebhookEvent`):**
 
-Provides endpoints for:
-- POST /api/v1/plan/generate - Start plan generation job
-- GET /api/v1/plan/status/{job_id} - Get job status
-"""
-from __future__ import annotations
+**Current code (from CARD_3):**
 
-import logging
-from typing import Annotated
+```typescript
+// Fetch athlete data for TSS calculation
+const athleteData = await getAthleteDataForWebhook(connection.user_id)
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
-from fastapi import status as http_status
-
-from cycling_ai.api.dependencies import SettingsDep
-from cycling_ai.api.models.common import JobStatus
-from cycling_ai.api.models.plan import JobStatusResponse, TrainingPlanRequest
-from cycling_ai.api.services.plan_service import PlanService
-
-logger = logging.getLogger(__name__)
-
-# Create router
-router = APIRouter()
-
-# Service instance (could be dependency-injected in future)
-plan_service = PlanService()
-
-# In-memory job storage (will be replaced with database in CARD_5)
-_job_storage: dict[str, JobStatus] = {}
-
-
-@router.post(
-    "/generate",
-    response_model=JobStatusResponse,
-    status_code=http_status.HTTP_202_ACCEPTED,
-    summary="Generate training plan",
-    description="Start asynchronous training plan generation. Returns job ID for status polling.",
-)
-async def generate_plan(
-    request: TrainingPlanRequest,
-    background_tasks: BackgroundTasks,
-    settings: SettingsDep,
-) -> JobStatusResponse:
-    """
-    Generate training plan asynchronously.
-
-    Args:
-        request: Training plan request with athlete profile and parameters
-        background_tasks: FastAPI background tasks manager
-        settings: Application settings
-
-    Returns:
-        Job status response with job ID
-
-    Raises:
-        HTTPException: If validation fails
-    """
-    import time
-    from uuid import uuid4
-
-    # Generate job ID
-    job_id = f"plan_{int(time.time())}_{uuid4().hex[:8]}"
-
-    logger.info(f"Creating plan generation job: {job_id}")
-
-    # Create initial job status
-    job_status = JobStatus(
-        job_id=job_id,
-        status="queued",
-        progress=None,
-        result=None,
-        error=None,
-    )
-
-    # Store job
-    _job_storage[job_id] = job_status
-
-    # Queue background task (actual implementation in CARD_5)
-    background_tasks.add_task(_execute_plan_generation, job_id, request)
-
-    return JobStatusResponse(
-        job_id=job_id,
-        status="queued",
-        message="Training plan generation started. Poll /api/v1/plan/status/{job_id} for updates.",
-    )
-
-
-@router.get(
-    "/status/{job_id}",
-    response_model=JobStatus,
-    summary="Get job status",
-    description="Get current status of a plan generation job.",
-)
-async def get_job_status(job_id: str) -> JobStatus:
-    """
-    Get status of plan generation job.
-
-    Args:
-        job_id: Job identifier
-
-    Returns:
-        Job status with progress and result
-
-    Raises:
-        HTTPException: If job not found
-    """
-    logger.debug(f"Getting status for job: {job_id}")
-
-    if job_id not in _job_storage:
-        logger.warning(f"Job not found: {job_id}")
-        raise HTTPException(
-            status_code=http_status.HTTP_404_NOT_FOUND,
-            detail=f"Job not found: {job_id}",
-        )
-
-    return _job_storage[job_id]
-
-
-async def _execute_plan_generation(job_id: str, request: TrainingPlanRequest) -> None:
-    """
-    Execute plan generation in background.
-
-    This is a placeholder - full implementation in CARD_5.
-
-    Args:
-        job_id: Job identifier
-        request: Training plan request
-    """
-    logger.info(f"Executing plan generation for job: {job_id}")
-
-    # Update status to running
-    _job_storage[job_id].status = "running"
-    _job_storage[job_id].progress = {"phase": "Generating plan", "percentage": 50}
-
-    try:
-        # Call service
-        response = plan_service.generate_plan(request)
-
-        # Update status to completed
-        _job_storage[job_id].status = "completed"
-        _job_storage[job_id].progress = {"phase": "Complete", "percentage": 100}
-        _job_storage[job_id].result = {
-            "training_plan": response.training_plan,
-            "metadata": response.metadata,
-        }
-
-        logger.info(f"Job completed successfully: {job_id}")
-
-    except Exception as e:
-        logger.error(f"Job failed: {job_id}, error: {str(e)}")
-
-        # Update status to failed
-        _job_storage[job_id].status = "failed"
-        _job_storage[job_id].error = str(e)
+// Calculate TSS using helper function from CARD_1
+const tssResult = calculateWebhookActivityTSS(activity, athleteData)
 ```
 
-### 2. Update `src/cycling_ai/api/main.py`
+**New code:**
 
-Add router to application:
+```typescript
+// Fetch athlete data for TSS calculation
+let tssResult: TSSResult | null = null
+try {
+  const athleteData = await getAthleteDataForWebhook(connection.user_id)
+  tssResult = calculateWebhookActivityTSS(activity, athleteData)
 
-```python
-# After imports, add:
-from cycling_ai.api.routers import plan
-
-# After CORS middleware, add:
-app.include_router(plan.router, prefix="/api/v1/plan", tags=["plan"])
-```
-
-### 3. Update `src/cycling_ai/api/routers/__init__.py`
-
-```python
-"""API routers."""
-from . import plan
-
-__all__ = ["plan"]
-```
-
-### 4. Create `tests/api/routers/test_plan.py`
-
-```python
-"""Tests for plan router."""
-from __future__ import annotations
-
-import pytest
-from fastapi.testclient import TestClient
-
-from cycling_ai.api.main import app
-
-
-@pytest.fixture
-def client() -> TestClient:
-    """Create test client."""
-    return TestClient(app)
-
-
-@pytest.fixture
-def sample_plan_request() -> dict:
-    """Create sample plan request."""
-    return {
-        "athlete_profile": {
-            "ftp": 265,
-            "weight_kg": 70,
-            "max_hr": 186,
-            "age": 35,
-            "goals": ["Improve FTP"],
-            "training_availability": {
-                "hours_per_week": 7,
-                "week_days": "Monday, Wednesday, Friday, Saturday, Sunday",
-            },
-        },
-        "weeks": 12,
-        "target_ftp": 278,
-    }
-
-
-def test_generate_plan_endpoint(client: TestClient, sample_plan_request: dict) -> None:
-    """Test plan generation endpoint."""
-    response = client.post("/api/v1/plan/generate", json=sample_plan_request)
-
-    assert response.status_code == 202
-    data = response.json()
-    assert "job_id" in data
-    assert data["status"] == "queued"
-    assert "message" in data
-    assert data["job_id"].startswith("plan_")
-
-
-def test_generate_plan_invalid_request(client: TestClient) -> None:
-    """Test plan generation with invalid request."""
-    invalid_request = {
-        "athlete_profile": {
-            "ftp": -100,  # Invalid: must be positive
-            "weight_kg": 70,
-            "age": 35,
-        },
-        "weeks": 12,
-    }
-
-    response = client.post("/api/v1/plan/generate", json=invalid_request)
-
-    assert response.status_code == 422  # Validation error
-
-
-def test_get_job_status_not_found(client: TestClient) -> None:
-    """Test getting status for non-existent job."""
-    response = client.get("/api/v1/plan/status/nonexistent_job")
-
-    assert response.status_code == 404
-
-
-@pytest.mark.integration
-def test_generate_plan_end_to_end(client: TestClient, sample_plan_request: dict) -> None:
-    """
-    Test plan generation end-to-end.
-
-    This is an integration test that requires LLM API keys.
-    """
-    # Start job
-    response = client.post("/api/v1/plan/generate", json=sample_plan_request)
-    assert response.status_code == 202
-    job_id = response.json()["job_id"]
-
-    # Poll for completion (with timeout)
-    import time
-    max_wait = 120  # 2 minutes
-    start_time = time.time()
-
-    while time.time() - start_time < max_wait:
-        status_response = client.get(f"/api/v1/plan/status/{job_id}")
-        assert status_response.status_code == 200
-
-        status_data = status_response.json()
-        if status_data["status"] == "completed":
-            assert "result" in status_data
-            assert "training_plan" in status_data["result"]
-            break
-        elif status_data["status"] == "failed":
-            pytest.fail(f"Job failed: {status_data.get('error')}")
-
-        time.sleep(2)
-    else:
-        pytest.fail("Job did not complete within timeout")
-```
-
----
-
-## Verification Steps
-
-### 1. Start API Server
-
-```bash
-./scripts/start_api.sh
-```
-
-### 2. Test Endpoints Manually
-
-```bash
-# Generate plan
-curl -X POST http://localhost:8000/api/v1/plan/generate \
-  -H "Content-Type: application/json" \
-  -d '{
-    "athlete_profile": {
-      "ftp": 265,
-      "weight_kg": 70,
-      "age": 35,
-      "goals": ["Improve FTP"]
+  if (tssResult) {
+    errorLogger.logInfo('TSS calculated for webhook activity', {
+      userId: connection.user_id,
+      metadata: {
+        activityId: event.object_id,
+        tss: tssResult.tss,
+        method: tssResult.method,
+        confidence: tssResult.confidence,
+      },
+    })
+  } else {
+    errorLogger.logWarning('TSS calculation returned null', {
+      userId: connection.user_id,
+      metadata: {
+        activityId: event.object_id,
+        reason: athleteData ? 'Insufficient activity data' : 'Missing athlete profile',
+        hasAthleteData: !!athleteData,
+        hasPowerData: !!(activity.weighted_average_watts || activity.average_watts),
+        hasHRData: !!activity.average_heartrate,
+      },
+    })
+  }
+} catch (tssError) {
+  // Don't fail the entire webhook processing if TSS calculation fails
+  errorLogger.logWarning('TSS calculation failed for webhook activity', {
+    userId: connection.user_id,
+    metadata: {
+      activityId: event.object_id,
+      error: tssError instanceof Error ? tssError.message : 'Unknown error',
+      activityType: activity.type,
     },
-    "weeks": 12,
-    "target_ftp": 278
-  }'
-
-# Response: {"job_id":"plan_1734376800_a1b2c3d4","status":"queued","message":"..."}
-
-# Get job status
-JOB_ID="plan_1734376800_a1b2c3d4"  # Use actual job ID from above
-curl http://localhost:8000/api/v1/plan/status/$JOB_ID
-
-# Response: {"job_id":"...","status":"running","progress":{...}}
-```
-
-### 3. Check API Documentation
-
-```bash
-open http://localhost:8000/docs
-```
-
-Should show:
-- POST /api/v1/plan/generate
-- GET /api/v1/plan/status/{job_id}
-
-### 4. Run Tests
-
-```bash
-# Unit tests only
-pytest tests/api/routers/test_plan.py -v -m "not integration"
-
-# Integration tests (requires API keys)
-export ANTHROPIC_API_KEY="your-key-here"
-pytest tests/api/routers/test_plan.py -v -m integration
+  })
+  // tssResult remains null, activity will be stored without TSS
+}
 ```
 
 ---
 
-## Files Created
+## Implementation Notes
 
-- `src/cycling_ai/api/routers/plan.py`
-- `src/cycling_ai/api/routers/__init__.py`
-- `tests/api/routers/__init__.py` (empty)
-- `tests/api/routers/test_plan.py`
+### Error Handling Strategy
+
+1. **Non-blocking failures** - TSS calculation errors don't stop webhook processing
+2. **Detailed logging** - Log why TSS calculation failed for debugging
+3. **Graceful degradation** - Store activity with `tss: null` if calculation fails
+4. **Visibility** - Use warning logs for missing data (not errors)
+
+### Log Levels
+
+- **Info** - TSS calculated successfully
+- **Warning** - TSS calculation returned null (missing data, not an error)
+- **Warning** - TSS calculation threw exception (unexpected error)
+
+### Diagnostic Metadata
+
+The warning log includes diagnostic information:
+- `reason` - Why TSS calculation failed
+- `hasAthleteData` - Whether athlete profile was found
+- `hasPowerData` - Whether activity has power metrics
+- `hasHRData` - Whether activity has heart rate data
+
+This helps diagnose issues like:
+- Missing athlete profile
+- Activity without power or HR data
+- Incomplete athlete profile (missing FTP or max HR)
+
+### Expected Scenarios
+
+| Scenario | Log Level | TSS Result |
+|----------|-----------|------------|
+| FTP + Power data available | Info | TSS calculated (power method) |
+| Max HR + HR data available | Info | TSS calculated (heart_rate method) |
+| No athlete profile | Warning | null (stored without TSS) |
+| Athlete profile without FTP/HR | Warning | null (stored without TSS) |
+| Activity without metrics | Warning | null (stored without TSS) |
+| Unexpected exception | Warning | null (stored without TSS) |
 
 ---
 
-## Files Modified
+## Testing
 
-- `src/cycling_ai/api/main.py` (add router)
+### Unit Tests
+
+```typescript
+describe('Webhook TSS Error Handling', () => {
+  it('should log warning when athlete profile missing', async () => {
+    mockGetAthleteDataForWebhook.mockResolvedValue(null)
+
+    await processWebhookEvent(mockEvent)
+
+    expect(errorLogger.logWarning).toHaveBeenCalledWith(
+      'TSS calculation returned null',
+      expect.objectContaining({
+        metadata: expect.objectContaining({
+          reason: 'Missing athlete profile',
+          hasAthleteData: false,
+        }),
+      })
+    )
+  })
+
+  it('should log warning when activity has no power or HR data', async () => {
+    const activity = {
+      id: 123456,
+      moving_time: 3600,
+      // No power or HR data
+    }
+
+    mockGetAthleteDataForWebhook.mockResolvedValue({ ftp: 265 })
+
+    await processWebhookEvent(mockEvent)
+
+    expect(errorLogger.logWarning).toHaveBeenCalledWith(
+      'TSS calculation returned null',
+      expect.objectContaining({
+        metadata: expect.objectContaining({
+          reason: 'Insufficient activity data',
+          hasAthleteData: true,
+          hasPowerData: false,
+          hasHRData: false,
+        }),
+      })
+    )
+  })
+
+  it('should continue webhook processing when TSS fails', async () => {
+    mockCalculateWebhookActivityTSS.mockImplementation(() => {
+      throw new Error('TSS calculation error')
+    })
+
+    await processWebhookEvent(mockEvent)
+
+    // Webhook should still succeed
+    expect(mockUpsert).toHaveBeenCalled()
+
+    // Error should be logged
+    expect(errorLogger.logWarning).toHaveBeenCalledWith(
+      'TSS calculation failed for webhook activity',
+      expect.any(Object)
+    )
+  })
+
+  it('should log success when TSS calculated', async () => {
+    const tssResult = { tss: 85.5, method: 'power', confidence: 'high' }
+    mockCalculateWebhookActivityTSS.mockReturnValue(tssResult)
+
+    await processWebhookEvent(mockEvent)
+
+    expect(errorLogger.logInfo).toHaveBeenCalledWith(
+      'TSS calculated for webhook activity',
+      expect.objectContaining({
+        metadata: expect.objectContaining({
+          tss: 85.5,
+          method: 'power',
+          confidence: 'high',
+        }),
+      })
+    )
+  })
+})
+```
+
+### Manual Testing
+
+1. **Test successful TSS calculation:**
+   - Create activity with power data on Strava
+   - Check logs for "TSS calculated for webhook activity"
+
+2. **Test missing athlete profile:**
+   - Delete athlete profile
+   - Create activity on Strava
+   - Check logs for "TSS calculation returned null" with reason "Missing athlete profile"
+
+3. **Test activity without metrics:**
+   - Create activity without power or HR data (e.g., manual entry)
+   - Check logs for "Insufficient activity data"
+
+4. **Test TSS calculation exception:**
+   - Simulate database error in athlete profile fetch
+   - Verify webhook still processes and logs warning
 
 ---
 
 ## Acceptance Criteria
 
-- [x] POST /generate endpoint works
-- [x] GET /status/{job_id} endpoint works
-- [x] Validation errors return 422
-- [x] Not found returns 404
-- [x] Background tasks execute
-- [x] Tests pass
-- [x] API docs show endpoints
-- [x] Type checking passes
+- [ ] TSS calculation wrapped in try-catch block
+- [ ] Success logged with TSS details (info level)
+- [ ] Null result logged with diagnostic data (warning level)
+- [ ] Exceptions logged with error message (warning level)
+- [ ] Webhook processing continues even if TSS fails
+- [ ] Activity stored with `tss: null` on TSS failure
+- [ ] TypeScript compilation passes
+- [ ] No linting errors
 
 ---
 
-## Next Card
+## Monitoring
 
-**CARD_5.md** - Implement background job system with database persistence
+After deployment, monitor logs for:
+
+```typescript
+// Expected INFO logs (successful TSS)
+"TSS calculated for webhook activity" - userId: abc123, tss: 85.5, method: power
+
+// Expected WARNING logs (missing data)
+"TSS calculation returned null" - reason: Missing athlete profile
+"TSS calculation returned null" - reason: Insufficient activity data
+
+// Unexpected WARNING logs (need investigation)
+"TSS calculation failed for webhook activity" - error: <exception message>
+```
+
+If you see frequent warnings, it may indicate:
+- Users not completing athlete profiles
+- Strava activities without required metrics
+- Bug in TSS calculation logic
+
+---
+
+## Next Steps
+
+After completing this card, **Phase 1 is complete**. Proceed to **Phase 2** starting with **CARD_5** to implement auto-incremental sync in the sync API endpoint.

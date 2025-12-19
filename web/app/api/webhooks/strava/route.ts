@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { errorLogger } from '@/lib/monitoring/error-logger'
+import { StravaService } from '@/lib/services/strava-service'
+import {
+  calculateTSS,
+  type ActivityData,
+  type AthleteData,
+  type TSSResult,
+} from '@/lib/services/tss-calculation-service'
 
 /**
  * Get webhook verify token at runtime (not build time)
@@ -135,6 +142,63 @@ export async function POST(request: NextRequest) {
 }
 
 /**
+ * Fetch athlete profile data for TSS calculation
+ * Returns null if profile not found or missing required fields
+ */
+async function getAthleteDataForWebhook(userId: string): Promise<AthleteData | null> {
+  const supabase = await createClient()
+
+  const { data: profile, error } = await supabase
+    .from('athlete_profiles')
+    .select('ftp, max_hr, resting_hr, gender')
+    .eq('user_id', userId)
+    .single<{
+      ftp: number | null
+      max_hr: number | null
+      resting_hr: number | null
+      gender: string | null
+    }>()
+
+  if (error || !profile) {
+    errorLogger.logWarning('Athlete profile not found for TSS calculation', {
+      userId,
+      metadata: { error: error?.message },
+    })
+    return null
+  }
+
+  return {
+    ftp: profile.ftp ?? undefined,
+    maxHr: profile.max_hr ?? undefined,
+    restingHr: profile.resting_hr ?? undefined,
+    gender: (profile.gender as AthleteData['gender']) ?? undefined,
+  }
+}
+
+/**
+ * Calculate TSS for a webhook activity
+ * Returns null if insufficient data for calculation
+ */
+function calculateWebhookActivityTSS(
+  activity: Record<string, unknown>,
+  athleteData: AthleteData | null
+): TSSResult | null {
+  if (!athleteData) {
+    return null
+  }
+
+  const activityData: ActivityData = {
+    movingTimeSeconds: activity.moving_time as number,
+    normalizedPower: (activity.weighted_average_watts as number) ?? undefined,
+    averageWatts: (activity.average_watts as number) ?? undefined,
+    averageHeartRate: (activity.average_heartrate as number) ?? undefined,
+    maxHeartRate: (activity.max_heartrate as number) ?? undefined,
+  }
+
+  return calculateTSS(activityData, athleteData)
+}
+
+/**
  * Process webhook event (background task)
  * This fetches the activity details and stores them in the database
  */
@@ -179,11 +243,16 @@ async function processWebhookEvent(event: StravaWebhookEvent): Promise<void> {
       })
     } else {
       // For create/update: fetch activity details from Strava
+      const stravaService = new StravaService()
+
+      // Get valid access token (refreshes automatically if expired)
+      const accessToken = await stravaService.getValidAccessToken(connection.user_id)
+
       const activityResponse = await fetch(
         `https://www.strava.com/api/v3/activities/${event.object_id}`,
         {
           headers: {
-            Authorization: `Bearer ${connection.access_token}`,
+            Authorization: `Bearer ${accessToken}`,
           },
         }
       )
@@ -194,7 +263,57 @@ async function processWebhookEvent(event: StravaWebhookEvent): Promise<void> {
 
       const activity = await activityResponse.json()
 
-      // Upsert activity to database
+      errorLogger.logInfo('Fetched activity from Strava API', {
+        userId: connection.user_id,
+        metadata: {
+          activityId: event.object_id,
+          activityType: activity.type,
+          activityName: activity.name,
+        },
+      })
+
+      // Fetch athlete data for TSS calculation
+      let tssResult: TSSResult | null = null
+      try {
+        const athleteData = await getAthleteDataForWebhook(connection.user_id)
+        tssResult = calculateWebhookActivityTSS(activity, athleteData)
+
+        if (tssResult) {
+          errorLogger.logInfo('TSS calculated for webhook activity', {
+            userId: connection.user_id,
+            metadata: {
+              activityId: event.object_id,
+              tss: tssResult.tss,
+              method: tssResult.method,
+              confidence: tssResult.confidence,
+            },
+          })
+        } else {
+          errorLogger.logWarning('TSS calculation returned null', {
+            userId: connection.user_id,
+            metadata: {
+              activityId: event.object_id,
+              reason: athleteData ? 'Insufficient activity data' : 'Missing athlete profile',
+              hasAthleteData: !!athleteData,
+              hasPowerData: !!(activity.weighted_average_watts || activity.average_watts),
+              hasHRData: !!activity.average_heartrate,
+            },
+          })
+        }
+      } catch (tssError) {
+        // Don't fail the entire webhook processing if TSS calculation fails
+        errorLogger.logWarning('TSS calculation failed for webhook activity', {
+          userId: connection.user_id,
+          metadata: {
+            activityId: event.object_id,
+            error: tssError instanceof Error ? tssError.message : 'Unknown error',
+            activityType: activity.type,
+          },
+        })
+        // tssResult remains null, activity will be stored without TSS
+      }
+
+      // Upsert activity to database WITH TSS data
       await supabase.from('strava_activities').upsert(
         {
           user_id: connection.user_id,
@@ -213,15 +332,24 @@ async function processWebhookEvent(event: StravaWebhookEvent): Promise<void> {
           average_heartrate: activity.average_heartrate,
           max_heartrate: activity.max_heartrate,
           raw_data: activity,
+          // NEW: TSS fields
+          tss: tssResult?.tss ?? null,
+          tss_method: tssResult?.method ?? null,
         } as never,
         {
           onConflict: 'strava_activity_id',
         }
       )
 
-      errorLogger.logInfo('Webhook synced activity', {
+      errorLogger.logInfo('Webhook synced activity with TSS', {
         userId: connection.user_id,
-        metadata: { activityId: event.object_id, aspectType: event.aspect_type },
+        metadata: {
+          activityId: event.object_id,
+          aspectType: event.aspect_type,
+          tss: tssResult?.tss ?? null,
+          tssMethod: tssResult?.method ?? null,
+          tssConfidence: tssResult?.confidence ?? null,
+        },
       })
     }
 

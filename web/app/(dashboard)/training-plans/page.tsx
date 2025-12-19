@@ -7,6 +7,16 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Calendar, Plus, Zap } from 'lucide-react'
 
+// Extended type to include optional weeks_total (exists after migration)
+interface PlanRow {
+  id: string
+  name: string
+  description: string | null
+  status: string | null
+  plan_data: unknown
+  weeks_total?: number | null
+}
+
 export default async function TrainingPlansPage() {
   const t = await getTranslations('trainingPlan')
   const supabase = await createClient()
@@ -42,7 +52,7 @@ export default async function TrainingPlansPage() {
 
       {plans && plans.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {plans.map((plan) => {
+          {(plans as PlanRow[]).map((plan) => {
             const planData =
               typeof plan.plan_data === 'string' ? JSON.parse(plan.plan_data) : plan.plan_data
             const totalTss =
@@ -69,16 +79,12 @@ export default async function TrainingPlansPage() {
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Calendar className="h-4 w-4" />
-                        {planData?.plan_metadata?.total_weeks || '?'} weeks
+                        {plan.weeks_total || planData?.plan_metadata?.total_weeks || '?'} weeks
                       </span>
                       <span className="flex items-center gap-1">
                         <Zap className="h-4 w-4" />
                         {Math.round(totalTss)} TSS
                       </span>
-                    </div>
-                    <div className="mt-2 text-xs text-muted-foreground">
-                      {new Date(plan.start_date).toLocaleDateString()} -{' '}
-                      {new Date(plan.end_date).toLocaleDateString()}
                     </div>
                   </CardContent>
                 </Card>

@@ -46,6 +46,7 @@ export async function GET(
       ...plan,
       plan_data: planData,
       metadata: (plan.metadata as PlanSourceMetadata | null) ?? null,
+      status: plan.status as TrainingPlan['status'],
     }
 
     return NextResponse.json({ plan: trainingPlan })

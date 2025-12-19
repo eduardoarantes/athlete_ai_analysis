@@ -1,440 +1,188 @@
-# CARD 1: FastAPI Project Setup
+# CARD 1: Add Helper Functions for TSS Calculation in Webhook Handler
 
-**Status:** Pending
-**Estimated Time:** 2 hours
+**Phase:** 1 - Fix Webhook Processing
+**Priority:** High
+**Estimated Effort:** 30 minutes
 **Dependencies:** None
-**Assignee:** Implementation Agent
 
 ---
 
 ## Objective
 
-Set up the basic FastAPI application structure with configuration, dependencies, and the main application entry point.
+Add reusable helper functions to the webhook route handler for fetching athlete data and calculating TSS for webhook activities. These functions will be used by the webhook event processor to ensure all webhook-synced activities have TSS data.
 
 ---
 
-## Tasks
+## Changes Required
 
-### 1. Create Directory Structure
+### File: `web/app/api/webhooks/strava/route.ts`
 
-Create the following directories:
+**Add imports (after line 3):**
 
-```bash
-mkdir -p src/cycling_ai/api/models
-mkdir -p src/cycling_ai/api/routers
-mkdir -p src/cycling_ai/api/services
+```typescript
+import { StravaService } from '@/lib/services/strava-service'
+import {
+  calculateTSS,
+  type ActivityData,
+  type AthleteData,
+  type TSSResult,
+} from '@/lib/services/tss-calculation-service'
 ```
 
-### 2. Create `src/cycling_ai/api/__init__.py`
+**Add helper function 1 (after line 135, before `processWebhookEvent`):**
 
-```python
-"""
-FastAPI REST API for cycling-ai backend.
+```typescript
+/**
+ * Fetch athlete profile data for TSS calculation
+ * Returns null if profile not found or missing required fields
+ */
+async function getAthleteDataForWebhook(userId: string): Promise<AthleteData | null> {
+  const supabase = await createClient()
 
-Provides HTTP endpoints for the Next.js web UI to interact with
-Python tools and services without spawning CLI processes.
-"""
+  const { data: profile, error } = await supabase
+    .from('athlete_profiles')
+    .select('ftp, max_hr, resting_hr, gender')
+    .eq('user_id', userId)
+    .single<{
+      ftp: number | null
+      max_hr: number | null
+      resting_hr: number | null
+      gender: string | null
+    }>()
 
-__version__ = "1.0.0"
+  if (error || !profile) {
+    errorLogger.logWarning('Athlete profile not found for TSS calculation', {
+      userId,
+      metadata: { error: error?.message },
+    })
+    return null
+  }
+
+  return {
+    ftp: profile.ftp ?? undefined,
+    maxHr: profile.max_hr ?? undefined,
+    restingHr: profile.resting_hr ?? undefined,
+    gender: (profile.gender as AthleteData['gender']) ?? undefined,
+  }
+}
 ```
 
-### 3. Create `src/cycling_ai/api/config.py`
-
-```python
-"""
-FastAPI application configuration.
-
-Manages environment variables and application settings using Pydantic.
-"""
-from __future__ import annotations
-
-from pydantic_settings import BaseSettings, SettingsConfigDict
-
-
-class APISettings(BaseSettings):
-    """
-    Application settings loaded from environment variables.
-
-    All settings can be overridden with environment variables prefixed with FASTAPI_.
-    Example: FASTAPI_PORT=8080
-    """
-
-    # Server configuration
-    host: str = "0.0.0.0"
-    port: int = 8000
-    reload: bool = False  # Enable auto-reload in development
-
-    # CORS configuration
-    allowed_origins: list[str] = ["http://localhost:3000", "http://localhost:3001"]
-
-    # Job storage
-    job_storage_path: str = "/tmp/cycling-ai-jobs"
-
-    # API metadata
-    title: str = "Cycling AI API"
-    description: str = "REST API for AI-powered cycling performance analysis"
-    version: str = "1.0.0"
-
-    # Model configuration
-    model_config = SettingsConfigDict(
-        env_prefix="FASTAPI_",
-        env_file=".env",
-        env_file_encoding="utf-8",
-        case_sensitive=False,
-    )
-
-
-# Global settings instance
-settings = APISettings()
-```
-
-### 4. Create `src/cycling_ai/api/dependencies.py`
-
-```python
-"""
-FastAPI dependency injection functions.
-
-Provides reusable dependencies for routes (auth, config, etc.).
-"""
-from __future__ import annotations
-
-from typing import Annotated
-
-from fastapi import Depends
-
-from .config import APISettings, settings
-
-
-def get_settings() -> APISettings:
-    """
-    Get application settings.
-
-    Returns:
-        Application settings instance
-    """
-    return settings
-
-
-# Type alias for settings dependency
-SettingsDep = Annotated[APISettings, Depends(get_settings)]
-```
-
-### 5. Create `src/cycling_ai/api/main.py`
-
-```python
-"""
-FastAPI application entry point.
-
-Creates and configures the FastAPI application with:
-- CORS middleware for Next.js integration
-- Health check endpoint
-- API routers for plan, chat, and analysis
-"""
-from __future__ import annotations
-
-from contextlib import asynccontextmanager
-from typing import AsyncGenerator
-
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-
-from .config import settings
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    """
-    Application lifespan manager.
-
-    Handles startup and shutdown events.
-    """
-    # Startup
-    print(f"Starting {settings.title} v{settings.version}")
-    print(f"Server: {settings.host}:{settings.port}")
-    print(f"Allowed origins: {settings.allowed_origins}")
-
-    yield
-
-    # Shutdown
-    print("Shutting down application")
-
-
-# Create FastAPI application
-app = FastAPI(
-    title=settings.title,
-    description=settings.description,
-    version=settings.version,
-    lifespan=lifespan,
-)
-
-# Configure CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.allowed_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-# Health check endpoint
-@app.get("/health", tags=["health"])
-async def health_check() -> JSONResponse:
-    """
-    Health check endpoint.
-
-    Returns:
-        JSON response with health status
-    """
-    return JSONResponse(
-        content={
-            "status": "healthy",
-            "version": settings.version,
-        }
-    )
-
-
-# Root endpoint
-@app.get("/", tags=["root"])
-async def root() -> JSONResponse:
-    """
-    Root endpoint with API information.
-
-    Returns:
-        JSON response with API metadata
-    """
-    return JSONResponse(
-        content={
-            "name": settings.title,
-            "version": settings.version,
-            "description": settings.description,
-            "docs_url": "/docs",
-            "health_url": "/health",
-        }
-    )
-
-
-# Routers will be included in subsequent cards:
-# app.include_router(plan_router, prefix="/api/v1/plan", tags=["plan"])
-# app.include_router(chat_router, prefix="/api/v1/chat", tags=["chat"])
-# app.include_router(analysis_router, prefix="/api/v1/analysis", tags=["analysis"])
-```
-
-### 6. Update `pyproject.toml`
-
-Add FastAPI dependencies to the `[project.dependencies]` section:
-
-```toml
-[project.dependencies]
-# Existing dependencies...
-"fastapi>=0.109.0",
-"uvicorn[standard]>=0.27.0",
-"pydantic>=2.5.0",
-"pydantic-settings>=2.1.0",
-"python-multipart>=0.0.6",  # For file uploads (future use)
-```
-
-Add testing dependencies to `[project.optional-dependencies]`:
-
-```toml
-[project.optional-dependencies]
-dev = [
-    # Existing dev dependencies...
-    "httpx>=0.26.0",  # For testing FastAPI
-    "pytest-asyncio>=0.23.0",  # For async tests
-]
-```
-
-### 7. Create Test File `tests/api/test_main.py`
-
-```python
-"""
-Tests for FastAPI application main module.
-
-Tests health check, root endpoint, and CORS configuration.
-"""
-from __future__ import annotations
-
-import pytest
-from fastapi.testclient import TestClient
-
-from cycling_ai.api.main import app
-
-
-@pytest.fixture
-def client() -> TestClient:
-    """Create test client."""
-    return TestClient(app)
-
-
-def test_health_check(client: TestClient) -> None:
-    """Test health check endpoint."""
-    response = client.get("/health")
-
-    assert response.status_code == 200
-    data = response.json()
-    assert data["status"] == "healthy"
-    assert "version" in data
-
-
-def test_root_endpoint(client: TestClient) -> None:
-    """Test root endpoint."""
-    response = client.get("/")
-
-    assert response.status_code == 200
-    data = response.json()
-    assert "name" in data
-    assert "version" in data
-    assert "docs_url" in data
-
-
-def test_cors_headers(client: TestClient) -> None:
-    """Test CORS headers are present."""
-    response = client.options(
-        "/health",
-        headers={
-            "Origin": "http://localhost:3000",
-            "Access-Control-Request-Method": "GET",
-        },
-    )
-
-    assert response.status_code == 200
-    assert "access-control-allow-origin" in response.headers
-```
-
-### 8. Create Development Script `scripts/start_api.sh`
-
-```bash
-#!/bin/bash
-# Start FastAPI development server
-
-set -e
-
-echo "Starting FastAPI development server..."
-echo "API will be available at: http://localhost:8000"
-echo "API docs: http://localhost:8000/docs"
-echo ""
-
-# Navigate to project root
-cd "$(dirname "$0")/.."
-
-# Activate virtual environment if it exists
-if [ -d "venv" ]; then
-    source venv/bin/activate
-fi
-
-# Start uvicorn with hot reload
-uvicorn cycling_ai.api.main:app \
-    --reload \
-    --host 0.0.0.0 \
-    --port 8000 \
-    --log-level info
-```
-
-Make it executable:
-```bash
-chmod +x scripts/start_api.sh
+**Add helper function 2 (after `getAthleteDataForWebhook`):**
+
+```typescript
+/**
+ * Calculate TSS for a webhook activity
+ * Returns null if insufficient data for calculation
+ */
+function calculateWebhookActivityTSS(
+  activity: Record<string, unknown>,
+  athleteData: AthleteData | null
+): TSSResult | null {
+  if (!athleteData) {
+    return null
+  }
+
+  const activityData: ActivityData = {
+    movingTimeSeconds: activity.moving_time as number,
+    normalizedPower: (activity.weighted_average_watts as number) ?? undefined,
+    averageWatts: (activity.average_watts as number) ?? undefined,
+    averageHeartRate: (activity.average_heartrate as number) ?? undefined,
+    maxHeartRate: (activity.max_heartrate as number) ?? undefined,
+  }
+
+  return calculateTSS(activityData, athleteData)
+}
 ```
 
 ---
 
-## Verification Steps
+## Implementation Notes
 
-### 1. Install Dependencies
+### Design Decisions
 
-```bash
-cd /Users/eduardo/Documents/projects/cycling-ai-analysis
-pip install -e ".[dev]"
-```
+1. **Separate helper functions** - Keeps `processWebhookEvent` clean and testable
+2. **Null-safe** - Returns null when data is missing, allowing graceful fallback
+3. **Type-safe** - Uses existing TypeScript interfaces from TSS service
+4. **Reusable** - Can be tested independently and used in future webhook features
 
-### 2. Start FastAPI Server
+### Type Mapping
 
-```bash
-./scripts/start_api.sh
-```
+The activity data from Strava API uses snake_case field names:
+- `moving_time` → `movingTimeSeconds`
+- `weighted_average_watts` → `normalizedPower`
+- `average_watts` → `averageWatts`
+- `average_heartrate` → `averageHeartRate`
+- `max_heartrate` → `maxHeartRate`
 
-Expected output:
-```
-Starting FastAPI development server...
-Starting Cycling AI API v1.0.0
-Server: 0.0.0.0:8000
-Allowed origins: ['http://localhost:3000', 'http://localhost:3001']
-INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-```
+### Error Handling
 
-### 3. Test Endpoints
-
-```bash
-# Health check
-curl http://localhost:8000/health
-# Expected: {"status":"healthy","version":"1.0.0"}
-
-# Root endpoint
-curl http://localhost:8000/
-# Expected: {"name":"Cycling AI API","version":"1.0.0",...}
-
-# API documentation (in browser)
-open http://localhost:8000/docs
-# Should show Swagger UI with endpoints
-```
-
-### 4. Run Tests
-
-```bash
-pytest tests/api/test_main.py -v
-```
-
-Expected:
-```
-tests/api/test_main.py::test_health_check PASSED
-tests/api/test_main.py::test_root_endpoint PASSED
-tests/api/test_main.py::test_cors_headers PASSED
-```
-
-### 5. Type Check
-
-```bash
-mypy src/cycling_ai/api --strict
-```
-
-Expected: No errors
+- `getAthleteDataForWebhook` logs warning if profile not found but doesn't throw
+- `calculateWebhookActivityTSS` returns null if no athlete data (graceful degradation)
+- Activities will still be stored even if TSS calculation fails
 
 ---
 
-## Files Created
+## Testing
 
-- `src/cycling_ai/api/__init__.py`
-- `src/cycling_ai/api/config.py`
-- `src/cycling_ai/api/dependencies.py`
-- `src/cycling_ai/api/main.py`
-- `src/cycling_ai/api/models/__init__.py` (empty)
-- `src/cycling_ai/api/routers/__init__.py` (empty)
-- `src/cycling_ai/api/services/__init__.py` (empty)
-- `tests/api/__init__.py` (empty)
-- `tests/api/test_main.py`
-- `scripts/start_api.sh`
+### Unit Tests
 
----
+```typescript
+describe('Webhook Helper Functions', () => {
+  describe('getAthleteDataForWebhook', () => {
+    it('should fetch athlete profile successfully', async () => {
+      const athleteData = await getAthleteDataForWebhook(userId)
+      expect(athleteData).not.toBeNull()
+      expect(athleteData.ftp).toBeDefined()
+    })
 
-## Files Modified
+    it('should return null for missing profile', async () => {
+      const athleteData = await getAthleteDataForWebhook('nonexistent-user')
+      expect(athleteData).toBeNull()
+    })
+  })
 
-- `pyproject.toml` (add FastAPI dependencies)
+  describe('calculateWebhookActivityTSS', () => {
+    it('should calculate TSS from power data', () => {
+      const activity = {
+        moving_time: 3600,
+        weighted_average_watts: 200,
+      }
+      const athlete = { ftp: 250 }
+
+      const result = calculateWebhookActivityTSS(activity, athlete)
+      expect(result).not.toBeNull()
+      expect(result.tss).toBeGreaterThan(0)
+      expect(result.method).toBe('power')
+    })
+
+    it('should return null when no athlete data', () => {
+      const activity = { moving_time: 3600 }
+      const result = calculateWebhookActivityTSS(activity, null)
+      expect(result).toBeNull()
+    })
+  })
+})
+```
+
+### Manual Testing
+
+1. Check that imports resolve correctly
+2. Verify TypeScript compilation passes
+3. Verify helper functions are accessible in `processWebhookEvent` scope
 
 ---
 
 ## Acceptance Criteria
 
-- [x] FastAPI server starts without errors
-- [x] Health check endpoint returns 200
-- [x] Root endpoint returns API metadata
-- [x] CORS headers present in responses
-- [x] Tests pass
-- [x] Type checking passes (`mypy --strict`)
-- [x] API documentation accessible at `/docs`
+- [ ] `getAthleteDataForWebhook` function added and compiles
+- [ ] `calculateWebhookActivityTSS` function added and compiles
+- [ ] Imports for `StravaService` and TSS types added
+- [ ] TypeScript compilation passes (`pnpm type-check`)
+- [ ] No linting errors (`pnpm lint`)
+- [ ] Functions follow existing code style
 
 ---
 
-## Next Card
+## Next Steps
 
-**CARD_2.md** - Create Pydantic models for request/response validation
+After completing this card, proceed to **CARD_2** to integrate these helper functions into the webhook event processor with token refresh logic.

@@ -6,31 +6,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: '13.0.5'
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       athlete_profiles: {
@@ -177,6 +152,63 @@ export type Database = {
           },
           {
             foreignKeyName: 'plan_generation_jobs_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'admin_user_view'
+            referencedColumns: ['user_id']
+          },
+        ]
+      }
+      plan_instances: {
+        Row: {
+          created_at: string | null
+          end_date: string
+          id: string
+          name: string
+          plan_data: Json
+          start_date: string
+          status: string | null
+          template_id: string | null
+          updated_at: string | null
+          user_id: string
+          weeks_total: number
+        }
+        Insert: {
+          created_at?: string | null
+          end_date: string
+          id?: string
+          name: string
+          plan_data: Json
+          start_date: string
+          status?: string | null
+          template_id?: string | null
+          updated_at?: string | null
+          user_id: string
+          weeks_total: number
+        }
+        Update: {
+          created_at?: string | null
+          end_date?: string
+          id?: string
+          name?: string
+          plan_data?: Json
+          start_date?: string
+          status?: string | null
+          template_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+          weeks_total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'plan_instances_template_id_fkey'
+            columns: ['template_id']
+            isOneToOne: false
+            referencedRelation: 'training_plans'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'plan_instances_user_id_fkey'
             columns: ['user_id']
             isOneToOne: false
             referencedRelation: 'admin_user_view'
@@ -544,12 +576,10 @@ export type Database = {
         Row: {
           created_at: string
           description: string | null
-          end_date: string
           id: string
           metadata: Json | null
           name: string
           plan_data: Json
-          start_date: string
           status: string | null
           updated_at: string
           user_id: string
@@ -557,12 +587,10 @@ export type Database = {
         Insert: {
           created_at?: string
           description?: string | null
-          end_date: string
           id?: string
           metadata?: Json | null
           name: string
           plan_data: Json
-          start_date: string
           status?: string | null
           updated_at?: string
           user_id: string
@@ -570,12 +598,10 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string | null
-          end_date?: string
           id?: string
           metadata?: Json | null
           name?: string
           plan_data?: Json
-          start_date?: string
           status?: string | null
           updated_at?: string
           user_id?: string
@@ -958,9 +984,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       job_status: ['pending', 'running', 'completed', 'failed'],

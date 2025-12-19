@@ -1,471 +1,291 @@
-# CARD 5: Background Job System with Database Persistence
+# CARD 5: Update Sync API Endpoint for Incremental Sync
 
-**Status:** Pending
-**Estimated Time:** 2 hours
-**Dependencies:** CARD_4
-**Assignee:** Implementation Agent
+**Phase:** 2 - Auto-Incremental Sync
+**Priority:** High
+**Estimated Effort:** 45 minutes
+**Dependencies:** None (independent of Phase 1)
 
 ---
 
 ## Objective
 
-Replace in-memory job storage with Supabase database persistence so jobs survive API restarts and can be polled by Next.js.
+Add `incremental` query parameter support to the sync API endpoint. When `incremental=true`, automatically calculate the `after` timestamp from `last_sync_at - 1 hour buffer` to sync only new activities.
 
 ---
 
-## Key Concept
+## Changes Required
 
-The `plan_generation_jobs` table already exists in Supabase (created by migration `20251215000003_create_coach_tables.sql`). We just need to integrate it into the API.
+### File: `web/app/api/strava/sync/route.ts`
 
----
+**Add incremental parameter handling (after line 112, in the parameter parsing section):**
 
-## Tasks
+**Current code:**
 
-### 1. Create `src/cycling_ai/api/services/job_storage.py`
+```typescript
+const syncOptions: {
+  after?: number
+  perPage?: number
+  maxPages?: number
+} = {}
 
-```python
-"""
-Job storage service using Supabase.
-
-Persists job status to database so jobs survive API restarts.
-"""
-from __future__ import annotations
-
-import logging
-import os
-from datetime import datetime
-from typing import Any
-
-from supabase import Client, create_client
-
-from cycling_ai.api.models.common import JobStatus
-
-logger = logging.getLogger(__name__)
-
-
-class JobStorage:
-    """
-    Job storage service backed by Supabase.
-
-    Manages job state in the plan_generation_jobs table.
-    """
-
-    def __init__(self) -> None:
-        """Initialize Supabase client."""
-        supabase_url = os.getenv("SUPABASE_URL")
-        supabase_key = os.getenv("SUPABASE_SERVICE_KEY")  # Service role key for backend
-
-        if not supabase_url or not supabase_key:
-            raise ValueError(
-                "SUPABASE_URL and SUPABASE_SERVICE_KEY must be set. "
-                "These are required for job persistence."
-            )
-
-        self.client: Client = create_client(supabase_url, supabase_key)
-        logger.info("JobStorage initialized with Supabase")
-
-    async def create_job(
-        self, job_id: str, user_id: str, params: dict[str, Any]
-    ) -> JobStatus:
-        """
-        Create new job in database.
-
-        Args:
-            job_id: Unique job identifier
-            user_id: User who created the job
-            params: Job parameters (wizard data)
-
-        Returns:
-            Created job status
-        """
-        logger.info(f"Creating job: {job_id} for user: {user_id}")
-
-        data = {
-            "id": job_id,
-            "user_id": user_id,
-            "status": "queued",
-            "params": params,
-            "progress": None,
-            "result": None,
-            "error": None,
-        }
-
-        response = self.client.table("plan_generation_jobs").insert(data).execute()
-
-        if not response.data:
-            raise ValueError("Failed to create job in database")
-
-        return self._row_to_job_status(response.data[0])
-
-    async def get_job(self, job_id: str) -> JobStatus | None:
-        """
-        Get job status from database.
-
-        Args:
-            job_id: Job identifier
-
-        Returns:
-            Job status or None if not found
-        """
-        logger.debug(f"Getting job: {job_id}")
-
-        response = (
-            self.client.table("plan_generation_jobs")
-            .select("*")
-            .eq("id", job_id)
-            .execute()
-        )
-
-        if not response.data:
-            return None
-
-        return self._row_to_job_status(response.data[0])
-
-    async def update_job(
-        self,
-        job_id: str,
-        status: str | None = None,
-        progress: dict[str, Any] | None = None,
-        result: dict[str, Any] | None = None,
-        error: str | None = None,
-    ) -> JobStatus:
-        """
-        Update job status in database.
-
-        Args:
-            job_id: Job identifier
-            status: New status (queued|running|completed|failed)
-            progress: Progress information
-            result: Job result (when completed)
-            error: Error message (when failed)
-
-        Returns:
-            Updated job status
-        """
-        logger.debug(f"Updating job: {job_id}, status={status}")
-
-        updates: dict[str, Any] = {}
-
-        if status:
-            updates["status"] = status
-        if progress is not None:
-            updates["progress"] = progress
-        if result is not None:
-            updates["result"] = result
-        if error is not None:
-            updates["error"] = error
-
-        if not updates:
-            raise ValueError("At least one field must be updated")
-
-        response = (
-            self.client.table("plan_generation_jobs")
-            .update(updates)
-            .eq("id", job_id)
-            .execute()
-        )
-
-        if not response.data:
-            raise ValueError(f"Job not found: {job_id}")
-
-        return self._row_to_job_status(response.data[0])
-
-    def _row_to_job_status(self, row: dict[str, Any]) -> JobStatus:
-        """
-        Convert database row to JobStatus model.
-
-        Args:
-            row: Database row
-
-        Returns:
-            JobStatus instance
-        """
-        return JobStatus(
-            job_id=row["id"],
-            status=row["status"],
-            progress=row.get("progress"),
-            result=row.get("result"),
-            error=row.get("error"),
-            created_at=row.get("created_at"),
-            updated_at=row.get("updated_at"),
-        )
-
-
-# Singleton instance
-_job_storage: JobStorage | None = None
-
-
-def get_job_storage() -> JobStorage:
-    """Get or create JobStorage instance."""
-    global _job_storage
-    if _job_storage is None:
-        _job_storage = JobStorage()
-    return _job_storage
+const afterParam = searchParams.get('after')
+if (afterParam) {
+  const after = parseInt(afterParam, 10)
+  if (isNaN(after) || after < 0) {
+    return NextResponse.json(
+      { error: 'after must be a positive Unix timestamp' },
+      { status: 400 }
+    )
+  }
+  syncOptions.after = after
+}
 ```
 
-### 2. Update `src/cycling_ai/api/routers/plan.py`
+**New code:**
 
-Replace in-memory storage with database:
+```typescript
+const syncOptions: {
+  after?: number
+  perPage?: number
+  maxPages?: number
+} = {}
 
-```python
-# Remove: _job_storage: dict[str, JobStatus] = {}
+// NEW: Handle incremental sync parameter
+const incrementalParam = searchParams.get('incremental')
+const isIncremental = incrementalParam === 'true'
 
-# Add import:
-from cycling_ai.api.services.job_storage import get_job_storage
-
-# Update generate_plan function:
-@router.post("/generate", ...)
-async def generate_plan(...) -> JobStatusResponse:
-    import time
-    from uuid import uuid4
-
-    job_id = f"plan_{int(time.time())}_{uuid4().hex[:8]}"
-    logger.info(f"Creating plan generation job: {job_id}")
-
-    # Get job storage
-    job_storage = get_job_storage()
-
-    # Create job in database (user_id from auth, for now use placeholder)
-    user_id = "00000000-0000-0000-0000-000000000000"  # TODO: Get from auth
-    await job_storage.create_job(
-        job_id=job_id,
-        user_id=user_id,
-        params=request.model_dump()
+const afterParam = searchParams.get('after')
+if (afterParam) {
+  // Explicit 'after' parameter takes precedence
+  const after = parseInt(afterParam, 10)
+  if (isNaN(after) || after < 0) {
+    return NextResponse.json(
+      { error: 'after must be a positive Unix timestamp' },
+      { status: 400 }
     )
+  }
+  syncOptions.after = after
+} else if (isIncremental) {
+  // NEW: Auto-calculate 'after' from last_sync_at
+  const syncService = new StravaSyncService()
+  const lastSync = await syncService.getLastSyncTime(user.id)
 
-    # Queue background task
-    background_tasks.add_task(_execute_plan_generation, job_id, request)
+  if (lastSync) {
+    // Subtract 1 hour buffer to catch edge cases (late uploads, clock skew, etc.)
+    const bufferMs = 60 * 60 * 1000 // 1 hour in milliseconds
+    syncOptions.after = Math.floor((lastSync.getTime() - bufferMs) / 1000)
 
-    return JobStatusResponse(...)
-
-# Update get_job_status function:
-@router.get("/status/{job_id}", ...)
-async def get_job_status(job_id: str) -> JobStatus:
-    logger.debug(f"Getting status for job: {job_id}")
-
-    job_storage = get_job_storage()
-    job_status = await job_storage.get_job(job_id)
-
-    if not job_status:
-        logger.warning(f"Job not found: {job_id}")
-        raise HTTPException(...)
-
-    return job_status
-
-# Update _execute_plan_generation function:
-async def _execute_plan_generation(job_id: str, request: TrainingPlanRequest) -> None:
-    logger.info(f"Executing plan generation for job: {job_id}")
-    job_storage = get_job_storage()
-
-    # Update to running
-    await job_storage.update_job(
-        job_id=job_id,
-        status="running",
-        progress={"phase": "Generating plan", "percentage": 50}
-    )
-
-    try:
-        response = plan_service.generate_plan(request)
-
-        # Update to completed
-        await job_storage.update_job(
-            job_id=job_id,
-            status="completed",
-            progress={"phase": "Complete", "percentage": 100},
-            result={"training_plan": response.training_plan, "metadata": response.metadata}
-        )
-
-        logger.info(f"Job completed successfully: {job_id}")
-
-    except Exception as e:
-        logger.error(f"Job failed: {job_id}, error: {str(e)}")
-
-        # Update to failed
-        await job_storage.update_job(
-            job_id=job_id,
-            status="failed",
-            error=str(e)
-        )
-```
-
-### 3. Update `pyproject.toml`
-
-Add Supabase dependency:
-
-```toml
-[project.dependencies]
-# Existing dependencies...
-"supabase>=2.0.0",  # For job persistence
-```
-
-### 4. Create `.env.example`
-
-```bash
-# Supabase Configuration
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_KEY=your-service-role-key-here
-
-# FastAPI Configuration
-FASTAPI_HOST=0.0.0.0
-FASTAPI_PORT=8000
-FASTAPI_RELOAD=true
-ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
-
-# LLM Provider
-ANTHROPIC_API_KEY=sk-ant-...
-```
-
-### 5. Create `tests/api/services/test_job_storage.py`
-
-```python
-"""Tests for job storage service."""
-from __future__ import annotations
-
-import os
-
-import pytest
-
-from cycling_ai.api.services.job_storage import JobStorage
-
-
-@pytest.fixture
-def job_storage() -> JobStorage:
-    """Create job storage instance."""
-    # Requires SUPABASE_URL and SUPABASE_SERVICE_KEY to be set
-    if not os.getenv("SUPABASE_URL") or not os.getenv("SUPABASE_SERVICE_KEY"):
-        pytest.skip("Supabase credentials not configured")
-
-    return JobStorage()
-
-
-@pytest.mark.asyncio
-@pytest.mark.integration
-async def test_create_job(job_storage: JobStorage) -> None:
-    """Test creating a job."""
-    job_status = await job_storage.create_job(
-        job_id="test_123",
-        user_id="user_123",
-        params={"weeks": 12}
-    )
-
-    assert job_status.job_id == "test_123"
-    assert job_status.status == "queued"
-
-
-@pytest.mark.asyncio
-@pytest.mark.integration
-async def test_get_job(job_storage: JobStorage) -> None:
-    """Test getting a job."""
-    # Create job first
-    await job_storage.create_job(
-        job_id="test_456",
-        user_id="user_123",
-        params={"weeks": 12}
-    )
-
-    # Get it back
-    job_status = await job_storage.get_job("test_456")
-
-    assert job_status is not None
-    assert job_status.job_id == "test_456"
-
-
-@pytest.mark.asyncio
-@pytest.mark.integration
-async def test_update_job(job_storage: JobStorage) -> None:
-    """Test updating a job."""
-    # Create job first
-    await job_storage.create_job(
-        job_id="test_789",
-        user_id="user_123",
-        params={"weeks": 12}
-    )
-
-    # Update it
-    updated = await job_storage.update_job(
-        job_id="test_789",
-        status="completed",
-        result={"plan": "data"}
-    )
-
-    assert updated.status == "completed"
-    assert updated.result is not None
+    errorLogger.logInfo('Incremental sync from last_sync_at', {
+      userId: user.id,
+      metadata: {
+        lastSyncAt: lastSync.toISOString(),
+        afterTimestamp: syncOptions.after,
+        bufferHours: 1,
+      },
+    })
+  } else {
+    // No previous sync, perform full sync
+    errorLogger.logInfo('No previous sync found, performing full sync', {
+      userId: user.id,
+    })
+  }
+  // If no lastSync, syncOptions.after remains undefined (full sync)
+}
 ```
 
 ---
 
-## Verification Steps
+## Implementation Notes
 
-### 1. Set Environment Variables
+### Parameter Precedence
 
-```bash
-export SUPABASE_URL="https://your-project.supabase.co"
-export SUPABASE_SERVICE_KEY="your-service-role-key"
-export ANTHROPIC_API_KEY="sk-ant-..."
-```
+1. **Explicit `after` parameter** - Highest priority, overrides everything
+2. **Incremental flag** - Uses `last_sync_at - 1 hour` if available
+3. **Default behavior** - Full sync (no `after` parameter)
 
-### 2. Install Dependencies
+### Buffer Rationale
 
-```bash
-pip install -e ".[dev]"
-```
+The 1-hour buffer ensures we don't miss activities due to:
+- **Late uploads** - Athletes upload activities hours/days after completion
+- **Clock skew** - Slight differences between server clocks
+- **Processing delays** - Edge cases where `last_sync_at` was updated before all activities processed
 
-### 3. Test Job Storage
+This slight overlap is acceptable because:
+- Duplicate activities are handled by `UNIQUE(strava_activity_id)` constraint
+- Upsert operation updates existing activities
+- Minimal performance impact (1 hour of activities is usually 0-5 activities)
 
-```bash
-pytest tests/api/services/test_job_storage.py -v -m integration
-```
+### Sync Type Logic
 
-### 4. Test End-to-End
+| Scenario | `incremental` param | `last_sync_at` | Result |
+|----------|-------------------|---------------|--------|
+| First sync | true | NULL | Full sync (no `after`) |
+| Subsequent sync | true | 2024-01-15 10:00 | Incremental (after = 2024-01-15 09:00) |
+| Explicit after | false | any | Uses explicit `after` timestamp |
+| Default | false | any | Full sync (no `after`) |
 
-```bash
-# Start API
-./scripts/start_api.sh
+### Logging Strategy
 
-# In another terminal, create job
-curl -X POST http://localhost:8000/api/v1/plan/generate \
-  -H "Content-Type: application/json" \
-  -d '{
-    "athlete_profile": {"ftp": 265, "weight_kg": 70, "age": 35},
-    "weeks": 12
-  }'
-
-# Check Supabase dashboard - job should appear in plan_generation_jobs table
-
-# Check job status
-curl http://localhost:8000/api/v1/plan/status/plan_...
-
-# Restart API - job should still be retrievable
-```
+- **Info** - Incremental sync with `last_sync_at` details
+- **Info** - No previous sync found (fallback to full)
 
 ---
 
-## Files Created
+## Testing
 
-- `src/cycling_ai/api/services/job_storage.py`
-- `tests/api/services/test_job_storage.py`
-- `.env.example`
+### Unit Tests
 
----
+```typescript
+describe('Incremental Sync Parameter Handling', () => {
+  it('should calculate after from last_sync_at with 1-hour buffer', async () => {
+    const lastSync = new Date('2024-01-15T10:00:00Z')
+    const expectedAfter = Math.floor((lastSync.getTime() - 3600000) / 1000)
 
-## Files Modified
+    mockSyncService.getLastSyncTime.mockResolvedValue(lastSync)
 
-- `src/cycling_ai/api/routers/plan.py` (use database storage)
-- `pyproject.toml` (add supabase dependency)
+    const response = await POST('/api/strava/sync?incremental=true')
+
+    expect(response.status).toBe(202)
+    expect(mockSyncService.syncActivities).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        after: expectedAfter,
+      })
+    )
+  })
+
+  it('should perform full sync when incremental=true but no last_sync_at', async () => {
+    mockSyncService.getLastSyncTime.mockResolvedValue(null)
+
+    const response = await POST('/api/strava/sync?incremental=true')
+
+    expect(response.status).toBe(202)
+    expect(mockSyncService.syncActivities).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.not.objectContaining({
+        after: expect.anything(),
+      })
+    )
+  })
+
+  it('should prioritize explicit after param over incremental', async () => {
+    const explicitAfter = 1234567890
+
+    const response = await POST('/api/strava/sync?incremental=true&after=1234567890')
+
+    expect(response.status).toBe(202)
+    expect(mockSyncService.syncActivities).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        after: explicitAfter,
+      })
+    )
+  })
+
+  it('should perform full sync when incremental is not specified', async () => {
+    const response = await POST('/api/strava/sync')
+
+    expect(response.status).toBe(202)
+    expect(mockSyncService.syncActivities).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.not.objectContaining({
+        after: expect.anything(),
+      })
+    )
+  })
+})
+```
+
+### Integration Tests
+
+```typescript
+describe('Incremental Sync Integration', () => {
+  beforeEach(async () => {
+    // Set last_sync_at to 7 days ago
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    await setLastSyncTime(userId, sevenDaysAgo)
+  })
+
+  it('should sync only recent activities with incremental flag', async () => {
+    const response = await POST('/api/strava/sync?incremental=true')
+
+    expect(response.status).toBe(202)
+
+    // Poll job status until completion
+    const job = await pollJobStatus(response.data.jobId)
+
+    expect(job.status).toBe('completed')
+    expect(job.result.activitiesSynced).toBeLessThan(50) // Only recent activities
+  })
+
+  it('should sync all activities without incremental flag', async () => {
+    const response = await POST('/api/strava/sync')
+
+    expect(response.status).toBe(202)
+
+    const job = await pollJobStatus(response.data.jobId)
+
+    expect(job.status).toBe('completed')
+    expect(job.result.activitiesSynced).toBeGreaterThan(100) // All activities
+  })
+})
+```
+
+### Manual Testing
+
+1. **First sync (no last_sync_at):**
+   ```bash
+   curl -X POST "http://localhost:3000/api/strava/sync?incremental=true"
+   # Should perform full sync (no after param)
+   ```
+
+2. **Subsequent incremental sync:**
+   ```bash
+   # After first sync completes, run again
+   curl -X POST "http://localhost:3000/api/strava/sync?incremental=true"
+   # Should sync from last_sync_at - 1 hour
+   ```
+
+3. **Explicit after param:**
+   ```bash
+   curl -X POST "http://localhost:3000/api/strava/sync?after=1704715200"
+   # Should use exact timestamp
+   ```
+
+4. **Verify logs:**
+   ```
+   Check app.log for:
+   - "Incremental sync from last_sync_at" with timestamp details
+   - "No previous sync found, performing full sync"
+   ```
 
 ---
 
 ## Acceptance Criteria
 
-- [x] Jobs persist to database
-- [x] Jobs survive API restarts
-- [x] Job status updates work
-- [x] Tests pass
-- [x] Type checking passes
-- [x] Environment variables documented
+- [ ] `incremental` query parameter parsed correctly
+- [ ] `last_sync_at` fetched from database when `incremental=true`
+- [ ] `after` timestamp calculated with 1-hour buffer
+- [ ] Explicit `after` param takes precedence over incremental
+- [ ] Full sync performed when `incremental=true` but no `last_sync_at`
+- [ ] Logging added for incremental sync details
+- [ ] TypeScript compilation passes
+- [ ] No linting errors
+- [ ] Existing sync tests still pass
 
 ---
 
-## Next Card
+## Edge Cases
 
-**CARD_6.md** - Update Next.js service to call API
+| Edge Case | Behavior |
+|-----------|----------|
+| `incremental=false` | Ignored, performs full sync |
+| `incremental=true&after=123` | Uses explicit `after`, ignores incremental logic |
+| `last_sync_at` in future | Calculates negative `after`, API returns no activities |
+| `last_sync_at` = now | Uses (now - 1 hour), syncs recent activities |
+
+---
+
+## Next Steps
+
+After completing this card, proceed to **CARD_6** to update the `StravaSyncService` to track sync type metadata in the `SyncResult` interface.

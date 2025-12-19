@@ -7,6 +7,7 @@ import { StravaSyncService } from '@/lib/services/strava-sync-service'
 import type { StravaSyncJobPayload } from '@/lib/types/jobs'
 import { STRAVA_SYNC, HTTP_STATUS, MESSAGES } from '@/lib/constants'
 import { rateLimiters, getClientIdentifier } from '@/lib/rate-limit'
+import { errorLogger } from '@/lib/monitoring/error-logger'
 
 /**
  * Sync activities from Strava (Background Job)
@@ -111,8 +112,13 @@ export async function POST(request: NextRequest) {
         maxPages?: number
       } = {}
 
+      // NEW: Handle incremental sync parameter
+      const incrementalParam = searchParams.get('incremental')
+      const isIncremental = incrementalParam === 'true'
+
       const afterParam = searchParams.get('after')
       if (afterParam) {
+        // Explicit 'after' parameter takes precedence
         const after = parseInt(afterParam, 10)
         if (isNaN(after) || after < 0) {
           return NextResponse.json(
@@ -121,6 +127,31 @@ export async function POST(request: NextRequest) {
           )
         }
         syncOptions.after = after
+      } else if (isIncremental) {
+        // NEW: Auto-calculate 'after' from last_sync_at
+        const syncService = new StravaSyncService()
+        const lastSync = await syncService.getLastSyncTime(user.id)
+
+        if (lastSync) {
+          // Subtract 1 hour buffer to catch edge cases (late uploads, clock skew, etc.)
+          const bufferMs = 60 * 60 * 1000 // 1 hour in milliseconds
+          syncOptions.after = Math.floor((lastSync.getTime() - bufferMs) / 1000)
+
+          errorLogger.logInfo('Incremental sync from last_sync_at', {
+            userId: user.id,
+            metadata: {
+              lastSyncAt: lastSync.toISOString(),
+              afterTimestamp: syncOptions.after,
+              bufferHours: 1,
+            },
+          })
+        } else {
+          // No previous sync, perform full sync
+          errorLogger.logInfo('No previous sync found, performing full sync', {
+            userId: user.id,
+          })
+        }
+        // If no lastSync, syncOptions.after remains undefined (full sync)
       }
 
       const perPageParam = searchParams.get('perPage')
