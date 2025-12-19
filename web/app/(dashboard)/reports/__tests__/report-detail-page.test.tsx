@@ -45,7 +45,9 @@ describe('ReportDetailPage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(useTranslations).mockReturnValue(createMockTranslations() as unknown as ReturnType<typeof useTranslations>)
+    vi.mocked(useTranslations).mockReturnValue(
+      createMockTranslations() as unknown as ReturnType<typeof useTranslations>
+    )
     vi.mocked(useRouter).mockReturnValue(mockRouter as ReturnType<typeof useRouter>)
     vi.mocked(useParams).mockReturnValue({ id: mockDetailedReport.id })
   })
@@ -150,7 +152,9 @@ describe('ReportDetailPage', () => {
       // trainingFocus label and badge with the actual focus value
       expect(screen.getByText(/trainingFocus/i)).toBeInTheDocument()
       expect(
-        screen.getByText(mockDetailedReport.report_data.performance_analysis.ai_insights.training_focus!)
+        screen.getByText(
+          mockDetailedReport.report_data.performance_analysis.ai_insights.training_focus!
+        )
       ).toBeInTheDocument()
     })
   })
@@ -213,8 +217,8 @@ describe('ReportDetailPage', () => {
       const greenTrends = container.querySelectorAll('.text-green-600')
       expect(greenTrends.length).toBeGreaterThan(0)
       // Check that at least one contains the positive percentage
-      const hasPositiveTrend = Array.from(greenTrends).some(
-        (el) => el.textContent?.includes('+33.3%')
+      const hasPositiveTrend = Array.from(greenTrends).some((el) =>
+        el.textContent?.includes('+33.3%')
       )
       expect(hasPositiveTrend).toBe(true)
     })
@@ -231,9 +235,7 @@ describe('ReportDetailPage', () => {
       const redTrends = container.querySelectorAll('.text-red-600')
       expect(redTrends.length).toBeGreaterThan(0)
       // Check that at least one contains the negative percentage
-      const hasNegativeTrend = Array.from(redTrends).some(
-        (el) => el.textContent?.includes('-4.1%')
-      )
+      const hasNegativeTrend = Array.from(redTrends).some((el) => el.textContent?.includes('-4.1%'))
       expect(hasNegativeTrend).toBe(true)
     })
   })
@@ -276,7 +278,8 @@ describe('ReportDetailPage', () => {
 
     render(<ReportDetailPage />)
 
-    const areas = mockDetailedReport.report_data.performance_analysis.ai_insights.areas_for_improvement
+    const areas =
+      mockDetailedReport.report_data.performance_analysis.ai_insights.areas_for_improvement
 
     await waitFor(() => {
       expect(screen.getByText('areasForImprovement')).toBeInTheDocument()
@@ -292,7 +295,8 @@ describe('ReportDetailPage', () => {
 
     render(<ReportDetailPage />)
 
-    const recommendations = mockDetailedReport.report_data.performance_analysis.ai_insights.recommendations
+    const recommendations =
+      mockDetailedReport.report_data.performance_analysis.ai_insights.recommendations
 
     await waitFor(() => {
       expect(screen.getByText('recommendations')).toBeInTheDocument()

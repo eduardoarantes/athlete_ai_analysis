@@ -112,11 +112,7 @@ export default function ReportDetailPage() {
 
     try {
       const supabase = createClient()
-      const { data, error } = await supabase
-        .from('reports')
-        .select('*')
-        .eq('id', id)
-        .single()
+      const { data, error } = await supabase.from('reports').select('*').eq('id', id).single()
 
       if (error || !data) {
         setNotFound(true)
@@ -253,7 +249,9 @@ export default function ReportDetailPage() {
               {athleteProfile.power_to_weight && (
                 <div className="text-center p-3 bg-muted/50 rounded-lg">
                   <TrendingUp className="h-5 w-5 mx-auto mb-1 text-green-500" />
-                  <div className="text-2xl font-bold">{athleteProfile.power_to_weight.toFixed(2)}</div>
+                  <div className="text-2xl font-bold">
+                    {athleteProfile.power_to_weight.toFixed(2)}
+                  </div>
                   <div className="text-xs text-muted-foreground">{t('wkg')}</div>
                 </div>
               )}
@@ -320,7 +318,9 @@ export default function ReportDetailPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">{previousPeriod.period || t('previousPeriod')}</CardTitle>
+              <CardTitle className="text-lg">
+                {previousPeriod.period || t('previousPeriod')}
+              </CardTitle>
               <CardDescription>{t('comparisonMetrics')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -474,32 +474,34 @@ export default function ReportDetailPage() {
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-2 gap-6">
-              {insights.recommendations.short_term && insights.recommendations.short_term.length > 0 && (
-                <div>
-                  <h4 className="font-semibold mb-3 text-green-600">{t('shortTermActions')}</h4>
-                  <ul className="space-y-2">
-                    {insights.recommendations.short_term.map((rec, index) => (
-                      <li key={index} className="flex items-start gap-2 text-sm">
-                        <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                        {rec}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {insights.recommendations.long_term && insights.recommendations.long_term.length > 0 && (
-                <div>
-                  <h4 className="font-semibold mb-3 text-blue-600">{t('longTermGoals')}</h4>
-                  <ul className="space-y-2">
-                    {insights.recommendations.long_term.map((rec, index) => (
-                      <li key={index} className="flex items-start gap-2 text-sm">
-                        <Target className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                        {rec}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              {insights.recommendations.short_term &&
+                insights.recommendations.short_term.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold mb-3 text-green-600">{t('shortTermActions')}</h4>
+                    <ul className="space-y-2">
+                      {insights.recommendations.short_term.map((rec, index) => (
+                        <li key={index} className="flex items-start gap-2 text-sm">
+                          <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                          {rec}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              {insights.recommendations.long_term &&
+                insights.recommendations.long_term.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold mb-3 text-blue-600">{t('longTermGoals')}</h4>
+                    <ul className="space-y-2">
+                      {insights.recommendations.long_term.map((rec, index) => (
+                        <li key={index} className="flex items-start gap-2 text-sm">
+                          <Target className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                          {rec}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
             </div>
           </CardContent>
         </Card>
@@ -510,13 +512,15 @@ export default function ReportDetailPage() {
         <CardContent className="py-4">
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <span>
-              {t('generatedOn', { date: new Date(report.completed_at || report.created_at).toLocaleString() })}
+              {t('generatedOn', {
+                date: new Date(report.completed_at || report.created_at).toLocaleString(),
+              })}
             </span>
             {reportData?.ai_metadata && (
               <span>
                 {t('aiMetadata', {
                   provider: reportData.ai_metadata.ai_provider || 'Unknown',
-                  model: reportData.ai_metadata.ai_model || 'Unknown'
+                  model: reportData.ai_metadata.ai_model || 'Unknown',
                 })}
               </span>
             )}

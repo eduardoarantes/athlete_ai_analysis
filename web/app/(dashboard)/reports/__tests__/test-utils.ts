@@ -126,14 +126,8 @@ export const mockDetailedReport = {
           'Recovery rides need more focus',
         ],
         recommendations: {
-          short_term: [
-            'Add one VO2max session per week',
-            'Maintain current volume',
-          ],
-          long_term: [
-            'Target FTP of 300W by summer',
-            'Build towards century event',
-          ],
+          short_term: ['Add one VO2max session per week', 'Maintain current volume'],
+          long_term: ['Target FTP of 300W by summer', 'Build towards century event'],
         },
         training_focus: 'Endurance Building',
       },

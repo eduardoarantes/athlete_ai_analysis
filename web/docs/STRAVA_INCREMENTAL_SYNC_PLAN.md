@@ -21,26 +21,26 @@ This document outlines the plan to implement incremental syncing for Strava acti
 
 ### What's Working
 
-| Feature | Location | Status |
-|---------|----------|--------|
-| Manual sync with `after` parameter | `lib/services/strava-sync-service.ts` | Working |
-| Webhook verification | `app/api/webhooks/strava/route.ts` | Working |
-| Webhook event storage | `strava_webhook_events` table | Working |
-| Webhook activity sync | `processWebhookEvent()` | Partial |
-| Token refresh | `lib/services/strava-service.ts` | Working |
-| TSS calculation | `lib/services/tss-calculation-service.ts` | Working |
-| `last_sync_at` tracking | `strava_connections` table | Working |
+| Feature                            | Location                                  | Status  |
+| ---------------------------------- | ----------------------------------------- | ------- |
+| Manual sync with `after` parameter | `lib/services/strava-sync-service.ts`     | Working |
+| Webhook verification               | `app/api/webhooks/strava/route.ts`        | Working |
+| Webhook event storage              | `strava_webhook_events` table             | Working |
+| Webhook activity sync              | `processWebhookEvent()`                   | Partial |
+| Token refresh                      | `lib/services/strava-service.ts`          | Working |
+| TSS calculation                    | `lib/services/tss-calculation-service.ts` | Working |
+| `last_sync_at` tracking            | `strava_connections` table                | Working |
 
 ### Identified Gaps
 
-| Gap | Current Behavior | Impact | Priority |
-|-----|------------------|--------|----------|
-| Manual sync doesn't auto-use `last_sync_at` | Users must manually specify `after` param or full-sync | UX friction, wasted API calls | **High** |
-| Webhook doesn't calculate TSS | Activities synced via webhook have `tss: null` | Incomplete training load data | **High** |
-| Webhook doesn't refresh tokens | Uses stored `access_token` directly | Sync fails when token expires | **High** |
-| No auto-incremental sync option | UI only offers full sync | Poor UX, rate limit waste | **Medium** |
-| Webhook subscription is manual | Requires manual API call to register | Setup complexity | **Medium** |
-| No background incremental sync | Data gets stale between manual syncs | Data freshness | **Lower** |
+| Gap                                         | Current Behavior                                       | Impact                        | Priority   |
+| ------------------------------------------- | ------------------------------------------------------ | ----------------------------- | ---------- |
+| Manual sync doesn't auto-use `last_sync_at` | Users must manually specify `after` param or full-sync | UX friction, wasted API calls | **High**   |
+| Webhook doesn't calculate TSS               | Activities synced via webhook have `tss: null`         | Incomplete training load data | **High**   |
+| Webhook doesn't refresh tokens              | Uses stored `access_token` directly                    | Sync fails when token expires | **High**   |
+| No auto-incremental sync option             | UI only offers full sync                               | Poor UX, rate limit waste     | **Medium** |
+| Webhook subscription is manual              | Requires manual API call to register                   | Setup complexity              | **Medium** |
+| No background incremental sync              | Data gets stale between manual syncs                   | Data freshness                | **Lower**  |
 
 ---
 
@@ -53,6 +53,7 @@ GET https://www.strava.com/api/v3/athlete/activities
 ```
 
 **Parameters for Incremental Sync:**
+
 - `after` - Unix timestamp, only return activities after this time
 - `before` - Unix timestamp, only return activities before this time
 - `page` - Page number (default: 1)
@@ -60,12 +61,13 @@ GET https://www.strava.com/api/v3/athlete/activities
 
 ### Rate Limits
 
-| Limit Type | 15-minute | Daily |
-|------------|-----------|-------|
-| Overall | 200 requests | 2,000 requests |
-| Read-only | 100 requests | 1,000 requests |
+| Limit Type | 15-minute    | Daily          |
+| ---------- | ------------ | -------------- |
+| Overall    | 200 requests | 2,000 requests |
+| Read-only  | 100 requests | 1,000 requests |
 
 **Headers returned:**
+
 - `X-RateLimit-Limit` - 15-min and daily limits
 - `X-RateLimit-Usage` - Current usage
 - `X-ReadRateLimit-Limit` - Read-specific limits
@@ -77,6 +79,7 @@ GET https://www.strava.com/api/v3/athlete/activities
 **Object Types:** `activity`, `athlete`
 
 **Payload Structure:**
+
 ```json
 {
   "object_type": "activity",
@@ -90,6 +93,7 @@ GET https://www.strava.com/api/v3/athlete/activities
 ```
 
 **Best Practices:**
+
 - Respond with HTTP 200 within 2 seconds
 - Process events asynchronously
 - One subscription serves all authorized athletes
@@ -109,13 +113,14 @@ GET https://www.strava.com/api/v3/athlete/activities
 **File:** `app/api/webhooks/strava/route.ts`
 
 **Current Code (lines 181-225):**
+
 ```typescript
 // For create/update: fetch activity details from Strava
 const activityResponse = await fetch(
   `https://www.strava.com/api/v3/activities/${event.object_id}`,
   {
     headers: {
-      Authorization: `Bearer ${connection.access_token}`,  // Uses raw token
+      Authorization: `Bearer ${connection.access_token}`, // Uses raw token
     },
   }
 )
@@ -129,7 +134,7 @@ import { StravaService } from '@/lib/services/strava-service'
 import {
   calculateTSS,
   type ActivityData,
-  type AthleteData
+  type AthleteData,
 } from '@/lib/services/tss-calculation-service'
 
 async function processWebhookEvent(event: StravaWebhookEvent): Promise<void> {
@@ -295,10 +300,7 @@ const afterParam = searchParams.get('after')
 if (afterParam) {
   const after = parseInt(afterParam, 10)
   if (isNaN(after) || after < 0) {
-    return NextResponse.json(
-      { error: 'after must be a positive Unix timestamp' },
-      { status: 400 }
-    )
+    return NextResponse.json({ error: 'after must be a positive Unix timestamp' }, { status: 400 })
   }
   syncOptions.after = after
 } else if (isIncremental) {
@@ -338,7 +340,7 @@ export interface SyncResult {
   error?: string
   // NEW: Sync metadata
   syncType: 'full' | 'incremental'
-  syncedFrom?: Date  // Only for incremental
+  syncedFrom?: Date // Only for incremental
 }
 ```
 
@@ -664,7 +666,7 @@ export function useSmartSync() {
 
   useEffect(() => {
     const checkAndSync = async () => {
-      const status = await fetch('/api/strava/sync').then(r => r.json())
+      const status = await fetch('/api/strava/sync').then((r) => r.json())
 
       // If last sync was more than 1 hour ago, trigger background sync
       if (status.lastSyncAt) {
@@ -675,8 +677,9 @@ export function useSmartSync() {
           setIsSyncing(true)
 
           // Trigger background incremental sync
-          fetch('/api/strava/sync?incremental=true', { method: 'POST' })
-            .finally(() => setIsSyncing(false))
+          fetch('/api/strava/sync?incremental=true', { method: 'POST' }).finally(() =>
+            setIsSyncing(false)
+          )
         }
       }
     }
@@ -745,12 +748,12 @@ export async function GET(request: NextRequest) {
 
 ## Rate Limit Impact Analysis
 
-| Sync Type | Activities | API Calls | Rate Impact |
-|-----------|------------|-----------|-------------|
-| Full Sync (1000 activities) | 1000 | ~34 calls (30/page) | **High** - uses 34% of 15-min limit |
-| Full Sync (200 activities) | 200 | ~7 calls | **Medium** - uses 7% of 15-min limit |
-| Incremental (last 7 days, ~10 activities) | 10 | 1 call | **Minimal** |
-| Webhook (single activity) | 1 | 1 call | **Minimal** |
+| Sync Type                                 | Activities | API Calls           | Rate Impact                          |
+| ----------------------------------------- | ---------- | ------------------- | ------------------------------------ |
+| Full Sync (1000 activities)               | 1000       | ~34 calls (30/page) | **High** - uses 34% of 15-min limit  |
+| Full Sync (200 activities)                | 200        | ~7 calls            | **Medium** - uses 7% of 15-min limit |
+| Incremental (last 7 days, ~10 activities) | 10         | 1 call              | **Minimal**                          |
+| Webhook (single activity)                 | 1          | 1 call              | **Minimal**                          |
 
 **Recommendations:**
 
@@ -862,6 +865,7 @@ CREATE TABLE strava_webhook_subscriptions (
 ### Rollback Plan
 
 Each phase is isolated and can be rolled back independently:
+
 - Phase 1: Revert webhook route.ts
 - Phase 2: Revert sync route.ts and UI component
 - Phase 3: Revert callback route.ts and remove webhook service
@@ -953,12 +957,12 @@ errorLogger.logWarning('Approaching rate limit', { usage, limit, resetAt })
 
 ## Summary
 
-| Phase | Effort | Value | Status |
-|-------|--------|-------|--------|
-| Phase 1: Webhook Fix | 2-3 hours | High | Not Started |
-| Phase 2: Auto-Incremental | 3-4 hours | High | Not Started |
+| Phase                     | Effort    | Value  | Status      |
+| ------------------------- | --------- | ------ | ----------- |
+| Phase 1: Webhook Fix      | 2-3 hours | High   | Not Started |
+| Phase 2: Auto-Incremental | 3-4 hours | High   | Not Started |
 | Phase 3: Webhook Auto-Reg | 2-3 hours | Medium | Not Started |
-| Phase 4: Background Sync | 4-6 hours | Lower | Not Started |
+| Phase 4: Background Sync  | 4-6 hours | Lower  | Not Started |
 
 **Recommended Implementation Order:** Phase 1 + Phase 2 together provides the most immediate value with 5-7 hours of effort.
 

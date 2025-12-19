@@ -24,8 +24,18 @@ vi.mock('next-intl', () => ({
 }))
 
 vi.mock('next/link', () => ({
-  default: ({ children, href, className }: { children: React.ReactNode; href: string; className?: string }) => (
-    <a href={href} className={className}>{children}</a>
+  default: ({
+    children,
+    href,
+    className,
+  }: {
+    children: React.ReactNode
+    href: string
+    className?: string
+  }) => (
+    <a href={href} className={className}>
+      {children}
+    </a>
   ),
 }))
 
@@ -37,7 +47,9 @@ import { useTranslations } from 'next-intl'
 describe('ReportsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(useTranslations).mockReturnValue(createMockTranslations() as unknown as ReturnType<typeof useTranslations>)
+    vi.mocked(useTranslations).mockReturnValue(
+      createMockTranslations() as unknown as ReturnType<typeof useTranslations>
+    )
   })
 
   it('shows loading state initially', () => {
@@ -79,7 +91,9 @@ describe('ReportsPage', () => {
       // Check status badge
       expect(screen.getByText('status.completed')).toBeInTheDocument()
       // Check summary is shown
-      expect(screen.getByText(mockCompletedReport.report_data.performance_analysis.ai_insights.summary)).toBeInTheDocument()
+      expect(
+        screen.getByText(mockCompletedReport.report_data.performance_analysis.ai_insights.summary)
+      ).toBeInTheDocument()
       // Check activities count
       expect(screen.getByText('activitiesCount')).toBeInTheDocument()
     })

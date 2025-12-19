@@ -140,13 +140,7 @@ function getSegmentColor(type: string): string {
   return colors[type] || '#3B82F6'
 }
 
-function PowerProfileSVG({
-  segments,
-  ftp,
-}: {
-  segments: WorkoutSegment[]
-  ftp: number
-}) {
+function PowerProfileSVG({ segments, ftp }: { segments: WorkoutSegment[]; ftp: number }) {
   const expanded = useMemo(() => expandSegments(segments), [segments])
 
   if (expanded.length === 0) return null
@@ -413,10 +407,7 @@ export function WorkoutDetailModal({
                 {groupedSegments.map((group, index) => {
                   if (group.type === 'repeat' && group.segments) {
                     return (
-                      <div
-                        key={index}
-                        className="bg-muted/50 border border-dashed rounded-lg p-3"
-                      >
+                      <div key={index} className="bg-muted/50 border border-dashed rounded-lg p-3">
                         {(group.repeat_count ?? 0) > 1 && (
                           <div className="flex items-center gap-2 mb-3 pb-2 border-b">
                             <Badge variant="secondary" className="font-bold">

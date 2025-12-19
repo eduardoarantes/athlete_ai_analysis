@@ -138,7 +138,8 @@ export default function ReportsPage() {
           {reports.map((report) => {
             const activitiesAnalyzed = report.report_data?.activities_analyzed
             const summary = report.report_data?.performance_analysis?.ai_insights?.summary
-            const trainingFocus = report.report_data?.performance_analysis?.ai_insights?.training_focus
+            const trainingFocus =
+              report.report_data?.performance_analysis?.ai_insights?.training_focus
 
             return (
               <Link
@@ -193,7 +194,13 @@ export default function ReportsPage() {
                     <div className="text-xs text-muted-foreground">
                       {t('created', { date: new Date(report.created_at).toLocaleDateString() })}
                       {report.completed_at && (
-                        <> &bull; {t('completedOn', { date: new Date(report.completed_at).toLocaleDateString() })}</>
+                        <>
+                          {' '}
+                          &bull;{' '}
+                          {t('completedOn', {
+                            date: new Date(report.completed_at).toLocaleDateString(),
+                          })}
+                        </>
                       )}
                     </div>
                   </CardContent>
