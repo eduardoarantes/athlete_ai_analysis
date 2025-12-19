@@ -60,15 +60,13 @@ class APISettings(BaseSettings):
     def get_provider_api_key(self) -> str:
         """Get the API key for the configured provider."""
         provider = self.ai_provider.lower()
-        if provider == "anthropic":
-            return self.anthropic_api_key or ""
-        elif provider == "openai":
-            return self.openai_api_key or ""
-        elif provider == "gemini":
-            return self.google_api_key or ""
-        elif provider == "ollama":
-            return "ollama"  # Ollama doesn't need API key
-        return ""
+        api_keys = {
+            "anthropic": self.anthropic_api_key or "",
+            "openai": self.openai_api_key or "",
+            "gemini": self.google_api_key or "",
+            "ollama": "ollama",  # Ollama doesn't need API key
+        }
+        return api_keys.get(provider, "")
 
     def get_default_model(self) -> str:
         """Get the default model for the configured provider."""
