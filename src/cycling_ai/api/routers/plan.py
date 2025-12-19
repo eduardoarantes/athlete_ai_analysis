@@ -11,10 +11,11 @@ import logging
 import tempfile
 from pathlib import Path
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 
 from cycling_ai.api.config import settings
+from cycling_ai.api.middleware.auth import User, get_current_user
 from cycling_ai.api.models.common import ErrorResponse
 from cycling_ai.api.models.plan import JobStatusResponse, TrainingPlanRequest
 from cycling_ai.api.services.job_store import JobStatus, get_job_store
@@ -191,6 +192,7 @@ from typing import Any
 async def generate_plan(
     request: TrainingPlanRequest,
     background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user),
     use_ai: bool = Query(
         default=True,
         description="Use AI-powered plan generation. Set to false for skeleton templates.",
@@ -202,9 +204,12 @@ async def generate_plan(
     By default, uses AI-powered generation for personalized training plans.
     Set use_ai=false for faster skeleton-based templates.
 
+    Requires authentication.
+
     Args:
         request: Training plan request with athlete profile and parameters
         background_tasks: FastAPI background tasks manager
+        current_user: Authenticated user from JWT token
         use_ai: If True (default), use AI-powered generation
 
     Returns:
@@ -213,6 +218,7 @@ async def generate_plan(
     Example:
         ```
         POST /api/v1/plan/generate?use_ai=true
+        Authorization: Bearer <jwt_token>
         {
             "athlete_profile": {
                 "ftp": 265,
@@ -236,12 +242,12 @@ async def generate_plan(
     mode = "AI-powered" if use_ai else "skeleton"
     logger.info(
         f"[PLAN ROUTER] Received {mode} plan generation request: "
-        f"{request.weeks} weeks, target FTP: {request.target_ftp}"
+        f"{request.weeks} weeks, target FTP: {request.target_ftp}, user: {current_user.id}"
     )
 
-    # Create job
+    # Create job with user_id for ownership tracking
     job_store = get_job_store()
-    job_id = await job_store.create_job()
+    job_id = await job_store.create_job(user_id=current_user.id)
 
     # Queue background task
     background_tasks.add_task(
@@ -260,22 +266,29 @@ async def generate_plan(
 
 
 @router.get("/status/{job_id}")
-async def get_job_status(job_id: str) -> JSONResponse:
+async def get_job_status(
+    job_id: str,
+    current_user: User = Depends(get_current_user),
+) -> JSONResponse:
     """
     Get status of plan generation job.
 
+    Requires authentication. Users can only access their own jobs.
+
     Args:
         job_id: Job identifier from /generate endpoint
+        current_user: Authenticated user from JWT token
 
     Returns:
         Job status with result or error
 
     Raises:
-        HTTPException: If job not found (404)
+        HTTPException: If job not found (404) or access denied (403)
 
     Example:
         ```
         GET /api/v1/plan/status/plan_1734376800_a1b2c3d4
+        Authorization: Bearer <jwt_token>
 
         Response (200):
         {
@@ -302,6 +315,17 @@ async def get_job_status(job_id: str) -> JSONResponse:
                 details=f"No job exists with ID: {job_id}",
                 validation_errors=None,
             ).model_dump(),
+        )
+
+    # Verify job ownership
+    if job.user_id is not None and job.user_id != current_user.id:
+        logger.warning(
+            f"[PLAN ROUTER] User {current_user.id} attempted to access "
+            f"job {job_id} owned by {job.user_id}"
+        )
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied: you can only access your own jobs",
         )
 
     return JSONResponse(content=job.to_dict())

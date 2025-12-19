@@ -34,6 +34,7 @@ class Job:
     status: JobStatus
     created_at: datetime
     updated_at: datetime
+    user_id: str | None = None  # Owner of the job for authorization
     result: dict[str, Any] | None = None
     error: str | None = None
     progress: dict[str, Any] = field(default_factory=dict)
@@ -45,6 +46,7 @@ class Job:
             "status": self.status.value,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
+            "user_id": self.user_id,
             "result": self.result,
             "error": self.error,
             "progress": self.progress,
@@ -63,12 +65,13 @@ class JobStore:
         self._jobs: dict[str, Job] = {}
         self._lock = asyncio.Lock()
 
-    async def create_job(self, prefix: str = "plan") -> str:
+    async def create_job(self, prefix: str = "plan", user_id: str | None = None) -> str:
         """
         Create a new job and return its ID.
 
         Args:
             prefix: Job ID prefix (default: "plan")
+            user_id: Owner of the job for authorization checks
 
         Returns:
             Job ID string
@@ -81,10 +84,11 @@ class JobStore:
                 status=JobStatus.QUEUED,
                 created_at=datetime.now(),
                 updated_at=datetime.now(),
+                user_id=user_id,
             )
             self._jobs[job_id] = job
 
-        logger.info(f"[JOB STORE] Created job: {job_id}")
+        logger.info(f"[JOB STORE] Created job: {job_id} for user: {user_id}")
         return job_id
 
     async def get_job(self, job_id: str) -> Job | None:

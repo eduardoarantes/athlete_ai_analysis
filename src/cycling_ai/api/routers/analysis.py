@@ -11,10 +11,11 @@ from datetime import datetime, timedelta
 
 import httpx
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from fastapi.responses import JSONResponse
 
 from cycling_ai.api.config import settings
+from cycling_ai.api.middleware.auth import User, get_current_user
 from cycling_ai.api.models.analysis import (
     AnalysisJobStatusResponse,
     PerformanceAnalysisRequest,
@@ -220,6 +221,7 @@ async def _execute_performance_analysis(
 async def analyze_performance(
     request: PerformanceAnalysisRequest,
     background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user),
 ) -> AnalysisJobStatusResponse:
     """
     Start performance analysis as background job.
@@ -227,16 +229,24 @@ async def analyze_performance(
     Fetches activity data from Supabase (synced from Strava) and runs
     comprehensive performance analysis with LLM-powered insights.
 
+    Requires authentication. The user_id in the request must match the
+    authenticated user's ID (users can only analyze their own data).
+
     Args:
         request: Performance analysis request with user_id and athlete profile
         background_tasks: FastAPI background tasks manager
+        current_user: Authenticated user from JWT token
 
     Returns:
         Job status response with job ID
 
+    Raises:
+        HTTPException: 403 if user_id doesn't match authenticated user
+
     Example:
         ```
         POST /api/v1/analysis/performance
+        Authorization: Bearer <jwt_token>
         {
             "user_id": "uuid-of-user",
             "athlete_profile": {
@@ -257,14 +267,25 @@ async def analyze_performance(
         }
         ```
     """
+    # Verify user can only request analysis for themselves (prevent IDOR)
+    if request.user_id != current_user.id:
+        logger.warning(
+            f"[ANALYSIS ROUTER] User {current_user.id} attempted to access "
+            f"data for user {request.user_id}"
+        )
+        raise HTTPException(
+            status_code=403,
+            detail="Cannot request analysis for other users",
+        )
+
     logger.info(
         f"[ANALYSIS ROUTER] Received performance analysis request: "
         f"user_id={request.user_id}, period_months={request.period_months}"
     )
 
-    # Create job
+    # Create job with user_id for ownership tracking
     job_store = get_job_store()
-    job_id = await job_store.create_job(prefix="analysis")
+    job_id = await job_store.create_job(prefix="analysis", user_id=current_user.id)
 
     # Create report record in database
     report_id = await _create_report_record(
@@ -292,22 +313,29 @@ async def analyze_performance(
 
 
 @router.get("/status/{job_id}")
-async def get_analysis_status(job_id: str) -> JSONResponse:
+async def get_analysis_status(
+    job_id: str,
+    current_user: User = Depends(get_current_user),
+) -> JSONResponse:
     """
     Get status of performance analysis job.
 
+    Requires authentication. Users can only access their own jobs.
+
     Args:
         job_id: Job identifier from /performance endpoint
+        current_user: Authenticated user from JWT token
 
     Returns:
         Job status with result or error
 
     Raises:
-        HTTPException: If job not found (404)
+        HTTPException: If job not found (404) or access denied (403)
 
     Example:
         ```
         GET /api/v1/analysis/status/analysis_1734376800_a1b2c3d4
+        Authorization: Bearer <jwt_token>
 
         Response (200):
         {
@@ -335,6 +363,17 @@ async def get_analysis_status(job_id: str) -> JSONResponse:
                 details=f"No job exists with ID: {job_id}",
                 validation_errors=None,
             ).model_dump(),
+        )
+
+    # Verify job ownership
+    if job.user_id is not None and job.user_id != current_user.id:
+        logger.warning(
+            f"[ANALYSIS ROUTER] User {current_user.id} attempted to access "
+            f"job {job_id} owned by {job.user_id}"
+        )
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied: you can only access your own jobs",
         )
 
     return JSONResponse(content=job.to_dict())
