@@ -1,658 +1,408 @@
-# CARD 8: Documentation & Deployment
+# CARD 8: Add Integration Tests for Incremental Sync Flow
 
-**Status:** Pending
-**Estimated Time:** 1.5 hours
-**Dependencies:** CARD_7
-**Assignee:** Implementation Agent
+**Phase:** 2 - Auto-Incremental Sync
+**Priority:** Medium
+**Estimated Effort:** 45 minutes
+**Dependencies:** CARD_5, CARD_6, CARD_7
 
 ---
 
 ## Objective
 
-Create comprehensive documentation and prepare the FastAPI application for deployment.
+Create comprehensive integration tests for the complete incremental sync flow, covering API endpoint, service layer, job execution, and UI interaction. These tests verify the feature works end-to-end.
 
 ---
 
-## Tasks
+## Test Files to Create/Update
 
-### 1. Create `docs/API_GUIDE.md`
+### 1. API Endpoint Tests
 
-```markdown
-# FastAPI Backend - API Guide
+**File:** `web/app/api/strava/sync/route.test.ts` (create new)
 
-## Overview
+```typescript
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals'
+import { POST } from './route'
+import { createMockRequest, createMockUser } from '@/lib/test-utils'
 
-The FastAPI backend provides REST endpoints for the Next.js web UI to interact with the Python cycling-ai tools and services.
+describe('POST /api/strava/sync - Incremental Sync', () => {
+  let mockUser: any
+  let mockConnection: any
 
-## Architecture
-
-```
-Next.js (Port 3000) → FastAPI (Port 8000) → Python Tools → LLM Providers
-```
-
-## Getting Started
-
-### Prerequisites
-
-- Python 3.11+
-- Supabase account and project
-- LLM API key (Anthropic recommended)
-
-### Installation
-
-1. Install dependencies:
-   ```bash
-   pip install -e ".[dev]"
-   ```
-
-2. Set environment variables:
-   ```bash
-   cp .env.example .env
-   # Edit .env with your credentials
-   ```
-
-3. Start the server:
-   ```bash
-   ./scripts/start_api.sh
-   ```
-
-The API will be available at http://localhost:8000
-
-### API Documentation
-
-Interactive API docs: http://localhost:8000/docs
-
-## Endpoints
-
-### Health Check
-
-```
-GET /health
-```
-
-Returns server health status.
-
-**Response:**
-```json
-{
-  "status": "healthy",
-  "version": "1.0.0"
-}
-```
-
-### Generate Training Plan
-
-```
-POST /api/v1/plan/generate
-Content-Type: application/json
-```
-
-Starts asynchronous training plan generation.
-
-**Request Body:**
-```json
-{
-  "athlete_profile": {
-    "ftp": 265,
-    "weight_kg": 70,
-    "max_hr": 186,
-    "age": 35,
-    "goals": ["Improve FTP"],
-    "training_availability": {
-      "hours_per_week": 7,
-      "week_days": "Monday, Wednesday, Friday, Saturday, Sunday"
+  beforeEach(() => {
+    mockUser = createMockUser()
+    mockConnection = {
+      user_id: mockUser.id,
+      strava_athlete_id: 12345,
+      last_sync_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
     }
-  },
-  "weeks": 12,
-  "target_ftp": 278
-}
+  })
+
+  describe('Incremental parameter handling', () => {
+    it('should calculate after timestamp from last_sync_at with 1-hour buffer', async () => {
+      const request = createMockRequest({
+        method: 'POST',
+        url: 'http://localhost:3000/api/strava/sync?incremental=true',
+      })
+
+      const response = await POST(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(202)
+      expect(data.jobId).toBeDefined()
+
+      // Verify job created with correct parameters
+      const job = await getJob(data.jobId)
+      expect(job.payload.syncOptions.after).toBeDefined()
+
+      const expectedAfter = Math.floor(
+        (mockConnection.last_sync_at.getTime() - 3600000) / 1000
+      )
+      expect(job.payload.syncOptions.after).toBe(expectedAfter)
+    })
+
+    it('should perform full sync when incremental=true but no last_sync_at', async () => {
+      mockConnection.last_sync_at = null
+
+      const request = createMockRequest({
+        method: 'POST',
+        url: 'http://localhost:3000/api/strava/sync?incremental=true',
+      })
+
+      const response = await POST(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(202)
+
+      const job = await getJob(data.jobId)
+      expect(job.payload.syncOptions.after).toBeUndefined()
+    })
+
+    it('should prioritize explicit after param over incremental flag', async () => {
+      const explicitAfter = 1704715200
+
+      const request = createMockRequest({
+        method: 'POST',
+        url: `http://localhost:3000/api/strava/sync?incremental=true&after=${explicitAfter}`,
+      })
+
+      const response = await POST(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(202)
+
+      const job = await getJob(data.jobId)
+      expect(job.payload.syncOptions.after).toBe(explicitAfter)
+    })
+  })
+
+  describe('Rate limiting', () => {
+    it('should allow incremental sync within rate limit', async () => {
+      const requests = []
+      for (let i = 0; i < 3; i++) {
+        requests.push(
+          POST(
+            createMockRequest({
+              method: 'POST',
+              url: 'http://localhost:3000/api/strava/sync?incremental=true',
+            })
+          )
+        )
+      }
+
+      const responses = await Promise.all(requests)
+      responses.forEach((response) => {
+        expect(response.status).toBe(202)
+      })
+    })
+  })
+})
 ```
 
-**Response (202 Accepted):**
-```json
-{
-  "job_id": "plan_1734376800_a1b2c3d4",
-  "status": "queued",
-  "message": "Training plan generation started"
-}
+### 2. Service Layer Tests
+
+**File:** `web/lib/services/strava-sync-service.test.ts` (update existing)
+
+```typescript
+describe('StravaSyncService - Incremental Sync', () => {
+  describe('Sync metadata tracking', () => {
+    it('should return full sync type when no after parameter', async () => {
+      const result = await syncService.syncActivities(userId, {
+        perPage: 30,
+      })
+
+      expect(result.success).toBe(true)
+      expect(result.syncType).toBe('full')
+      expect(result.syncedFrom).toBeUndefined()
+    })
+
+    it('should return incremental sync type with syncedFrom date', async () => {
+      const afterTimestamp = 1704715200
+      const result = await syncService.syncActivities(userId, {
+        after: afterTimestamp,
+      })
+
+      expect(result.success).toBe(true)
+      expect(result.syncType).toBe('incremental')
+      expect(result.syncedFrom).toEqual(new Date('2024-01-08T10:00:00Z'))
+    })
+  })
+
+  describe('Incremental sync behavior', () => {
+    it('should fetch only activities after timestamp', async () => {
+      const afterTimestamp = Math.floor(Date.now() / 1000) - 7 * 24 * 60 * 60 // 7 days ago
+
+      const result = await syncService.syncActivities(userId, {
+        after: afterTimestamp,
+        perPage: 30,
+      })
+
+      expect(result.success).toBe(true)
+      expect(result.activitiesSynced).toBeLessThan(50) // Should only get recent activities
+
+      // Verify Strava API called with after parameter
+      expect(mockStravaService.getActivitiesWithRefresh).toHaveBeenCalledWith(
+        userId,
+        expect.objectContaining({
+          after: afterTimestamp,
+        })
+      )
+    })
+  })
+})
 ```
 
-### Get Job Status
+### 3. End-to-End Integration Tests
 
-```
-GET /api/v1/plan/status/{job_id}
-```
+**File:** `web/__tests__/integration/strava-incremental-sync.test.ts` (create new)
 
-Gets current status of a background job.
+```typescript
+import { describe, it, expect, beforeAll, afterAll } from '@jest/globals'
+import { createTestUser, deleteTestUser, setLastSyncTime } from '@/lib/test-helpers'
 
-**Response (200 OK):**
-```json
-{
-  "job_id": "plan_1734376800_a1b2c3d4",
-  "status": "completed",
-  "progress": {
-    "phase": "Complete",
-    "percentage": 100
-  },
-  "result": {
-    "training_plan": {
-      "total_weeks": 12,
-      "target_ftp": 278,
-      "weekly_plan": [...]
+describe('Strava Incremental Sync - End-to-End', () => {
+  let testUser: any
+  let authToken: string
+
+  beforeAll(async () => {
+    testUser = await createTestUser()
+    authToken = await getAuthToken(testUser)
+  })
+
+  afterAll(async () => {
+    await deleteTestUser(testUser.id)
+  })
+
+  it('should complete incremental sync workflow', async () => {
+    // Step 1: Set last_sync_at to 7 days ago
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    await setLastSyncTime(testUser.id, sevenDaysAgo)
+
+    // Step 2: Trigger incremental sync
+    const syncResponse = await fetch('http://localhost:3000/api/strava/sync?incremental=true', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    })
+
+    expect(syncResponse.status).toBe(202)
+    const syncData = await syncResponse.json()
+    expect(syncData.jobId).toBeDefined()
+
+    // Step 3: Poll job status until completion
+    let job = null
+    let attempts = 0
+    while (attempts < 30) {
+      const statusResponse = await fetch(
+        `http://localhost:3000/api/strava/sync/status/${syncData.jobId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        }
+      )
+
+      job = await statusResponse.json()
+
+      if (job.status === 'completed' || job.status === 'failed') {
+        break
+      }
+
+      await sleep(1000)
+      attempts++
     }
+
+    // Step 4: Verify job completed successfully
+    expect(job.status).toBe('completed')
+    expect(job.result).toBeDefined()
+    expect(job.result.success).toBe(true)
+    expect(job.result.syncType).toBe('incremental')
+    expect(job.result.syncedFrom).toBeDefined()
+    expect(job.result.activitiesSynced).toBeGreaterThanOrEqual(0)
+
+    // Step 5: Verify last_sync_at was updated
+    const connection = await getConnection(testUser.id)
+    expect(new Date(connection.last_sync_at)).toBeAfter(sevenDaysAgo)
+
+    // Step 6: Verify activities were stored
+    if (job.result.activitiesSynced > 0) {
+      const activities = await getActivities(testUser.id)
+      expect(activities.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('should perform full sync when no last_sync_at exists', async () => {
+    // Clear last_sync_at
+    await clearLastSyncTime(testUser.id)
+
+    const syncResponse = await fetch('http://localhost:3000/api/strava/sync?incremental=true', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    })
+
+    expect(syncResponse.status).toBe(202)
+    const syncData = await syncResponse.json()
+
+    const job = await pollJobUntilComplete(syncData.jobId, authToken)
+
+    expect(job.status).toBe('completed')
+    expect(job.result.syncType).toBe('full')
+    expect(job.result.syncedFrom).toBeUndefined()
+  })
+})
+
+// Helper functions
+async function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+async function pollJobUntilComplete(jobId: string, authToken: string): Promise<any> {
+  let attempts = 0
+  while (attempts < 30) {
+    const response = await fetch(`http://localhost:3000/api/strava/sync/status/${jobId}`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    })
+
+    const job = await response.json()
+
+    if (job.status === 'completed' || job.status === 'failed') {
+      return job
+    }
+
+    await sleep(1000)
+    attempts++
   }
+
+  throw new Error('Job did not complete within timeout')
 }
 ```
 
-## Configuration
-
-### Environment Variables
-
-| Variable | Description | Required | Default |
-|----------|-------------|----------|---------|
-| `FASTAPI_HOST` | Server bind address | No | `0.0.0.0` |
-| `FASTAPI_PORT` | Server port | No | `8000` |
-| `FASTAPI_RELOAD` | Enable auto-reload | No | `false` |
-| `ALLOWED_ORIGINS` | CORS allowed origins | No | `http://localhost:3000` |
-| `SUPABASE_URL` | Supabase project URL | Yes | - |
-| `SUPABASE_SERVICE_KEY` | Supabase service role key | Yes | - |
-| `ANTHROPIC_API_KEY` | Anthropic API key | Yes* | - |
-| `OPENAI_API_KEY` | OpenAI API key | Yes* | - |
-
-*At least one LLM provider API key is required
-
-## Development
-
-### Running Tests
-
-```bash
-# All tests
-./scripts/test_api.sh
-
-# Unit tests only
-pytest tests/api -v -m "not integration"
-
-# Integration tests
-export ANTHROPIC_API_KEY="sk-ant-..."
-export SUPABASE_URL="https://..."
-export SUPABASE_SERVICE_KEY="..."
-pytest tests/api -v -m integration
-```
-
-### Type Checking
-
-```bash
-mypy src/cycling_ai/api --strict
-```
-
-### Code Quality
-
-```bash
-# Linting
-ruff check src/cycling_ai/api
-
-# Formatting
-ruff format src/cycling_ai/api
-```
-
-## Deployment
-
-### Docker
-
-```dockerfile
-FROM python:3.11-slim
-
-WORKDIR /app
-
-COPY pyproject.toml .
-RUN pip install .
-
-COPY src/ src/
-
-CMD ["uvicorn", "cycling_ai.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
-```
-
-Build and run:
-```bash
-docker build -t cycling-ai-api .
-docker run -p 8000:8000 --env-file .env cycling-ai-api
-```
-
-### Production Checklist
-
-- [ ] Set `FASTAPI_RELOAD=false`
-- [ ] Use production Supabase project
-- [ ] Set secure `ALLOWED_ORIGINS`
-- [ ] Enable HTTPS
-- [ ] Set up monitoring/logging
-- [ ] Configure rate limiting
-- [ ] Set up health checks
-- [ ] Configure backup/recovery
-
-## Troubleshooting
-
-### Job stays in "queued" status
-
-- Check that background tasks are enabled
-- Check logs for errors
-- Verify LLM API key is set
-
-### CORS errors from Next.js
-
-- Verify `ALLOWED_ORIGINS` includes your Next.js URL
-- Check that CORS middleware is enabled
-
-### Database connection errors
-
-- Verify `SUPABASE_URL` and `SUPABASE_SERVICE_KEY`
-- Check network connectivity to Supabase
-- Verify database schema is up to date
-```
-
-### 2. Create `README.md` for API
-
-Create `src/cycling_ai/api/README.md`:
-
-```markdown
-# Cycling AI - FastAPI Backend
-
-REST API for the cycling-ai Python backend, enabling web UI integration.
-
-## Quick Start
-
-```bash
-# Install dependencies
-pip install -e ".[dev]"
-
-# Configure environment
-cp .env.example .env
-# Edit .env with your credentials
-
-# Start server
-./scripts/start_api.sh
-```
-
-API will be available at http://localhost:8000
-
-## Documentation
-
-- [API Guide](../../../docs/API_GUIDE.md) - Complete API reference
-- [Interactive Docs](http://localhost:8000/docs) - Swagger UI (when server running)
-
-## Project Structure
-
-```
-api/
-├── main.py           # FastAPI application entry point
-├── config.py         # Configuration management
-├── dependencies.py   # Dependency injection
-├── models/           # Pydantic request/response models
-│   ├── common.py
-│   └── plan.py
-├── routers/          # API route handlers
-│   └── plan.py
-└── services/         # Business logic layer
-    ├── plan_service.py
-    └── job_storage.py
-```
-
-## Key Features
-
-- **Type-safe**: Full Pydantic validation
-- **Async**: FastAPI async support
-- **Persistent**: Jobs stored in Supabase
-- **Tested**: >80% test coverage
-- **Documented**: Auto-generated API docs
-
-## Development
-
-See [API Guide](../../../docs/API_GUIDE.md) for development instructions.
-```
-
-### 3. Update Root `README.md`
-
-Add FastAPI section to main README:
-
-```markdown
-## FastAPI Web API (New)
-
-The project now includes a FastAPI REST API for web UI integration:
-
-### Running the API Server
-
-```bash
-# Start API server
-./scripts/start_api.sh
-
-# In another terminal, start Next.js
-cd web && pnpm dev
-```
-
-### API Documentation
-
-- Interactive docs: http://localhost:8000/docs
-- Complete guide: [docs/API_GUIDE.md](docs/API_GUIDE.md)
-
-### Environment Setup
-
-```bash
-# API requires these environment variables:
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_KEY=your-service-role-key
-ANTHROPIC_API_KEY=sk-ant-...
-```
-```
-
-### 4. Create Deployment Guide `docs/DEPLOYMENT.md`
-
-```markdown
-# Deployment Guide - FastAPI Backend
-
-## Overview
-
-This guide covers deploying the FastAPI backend to production.
-
-## Deployment Options
-
-### Option 1: Docker (Recommended)
-
-#### Build Image
-
-```dockerfile
-# Dockerfile
-FROM python:3.11-slim
-
-WORKDIR /app
-
-# Install dependencies
-COPY pyproject.toml .
-RUN pip install --no-cache-dir .
-
-# Copy application
-COPY src/ src/
-
-# Run server
-CMD ["uvicorn", "cycling_ai.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
-```
-
-```bash
-docker build -t cycling-ai-api .
-docker run -p 8000:8000 --env-file .env cycling-ai-api
-```
-
-#### Docker Compose
-
-```yaml
-version: '3.8'
-
-services:
-  api:
-    build: .
-    ports:
-      - "8000:8000"
-    environment:
-      - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - ALLOWED_ORIGINS=https://your-app.vercel.app
-    restart: unless-stopped
-```
-
-### Option 2: Render.com
-
-1. Create new Web Service
-2. Connect GitHub repository
-3. Configure:
-   - Build Command: `pip install .`
-   - Start Command: `uvicorn cycling_ai.api.main:app --host 0.0.0.0 --port $PORT`
-4. Set environment variables
-5. Deploy
-
-### Option 3: Railway.app
-
-1. Create new project
-2. Connect GitHub repository
-3. Set environment variables
-4. Railway auto-detects Python and deploys
-
-### Option 4: AWS/GCP/Azure
-
-Use Docker deployment with your cloud provider's container service.
-
-## Production Checklist
-
-### Security
-
-- [ ] Use HTTPS only
-- [ ] Set restrictive CORS origins
-- [ ] Rotate API keys regularly
-- [ ] Use secrets manager for credentials
-- [ ] Enable rate limiting
-- [ ] Add authentication (future)
-
-### Performance
-
-- [ ] Use production ASGI server (uvicorn with workers)
-- [ ] Enable gzip compression
-- [ ] Configure connection pooling
-- [ ] Set appropriate timeouts
-- [ ] Monitor resource usage
-
-### Monitoring
-
-- [ ] Set up error tracking (Sentry)
-- [ ] Configure logging (CloudWatch/StackDriver)
-- [ ] Set up health checks
-- [ ] Monitor API latency
-- [ ] Track job success rates
-
-### Database
-
-- [ ] Use production Supabase project
-- [ ] Configure connection pooling
-- [ ] Set up automated backups
-- [ ] Monitor database performance
-- [ ] Plan for scaling
-
-## Environment Variables (Production)
-
-```bash
-# Server
-FASTAPI_HOST=0.0.0.0
-FASTAPI_PORT=8000
-FASTAPI_RELOAD=false
-
-# CORS
-ALLOWED_ORIGINS=https://your-app.vercel.app,https://www.your-app.com
-
-# Database
-SUPABASE_URL=https://your-prod-project.supabase.co
-SUPABASE_SERVICE_KEY=your-production-service-key
-
-# LLM
-ANTHROPIC_API_KEY=sk-ant-production-key
-```
-
-## Monitoring
-
-### Health Checks
-
-Configure your deployment platform to ping:
-```
-GET /health
-```
-
-Expected response:
-```json
-{"status": "healthy", "version": "1.0.0"}
-```
-
-### Logs
-
-Monitor application logs for:
-- Job failures
-- API errors
-- Performance issues
-- LLM timeouts
-
-## Scaling
-
-### Horizontal Scaling
-
-Add more API server instances behind a load balancer.
-
-### Background Jobs
-
-For high load, consider:
-- Celery with Redis
-- AWS SQS + Lambda
-- Cloud Tasks
-
-## Rollback Plan
-
-1. Keep previous Docker image
-2. Monitor error rates after deployment
-3. Rollback if error rate increases
-4. Check job completion rates
-
-## Support
-
-For deployment issues, see:
-- [API Guide](API_GUIDE.md)
-- [Troubleshooting](#troubleshooting) in API Guide
-```
-
-### 5. Create `CHANGELOG.md` for API
-
-Create `src/cycling_ai/api/CHANGELOG.md`:
-
-```markdown
-# Changelog - FastAPI Backend
-
-## [1.0.0] - 2024-12-16
-
-### Added
-- Initial FastAPI application setup
-- Training plan generation endpoint (`POST /api/v1/plan/generate`)
-- Job status endpoint (`GET /api/v1/plan/status/{job_id}`)
-- Pydantic models for type-safe requests/responses
-- Supabase integration for job persistence
-- Background task execution
-- CORS configuration for Next.js
-- Comprehensive test suite (>80% coverage)
-- Auto-generated API documentation
-- Docker deployment support
-
-### Changed
-- Next.js service no longer spawns CLI processes
-- All plan generation now goes through REST API
-
-### Security
-- Environment-based CORS origins
-- Service role key for Supabase
-- No hardcoded credentials
+---
+
+## Test Coverage Goals
+
+### API Endpoint Tests
+- [ ] Incremental parameter parsing
+- [ ] `after` timestamp calculation with buffer
+- [ ] Full sync fallback when no `last_sync_at`
+- [ ] Explicit `after` parameter precedence
+- [ ] Rate limiting with incremental sync
+
+### Service Layer Tests
+- [ ] Sync type detection (full vs incremental)
+- [ ] `syncedFrom` timestamp conversion
+- [ ] Metadata included in success result
+- [ ] Metadata included in error result
+
+### Integration Tests
+- [ ] Complete incremental sync workflow
+- [ ] Job creation and execution
+- [ ] Job status polling
+- [ ] `last_sync_at` update after sync
+- [ ] Activities stored correctly
+- [ ] Full sync fallback scenario
+
+---
+
+## Test Data Setup
+
+### Test Fixtures
+
+```typescript
+// test-fixtures/strava.ts
+
+export const mockStravaConnection = {
+  user_id: 'test-user-123',
+  strava_athlete_id: 12345,
+  access_token: 'mock_access_token',
+  refresh_token: 'mock_refresh_token',
+  expires_at: new Date(Date.now() + 3600000).toISOString(),
+  last_sync_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+}
+
+export const mockStravaActivities = [
+  {
+    id: 1001,
+    name: 'Morning Ride',
+    type: 'Ride',
+    sport_type: 'Ride',
+    start_date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    moving_time: 3600,
+    distance: 25000,
+    weighted_average_watts: 200,
+  },
+  // ... more activities
+]
 ```
 
 ---
 
-## Verification Steps
-
-### 1. Check Documentation
+## Running the Tests
 
 ```bash
-# Verify all docs exist
-ls -la docs/API_GUIDE.md
-ls -la docs/DEPLOYMENT.md
-ls -la src/cycling_ai/api/README.md
-ls -la src/cycling_ai/api/CHANGELOG.md
+# Run all tests
+pnpm test
+
+# Run integration tests only
+pnpm test:integration
+
+# Run specific test file
+pnpm test web/app/api/strava/sync/route.test.ts
+
+# Run with coverage
+pnpm test --coverage
 ```
-
-### 2. Test API Docs
-
-```bash
-# Start server
-./scripts/start_api.sh
-
-# Open browser
-open http://localhost:8000/docs
-```
-
-Should show complete API documentation with examples.
-
-### 3. Test Docker Build
-
-```bash
-# Create Dockerfile
-cat > Dockerfile << 'EOF'
-FROM python:3.11-slim
-WORKDIR /app
-COPY pyproject.toml .
-RUN pip install .
-COPY src/ src/
-CMD ["uvicorn", "cycling_ai.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
-EOF
-
-# Build
-docker build -t cycling-ai-api .
-
-# Run
-docker run -p 8000:8000 --env-file .env cycling-ai-api
-
-# Test
-curl http://localhost:8000/health
-```
-
-### 4. Review All Documentation
-
-Read through each doc to ensure:
-- No broken links
-- Code examples work
-- Instructions are clear
-- All environment variables documented
-
----
-
-## Files Created
-
-- `docs/API_GUIDE.md`
-- `docs/DEPLOYMENT.md`
-- `src/cycling_ai/api/README.md`
-- `src/cycling_ai/api/CHANGELOG.md`
-- `Dockerfile` (example)
-
----
-
-## Files Modified
-
-- Root `README.md` (add FastAPI section)
 
 ---
 
 ## Acceptance Criteria
 
-- [x] API Guide complete with examples
-- [x] Deployment guide covers major platforms
-- [x] README files clear and helpful
-- [x] Changelog documents all changes
-- [x] Docker deployment works
-- [x] All documentation reviewed
-- [x] No broken links
-- [x] All code examples tested
+- [ ] API endpoint tests created and passing
+- [ ] Service layer tests updated and passing
+- [ ] End-to-end integration tests created and passing
+- [ ] Test coverage for incremental sync > 80%
+- [ ] All edge cases covered (no `last_sync_at`, explicit `after`, etc.)
+- [ ] Tests run successfully in CI/CD pipeline
+- [ ] Test fixtures created for reusability
 
 ---
 
-## Final Steps
+## Next Steps
 
-After completing this card:
+After completing this card, **Phase 2 is complete**. The implementation is ready for:
 
-1. Review all 8 cards are complete
-2. Run full test suite: `./scripts/test_api.sh`
-3. Test end-to-end flow: Next.js → API → Database
-4. Update main PLAN.md with completion status
-5. Create summary document of implementation
+1. **Code review** - Review all changes across 8 cards
+2. **Manual QA testing** - Test on staging environment
+3. **Merge to main** - Deploy to production
+4. **Monitor metrics** - Track sync performance, API usage, TSS calculation success rate
 
 ---
 
-**Implementation Complete!**
+## Future Test Enhancements (Out of Scope)
 
-The FastAPI integration is ready for production use. The Next.js app can now communicate with the Python backend via a clean REST API instead of spawning CLI processes.
+- Performance tests for large datasets (1000+ activities)
+- Load tests for concurrent sync requests
+- Webhook + incremental sync interaction tests
+- UI component snapshot tests

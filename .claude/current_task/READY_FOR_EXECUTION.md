@@ -1,365 +1,253 @@
-# Phase 1 Foundation - Ready for Execution
+# Strava Incremental Sync - Ready for Execution
 
-**Status:** ✅ READY
-**Created:** 2025-12-03
-**Estimated Duration:** 2 weeks (29 hours)
-
----
-
-## Quick Overview
-
-This implementation plan guides you through building the **foundational infrastructure** for the Cycling AI Web Application. By the end of Phase 1, you'll have a production-grade Next.js application with:
-
-- ✅ Complete authentication system (signup, login, password recovery)
-- ✅ Supabase backend (PostgreSQL + Auth + Row-Level Security)
-- ✅ Basic application shell (navigation, dark mode, responsive layout)
-- ✅ CI/CD pipeline (automated testing and deployment)
-- ✅ TypeScript strict mode (following the same quality standards as the Python backend)
+**Status:** Ready for Implementation
+**Created:** 2025-12-19
+**Estimated Effort:** 5-7 hours
+**Implementation Cards:** 8 cards
 
 ---
 
-## What's Been Prepared
+## Quick Start
 
-### 1. Comprehensive Implementation Plan
+This implementation plan is ready for execution. All necessary context has been gathered and the work is broken down into sequential, atomic cards.
 
-**Location:** `.claude/current_task/PLAN.md`
+### Implementation Order
 
-This 500+ line document contains:
+**Phase 1: Fix Webhook Processing (2-3 hours)**
+1. CARD_1: Add helper functions for TSS calculation (30 min)
+2. CARD_2: Update webhook with token refresh (45 min)
+3. CARD_3: Add TSS calculation to activity upsert (30 min)
+4. CARD_4: Add error handling and logging (20 min)
 
-- **Task-by-task breakdown** of all 12 tasks (P1-T1 through P1-T12)
-- **Exact commands to run** for each step
-- **Complete code snippets** ready to copy/paste
-- **Verification steps** to ensure each task works
-- **Acceptance criteria** for each task
-
-### 2. Phase Specification
-
-**Location:** `docs/tasks/PHASE_1_FOUNDATION.md`
-
-Original task specification with:
-- High-level overview
-- Dependencies between tasks
-- Estimated effort per task
-- Success criteria
-
-### 3. Architecture Documentation
-
-**Locations:**
-- `docs/IMPLEMENTATION_PLAN.md` - Overall 10-week roadmap
-- `docs/UI_ARCHITECTURE.md` - Technical architecture details
+**Phase 2: Auto-Incremental Sync (3-4 hours)**
+5. CARD_5: Update sync API endpoint (45 min)
+6. CARD_6: Track sync type metadata (30 min)
+7. CARD_7: Update UI with sync options dropdown (60 min)
+8. CARD_8: Add integration tests (45 min)
 
 ---
 
-## Implementation Approach
+## What This Delivers
 
-### Week 1: Infrastructure (Days 1-5)
+### User-Facing Improvements
 
-**P1-T1:** Initialize Next.js Project (2 hours)
-- Create Next.js 14+ with TypeScript and App Router
-- Configure Tailwind CSS and shadcn/ui
-- Set up TypeScript strict mode
-- Enable React Compiler v1.0 for automatic memoization
+1. **Complete TSS Data**
+   - All webhook-synced activities now include TSS
+   - Training load tracking works for real-time updates
+   - No manual re-sync required after webhook events
 
-**P1-T2:** Configure ESLint and Prettier (1 hour)
-- Install and configure code quality tools
-- Set up auto-formatting
+2. **Smart Sync Options**
+   - "Sync New Activities" - Incremental sync from last sync time
+   - "Full Re-sync" - Complete re-sync of all activities
+   - Clear UI showing last sync date
 
-**P1-T3:** GitHub Repository and CI/CD (2 hours)
-- Create feature branch
-- Set up GitHub Actions workflow
-- Configure automated testing
+3. **Better Performance**
+   - 94% reduction in API calls for typical syncs (1 call vs 34 calls)
+   - Faster sync times (seconds instead of minutes)
+   - Better rate limit efficiency
 
-**P1-T4:** Supabase Project and Database Schema (4 hours)
-- Create Supabase cloud project
-- Write and apply database migrations
-- Set up 5 core tables (profiles, activities, reports, etc.)
+### Technical Improvements
 
-**P1-T5:** Row-Level Security Policies (3 hours)
-- Enable RLS on all tables
-- Create 20 security policies (4 per table)
-- Test data isolation
+1. **Automatic Token Refresh**
+   - Webhook handler refreshes expired tokens
+   - No more failed syncs due to token expiration
 
-### Week 2: Authentication & UI (Days 6-12)
+2. **Sync Metadata Tracking**
+   - `syncType`: 'full' or 'incremental'
+   - `syncedFrom`: Timestamp for incremental syncs
+   - Better debugging and monitoring
 
-**P1-T6:** Supabase Client Configuration (2 hours)
-- Install Supabase packages
-- Create client/server utilities
-- Generate TypeScript types from database
-
-**P1-T7:** Signup Page (3 hours)
-- Build signup form with validation
-- Implement email verification flow
-- Test with real email
-
-**P1-T8:** Login Page (2 hours)
-- Build login form
-- Implement session management
-- Test authentication
-
-**P1-T9:** Password Recovery (2 hours)
-- Forgot password page
-- Reset password flow
-- Email magic links
-
-**P1-T10:** Protected Route Middleware (2 hours)
-- Implement auth middleware
-- Redirect unauthenticated users
-- Handle return URLs
-
-**P1-T11:** App Layout with Navigation (4 hours)
-- Build navigation bar
-- Add dark mode toggle
-- Create user menu
-- Responsive design
-
-**P1-T12:** Dashboard Home Page (2 hours)
-- Welcome message
-- Placeholder widgets
-- Profile status check
+3. **Comprehensive Error Handling**
+   - Graceful degradation when TSS calculation fails
+   - Detailed logging for troubleshooting
+   - Activities stored even if TSS unavailable
 
 ---
 
-## How to Execute
+## Architecture
 
-### Option 1: Follow PLAN.md Step-by-Step (Recommended)
+### Files Modified (8 files)
 
-1. Open `.claude/current_task/PLAN.md`
-2. Start with P1-T1
-3. Copy commands exactly as written
-4. Run verification steps after each task
-5. Check off acceptance criteria
-6. Move to next task
+1. `web/app/api/webhooks/strava/route.ts` - Webhook handler (CARD_1-4)
+2. `web/app/api/strava/sync/route.ts` - Sync API endpoint (CARD_5)
+3. `web/lib/services/strava-sync-service.ts` - Sync service (CARD_6)
+4. `web/components/strava/strava-connection.tsx` - UI component (CARD_7)
+5. `web/messages/en.json` - Translation keys (CARD_7)
+6. `web/messages/pt.json` - Translation keys (CARD_7)
+7. `web/messages/es.json` - Translation keys (CARD_7)
+8. `web/messages/fr.json` - Translation keys (CARD_7)
 
-**Advantages:**
-- Complete instructions for every step
-- All code provided (no decisions needed)
-- Clear verification at each stage
-- Rollback strategy if issues arise
+### Files Created (3 test files)
 
-### Option 2: Use Execution Agent
+1. `web/app/api/strava/sync/route.test.ts` - API tests (CARD_8)
+2. `web/lib/services/strava-sync-service.test.ts` - Service tests (CARD_8)
+3. `web/__tests__/integration/strava-incremental-sync.test.ts` - E2E tests (CARD_8)
 
-If you're working with an AI agent that can execute tasks:
+### Database Changes
 
-1. Pass the entire PLAN.md to the agent
-2. Agent should execute tasks sequentially
-3. Agent should verify each task before proceeding
-4. Agent should report any issues immediately
-
----
-
-## Key Decisions Already Made
-
-To speed up implementation, these architectural decisions are already made:
-
-1. **Framework:** Next.js 14+ with App Router (not Pages Router)
-2. **Language:** TypeScript with strict mode enabled
-3. **Styling:** Tailwind CSS + shadcn/ui components
-4. **Database:** Supabase (PostgreSQL with built-in auth)
-5. **Authentication:** Email/password (OAuth in Phase 3)
-6. **Optimization:** React Compiler v1.0 (automatic memoization, 12% faster page loads)
-7. **Deployment:** Vercel for Next.js, Supabase Cloud for database
-8. **CI/CD:** GitHub Actions
-9. **Package Manager:** pnpm (faster than npm/yarn)
-
-**No decisions needed** - just follow the plan!
-
----
-
-## Prerequisites Checklist
-
-Before starting, ensure you have:
-
-- [x] **Node.js 20+** installed (`node --version`)
-- [x] **pnpm** installed (`npm install -g pnpm`)
-- [x] **Git** installed and configured
-- [x] **GitHub account** with repository access
-- [x] **Supabase account** (free tier)
-- [x] **Real email address** (for testing verification emails)
-- [x] **VSCode** or preferred editor
-- [x] **Docker** installed (optional, for local Supabase)
-
----
-
-## Expected Outcomes
-
-### After Week 1
-
-You will have:
-- ✅ Next.js project running on localhost:3000
-- ✅ Supabase database with 5 tables
-- ✅ RLS policies protecting all data
-- ✅ CI/CD pipeline passing on GitHub
-- ✅ Clean git history with atomic commits
-
-### After Week 2
-
-You will have:
-- ✅ Working signup/login flow
-- ✅ Email verification working
-- ✅ Password recovery working
-- ✅ Dashboard accessible only when logged in
-- ✅ Navigation bar with dark mode
-- ✅ Mobile-responsive design
-- ✅ Production-ready authentication system
-
-### What You WON'T Have Yet
-
-(These come in Phases 2-5):
-- Profile onboarding wizard
-- Strava integration
-- AI report generation
-- Performance analytics
-- Training plan creation
-
-**Phase 1 is purely foundation** - authentication and database infrastructure.
-
----
-
-## Common Issues & Solutions
-
-### Issue: "Module not found" errors
-
-**Solution:**
-```bash
-# Delete node_modules and reinstall
-rm -rf node_modules
-pnpm install
-```
-
-### Issue: Supabase connection fails
-
-**Solution:**
-1. Check `.env.local` has correct values
-2. Verify Supabase project is running
-3. Check API keys in Supabase Dashboard → Settings → API
-
-### Issue: TypeScript errors
-
-**Solution:**
-```bash
-# Run type check to see all errors
-pnpm type-check
-
-# Most common: missing type definitions
-pnpm add -D @types/node
-```
-
-### Issue: Migration fails
-
-**Solution:**
-```bash
-# Reset local database
-supabase db reset
-
-# If cloud migration fails, rollback in Supabase Dashboard
-```
+**None required** - All necessary fields already exist:
+- `strava_activities.tss`
+- `strava_activities.tss_method`
+- `strava_connections.last_sync_at`
+- `athlete_profiles.resting_hr`
 
 ---
 
 ## Testing Strategy
 
-### Manual Testing (Required)
+### Unit Tests (CARD_1-6, CARD_8)
+- TSS calculation helper functions
+- Token refresh logic
+- Incremental sync parameter handling
+- Sync metadata tracking
 
-After each task, manually test:
-- Does the page load?
-- Does the form validate correctly?
-- Does the happy path work?
-- Does error handling work?
+### Integration Tests (CARD_8)
+- Complete sync workflow (API → Service → Job → Database)
+- Webhook processing with TSS
+- Job status polling
+- UI interaction
 
-### Automated Testing (CI/CD)
-
-GitHub Actions will automatically run:
-- `pnpm lint` - Check code quality
-- `pnpm type-check` - Check TypeScript
-- `pnpm build` - Build production bundle
-
-### Integration Testing (Phase 5)
-
-Full E2E tests come later. For Phase 1, manual testing is sufficient.
-
----
-
-## Success Metrics
-
-Phase 1 is successful when:
-
-1. **All 12 tasks completed** with acceptance criteria met
-2. **CI/CD pipeline green** on GitHub
-3. **Manual test flow works:**
-   - User signs up → receives email → verifies → logs in → sees dashboard → logs out
-
-4. **Performance targets:**
-   - Page load < 2 seconds
-   - No console errors
-   - TypeScript compilation successful
-
-5. **Security verified:**
-   - RLS prevents accessing other users' data
-   - Protected routes require authentication
-   - Passwords meet strength requirements
+### Manual Testing
+- Create activity on Strava → verify webhook syncs with TSS
+- Trigger incremental sync → verify only recent activities synced
+- Trigger full sync → verify all activities synced
+- Check logs for proper metadata and error handling
 
 ---
 
-## Next Steps After Phase 1
+## Deployment
 
-Once Phase 1 is complete and merged:
+### Pre-Deployment Checklist
+- [ ] All 8 cards implemented
+- [ ] All tests passing (`pnpm test`)
+- [ ] Type checking passing (`pnpm type-check`)
+- [ ] Linting passing (`pnpm lint`)
+- [ ] Manual testing completed
 
-1. **Deploy to Production:**
-   - Vercel will auto-deploy from main branch
-   - Verify production deployment works
-   - Test with production Supabase
+### Deployment Steps
+1. Merge to main branch
+2. Automatic deployment via Vercel
+3. Monitor logs for webhook processing
+4. Verify incremental sync works for existing users
 
-2. **Review & Retrospective:**
-   - What went well?
-   - What took longer than expected?
-   - Any technical debt to address?
+### Post-Deployment Verification
+- [ ] Webhook events processed with TSS
+- [ ] Incremental sync API endpoint works
+- [ ] UI shows sync options dropdown
+- [ ] `last_sync_at` updates correctly
+- [ ] No errors in production logs
 
-3. **Prepare for Phase 2:**
-   - Review `docs/tasks/PHASE_2_PROFILE_ONBOARDING.md`
-   - Plan 4-step profile wizard
-   - Set up internationalization (i18n)
-
----
-
-## Support & Resources
-
-### Documentation
-
-- **Next.js:** https://nextjs.org/docs
-- **Supabase:** https://supabase.com/docs
-- **shadcn/ui:** https://ui.shadcn.com
-- **Tailwind CSS:** https://tailwindcss.com/docs
-
-### Project Context
-
-- **Python Backend:** See `CLAUDE.md` for existing system architecture
-- **Overall Plan:** See `docs/IMPLEMENTATION_PLAN.md`
-- **Technical Details:** See `docs/UI_ARCHITECTURE.md`
-
-### Getting Help
-
-If stuck:
-1. Check PLAN.md for exact commands
-2. Check verification steps - did previous task complete?
-3. Check common issues section above
-4. Review task specification in `docs/tasks/PHASE_1_FOUNDATION.md`
+### Rollback Plan
+Each phase is independent and can be rolled back separately:
+- **Phase 1:** Revert webhook route changes
+- **Phase 2:** Revert sync API and UI changes
+- **No database changes** - No migrations to rollback
 
 ---
 
-## Final Notes
+## Monitoring
 
-This plan is designed to be:
-- **Executable** - Every command is provided
-- **Verifiable** - Clear success criteria at each step
-- **Safe** - Rollback strategies for failures
-- **Production-grade** - Follows best practices from the Python backend
+### Key Metrics
 
-You should be able to execute this plan **without making any architectural decisions** - everything is already decided and documented.
+**Webhook Health:**
+- Events received per hour
+- TSS calculation success rate (target: >90%)
+- Token refresh success rate (target: >99%)
+- Processing time (target: <2 seconds)
 
-**Good luck with the implementation!** 🚀
+**Sync Performance:**
+- Sync type distribution (full vs incremental)
+- Average activities per sync by type
+- API calls per sync by type
+- Sync duration by type
+
+**Rate Limit Usage:**
+- API calls per 15-minute window
+- Daily API call usage
+- Rate limit errors (target: 0)
+
+### Log Queries
+
+```typescript
+// Successful TSS calculation
+"TSS calculated for webhook activity"
+
+// Missing athlete profile (expected)
+"TSS calculation returned null" + reason: "Missing athlete profile"
+
+// Incremental sync started
+"Incremental sync from last_sync_at"
+
+// Full sync fallback
+"No previous sync found, performing full sync"
+```
 
 ---
 
-**Document Version:** 1.0
-**Last Updated:** 2025-12-03
-**Status:** ✅ Ready for Execution
+## Known Limitations
+
+### Phase 1 + Phase 2 Scope
+
+**Included:**
+- ✅ Webhook TSS calculation
+- ✅ Automatic token refresh
+- ✅ Auto-incremental sync parameter
+- ✅ UI sync options dropdown
+
+**Not Included (Future Phases):**
+- ❌ Auto-register webhooks on OAuth
+- ❌ Background automatic sync
+- ❌ Webhook retry queue
+- ❌ Webhook subscription management UI
+
+### Edge Cases Handled
+
+- Missing athlete profile → Activity stored with `tss: null`
+- Expired token → Automatic refresh before API call
+- No `last_sync_at` → Full sync performed
+- Activity without metrics → Gracefully stored without TSS
+
+---
+
+## Success Criteria
+
+### Phase 1 Complete When:
+- [ ] Webhook-synced activities have TSS calculated
+- [ ] Token refresh works automatically
+- [ ] No webhook failures due to expired tokens
+- [ ] TSS calculation errors logged with diagnostic data
+
+### Phase 2 Complete When:
+- [ ] Incremental sync works with `?incremental=true`
+- [ ] UI shows sync options for existing users
+- [ ] First-time users see simple sync button
+- [ ] Sync metadata tracked in job results
+
+### Overall Success When:
+- [ ] All 8 cards implemented and tested
+- [ ] Production deployment successful
+- [ ] No increase in error rates
+- [ ] User feedback positive (faster syncs)
+
+---
+
+## Next Steps
+
+1. **Start with CARD_1** - Add TSS helper functions
+2. **Follow sequential order** - Each card builds on previous
+3. **Test after each card** - Verify changes work before proceeding
+4. **Create PR after Phase 1** - Consider reviewing Phase 1 before Phase 2
+5. **Deploy and monitor** - Watch metrics after production deployment
+
+---
+
+## Support & Questions
+
+If you encounter issues during implementation:
+
+1. **Check the detailed plan:** `PLAN.md` has full context
+2. **Review individual cards:** `PLAN/CARD_X.md` has step-by-step instructions
+3. **Reference original spec:** `web/docs/STRAVA_INCREMENTAL_SYNC_PLAN.md`
+4. **Check existing code:** All helper services already exist and work
+
+**Ready to execute!** Start with CARD_1 and work through sequentially.
