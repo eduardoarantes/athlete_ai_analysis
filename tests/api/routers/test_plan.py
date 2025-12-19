@@ -19,6 +19,9 @@ from cycling_ai.api.main import app
 # Enable async testing
 pytestmark = pytest.mark.anyio
 
+# Test auth header (uses mock user when SUPABASE_JWT_SECRET not set)
+TEST_AUTH_HEADERS = {"Authorization": "Bearer test-token"}
+
 
 @pytest.fixture
 def client() -> TestClient:
@@ -91,13 +94,15 @@ async def test_generate_plan_endpoint(
                 "weeks": 12,
                 "target_ftp": 278,
             },
+            headers=TEST_AUTH_HEADERS,
         )
 
     assert response.status_code == 202
     data = response.json()
     assert "job_id" in data
     assert data["status"] == "queued"
-    assert data["message"] == "Training plan generation started"
+    # Message can be either AI or skeleton based on use_ai param
+    assert "started" in data["message"]
 
 
 async def test_generate_plan_invalid_request() -> None:
@@ -114,6 +119,7 @@ async def test_generate_plan_invalid_request() -> None:
                 },
                 "weeks": 12,
             },
+            headers=TEST_AUTH_HEADERS,
         )
 
     assert response.status_code == 422  # Validation error
@@ -133,6 +139,7 @@ async def test_generate_plan_invalid_weeks() -> None:
                 },
                 "weeks": 100,  # Invalid: exceeds max 24 weeks
             },
+            headers=TEST_AUTH_HEADERS,
         )
 
     assert response.status_code == 422  # Validation error
@@ -142,7 +149,10 @@ async def test_get_job_status_not_found() -> None:
     """Test GET /api/v1/plan/status/{job_id} for non-existent job."""
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.get("/api/v1/plan/status/nonexistent_job_id")
+        response = await ac.get(
+            "/api/v1/plan/status/nonexistent_job_id",
+            headers=TEST_AUTH_HEADERS,
+        )
 
     assert response.status_code == 404
     data = response.json()
@@ -163,12 +173,16 @@ async def test_get_job_status_queued(
                 "weeks": 12,
                 "target_ftp": 278,
             },
+            headers=TEST_AUTH_HEADERS,
         )
 
         job_id = create_response.json()["job_id"]
 
         # Get job status immediately (should be queued or running)
-        status_response = await ac.get(f"/api/v1/plan/status/{job_id}")
+        status_response = await ac.get(
+            f"/api/v1/plan/status/{job_id}",
+            headers=TEST_AUTH_HEADERS,
+        )
 
     assert status_response.status_code == 200
     data = status_response.json()
@@ -192,6 +206,7 @@ async def test_full_plan_generation_flow(
                 "weeks": 8,  # Shorter for faster test
                 "target_ftp": 278,
             },
+            headers=TEST_AUTH_HEADERS,
         )
 
         assert create_response.status_code == 202
@@ -200,7 +215,10 @@ async def test_full_plan_generation_flow(
         # Poll for completion (max 30 seconds)
         max_attempts = 30
         for attempt in range(max_attempts):
-            status_response = await ac.get(f"/api/v1/plan/status/{job_id}")
+            status_response = await ac.get(
+                f"/api/v1/plan/status/{job_id}",
+                headers=TEST_AUTH_HEADERS,
+            )
             data = status_response.json()
 
             if data["status"] == "completed":
