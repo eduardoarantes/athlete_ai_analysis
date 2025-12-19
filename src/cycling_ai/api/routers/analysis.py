@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timedelta
+from typing import Any
 
 import httpx
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
@@ -30,7 +31,7 @@ router = APIRouter()
 async def _create_report_record(
     user_id: str,
     period_months: int,
-    config: dict,
+    config: dict[str, Any],
 ) -> str | None:
     """
     Create a report record in the database.
@@ -82,7 +83,7 @@ async def _create_report_record(
 
 async def _update_report_completed(
     report_id: str,
-    result: dict,
+    result: dict[str, Any],
 ) -> None:
     """Update report record with completed status and results."""
     if not report_id or not settings.supabase_url or not settings.supabase_service_role_key:

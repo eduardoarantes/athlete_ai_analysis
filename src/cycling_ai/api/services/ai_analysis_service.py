@@ -19,7 +19,7 @@ import pandas as pd
 from cycling_ai.api.config import settings
 from cycling_ai.api.models.analysis import PerformanceAnalysisRequest
 from cycling_ai.core.performance import analyze_performance
-from cycling_ai.providers.base import ProviderConfig, ProviderMessage
+from cycling_ai.providers.base import BaseProvider, ProviderConfig, ProviderMessage
 from cycling_ai.providers.factory import ProviderFactory
 
 logger = logging.getLogger(__name__)
@@ -38,7 +38,7 @@ class AIAnalysisService:
 
     def __init__(self) -> None:
         """Initialize the AI analysis service."""
-        self._provider = None
+        self._provider: BaseProvider | None = None
         self._provider_name = settings.ai_provider
         self._model_name = settings.get_default_model()
 
@@ -46,7 +46,7 @@ class AIAnalysisService:
         self._supabase_url = settings.supabase_url
         self._supabase_key = settings.supabase_service_role_key
 
-    def _get_provider(self) -> Any:
+    def _get_provider(self) -> BaseProvider:
         """Get or create the LLM provider instance."""
         if self._provider is None:
             api_key = settings.get_provider_api_key()
@@ -65,10 +65,7 @@ class AIAnalysisService:
             )
 
             self._provider = ProviderFactory.create_provider(config)
-            logger.info(
-                f"[AI ANALYSIS SERVICE] Created provider: {self._provider_name} "
-                f"with model {self._model_name}"
-            )
+            logger.info(f"[AI ANALYSIS SERVICE] Created provider: {self._provider_name} with model {self._model_name}")
 
         return self._provider
 
@@ -193,7 +190,8 @@ class AIAnalysisService:
         async with httpx.AsyncClient() as client:
             response = await client.get(url, params=params, headers=headers)
             response.raise_for_status()
-            return response.json()
+            data: list[dict[str, Any]] = response.json()
+            return data
 
     def _activities_to_dataframe(self, activities: list[dict[str, Any]]) -> pd.DataFrame:
         """
@@ -212,22 +210,24 @@ class AIAnalysisService:
             # Calculate average speed (m/s) if moving time > 0
             avg_speed_ms = distance_m / moving_time if moving_time > 0 else 0
 
-            records.append({
-                "Activity Date": activity.get("start_date"),
-                "Activity Name": activity.get("name") or "Untitled",
-                "Activity Type": activity.get("type", "Ride"),
-                "Elapsed Time": elapsed_time,
-                "Moving Time": moving_time,
-                "Distance": distance_m,  # Keep in meters - analysis code converts
-                "Elevation Gain": activity.get("total_elevation_gain", 0) or 0,
-                "Average Heart Rate": activity.get("average_heartrate", 0) or 0,
-                "Max Heart Rate": activity.get("max_heartrate", 0) or 0,
-                "Average Watts": activity.get("average_watts", 0) or 0,
-                "Max Watts": activity.get("max_watts", 0) or 0,
-                "Average Cadence": activity.get("average_cadence", 0) or 0,
-                "Average Speed": avg_speed_ms,  # m/s
-                "Weighted Average Power": activity.get("weighted_average_watts", 0) or 0,
-            })
+            records.append(
+                {
+                    "Activity Date": activity.get("start_date"),
+                    "Activity Name": activity.get("name") or "Untitled",
+                    "Activity Type": activity.get("type", "Ride"),
+                    "Elapsed Time": elapsed_time,
+                    "Moving Time": moving_time,
+                    "Distance": distance_m,  # Keep in meters - analysis code converts
+                    "Elevation Gain": activity.get("total_elevation_gain", 0) or 0,
+                    "Average Heart Rate": activity.get("average_heartrate", 0) or 0,
+                    "Max Heart Rate": activity.get("max_heartrate", 0) or 0,
+                    "Average Watts": activity.get("average_watts", 0) or 0,
+                    "Max Watts": activity.get("max_watts", 0) or 0,
+                    "Average Cadence": activity.get("average_cadence", 0) or 0,
+                    "Average Speed": avg_speed_ms,  # m/s
+                    "Weighted Average Power": activity.get("weighted_average_watts", 0) or 0,
+                }
+            )
 
         df = pd.DataFrame(records)
 
@@ -259,9 +259,7 @@ class AIAnalysisService:
 
         return cache_path
 
-    async def _synthesize_insights(
-        self, performance_data: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def _synthesize_insights(self, performance_data: dict[str, Any]) -> dict[str, Any]:
         """
         Use LLM to synthesize actionable insights from raw performance data.
         """
@@ -328,12 +326,15 @@ Return ONLY the JSON insights object. No additional text."""
         response = response.strip()
 
         try:
-            return json.loads(response)
+            result: dict[str, Any] = json.loads(response)
+            return result
         except json.JSONDecodeError:
             import re
+
             json_match = re.search(r"\{[\s\S]*\}", response)
             if json_match:
-                return json.loads(json_match.group())
+                result = json.loads(json_match.group())
+                return result
             raise
 
     def get_ai_metadata(self) -> dict[str, str]:

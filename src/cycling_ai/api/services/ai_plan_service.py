@@ -14,7 +14,7 @@ from typing import Any
 from cycling_ai.api.config import settings
 from cycling_ai.api.models.plan import AthleteProfileData, TrainingPlanRequest
 from cycling_ai.core.power_zones import calculate_power_zones
-from cycling_ai.providers.base import ProviderConfig, ProviderMessage
+from cycling_ai.providers.base import BaseProvider, ProviderConfig, ProviderMessage
 from cycling_ai.providers.factory import ProviderFactory
 
 logger = logging.getLogger(__name__)
@@ -30,11 +30,11 @@ class AIPlanService:
 
     def __init__(self) -> None:
         """Initialize the AI plan service with provider from config."""
-        self._provider = None
+        self._provider: BaseProvider | None = None
         self._provider_name = settings.ai_provider
         self._model_name = settings.get_default_model()
 
-    def _get_provider(self) -> Any:
+    def _get_provider(self) -> BaseProvider:
         """
         Get or create the LLM provider instance.
 
@@ -62,9 +62,7 @@ class AIPlanService:
             )
 
             self._provider = ProviderFactory.create_provider(config)
-            logger.info(
-                f"[AI PLAN SERVICE] Created provider: {self._provider_name} with model {self._model_name}"
-            )
+            logger.info(f"[AI PLAN SERVICE] Created provider: {self._provider_name} with model {self._model_name}")
 
         return self._provider
 
@@ -85,8 +83,7 @@ class AIPlanService:
             ValueError: If plan generation fails
         """
         logger.info(
-            f"[AI PLAN SERVICE] Starting AI plan generation: "
-            f"{request.weeks} weeks, target FTP: {request.target_ftp}"
+            f"[AI PLAN SERVICE] Starting AI plan generation: {request.weeks} weeks, target FTP: {request.target_ftp}"
         )
 
         try:
@@ -96,7 +93,7 @@ class AIPlanService:
             raise
 
         # Calculate power zones based on athlete FTP
-        ftp = request.athlete_profile.ftp
+        ftp = int(request.athlete_profile.ftp)
         power_zones = calculate_power_zones(ftp)
 
         # Format power zones for prompt
@@ -113,7 +110,7 @@ class AIPlanService:
             athlete_context=athlete_context,
             zones_text=zones_text,
             weeks=request.weeks,
-            target_ftp=request.target_ftp,
+            target_ftp=int(request.target_ftp) if request.target_ftp else None,
         )
 
         # Call the LLM
@@ -162,9 +159,7 @@ class AIPlanService:
             )
         return zones_text
 
-    def _build_athlete_context(
-        self, profile: AthleteProfileData, request: TrainingPlanRequest
-    ) -> str:
+    def _build_athlete_context(self, profile: AthleteProfileData, request: TrainingPlanRequest) -> str:
         """Build athlete context string for the prompt."""
         context_parts = [
             f"- Current FTP: {profile.ftp}W",
@@ -310,6 +305,7 @@ Return ONLY valid JSON. No markdown. No extra text."""
         response = response.strip()
 
         # Parse JSON
+        plan_data: dict[str, Any]
         try:
             plan_data = json.loads(response)
         except json.JSONDecodeError as e:
