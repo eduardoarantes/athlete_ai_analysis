@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { errorLogger } from '@/lib/monitoring/error-logger'
-import type { TrainingPlan, TrainingPlanData } from '@/lib/types/training-plan'
+import type { TrainingPlan, TrainingPlanData, PlanSourceMetadata } from '@/lib/types/training-plan'
 
 /**
  * Get a specific training plan by ID
@@ -45,6 +45,7 @@ export async function GET(
     const trainingPlan: TrainingPlan = {
       ...plan,
       plan_data: planData,
+      metadata: (plan.metadata as PlanSourceMetadata | null) ?? null,
     }
 
     return NextResponse.json({ plan: trainingPlan })

@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ChevronLeft, ChevronRight, Calendar, Zap } from 'lucide-react'
 import { WorkoutCard } from './workout-card'
+import { WorkoutDetailModal } from './workout-detail-modal'
 import type { TrainingPlan, Workout, WeeklyPlan } from '@/lib/types/training-plan'
 
 interface TrainingPlanCalendarProps {
@@ -34,6 +35,20 @@ export function TrainingPlanCalendar({ plan }: TrainingPlanCalendarProps) {
   }
 
   const [currentPage, setCurrentPage] = useState(calculateCurrentWeekPage)
+  const [selectedWorkout, setSelectedWorkout] = useState<{
+    workout: Workout
+    weekNumber: number
+  } | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
+
+  // Get FTP from athlete profile
+  const ftp = planData.athlete_profile?.ftp || 200
+
+  // Handle workout click
+  const handleWorkoutClick = (workout: Workout, weekNumber: number) => {
+    setSelectedWorkout({ workout, weekNumber })
+    setModalOpen(true)
+  }
 
   // Get weeks for current page
   const startWeek = currentPage * WEEKS_PER_PAGE + 1
@@ -185,7 +200,11 @@ export function TrainingPlanCalendar({ plan }: TrainingPlanCalendarProps) {
                     >
                       <div className="text-[10px] text-muted-foreground mb-1">{date.getDate()}</div>
                       {workout ? (
-                        <WorkoutCard workout={workout} className="text-[10px]" />
+                        <WorkoutCard
+                          workout={workout}
+                          className="text-[10px]"
+                          onClick={() => handleWorkoutClick(workout, weekData.week_number)}
+                        />
                       ) : (
                         <div className="h-full flex items-center justify-center text-[10px] text-muted-foreground">
                           Rest
@@ -223,6 +242,15 @@ export function TrainingPlanCalendar({ plan }: TrainingPlanCalendarProps) {
           <span>{t('workoutTypes.vo2max')}</span>
         </div>
       </div>
+
+      {/* Workout Detail Modal */}
+      <WorkoutDetailModal
+        workout={selectedWorkout?.workout || null}
+        weekNumber={selectedWorkout?.weekNumber || 0}
+        ftp={ftp}
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+      />
     </div>
   )
 }

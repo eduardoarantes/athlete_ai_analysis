@@ -17,7 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .config import settings
-from .routers import plan
+from .routers import analysis, plan
 
 
 @asynccontextmanager
@@ -98,7 +98,7 @@ async def root() -> JSONResponse:
 
 # Include routers
 app.include_router(plan.router, prefix="/api/v1/plan", tags=["plan"])
+app.include_router(analysis.router, prefix="/api/v1/analysis", tags=["analysis"])
 
 # Future routers:
 # app.include_router(chat_router, prefix="/api/v1/chat", tags=["chat"])
-# app.include_router(analysis_router, prefix="/api/v1/analysis", tags=["analysis"])

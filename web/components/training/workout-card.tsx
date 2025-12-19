@@ -13,14 +13,26 @@ import {
 interface WorkoutCardProps {
   workout: Workout
   className?: string
+  onClick?: () => void
 }
 
-export function WorkoutCard({ workout, className }: WorkoutCardProps) {
+export function WorkoutCard({ workout, className, onClick }: WorkoutCardProps) {
   const duration = calculateWorkoutDuration(workout)
   const colorClasses = getWorkoutColors(workout.type || 'mixed')
 
   return (
-    <div className={cn('rounded-lg border p-2 text-xs', colorClasses, className)}>
+    <div
+      className={cn(
+        'rounded-lg border p-2 text-xs',
+        colorClasses,
+        onClick && 'cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all',
+        className
+      )}
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => e.key === 'Enter' && onClick() : undefined}
+    >
       <div className="font-medium truncate" title={workout.name}>
         {workout.name}
       </div>

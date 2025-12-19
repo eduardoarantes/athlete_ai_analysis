@@ -8,11 +8,11 @@ import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { createClient } from '@/lib/supabase/server'
 import { invokePythonApi } from '@/lib/services/lambda-client'
+import type { PlanSourceMetadata } from '@/lib/types/training-plan'
+import { errorLogger } from '@/lib/monitoring/error-logger'
 
 // Configuration
 const TEMP_DATA_DIR = process.env.TEMP_DATA_DIR || '/tmp/cycling-ai-jobs'
-
-import { errorLogger } from '@/lib/monitoring/error-logger'
 
 export interface TrainingPlanParams {
   goal: string
@@ -234,6 +234,22 @@ export class CyclingCoachService {
           const endDate = new Date()
           endDate.setDate(endDate.getDate() + weeks * 7)
 
+          // Extract AI metadata from job result
+          const aiMetadata = (jobStatus.result as Record<string, unknown>)?.ai_metadata as
+            | Record<string, unknown>
+            | undefined
+
+          // Build source metadata for tracking plan generation
+          const sourceMetadata: PlanSourceMetadata = {
+            source: 'cycling-ai-python-api',
+            generated_at: new Date().toISOString(),
+            job_id: apiJobId,
+            // AI provider info from Python API response
+            ai_provider: (aiMetadata?.ai_provider as string | undefined) || undefined,
+            ai_model: (aiMetadata?.ai_model as string | undefined) || undefined,
+            library_version: (aiMetadata?.library_version as string | undefined) || undefined,
+          }
+
           // Store plan in database
           const { data: plan, error: planError } = await supabase
             .from('training_plans')
@@ -244,6 +260,7 @@ export class CyclingCoachService {
               start_date: new Date().toISOString().split('T')[0] ?? '',
               end_date: endDate.toISOString().split('T')[0] ?? '',
               plan_data: planData as never,
+              metadata: sourceMetadata as never,
               status: 'active',
             } as never)
             .select('id')
