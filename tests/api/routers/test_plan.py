@@ -87,8 +87,9 @@ async def test_generate_plan_endpoint(
     """Test POST /api/v1/plan/generate endpoint."""
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        # Use skeleton mode (use_ai=false) to avoid requiring API keys in CI
         response = await ac.post(
-            "/api/v1/plan/generate",
+            "/api/v1/plan/generate?use_ai=false",
             json={
                 "athlete_profile": athlete_profile_data,
                 "weeks": 12,
@@ -101,7 +102,6 @@ async def test_generate_plan_endpoint(
     data = response.json()
     assert "job_id" in data
     assert data["status"] == "queued"
-    # Message can be either AI or skeleton based on use_ai param
     assert "started" in data["message"]
 
 
@@ -166,8 +166,9 @@ async def test_get_job_status_queued(
     # Create a job first
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        # Use skeleton mode to avoid requiring API keys in CI
         create_response = await ac.post(
-            "/api/v1/plan/generate",
+            "/api/v1/plan/generate?use_ai=false",
             json={
                 "athlete_profile": athlete_profile_data,
                 "weeks": 12,
@@ -198,9 +199,9 @@ async def test_full_plan_generation_flow(
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        # Create job
+        # Create job with skeleton mode to avoid requiring API keys in CI
         create_response = await ac.post(
-            "/api/v1/plan/generate",
+            "/api/v1/plan/generate?use_ai=false",
             json={
                 "athlete_profile": athlete_profile_data,
                 "weeks": 8,  # Shorter for faster test
