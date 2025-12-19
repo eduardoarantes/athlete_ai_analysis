@@ -40,6 +40,12 @@ export function Navbar() {
           >
             {t('training')}
           </Link>
+          <Link
+            href="/schedule"
+            className="transition-colors hover:text-foreground/80 text-foreground/60"
+          >
+            {t('schedule')}
+          </Link>
         </nav>
 
         {/* Right side actions */}

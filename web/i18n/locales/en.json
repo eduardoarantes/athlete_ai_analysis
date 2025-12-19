@@ -26,6 +26,7 @@
     "reports": "Reports",
     "training": "Training",
     "trainingPlans": "Training Plans",
+    "schedule": "My Schedule",
     "logout": "Logout"
   },
   "userMenu": {
@@ -555,6 +556,43 @@
     "powerProfile": "Power Profile",
     "workoutStructure": "Workout Structure",
     "repeatSet": "{count}x Repeat Set"
+  },
+  "schedule": {
+    "title": "My Schedule",
+    "subtitle": "Your scheduled training plans",
+    "schedulePlan": "Schedule Plan",
+    "scheduleTitle": "Schedule Training Plan",
+    "scheduleDescription": "Select a start date for {planName}. The plan will be scheduled on your calendar.",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "totalWeeks": "Total Weeks",
+    "ftpGoal": "FTP Goal",
+    "planOverview": "Plan Overview",
+    "totalTss": "Total TSS",
+    "avgWeeklyTss": "Avg Weekly TSS",
+    "ftpGain": "FTP Gain",
+    "cancel": "Cancel",
+    "schedule": "Schedule",
+    "scheduling": "Scheduling...",
+    "conflictsWith": "Conflicts with",
+    "status": {
+      "scheduled": "Scheduled",
+      "active": "Active",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "activePlans": "Active Plans",
+    "upcomingPlans": "Upcoming Plans",
+    "completedPlans": "Completed Plans",
+    "noScheduledPlans": "No scheduled plans",
+    "noScheduledPlansDescription": "Schedule a training plan template to start training.",
+    "browseTemplates": "Browse Templates",
+    "cancelPlan": "Cancel Plan",
+    "cancelConfirmTitle": "Cancel Training Plan?",
+    "cancelConfirmDescription": "Are you sure you want to cancel \"{planName}\"? This will remove it from your schedule. You can always schedule it again later.",
+    "keepPlan": "Keep Plan",
+    "confirmCancel": "Yes, Cancel Plan",
+    "cancelling": "Cancelling..."
   },
   "reports": {
     "title": "Performance Reports",

@@ -3,8 +3,9 @@ import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Calendar, Target, TrendingUp, Zap } from 'lucide-react'
+import { Target, TrendingUp, Zap } from 'lucide-react'
 import { TrainingPlanCalendar } from '@/components/training/training-plan-calendar'
+import { SchedulePlanButton } from '@/components/training/schedule-plan-button'
 import type { TrainingPlan, TrainingPlanData, PlanSourceMetadata } from '@/lib/types/training-plan'
 
 interface TrainingPlanPageProps {
@@ -43,67 +44,33 @@ export default async function TrainingPlanPage({ params }: TrainingPlanPageProps
     ...planRow,
     plan_data: planData,
     metadata: (planRow.metadata as PlanSourceMetadata | null) ?? null,
+    status: planRow.status as TrainingPlan['status'],
   }
-
-  const startDate = new Date(plan.start_date)
-  const endDate = new Date(plan.end_date)
 
   // Calculate total TSS for the plan
   const totalPlanTss = planData.weekly_plan.reduce((sum, week) => sum + (week.week_tss || 0), 0)
+  const weeksTotal = plan.weeks_total || planData.plan_metadata.total_weeks
 
   return (
     <div className="container mx-auto py-6 space-y-6">
       {/* Plan Header */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-3">
-          <h1 className="text-3xl font-bold">{plan.name}</h1>
-          {plan.status && (
-            <Badge variant={plan.status === 'active' ? 'default' : 'secondary'}>
-              {t(`planStatus.${plan.status}`, { defaultValue: plan.status })}
-            </Badge>
-          )}
+      <div className="flex items-start justify-between">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold">{plan.name}</h1>
+            {plan.status && (
+              <Badge variant={plan.status === 'active' ? 'default' : 'secondary'}>
+                {t(`planStatus.${plan.status}`, { defaultValue: plan.status })}
+              </Badge>
+            )}
+          </div>
+          {plan.description && <p className="text-muted-foreground">{plan.description}</p>}
         </div>
-        {plan.description && <p className="text-muted-foreground">{plan.description}</p>}
+        <SchedulePlanButton templateId={plan.id} templateName={plan.name} weeksTotal={weeksTotal} />
       </div>
 
       {/* Plan Overview Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription className="flex items-center gap-1">
-              <Calendar className="h-4 w-4" />
-              {t('startDate')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-lg font-semibold">
-              {startDate.toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-              })}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription className="flex items-center gap-1">
-              <Calendar className="h-4 w-4" />
-              {t('endDate')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-lg font-semibold">
-              {endDate.toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-              })}
-            </p>
-          </CardContent>
-        </Card>
-
+      <div className="grid grid-cols-2 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardDescription className="flex items-center gap-1">
@@ -112,7 +79,7 @@ export default async function TrainingPlanPage({ params }: TrainingPlanPageProps
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-lg font-semibold">{planData.plan_metadata.total_weeks}</p>
+            <p className="text-lg font-semibold">{weeksTotal} weeks</p>
           </CardContent>
         </Card>
 
@@ -168,8 +135,8 @@ export default async function TrainingPlanPage({ params }: TrainingPlanPageProps
         </CardContent>
       </Card>
 
-      {/* Calendar */}
-      <TrainingPlanCalendar plan={plan} />
+      {/* Calendar - Template mode (no real dates) */}
+      <TrainingPlanCalendar plan={plan} templateMode={true} />
     </div>
   )
 }

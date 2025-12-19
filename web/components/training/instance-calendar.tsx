@@ -5,28 +5,45 @@ import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { ChevronLeft, ChevronRight, Zap } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Calendar, Zap } from 'lucide-react'
 import { WorkoutCard } from './workout-card'
 import { WorkoutDetailModal } from './workout-detail-modal'
-import type { TrainingPlan, Workout, WeeklyPlan } from '@/lib/types/training-plan'
+import type { PlanInstance, TrainingPlanData, Workout, WeeklyPlan } from '@/lib/types/training-plan'
 
-interface TrainingPlanCalendarProps {
-  plan: TrainingPlan
-  /** When true, shows weekday names only without real dates (for template preview) */
-  templateMode?: boolean
+interface InstanceCalendarProps {
+  instance: PlanInstance
+  planData: TrainingPlanData
 }
 
 const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 const DAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const WEEKS_PER_PAGE = 4
 
-export function TrainingPlanCalendar({ plan, templateMode: _templateMode = false }: TrainingPlanCalendarProps) {
+export function InstanceCalendar({ instance, planData }: InstanceCalendarProps) {
   const t = useTranslations('trainingPlan')
-  const planData = plan.plan_data
   const totalWeeks = planData.weekly_plan.length
 
-  // Start at first page for template mode, otherwise calculate based on dates
-  const [currentPage, setCurrentPage] = useState(0)
+  // Calculate current week based on today's date vs instance start
+  const calculateCurrentWeekPage = (): number => {
+    const today = new Date()
+    const startDate = new Date(instance.start_date)
+    const diffTime = today.getTime() - startDate.getTime()
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+    const currentWeek = Math.floor(diffDays / 7) + 1
+
+    // If before plan starts, show first page
+    if (currentWeek < 1) {
+      return 0
+    }
+
+    // If after plan ends, show last page
+    const maxPage = Math.ceil(totalWeeks / WEEKS_PER_PAGE) - 1
+    const calculatedPage = Math.floor((currentWeek - 1) / WEEKS_PER_PAGE)
+
+    return Math.min(Math.max(0, calculatedPage), maxPage)
+  }
+
+  const [currentPage, setCurrentPage] = useState(calculateCurrentWeekPage)
   const [selectedWorkout, setSelectedWorkout] = useState<{
     workout: Workout
     weekNumber: number
@@ -51,6 +68,23 @@ export function TrainingPlanCalendar({ plan, templateMode: _templateMode = false
       (w) => w.week_number >= startWeek && w.week_number <= endWeek
     )
   }, [planData.weekly_plan, startWeek, endWeek])
+
+  // Calculate dates for a specific week based on instance start_date
+  const getWeekDates = (weekNumber: number): Date[] => {
+    const startDate = new Date(instance.start_date)
+    const weekStartDate = new Date(startDate)
+    weekStartDate.setDate(weekStartDate.getDate() + (weekNumber - 1) * 7)
+
+    // Adjust to start of week (Sunday)
+    const dayOfWeek = weekStartDate.getDay()
+    weekStartDate.setDate(weekStartDate.getDate() - dayOfWeek)
+
+    return DAYS_OF_WEEK.map((_, index) => {
+      const date = new Date(weekStartDate)
+      date.setDate(date.getDate() + index)
+      return date
+    })
+  }
 
   // Map workouts to day index for a specific week
   const getWorkoutsByDay = (weekData: WeeklyPlan): Map<number, Workout> => {
@@ -78,6 +112,12 @@ export function TrainingPlanCalendar({ plan, templateMode: _templateMode = false
     setCurrentPage((prev) => Math.min(totalPages - 1, prev + 1))
   }
 
+  const goToCurrentWeek = () => {
+    setCurrentPage(calculateCurrentWeekPage())
+  }
+
+  const today = new Date()
+
   // Calculate total TSS for visible weeks
   const visibleTotalTss = visibleWeeks.reduce((sum, w) => sum + (w.week_tss || 0), 0)
 
@@ -97,6 +137,10 @@ export function TrainingPlanCalendar({ plan, templateMode: _templateMode = false
           </div>
         </div>
         <div className="flex gap-2">
+          <Button onClick={goToCurrentWeek} variant="outline" size="sm">
+            <Calendar className="h-4 w-4 mr-1" />
+            {t('today')}
+          </Button>
           <Button
             onClick={goToPreviousPage}
             variant="outline"
@@ -131,6 +175,7 @@ export function TrainingPlanCalendar({ plan, templateMode: _templateMode = false
 
           {/* Week Rows */}
           {visibleWeeks.map((weekData) => {
+            const weekDates = getWeekDates(weekData.week_number)
             const workoutsByDay = getWorkoutsByDay(weekData)
 
             return (
@@ -150,12 +195,19 @@ export function TrainingPlanCalendar({ plan, templateMode: _templateMode = false
                 {/* Day Cells */}
                 {DAYS_OF_WEEK.map((day, dayIndex) => {
                   const workout = workoutsByDay.get(dayIndex)
+                  const date = weekDates[dayIndex]
+                  if (!date) return null
+                  const isToday = today.toDateString() === date.toDateString()
+                  const isPast = date < today && !isToday
 
                   return (
                     <div
                       key={`${weekData.week_number}-${day}`}
-                      className="bg-background p-1.5 min-h-[100px]"
+                      className={`bg-background p-1.5 min-h-[100px] ${
+                        isToday ? 'ring-2 ring-primary ring-inset' : ''
+                      } ${isPast ? 'opacity-50' : ''}`}
                     >
+                      <div className="text-[10px] text-muted-foreground mb-1">{date.getDate()}</div>
                       {workout ? (
                         <WorkoutCard
                           workout={workout}
@@ -178,6 +230,10 @@ export function TrainingPlanCalendar({ plan, templateMode: _templateMode = false
 
       {/* Legend */}
       <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded border-2 border-primary" />
+          <span>{t('today')}</span>
+        </div>
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded bg-green-100 border border-green-200" />
           <span>{t('workoutTypes.endurance')}</span>

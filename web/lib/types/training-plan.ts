@@ -71,7 +71,6 @@ export interface PlanMetadata {
   ftp_gain_watts?: number
   ftp_gain_percent?: number
   plan_type?: string
-  start_date?: string
 }
 
 /**
@@ -102,19 +101,72 @@ export interface TrainingPlanData {
   weekly_plan: WeeklyPlan[]
 }
 
+/**
+ * Training Plan Template (no dates - reusable)
+ * Templates define the workout structure but are not bound to specific dates.
+ * Users schedule templates by creating PlanInstance records with start dates.
+ */
 export interface TrainingPlan {
   id: string
   user_id: string
   name: string
+  /** Training goal (added in migration, optional for backward compatibility) */
+  goal?: string
   description: string | null
-  start_date: string
-  end_date: string
+  /** Duration in weeks (added in migration, optional for backward compatibility) */
+  weeks_total?: number | null
   plan_data: TrainingPlanData
   /** Source metadata tracking how the plan was generated */
   metadata: PlanSourceMetadata | null
-  status: string | null
+  status: 'draft' | 'active' | 'completed' | 'archived' | null
   created_at: string
   updated_at: string
+  /** @deprecated Will be removed after migration - use PlanInstance.start_date instead */
+  start_date?: string
+  /** @deprecated Will be removed after migration - use PlanInstance.end_date instead */
+  end_date?: string
+}
+
+/**
+ * Plan Instance (scheduled on calendar with specific dates)
+ * An instance is created when a user schedules a template.
+ * Contains a snapshot of the template's plan_data at creation time.
+ */
+export interface PlanInstance {
+  id: string
+  user_id: string
+  /** Reference to the original template (null if template was deleted) */
+  template_id: string | null
+  /** Plan name (snapshot from template) */
+  name: string
+  /** Start date in ISO format (YYYY-MM-DD) */
+  start_date: string
+  /** End date in ISO format (YYYY-MM-DD), calculated from start_date + weeks */
+  end_date: string
+  /** Duration in weeks (snapshot from template) */
+  weeks_total: number
+  /** Full plan data (SNAPSHOT: copied from template at instance creation) */
+  plan_data: TrainingPlanData
+  /** Instance status */
+  status: 'scheduled' | 'active' | 'completed' | 'cancelled'
+  created_at: string
+  updated_at: string
+}
+
+/**
+ * Helper type for creating a new plan instance
+ */
+export interface CreatePlanInstanceInput {
+  template_id: string
+  start_date: string  // ISO date string (YYYY-MM-DD)
+}
+
+/**
+ * Response when checking for overlapping instances
+ */
+export interface OverlapCheckResult {
+  hasOverlap: boolean
+  conflicts: PlanInstance[]
 }
 
 const WORKOUT_COLORS = {
