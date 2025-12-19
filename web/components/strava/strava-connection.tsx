@@ -6,6 +6,13 @@ import { toast } from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { ChevronDown, RefreshCw, RotateCcw } from 'lucide-react'
 import { useSyncPolling } from '@/lib/hooks/use-sync-polling'
 
 interface StravaStatus {
@@ -126,13 +133,23 @@ export function StravaConnection() {
     }
   }
 
-  const handleSync = async () => {
+  const handleSync = async (fullSync = false) => {
     try {
       setError(null)
       setSuccessMessage(null)
       resetPolling()
 
-      const res = await fetch('/api/strava/sync', {
+      // Build URL with query parameters
+      const params = new URLSearchParams()
+
+      // Default to incremental if we have a last sync time
+      if (!fullSync && syncStatus?.lastSyncAt) {
+        params.set('incremental', 'true')
+      }
+
+      const url = `/api/strava/sync${params.toString() ? `?${params}` : ''}`
+
+      const res = await fetch(url, {
         method: 'POST',
       })
 
@@ -141,7 +158,12 @@ export function StravaConnection() {
         const data = await res.json()
         setCurrentJobId(data.jobId)
         startPolling()
-        toast.loading(t('syncStarted') || 'Sync started in background...', {
+
+        const message = fullSync
+          ? t('fullSyncStarted') || 'Full sync started...'
+          : t('incrementalSyncStarted') || 'Syncing new activities...'
+
+        toast.loading(message, {
           duration: 3000,
         })
       } else if (!res.ok) {
@@ -245,13 +267,50 @@ export function StravaConnection() {
           )}
 
           <div className="flex gap-2">
-            <Button
-              onClick={handleSync}
-              disabled={isPolling || status.token_expired}
-              variant="default"
-            >
-              {isPolling ? t('syncing') : t('syncActivities')}
-            </Button>
+            {syncStatus?.lastSyncAt ? (
+              // Show dropdown with sync options for users with existing syncs
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button disabled={isPolling || status.token_expired} variant="default">
+                    <RefreshCw className={`h-4 w-4 mr-2 ${isPolling ? 'animate-spin' : ''}`} />
+                    {isPolling ? t('syncing') : t('syncActivities')}
+                    <ChevronDown className="h-4 w-4 ml-2" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuItem onClick={() => handleSync(false)} disabled={isPolling}>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    <div className="flex flex-col">
+                      <span>{t('syncNew') || 'Sync New Activities'}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {t('sinceLast', {
+                          date: new Date(syncStatus.lastSyncAt).toLocaleDateString(),
+                        }) || `Since ${new Date(syncStatus.lastSyncAt).toLocaleDateString()}`}
+                      </span>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleSync(true)} disabled={isPolling}>
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    <div className="flex flex-col">
+                      <span>{t('fullResync') || 'Full Re-sync'}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {t('allActivities') || 'All activities'}
+                      </span>
+                    </div>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              // First sync - just show simple button
+              <Button
+                onClick={() => handleSync(true)}
+                disabled={isPolling || status.token_expired}
+                variant="default"
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${isPolling ? 'animate-spin' : ''}`} />
+                {isPolling ? t('syncing') : t('syncActivities')}
+              </Button>
+            )}
             <Button onClick={handleDisconnect} variant="outline">
               {t('disconnect')}
             </Button>

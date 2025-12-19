@@ -16,6 +16,9 @@ export interface SyncResult {
   success: boolean
   activitiesSynced: number
   error?: string
+  // NEW: Sync metadata
+  syncType: 'full' | 'incremental'
+  syncedFrom?: Date // Only for incremental syncs
 }
 
 export interface SyncProgress {
@@ -43,6 +46,10 @@ export class StravaSyncService {
       maxPages?: number // Maximum pages to fetch (default: unlimited)
     }
   ): Promise<SyncResult> {
+    // NEW: Determine sync type based on 'after' parameter
+    const syncType: 'full' | 'incremental' = options?.after ? 'incremental' : 'full'
+    const syncedFrom = options?.after ? new Date(options.after * 1000) : undefined
+
     try {
       // NOTE: sync_status is already set to 'syncing' atomically by the API endpoint
       // to prevent race conditions. We don't set it here.
@@ -93,6 +100,8 @@ export class StravaSyncService {
       return {
         success: true,
         activitiesSynced: totalSynced,
+        syncType,
+        ...(syncedFrom && { syncedFrom }),
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
@@ -112,6 +121,8 @@ export class StravaSyncService {
         success: false,
         activitiesSynced: 0,
         error: errorMessage,
+        syncType,
+        ...(syncedFrom && { syncedFrom }),
       }
     }
   }
