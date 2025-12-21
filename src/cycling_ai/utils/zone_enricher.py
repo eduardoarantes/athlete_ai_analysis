@@ -116,14 +116,14 @@ class ZoneEnricher:
                 stats["power_data_count"] += 1  # type: ignore[operator]
 
                 # Add zone data to DataFrame
-                df.at[idx, "z1_active_recovery_sec"] = zone_data["z1_active_recovery"]  # type: ignore[index]
-                df.at[idx, "z2_endurance_sec"] = zone_data["z2_endurance"]  # type: ignore[index]
-                df.at[idx, "z3_tempo_sec"] = zone_data["z3_tempo"]  # type: ignore[index]
-                df.at[idx, "z4_threshold_sec"] = zone_data["z4_threshold"]  # type: ignore[index]
-                df.at[idx, "z5_vo2max_sec"] = zone_data["z5_vo2max"]  # type: ignore[index]
-                df.at[idx, "z6_anaerobic_sec"] = zone_data["z6_anaerobic"]  # type: ignore[index]
-                df.at[idx, "total_power_sec"] = zone_data["total_power_seconds"]  # type: ignore[index]
-                df.at[idx, "normalized_power"] = zone_data["normalized_power"]  # type: ignore[index]
+                df.at[idx, "z1_active_recovery_sec"] = zone_data["z1_active_recovery"]
+                df.at[idx, "z2_endurance_sec"] = zone_data["z2_endurance"]
+                df.at[idx, "z3_tempo_sec"] = zone_data["z3_tempo"]
+                df.at[idx, "z4_threshold_sec"] = zone_data["z4_threshold"]
+                df.at[idx, "z5_vo2max_sec"] = zone_data["z5_vo2max"]
+                df.at[idx, "z6_anaerobic_sec"] = zone_data["z6_anaerobic"]
+                df.at[idx, "total_power_sec"] = zone_data["total_power_seconds"]
+                df.at[idx, "normalized_power"] = zone_data["normalized_power"]
 
             except Exception as e:
                 error_msg = f"Activity {activity_id}: {str(e)}"
