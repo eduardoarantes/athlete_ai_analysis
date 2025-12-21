@@ -10,7 +10,78 @@ import { RecentActivitiesList } from '@/components/dashboard/recent-activities-l
 import { StravaConnectionToast } from '@/components/dashboard/strava-connection-toast'
 import { StravaSyncStatus } from '@/components/dashboard/strava-sync-status'
 import { StatsPanel } from '@/components/dashboard/stats-panel'
+import { UpcomingWorkouts, type UpcomingWorkoutData } from '@/components/dashboard/upcoming-workouts'
+import { asPlanInstances } from '@/lib/types/type-guards'
+import type { PlanInstance, Workout } from '@/lib/types/training-plan'
 import { User, Zap, Heart, Scale, TrendingUp } from 'lucide-react'
+
+const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
+// Helper function to compute upcoming workouts from plan instances
+function getUpcomingWorkouts(instances: PlanInstance[], limit: number = 3): UpcomingWorkoutData[] {
+  const workouts: UpcomingWorkoutData[] = []
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  for (const instance of instances) {
+    if (!instance.plan_data?.weekly_plan) continue
+
+    const startDate = new Date(instance.start_date + 'T00:00:00')
+
+    for (const week of instance.plan_data.weekly_plan) {
+      if (!week.workouts) continue
+
+      for (const workout of week.workouts) {
+        // Calculate the actual date for this workout
+        const dayIndex = DAYS_OF_WEEK.findIndex(
+          (d) => d.toLowerCase() === workout.weekday.toLowerCase()
+        )
+        if (dayIndex === -1) continue
+
+        // Week 1 starts on start_date, find the Monday of that week
+        const startDayOfWeek = startDate.getDay()
+        const daysToMonday = startDayOfWeek === 0 ? -6 : 1 - startDayOfWeek
+        const weekOneMonday = new Date(startDate)
+        weekOneMonday.setDate(startDate.getDate() + daysToMonday)
+
+        // Calculate the actual date
+        const adjustedDayIndex = dayIndex === 0 ? 6 : dayIndex - 1
+        const workoutDate = new Date(weekOneMonday)
+        workoutDate.setDate(
+          weekOneMonday.getDate() + (week.week_number - 1) * 7 + adjustedDayIndex
+        )
+
+        // Only include future workouts (today or later)
+        if (workoutDate >= today) {
+          // Calculate duration from segments
+          const durationMinutes = (workout as Workout).segments?.reduce(
+            (sum, seg) => sum + (seg.duration_min || 0),
+            0
+          ) || 60
+
+          const workoutData: UpcomingWorkoutData = {
+            id: `${instance.id}-${week.week_number}-${workout.weekday}`,
+            instanceId: instance.id,
+            name: workout.name,
+            type: workout.type || 'Workout',
+            weekNumber: week.week_number,
+            date: workoutDate.toISOString(),
+            durationMinutes,
+          }
+          if (workout.tss !== undefined) {
+            workoutData.tss = workout.tss
+          }
+          workouts.push(workoutData)
+        }
+      }
+    }
+  }
+
+  // Sort by date and take first N
+  return workouts
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .slice(0, limit)
+}
 
 type AthleteProfile = Database['public']['Tables']['athlete_profiles']['Row']
 
@@ -50,80 +121,112 @@ export default async function DashboardPage() {
       .single()
     stravaConnected = !!connection
 
-    if (stravaConnected) {
-      // Get recent activities (last 5)
-      const { data: activities } = await supabase
-        .from('strava_activities')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('start_date', { ascending: false })
-        .limit(5)
-      recentActivities = activities || []
+    // Always fetch activities from database (they might exist from previous syncs)
+    // Get recent activities (last 5)
+    const { data: activities } = await supabase
+      .from('strava_activities')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('start_date', { ascending: false })
+      .limit(5)
+    recentActivities = activities || []
 
-      // Get user's timezone from profile, default to UTC
-      const userTimezone = profile?.timezone || 'UTC'
+    // Get user's timezone from profile, default to UTC
+    const userTimezone = profile?.timezone || 'UTC'
 
-      // Calculate date ranges in user's timezone
-      const now = new Date()
-      const formatter = new Intl.DateTimeFormat('en-CA', {
-        timeZone: userTimezone,
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-      })
-      const todayStr = formatter.format(now) // YYYY-MM-DD in user's timezone
-      const todayInUserTz = new Date(todayStr + 'T00:00:00')
+    // Calculate date ranges in user's timezone
+    const now = new Date()
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: userTimezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    })
+    const todayStr = formatter.format(now) // YYYY-MM-DD in user's timezone
+    const todayInUserTz = new Date(todayStr + 'T00:00:00')
 
-      // Get day of week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
-      // We want Monday as start of week
-      const dayOfWeek = todayInUserTz.getDay()
-      const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+    // Get day of week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+    // We want Monday as start of week
+    const dayOfWeek = todayInUserTz.getDay()
+    const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1
 
-      // Start of current week (Monday)
-      const startOfWeek = new Date(todayInUserTz)
-      startOfWeek.setDate(todayInUserTz.getDate() - daysFromMonday)
+    // Start of current week (Monday)
+    const startOfWeek = new Date(todayInUserTz)
+    startOfWeek.setDate(todayInUserTz.getDate() - daysFromMonday)
 
-      // Start of last week (previous Monday)
-      const startOfLastWeek = new Date(startOfWeek)
-      startOfLastWeek.setDate(startOfWeek.getDate() - 7)
-      const endOfLastWeek = new Date(startOfWeek) // End of last week = start of this week
+    // Start of last week (previous Monday)
+    const startOfLastWeek = new Date(startOfWeek)
+    startOfLastWeek.setDate(startOfWeek.getDate() - 7)
+    const endOfLastWeek = new Date(startOfWeek) // End of last week = start of this week
 
-      // Start of current month (1st)
-      const startOfMonth = new Date(todayInUserTz)
-      startOfMonth.setDate(1)
+    // Start of current month (1st)
+    const startOfMonth = new Date(todayInUserTz)
+    startOfMonth.setDate(1)
 
-      // Start of current year (Jan 1st)
-      const startOfYear = new Date(todayInUserTz.getFullYear(), 0, 1)
+    // Start of current year (Jan 1st)
+    const startOfYear = new Date(todayInUserTz.getFullYear(), 0, 1)
 
-      // Get last week activities
-      const { data: lastWeekData } = await supabase
-        .from('strava_activities')
-        .select('sport_type, distance, moving_time, total_elevation_gain, start_date')
-        .eq('user_id', user.id)
-        .gte('start_date', startOfLastWeek.toISOString())
-        .lt('start_date', endOfLastWeek.toISOString())
+    // Get last week activities
+    const { data: lastWeekData } = await supabase
+      .from('strava_activities')
+      .select('sport_type, distance, moving_time, total_elevation_gain, start_date')
+      .eq('user_id', user.id)
+      .gte('start_date', startOfLastWeek.toISOString())
+      .lt('start_date', endOfLastWeek.toISOString())
 
-      lastWeekActivities = lastWeekData || []
+    lastWeekActivities = lastWeekData || []
 
-      // Get monthly activities
-      const { data: monthData } = await supabase
-        .from('strava_activities')
-        .select('sport_type, distance, moving_time, total_elevation_gain, start_date')
-        .eq('user_id', user.id)
-        .gte('start_date', startOfMonth.toISOString())
+    // Get monthly activities
+    const { data: monthData } = await supabase
+      .from('strava_activities')
+      .select('sport_type, distance, moving_time, total_elevation_gain, start_date')
+      .eq('user_id', user.id)
+      .gte('start_date', startOfMonth.toISOString())
 
-      monthActivities = monthData || []
+    monthActivities = monthData || []
 
-      // Get yearly activities
-      const { data: yearData } = await supabase
-        .from('strava_activities')
-        .select('sport_type, distance, moving_time, total_elevation_gain, start_date')
-        .eq('user_id', user.id)
-        .gte('start_date', startOfYear.toISOString())
+    // Get yearly activities
+    const { data: yearData } = await supabase
+      .from('strava_activities')
+      .select('sport_type, distance, moving_time, total_elevation_gain, start_date')
+      .eq('user_id', user.id)
+      .gte('start_date', startOfYear.toISOString())
 
-      yearActivities = yearData || []
+    yearActivities = yearData || []
+  }
+
+  // Fetch active/scheduled plan instances for upcoming workouts
+  const { data: planInstancesData } = await supabase
+    .from('plan_instances')
+    .select('*')
+    .eq('user_id', user?.id || '')
+    .in('status', ['active', 'scheduled'])
+    .order('start_date', { ascending: true })
+
+  // Automatically mark ended plans as completed
+  const todayForPlanCheck = new Date()
+  todayForPlanCheck.setHours(0, 0, 0, 0)
+
+  if (planInstancesData) {
+    for (const instance of planInstancesData) {
+      const endDate = new Date(instance.end_date + 'T00:00:00')
+      if (endDate < todayForPlanCheck) {
+        // Plan has ended, mark as completed
+        await supabase
+          .from('plan_instances')
+          .update({ status: 'completed' })
+          .eq('id', instance.id)
+        instance.status = 'completed'
+      }
     }
   }
+
+  // Filter to only include plans that are still active/scheduled after status update
+  const activePlanInstances = (planInstancesData || []).filter(
+    (p) => p.status === 'active' || p.status === 'scheduled'
+  )
+  const planInstances = asPlanInstances(activePlanInstances)
+  const upcomingWorkouts = getUpcomingWorkouts(planInstances, 3)
 
   // Calculate W/kg if both FTP and weight are available
   const wattsPerKg =
@@ -227,8 +330,8 @@ export default async function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Stats Panel with Sport Filter */}
-          {stravaConnected && (
+          {/* Stats Panel with Sport Filter - Show if there are any activities */}
+          {yearActivities.length > 0 && (
             <StatsPanel
               yearActivities={yearActivities}
               monthActivities={monthActivities}
@@ -270,6 +373,9 @@ export default async function DashboardPage() {
 
           {/* Strava Sync Status - Only shows when connected */}
           <StravaSyncStatus />
+
+          {/* Upcoming Workouts - Only shows if there are upcoming workouts */}
+          {upcomingWorkouts.length > 0 && <UpcomingWorkouts workouts={upcomingWorkouts} />}
 
           {/* Recent Activities */}
           <Card>

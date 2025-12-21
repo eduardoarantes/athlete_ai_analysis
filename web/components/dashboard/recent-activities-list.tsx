@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import {
   Bike,
@@ -205,6 +205,7 @@ const getActivityColors = (sportType: string) => {
 
 export function RecentActivitiesList({ activities, stravaConnected }: RecentActivitiesListProps) {
   const t = useTranslations('activities')
+  const locale = useLocale()
 
   if (activities.length === 0) {
     return (
@@ -261,7 +262,7 @@ export function RecentActivitiesList({ activities, stravaConnected }: RecentActi
                   <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground flex-shrink-0" />
                 </h4>
                 <p className="text-sm text-muted-foreground">
-                  {date.toLocaleDateString('en-US', {
+                  {date.toLocaleDateString(locale, {
                     month: 'short',
                     day: 'numeric',
                     year: 'numeric',

@@ -96,10 +96,11 @@ ALTER TABLE training_plans DROP COLUMN IF EXISTS start_date;
 ALTER TABLE training_plans DROP COLUMN IF EXISTS end_date;
 
 -- ============================================================================
--- STEP 6: Add description column to training_plans if not exists
--- This is useful for templates to have a description separate from goal
+-- STEP 6: Ensure all required columns exist in training_plans
+-- This handles cases where migrations may have been run out of order
 -- ============================================================================
 
+-- Add description column if not exists
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -107,5 +108,27 @@ BEGIN
     WHERE table_name = 'training_plans' AND column_name = 'description'
   ) THEN
     ALTER TABLE training_plans ADD COLUMN description TEXT;
+  END IF;
+END $$;
+
+-- Add goal column if not exists (should already exist from coach_tables migration)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'training_plans' AND column_name = 'goal'
+  ) THEN
+    ALTER TABLE training_plans ADD COLUMN goal TEXT NOT NULL DEFAULT '';
+  END IF;
+END $$;
+
+-- Add weeks_total column if not exists (should already exist from coach_tables migration)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'training_plans' AND column_name = 'weeks_total'
+  ) THEN
+    ALTER TABLE training_plans ADD COLUMN weeks_total INTEGER;
   END IF;
 END $$;

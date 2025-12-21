@@ -27,6 +27,7 @@ export interface TrainingPlanParams {
     ftp: number
     weight: number
     maxHR: number
+    age: number
     weeklyHours: string
     experienceLevel: string
     trainingDays: string[]
@@ -118,8 +119,8 @@ export class CyclingCoachService {
           athlete_profile: {
             ftp: params.profile.ftp,
             weight_kg: params.profile.weight,
-            max_hr: params.profile.maxHR,
-            age: 35, // TODO: Get from user profile
+            max_hr: params.profile.maxHR || null,
+            age: params.profile.age || null,
             goals: params.customGoal ? [params.goal, params.customGoal] : [params.goal],
             experience_level: params.profile.experienceLevel,
             weekly_hours_available: parseFloat(params.profile.weeklyHours) || 7,

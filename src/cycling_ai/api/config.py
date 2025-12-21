@@ -49,6 +49,12 @@ class APISettings(BaseSettings):
     ai_max_tokens: int = 16384  # Increased for longer training plans
     ai_temperature: float = 0.7
 
+    # Workout source: "library" (fast, deterministic) or "llm" (flexible)
+    # "library" uses LLM for plan structure, then selects workouts from curated library
+    # "llm" generates entire plan including workouts via LLM
+    # Note: "library" mode requires LLM orchestration - use "llm" for direct API calls
+    workout_source: str = "llm"
+
     # Model configuration
     model_config = SettingsConfigDict(
         env_prefix="",  # No prefix - use direct env var names
