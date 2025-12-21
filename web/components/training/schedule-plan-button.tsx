@@ -19,6 +19,7 @@ import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import type { PlanInstance } from '@/lib/types/training-plan'
 import { calculateEndDate, getTomorrowDateString, parseLocalDate } from '@/lib/utils/date-utils'
+import { formatWithGoalLabels } from '@/lib/utils/format-utils'
 
 interface SchedulePlanButtonProps {
   templateId: string
@@ -32,6 +33,7 @@ export function SchedulePlanButton({
   weeksTotal,
 }: SchedulePlanButtonProps) {
   const t = useTranslations('schedule')
+  const tGoals = useTranslations('goals')
   const locale = useLocale()
   const router = useRouter()
 
@@ -112,7 +114,7 @@ export function SchedulePlanButton({
         <DialogHeader>
           <DialogTitle>{t('scheduleTitle')}</DialogTitle>
           <DialogDescription>
-            {t('scheduleDescription', { planName: templateName })}
+            {t('scheduleDescription', { planName: formatWithGoalLabels(templateName, tGoals) })}
           </DialogDescription>
         </DialogHeader>
 
@@ -162,7 +164,7 @@ export function SchedulePlanButton({
                 <ul className="list-disc list-inside space-y-1">
                   {conflicts.map((conflict) => (
                     <li key={conflict.id}>
-                      {conflict.name} (
+                      {formatWithGoalLabels(conflict.name, tGoals)} (
                       {parseLocalDate(conflict.start_date).toLocaleDateString(locale)} -{' '}
                       {parseLocalDate(conflict.end_date).toLocaleDateString(locale)})
                     </li>

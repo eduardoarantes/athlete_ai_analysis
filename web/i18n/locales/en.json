@@ -1,4 +1,11 @@
 {
+  "goals": {
+    "improve-ftp": "Improve FTP",
+    "build-endurance": "Build Endurance",
+    "race-prep": "Race Preparation",
+    "weight-loss": "Weight Loss",
+    "general-fitness": "General Fitness"
+  },
   "common": {
     "next": "Next",
     "back": "Back",
@@ -24,7 +31,7 @@
     "settings": "Settings",
     "activities": "Activities",
     "reports": "Reports",
-    "training": "Training",
+    "training": "Training Plans",
     "trainingPlans": "Training Plans",
     "schedule": "My Schedule",
     "logout": "Logout"
@@ -33,6 +40,7 @@
     "myAccount": "My Account",
     "profile": "Profile",
     "settings": "Settings",
+    "admin": "Admin",
     "logout": "Log out"
   },
   "auth": {
@@ -83,6 +91,11 @@
     "setupProfilePrompt": "Set up your profile for personalized analysis",
     "recentActivities": "Recent Activities",
     "recentActivitiesDescription": "Your latest cycling activities",
+    "upcomingWorkouts": "Upcoming Workouts",
+    "upcomingWorkoutsDescription": "Your next scheduled sessions",
+    "viewSchedule": "View Schedule",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
     "trainingOverview": "Training Overview",
     "performanceMetrics": "Performance Metrics",
     "noActivities": "No activities yet",
@@ -598,7 +611,10 @@
       "description": "We couldn't load your schedule. Please try again.",
       "retry": "Try Again",
       "goHome": "Go to Dashboard"
-    }
+    },
+    "today": "Today",
+    "calendarView": "Calendar",
+    "listView": "List"
   },
   "reports": {
     "title": "Performance Reports",

@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import { useTranslations } from 'next-intl'
-import { Clock, Zap, Activity, Target, Repeat } from 'lucide-react'
+import { Clock, Zap, Activity, Repeat, Code } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -11,6 +11,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   type Workout,
@@ -25,6 +26,7 @@ interface WorkoutDetailModalProps {
   ftp: number
   open: boolean
   onOpenChange: (open: boolean) => void
+  isAdmin?: boolean
 }
 
 interface ExpandedSegment {
@@ -289,8 +291,17 @@ export function WorkoutDetailModal({
   ftp,
   open,
   onOpenChange,
+  isAdmin = false,
 }: WorkoutDetailModalProps) {
   const t = useTranslations('trainingPlan')
+
+  const handleViewJson = () => {
+    if (!workout) return
+    const jsonString = JSON.stringify(workout, null, 2)
+    const blob = new Blob([jsonString], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank')
+  }
 
   if (!workout) return null
 
@@ -312,69 +323,55 @@ export function WorkoutDetailModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="flex items-center gap-2 flex-wrap">
-            <DialogTitle className="text-xl">{workout.name}</DialogTitle>
+        <DialogHeader className="pb-2 text-center">
+          <div className="flex items-center justify-center gap-2 flex-wrap">
+            <DialogTitle className="text-lg">{workout.name}</DialogTitle>
             {workout.type && (
-              <Badge variant="outline" className="capitalize">
+              <Badge variant="outline" className="capitalize text-xs">
                 {workout.type.replace('_', ' ')}
               </Badge>
             )}
+            {isAdmin && workout.source && (
+              <Badge
+                variant={workout.source === 'library' ? 'secondary' : 'outline'}
+                className="text-xs"
+              >
+                {workout.source === 'library' ? `📚 ${workout.library_workout_id}` : '🤖 LLM'}
+              </Badge>
+            )}
+            {isAdmin && (
+              <Button variant="ghost" size="sm" className="h-6 px-2" onClick={handleViewJson}>
+                <Code className="h-3 w-3" />
+              </Button>
+            )}
           </div>
-          <DialogDescription>
+          <DialogDescription className="text-xs">
             {t('week')} {weekNumber} &bull; {workout.weekday}
           </DialogDescription>
+          {/* Inline Metrics */}
+          <div className="flex flex-wrap items-center justify-center gap-4 text-sm pt-2 border-t mt-2">
+            <div className="flex items-center gap-1.5">
+              <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="font-medium">{formatDuration(totalDuration)}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Activity className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="text-muted-foreground text-xs">Work:</span>
+              <span className="font-medium">{workTime > 0 ? formatDuration(workTime) : 'N/A'}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Zap className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="font-medium">{workout.tss ?? 'N/A'} TSS</span>
+            </div>
+          </div>
         </DialogHeader>
 
-        <div className="space-y-6">
-          {/* Key Metrics */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <Card>
-              <CardContent className="p-3">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-                  <Clock className="h-3 w-3" />
-                  {t('duration')}
-                </div>
-                <div className="text-lg font-bold">{formatDuration(totalDuration)}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-3">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-                  <Activity className="h-3 w-3" />
-                  {t('workTime')}
-                </div>
-                <div className="text-lg font-bold">
-                  {workTime > 0 ? formatDuration(workTime) : 'N/A'}
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-3">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-                  <Zap className="h-3 w-3" />
-                  TSS
-                </div>
-                <div className="text-lg font-bold">{workout.tss ?? 'N/A'}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-3">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-                  <Target className="h-3 w-3" />
-                  {t('intensity')}
-                </div>
-                <div className="text-lg font-bold capitalize">
-                  {workout.type?.replace('_', ' ') || 'Mixed'}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+        <div className="space-y-4">
 
           {/* Workout Description */}
           {(workout.detailed_description || workout.description) && (
-            <Card>
-              <CardHeader className="pb-2">
+            <Card className="gap-1 py-3">
+              <CardHeader className="pb-0">
                 <CardTitle className="text-sm font-medium">{t('workoutDescription')}</CardTitle>
               </CardHeader>
               <CardContent>
@@ -387,8 +384,8 @@ export function WorkoutDetailModal({
 
           {/* Power Profile Visualization */}
           {workout.segments && workout.segments.length > 0 && (
-            <Card>
-              <CardHeader className="pb-2">
+            <Card className="gap-1 py-3">
+              <CardHeader className="pb-0">
                 <CardTitle className="text-sm font-medium">{t('powerProfile')}</CardTitle>
               </CardHeader>
               <CardContent>
@@ -399,8 +396,8 @@ export function WorkoutDetailModal({
 
           {/* Workout Structure */}
           {groupedSegments.length > 0 && (
-            <Card>
-              <CardHeader className="pb-2">
+            <Card className="gap-1 py-3">
+              <CardHeader className="pb-0">
                 <CardTitle className="text-sm font-medium">{t('workoutStructure')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -423,7 +420,8 @@ export function WorkoutDetailModal({
                           {group.segments.map((seg, segIndex) => (
                             <div
                               key={segIndex}
-                              className="bg-background p-2 rounded border-l-2 border-primary grid grid-cols-3 gap-2 items-center text-sm"
+                              className="bg-background p-2 rounded border-l-4 grid grid-cols-3 gap-2 items-center text-sm"
+                              style={{ borderLeftColor: getSegmentColor(seg.type) }}
                             >
                               <div className="font-medium">
                                 {formatSegmentDuration(seg.duration_min)}
@@ -445,7 +443,8 @@ export function WorkoutDetailModal({
                   return (
                     <div
                       key={index}
-                      className="bg-muted/30 p-2 rounded border-l-2 border-muted-foreground/30 grid grid-cols-3 gap-2 items-center text-sm"
+                      className="bg-muted/30 p-2 rounded border-l-4 grid grid-cols-3 gap-2 items-center text-sm"
+                      style={{ borderLeftColor: getSegmentColor(seg.type) }}
                     >
                       <div className="font-medium">{formatSegmentDuration(seg.duration_min)}</div>
                       <div className="text-muted-foreground">
