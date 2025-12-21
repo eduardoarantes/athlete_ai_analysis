@@ -61,7 +61,9 @@ export default async function TrainingPlanPage({ params }: TrainingPlanPageProps
         <div className="space-y-1">
           <h1 className="text-2xl font-bold">{formatWithGoalLabels(plan.name, tGoals)}</h1>
           {plan.description && (
-            <p className="text-sm text-muted-foreground">{formatWithGoalLabels(plan.description, tGoals)}</p>
+            <p className="text-sm text-muted-foreground">
+              {formatWithGoalLabels(plan.description, tGoals)}
+            </p>
           )}
         </div>
 
@@ -80,11 +82,15 @@ export default async function TrainingPlanPage({ params }: TrainingPlanPageProps
           <div className="flex items-center gap-1.5">
             <Zap className="h-4 w-4 text-muted-foreground" />
             <span className="font-medium">
-              +{planData.plan_metadata.ftp_gain_watts || planData.plan_metadata.target_ftp - planData.plan_metadata.current_ftp}W
+              +
+              {planData.plan_metadata.ftp_gain_watts ||
+                planData.plan_metadata.target_ftp - planData.plan_metadata.current_ftp}
+              W
             </span>
           </div>
           <div className="text-muted-foreground">
-            {Math.round(totalPlanTss)} TSS ({Math.round(totalPlanTss / planData.plan_metadata.total_weeks)}/wk)
+            {Math.round(totalPlanTss)} TSS (
+            {Math.round(totalPlanTss / planData.plan_metadata.total_weeks)}/wk)
           </div>
         </div>
 

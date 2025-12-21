@@ -7,16 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import {
-  Calendar,
-  Clock,
-  Plus,
-  Zap,
-  Search,
-  Target,
-  TrendingUp,
-  ChevronRight,
-} from 'lucide-react'
+import { Calendar, Clock, Plus, Zap, Search, Target, TrendingUp, ChevronRight } from 'lucide-react'
 import { formatWithGoalLabels, GOAL_KEYS } from '@/lib/utils/format-utils'
 
 interface PlanData {
@@ -100,8 +91,7 @@ export function TrainingPlansList({ plans }: TrainingPlansListProps) {
       const query = searchQuery.toLowerCase()
       result = result.filter(
         (plan) =>
-          plan.name.toLowerCase().includes(query) ||
-          plan.description?.toLowerCase().includes(query)
+          plan.name.toLowerCase().includes(query) || plan.description?.toLowerCase().includes(query)
       )
     }
 

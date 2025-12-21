@@ -93,7 +93,10 @@ export default async function InstancePage({ params }: InstancePageProps) {
           </p>
         </div>
         {(instance.status === 'scheduled' || instance.status === 'active') && (
-          <CancelInstanceButton instanceId={instance.id} instanceName={formatWithGoalLabels(instance.name, tGoals)} />
+          <CancelInstanceButton
+            instanceId={instance.id}
+            instanceName={formatWithGoalLabels(instance.name, tGoals)}
+          />
         )}
       </div>
 

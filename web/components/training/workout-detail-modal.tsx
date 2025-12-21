@@ -369,7 +369,6 @@ export function WorkoutDetailModal({
         </DialogHeader>
 
         <div className="space-y-4">
-
           {/* Workout Description */}
           {(workout.detailed_description || workout.description) && (
             <Card className="gap-1 py-3">

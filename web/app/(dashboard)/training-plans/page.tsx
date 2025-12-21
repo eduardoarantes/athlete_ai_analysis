@@ -34,11 +34,12 @@ export default async function TrainingPlansPage() {
     .order('created_at', { ascending: false })
 
   // Parse plan_data for each plan
-  const parsedPlans = (plans as PlanRow[] | null)?.map((plan) => ({
-    ...plan,
-    plan_data: typeof plan.plan_data === 'string' ? JSON.parse(plan.plan_data) : plan.plan_data,
-    weeks_total: plan.weeks_total ?? null,
-  })) || []
+  const parsedPlans =
+    (plans as PlanRow[] | null)?.map((plan) => ({
+      ...plan,
+      plan_data: typeof plan.plan_data === 'string' ? JSON.parse(plan.plan_data) : plan.plan_data,
+      weeks_total: plan.weeks_total ?? null,
+    })) || []
 
   return (
     <div className="container mx-auto py-6 space-y-6">

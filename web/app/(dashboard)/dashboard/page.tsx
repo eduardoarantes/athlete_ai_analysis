@@ -10,7 +10,10 @@ import { RecentActivitiesList } from '@/components/dashboard/recent-activities-l
 import { StravaConnectionToast } from '@/components/dashboard/strava-connection-toast'
 import { StravaSyncStatus } from '@/components/dashboard/strava-sync-status'
 import { StatsPanel } from '@/components/dashboard/stats-panel'
-import { UpcomingWorkouts, type UpcomingWorkoutData } from '@/components/dashboard/upcoming-workouts'
+import {
+  UpcomingWorkouts,
+  type UpcomingWorkoutData,
+} from '@/components/dashboard/upcoming-workouts'
 import { asPlanInstances } from '@/lib/types/type-guards'
 import type { PlanInstance, Workout } from '@/lib/types/training-plan'
 import { User, Zap, Heart, Scale, TrendingUp } from 'lucide-react'
@@ -47,17 +50,14 @@ function getUpcomingWorkouts(instances: PlanInstance[], limit: number = 3): Upco
         // Calculate the actual date
         const adjustedDayIndex = dayIndex === 0 ? 6 : dayIndex - 1
         const workoutDate = new Date(weekOneMonday)
-        workoutDate.setDate(
-          weekOneMonday.getDate() + (week.week_number - 1) * 7 + adjustedDayIndex
-        )
+        workoutDate.setDate(weekOneMonday.getDate() + (week.week_number - 1) * 7 + adjustedDayIndex)
 
         // Only include future workouts (today or later)
         if (workoutDate >= today) {
           // Calculate duration from segments
-          const durationMinutes = (workout as Workout).segments?.reduce(
-            (sum, seg) => sum + (seg.duration_min || 0),
-            0
-          ) || 60
+          const durationMinutes =
+            (workout as Workout).segments?.reduce((sum, seg) => sum + (seg.duration_min || 0), 0) ||
+            60
 
           const workoutData: UpcomingWorkoutData = {
             id: `${instance.id}-${week.week_number}-${workout.weekday}`,
@@ -212,10 +212,7 @@ export default async function DashboardPage() {
       const endDate = new Date(instance.end_date + 'T00:00:00')
       if (endDate < todayForPlanCheck) {
         // Plan has ended, mark as completed
-        await supabase
-          .from('plan_instances')
-          .update({ status: 'completed' })
-          .eq('id', instance.id)
+        await supabase.from('plan_instances').update({ status: 'completed' }).eq('id', instance.id)
         instance.status = 'completed'
       }
     }

@@ -39,7 +39,9 @@ export function ScheduleContent({ instances, locale }: ScheduleContentProps) {
   const hasCalendarContent = plansWithFutureContent.length > 0
 
   // Default to list view if no calendar content
-  const [viewMode, setViewMode] = useState<'calendar' | 'list'>(hasCalendarContent ? 'calendar' : 'list')
+  const [viewMode, setViewMode] = useState<'calendar' | 'list'>(
+    hasCalendarContent ? 'calendar' : 'list'
+  )
 
   const getStatusVariant = (status: string) => {
     switch (status) {
@@ -101,7 +103,9 @@ export function ScheduleContent({ instances, locale }: ScheduleContentProps) {
         <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">{formatWithGoalLabels(instance.name, tGoals)}</CardTitle>
+              <CardTitle className="text-lg">
+                {formatWithGoalLabels(instance.name, tGoals)}
+              </CardTitle>
               <Badge variant={getStatusVariant(instance.status)}>
                 {t(`status.${instance.status}`)}
               </Badge>

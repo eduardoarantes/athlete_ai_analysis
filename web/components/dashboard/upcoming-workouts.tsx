@@ -95,17 +95,15 @@ export function UpcomingWorkouts({ workouts }: UpcomingWorkoutsProps) {
           const date = new Date(workout.date)
 
           return (
-            <Link
-              key={workout.id}
-              href={`/schedule/${workout.instanceId}`}
-              className="block"
-            >
+            <Link key={workout.id} href={`/schedule/${workout.instanceId}`} className="block">
               <div className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors">
                 {/* Date Column */}
                 <div className="flex-shrink-0 w-14 text-center">
                   <div className="text-xs text-muted-foreground">{formatWeekday(workout.date)}</div>
                   <div className="text-lg font-bold">{date.getDate()}</div>
-                  <div className="text-[10px] text-muted-foreground">{formatMonth(workout.date)}</div>
+                  <div className="text-[10px] text-muted-foreground">
+                    {formatMonth(workout.date)}
+                  </div>
                 </div>
 
                 {/* Workout Info */}
