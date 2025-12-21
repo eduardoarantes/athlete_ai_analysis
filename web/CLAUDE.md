@@ -289,6 +289,36 @@ async function processWebhookEvent(event: WebhookEvent): Promise<void> {
 
 ---
 
+## Custom Hooks
+
+### useIsAdmin
+
+Use the `useIsAdmin` hook to check if the current user has admin privileges. This hook calls the Supabase `is_admin()` RPC function and caches the result.
+
+**Location:** `@/lib/hooks/use-is-admin`
+
+**Usage:**
+
+```typescript
+import { useIsAdmin } from '@/lib/hooks/use-is-admin'
+
+function MyComponent() {
+  const isAdmin = useIsAdmin()
+
+  if (!isAdmin) return null
+
+  return <div>Admin-only content</div>
+}
+```
+
+**Key Points:**
+
+- Returns `false` initially, then updates after the RPC call completes
+- Result is cached for the component lifetime
+- Use this hook instead of manually calling `supabase.rpc('is_admin')` to avoid duplicate RPC calls
+
+---
+
 ## Project Structure
 
 ```

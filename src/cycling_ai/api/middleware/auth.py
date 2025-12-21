@@ -62,17 +62,6 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
         if request.method == "OPTIONS":
             return await call_next(request)
 
-        # In development (no JWT secret), skip auth and use mock user
-        if not SUPABASE_JWT_SECRET:
-            logger.debug("No SUPABASE_JWT_SECRET configured, using development user")
-            request.state.user = User(
-                id="development-user",
-                email="dev@example.com",
-                role="authenticated",
-                metadata={},
-            )
-            return await call_next(request)
-
         # Check for Authorization header
         auth_header = request.headers.get("Authorization")
         if not auth_header:
@@ -178,16 +167,6 @@ async def get_current_user(
     if hasattr(request.state, "user"):
         user: User = request.state.user
         return user
-
-    # In development (no JWT secret), return mock user
-    if not SUPABASE_JWT_SECRET:
-        logger.debug("No SUPABASE_JWT_SECRET configured, using development user")
-        return User(
-            id="development-user",
-            email="dev@example.com",
-            role="authenticated",
-            metadata={},
-        )
 
     # Fall back to manual validation if middleware didn't run
     if not credentials:

@@ -301,6 +301,8 @@ export function WorkoutDetailModal({
     const blob = new Blob([jsonString], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     window.open(url, '_blank')
+    // Revoke URL after window has time to load to prevent memory leak
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
 
   if (!workout) return null

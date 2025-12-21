@@ -14,13 +14,14 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useEffect, useState } from 'react'
 import { Shield } from 'lucide-react'
+import { useIsAdmin } from '@/lib/hooks/use-is-admin'
 
 export function UserMenu() {
   const router = useRouter()
   const supabase = createClient()
   const t = useTranslations('userMenu')
   const [userEmail, setUserEmail] = useState<string>('')
-  const [isAdmin, setIsAdmin] = useState<boolean>(false)
+  const isAdmin = useIsAdmin()
 
   useEffect(() => {
     const getUser = async () => {
@@ -30,10 +31,6 @@ export function UserMenu() {
       if (user?.email) {
         setUserEmail(user.email)
       }
-
-      // Check admin status
-      const { data: adminStatus } = await supabase.rpc('is_admin')
-      setIsAdmin(adminStatus === true)
     }
     getUser()
   }, [supabase])

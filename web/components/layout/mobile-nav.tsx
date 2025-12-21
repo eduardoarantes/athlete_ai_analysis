@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Shield } from 'lucide-react'
+import { useIsAdmin } from '@/lib/hooks/use-is-admin'
 
 export function MobileNav() {
   const router = useRouter()
@@ -21,15 +22,7 @@ export function MobileNav() {
   const t = useTranslations('nav')
   const tUser = useTranslations('userMenu')
   const [isOpen, setIsOpen] = useState(false)
-  const [isAdmin, setIsAdmin] = useState(false)
-
-  useEffect(() => {
-    const checkAdmin = async () => {
-      const { data: adminStatus } = await supabase.rpc('is_admin')
-      setIsAdmin(adminStatus === true)
-    }
-    checkAdmin()
-  }, [supabase])
+  const isAdmin = useIsAdmin()
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
