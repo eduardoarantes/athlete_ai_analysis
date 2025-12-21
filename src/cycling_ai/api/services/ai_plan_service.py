@@ -13,15 +13,17 @@ from __future__ import annotations
 
 import json
 import logging
-import uuid
+import tempfile
 from pathlib import Path
 from typing import Any
 
 from cycling_ai.api.config import settings
 from cycling_ai.api.models.plan import AthleteProfileData, TrainingPlanRequest
 from cycling_ai.core.power_zones import calculate_power_zones
+from cycling_ai.orchestration.prompt_loader import PromptLoader
 from cycling_ai.providers.base import BaseProvider, ProviderConfig, ProviderMessage
 from cycling_ai.providers.factory import ProviderFactory
+from cycling_ai.tools.wrappers.plan_overview_tool import PlanOverviewTool
 
 logger = logging.getLogger(__name__)
 
@@ -122,7 +124,7 @@ class AIPlanService:
         logger.info("[AI PLAN SERVICE] Using library-based workout selection")
 
         try:
-            provider = self._get_provider()
+            self._get_provider()  # Validate provider can be initialized
         except ValueError as e:
             logger.error(f"[AI PLAN SERVICE] Provider initialization failed: {e}")
             raise
