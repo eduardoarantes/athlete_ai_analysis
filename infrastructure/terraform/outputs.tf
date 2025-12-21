@@ -81,8 +81,8 @@ output "deployment_commands" {
     docker_push  = "docker push ${aws_ecr_repository.web.repository_url}:latest"
 
     # EC2 deployment
-    ec2_ssh       = "ssh -i ~/.ssh/your-key.pem ec2-user@${aws_eip.web.public_ip}"
-    ec2_restart   = "ssh -i ~/.ssh/your-key.pem ec2-user@${aws_eip.web.public_ip} 'sudo /usr/local/bin/start-nextjs.sh'"
+    ec2_ssh     = "ssh -i ~/.ssh/your-key.pem ec2-user@${aws_eip.web.public_ip}"
+    ec2_restart = "ssh -i ~/.ssh/your-key.pem ec2-user@${aws_eip.web.public_ip} 'sudo /usr/local/bin/start-nextjs.sh'"
 
     # Lambda update
     update_lambda = "aws lambda update-function-code --function-name ${aws_lambda_function.api.function_name} --s3-bucket ${aws_s3_bucket.lambda_code.id} --s3-key lambda.zip"
@@ -101,8 +101,8 @@ output "web_env_vars" {
   value = {
     NEXT_PUBLIC_SUPABASE_URL = var.supabase_url
     # Note: NEXT_PUBLIC_SUPABASE_ANON_KEY should be passed as build arg
-    AWS_REGION               = var.aws_region
-    LAMBDA_FUNCTION_NAME     = aws_lambda_function.api.function_name
+    AWS_REGION           = var.aws_region
+    LAMBDA_FUNCTION_NAME = aws_lambda_function.api.function_name
   }
   sensitive = true
 }

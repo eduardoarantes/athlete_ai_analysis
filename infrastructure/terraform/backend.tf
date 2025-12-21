@@ -29,9 +29,9 @@ terraform {
     # bucket = "cycling-ai-terraform-state-ACCOUNT_ID"
 
     # State file path - workspaces create separate paths automatically
-    key            = "cycling-ai/terraform.tfstate"
-    region         = "ap-southeast-2"
-    encrypt        = true
+    key     = "cycling-ai/terraform.tfstate"
+    region  = "ap-southeast-2"
+    encrypt = true
 
     # DynamoDB table for state locking
     dynamodb_table = "cycling-ai-terraform-locks"

@@ -40,21 +40,21 @@ locals {
   # Environment-specific configurations
   env_config = {
     dev = {
-      lambda_memory   = 256
-      lambda_timeout  = 60
-      log_retention   = 3
+      lambda_memory              = 256
+      lambda_timeout             = 60
+      log_retention              = 3
       enable_deletion_protection = false
     }
     staging = {
-      lambda_memory   = 512
-      lambda_timeout  = 180
-      log_retention   = 7
+      lambda_memory              = 512
+      lambda_timeout             = 180
+      log_retention              = 7
       enable_deletion_protection = false
     }
     prod = {
-      lambda_memory   = 512
-      lambda_timeout  = 300
-      log_retention   = 14
+      lambda_memory              = 512
+      lambda_timeout             = 300
+      log_retention              = 14
       enable_deletion_protection = true
     }
   }

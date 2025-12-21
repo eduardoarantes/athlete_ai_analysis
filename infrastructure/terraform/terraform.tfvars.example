@@ -18,6 +18,11 @@ anthropic_api_key = "sk-ant-..."
 google_api_key    = ""  # Optional
 openai_api_key    = ""  # Optional
 
+# AI Plan Generation
+# "library" = LLM generates plan structure, library provides workouts (faster, cheaper)
+# "llm" = Full LLM generation including workouts (more flexible)
+workout_source = "library"
+
 # Lambda Configuration (Free Tier friendly defaults)
 lambda_memory_size = 512  # MB
 lambda_timeout     = 300  # seconds (5 min)

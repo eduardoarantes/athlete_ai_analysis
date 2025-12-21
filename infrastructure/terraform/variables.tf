@@ -76,6 +76,13 @@ variable "openai_api_key" {
   sensitive   = true
 }
 
+# AI Plan Generation Configuration
+variable "workout_source" {
+  description = "Workout source: 'library' (LLM for structure, library for workouts) or 'llm' (full LLM generation)"
+  type        = string
+  default     = "library"
+}
+
 # Lambda Configuration
 variable "lambda_memory_size" {
   description = "Lambda function memory in MB"

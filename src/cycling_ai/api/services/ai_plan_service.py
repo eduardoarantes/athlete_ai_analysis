@@ -19,6 +19,7 @@ from typing import Any
 
 from cycling_ai.api.config import settings
 from cycling_ai.api.models.plan import AthleteProfileData, TrainingPlanRequest
+from cycling_ai.config.loader import load_config
 from cycling_ai.core.power_zones import calculate_power_zones
 from cycling_ai.orchestration.prompt_loader import PromptLoader
 from cycling_ai.providers.base import BaseProvider, ProviderConfig, ProviderMessage
@@ -74,6 +75,34 @@ class AIPlanService:
 
         return self._provider
 
+    def _validate_request(self, request: TrainingPlanRequest) -> None:
+        """
+        Validate that the request has all required fields.
+
+        Args:
+            request: Training plan request to validate
+
+        Raises:
+            ValueError: If required fields are missing
+        """
+        profile = request.athlete_profile
+
+        # Validate training availability
+        if not profile.training_availability:
+            raise ValueError("Training availability is required. Please configure your available training days and hours.")
+
+        if "week_days" not in profile.training_availability:
+            raise ValueError("Training days (week_days) are required. Please configure your available training days.")
+
+        days = profile.training_availability["week_days"]
+        if (isinstance(days, list) and not days) or (isinstance(days, str) and not days.strip()):
+            raise ValueError("At least one training day is required.")
+
+        if "hours_per_week" not in profile.training_availability:
+            raise ValueError("Weekly training hours are required. Please configure your available hours per week.")
+
+        logger.debug(f"[AI PLAN SERVICE] Request validation passed: {len(days)} training days configured")
+
     async def generate_plan(
         self,
         request: TrainingPlanRequest,
@@ -88,8 +117,11 @@ class AIPlanService:
             Dictionary with training_plan data and AI metadata
 
         Raises:
-            ValueError: If plan generation fails
+            ValueError: If plan generation fails or required fields are missing
         """
+        # Early validation of required fields
+        self._validate_request(request)
+
         workout_source = settings.workout_source
         logger.info(
             f"[AI PLAN SERVICE] Starting plan generation: {request.weeks} weeks, "
@@ -109,7 +141,7 @@ class AIPlanService:
         Generate plan using LLM for structure + library for workouts.
 
         This is the hybrid approach:
-        1. LLM generates weekly overview (plan structure)
+        1. LLM generates weekly overview (plan structure) via tool calling
         2. Library selects specific workouts (no LLM tokens)
 
         Args:
@@ -119,39 +151,77 @@ class AIPlanService:
             Dictionary with training_plan data and AI metadata
         """
         from cycling_ai.orchestration.phases.training_planning_library import LibraryBasedTrainingPlanningWeeks
-        from cycling_ai.tools.wrappers.plan_overview_tool import PlanOverviewTool
 
         logger.info("[AI PLAN SERVICE] Using library-based workout selection")
 
         try:
-            self._get_provider()  # Validate provider can be initialized
+            provider = self._get_provider()
         except ValueError as e:
             logger.error(f"[AI PLAN SERVICE] Provider initialization failed: {e}")
             raise
 
-        # Generate a unique plan ID for this generation
-        plan_id = str(uuid.uuid4())
-
-        # Step 1: Use LLM to generate weekly overview
+        # Step 1: Use LLM to generate weekly overview via tool calling
         logger.info("[AI PLAN SERVICE] Step 1: Generating weekly overview with LLM...")
 
-        overview_tool = PlanOverviewTool()
-        overview_result = overview_tool.execute(
-            plan_id=plan_id,
-            weeks=request.weeks,
-            athlete_ftp=int(request.athlete_profile.ftp),
-            athlete_weight_kg=float(request.athlete_profile.weight_kg),
-            athlete_goals=request.athlete_profile.goals or ["General fitness"],
-            target_ftp=int(request.target_ftp) if request.target_ftp else None,
-            training_days=self._get_training_days(request.athlete_profile),
-            weekly_hours=self._get_weekly_hours(request.athlete_profile),
-        )
+        # Create temp athlete profile file (required by prompts)
+        athlete_profile_path = self._create_temp_athlete_profile(request)
 
-        if not overview_result.success:
-            errors = overview_result.errors or ["Unknown error"]
-            raise ValueError(f"Failed to generate weekly overview: {', '.join(errors)}")
+        try:
+            # Build prompt parameters
+            prompt_params = self._build_overview_prompt_params(request, athlete_profile_path)
 
-        logger.info("[AI PLAN SERVICE] Step 1 complete: Weekly overview generated")
+            # Load prompts from external files (version from .cycling-ai.yaml)
+            config = load_config()
+            prompt_loader = PromptLoader(version=config.version)
+            system_prompt = prompt_loader.get_training_planning_overview_prompt(**prompt_params)
+            user_message = prompt_loader.get_training_planning_overview_user_prompt(**prompt_params)
+
+            # Get tool definition
+            overview_tool = PlanOverviewTool()
+            tool_definition = overview_tool.definition
+
+            # Call LLM with tool
+            messages = [
+                ProviderMessage(role="system", content=system_prompt),
+                ProviderMessage(role="user", content=user_message),
+            ]
+
+            logger.info("[AI PLAN SERVICE] Calling LLM with create_plan_overview tool...")
+            response = provider.create_completion(
+                messages=messages,
+                tools=[tool_definition],
+                force_tool_call=True,
+            )
+
+            # Extract tool call arguments
+            if not response.tool_calls or len(response.tool_calls) == 0:
+                raise ValueError("LLM did not call create_plan_overview tool")
+
+            tool_call = response.tool_calls[0]
+            tool_args = tool_call.get("arguments", {})
+
+            logger.info(f"[AI PLAN SERVICE] LLM called tool with {len(tool_args)} arguments")
+
+            # Execute the tool with LLM-provided arguments
+            overview_result = overview_tool.execute(**tool_args)
+
+            if not overview_result.success:
+                errors = overview_result.errors or ["Unknown error"]
+                raise ValueError(f"Failed to generate weekly overview: {', '.join(errors)}")
+
+            # Extract plan_id from result
+            result_data = overview_result.data
+            if not isinstance(result_data, dict):
+                raise ValueError("Tool result data is not a dictionary")
+            plan_id = result_data.get("plan_id")
+            if not plan_id:
+                raise ValueError("Tool result missing plan_id")
+
+            logger.info(f"[AI PLAN SERVICE] Step 1 complete: Overview generated with plan_id={plan_id}")
+
+        finally:
+            # Clean up temp athlete profile
+            Path(athlete_profile_path).unlink(missing_ok=True)
 
         # Step 2: Use library to select workouts
         logger.info("[AI PLAN SERVICE] Step 2: Selecting workouts from library...")
@@ -178,6 +248,12 @@ class AIPlanService:
             if temp_path.exists():
                 temp_path.unlink()
 
+        # Also clean up week files
+        for week_num in range(1, request.weeks + 1):
+            week_path = Path("/tmp") / f"{plan_id}_week_{week_num}.json"
+            if week_path.exists():
+                week_path.unlink()
+
         # Add metadata
         result = {
             "training_plan": plan_data,
@@ -191,6 +267,85 @@ class AIPlanService:
 
         logger.info("[AI PLAN SERVICE] Successfully generated training plan with library workouts")
         return result
+
+    def _create_temp_athlete_profile(self, request: TrainingPlanRequest) -> str:
+        """Create a temporary athlete profile JSON file for the prompts."""
+        profile = request.athlete_profile
+        profile_data = {
+            "ftp": profile.ftp,
+            "weight_kg": profile.weight_kg,
+            "max_hr": profile.max_hr,
+            "age": profile.age,
+            "goals": profile.goals or ["General fitness"],
+            "experience_level": profile.experience_level,
+            "training_availability": profile.training_availability or {
+                "hours_per_week": 7,
+                "week_days": ["Tuesday", "Thursday", "Saturday", "Sunday"],
+            },
+        }
+
+        # Create temp file
+        fd, path = tempfile.mkstemp(suffix=".json", prefix="athlete_profile_")
+        with open(fd, "w") as f:
+            json.dump(profile_data, f, indent=2)
+
+        return path
+
+    def _build_overview_prompt_params(
+        self,
+        request: TrainingPlanRequest,
+        athlete_profile_path: str,
+    ) -> dict[str, Any]:
+        """Build parameters for the training planning overview prompts."""
+        profile = request.athlete_profile
+        ftp = int(profile.ftp)
+
+        # Calculate power zones
+        power_zones = calculate_power_zones(ftp)
+        zones_text = self._format_power_zones(power_zones, ftp)
+
+        # Get training availability
+        available_days = self._get_training_days_list(profile)
+        weekly_hours = self._get_weekly_hours(profile)
+
+        # Build prompt parameters matching what the prompts expect
+        return {
+            "training_plan_weeks": str(request.weeks),
+            "athlete_profile_path": athlete_profile_path,
+            "power_zones": zones_text,
+            "available_days": ", ".join(available_days),
+            "num_available_days": str(len(available_days)),
+            "weekly_time_budget_hours": str(weekly_hours),
+            "daily_time_caps_json": "None",
+            "goals": ", ".join(profile.goals) if profile.goals else "General fitness",
+            "current_training_status": profile.experience_level or "intermediate",
+            "performance_summary": "No historical performance data available (new plan from web).",
+        }
+
+    def _get_training_days_list(self, profile: AthleteProfileData) -> list[str]:
+        """
+        Extract training days as a list from profile.
+
+        Raises:
+            ValueError: If training days are not configured in the profile
+        """
+        if not profile.training_availability:
+            raise ValueError("Training availability is required. Please configure your available training days.")
+        if "week_days" not in profile.training_availability:
+            raise ValueError("Training days (week_days) are required. Please configure your available training days.")
+
+        days = profile.training_availability["week_days"]
+        if isinstance(days, list):
+            if not days:
+                raise ValueError("At least one training day is required.")
+            return days
+        elif isinstance(days, str):
+            day_list = [d.strip() for d in days.split(",") if d.strip()]
+            if not day_list:
+                raise ValueError("At least one training day is required.")
+            return day_list
+        else:
+            raise ValueError(f"Invalid training days format: expected list or comma-separated string, got {type(days).__name__}")
 
     async def _generate_plan_with_llm(
         self,
@@ -270,17 +425,26 @@ class AIPlanService:
         logger.info("[AI PLAN SERVICE] Successfully generated AI training plan")
         return result
 
-    def _get_training_days(self, profile: AthleteProfileData) -> str:
-        """Extract training days from profile."""
-        if profile.training_availability and "week_days" in profile.training_availability:
-            return str(profile.training_availability["week_days"])
-        return "Tuesday, Thursday, Saturday, Sunday"
-
     def _get_weekly_hours(self, profile: AthleteProfileData) -> float:
-        """Extract weekly hours from profile."""
-        if profile.training_availability and "hours_per_week" in profile.training_availability:
-            return float(profile.training_availability["hours_per_week"])
-        return 7.0
+        """
+        Extract weekly hours from profile.
+
+        Raises:
+            ValueError: If weekly hours are not configured in the profile
+        """
+        if not profile.training_availability:
+            raise ValueError("Training availability is required.")
+        if "hours_per_week" not in profile.training_availability:
+            raise ValueError("Weekly training hours are required. Please configure your available hours per week.")
+
+        hours = profile.training_availability["hours_per_week"]
+        try:
+            hours_float = float(hours)
+            if hours_float <= 0:
+                raise ValueError("Weekly training hours must be greater than 0.")
+            return hours_float
+        except (TypeError, ValueError) as e:
+            raise ValueError(f"Invalid weekly hours format: {hours}") from e
 
     def _format_power_zones(self, power_zones: dict[str, Any], ftp: int) -> str:
         """Format power zones for inclusion in prompt."""

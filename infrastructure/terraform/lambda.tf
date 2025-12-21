@@ -48,6 +48,8 @@ resource "aws_lambda_function" "api" {
       ANTHROPIC_API_KEY         = var.anthropic_api_key
       GOOGLE_API_KEY            = var.google_api_key
       OPENAI_API_KEY            = var.openai_api_key
+      # AI Plan Generation
+      WORKOUT_SOURCE = var.workout_source
       # Disable buffering for Lambda
       PYTHONUNBUFFERED = "1"
     }
