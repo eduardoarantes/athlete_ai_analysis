@@ -14,6 +14,8 @@ interface TrainingPlanCalendarProps {
   plan: TrainingPlan
   /** When true, shows weekday names only without real dates (for template preview) */
   templateMode?: boolean
+  /** When true, shows admin features like JSON view */
+  isAdmin?: boolean
 }
 
 const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
@@ -23,6 +25,7 @@ const WEEKS_PER_PAGE = 4
 export function TrainingPlanCalendar({
   plan,
   templateMode: _templateMode = false,
+  isAdmin = false,
 }: TrainingPlanCalendarProps) {
   const t = useTranslations('trainingPlan')
   const planData = plan.plan_data
@@ -206,6 +209,7 @@ export function TrainingPlanCalendar({
         ftp={ftp}
         open={modalOpen}
         onOpenChange={setModalOpen}
+        isAdmin={isAdmin}
       />
     </div>
   )

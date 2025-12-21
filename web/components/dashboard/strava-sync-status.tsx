@@ -53,14 +53,22 @@ export function StravaSyncStatus() {
 
   useEffect(() => {
     loadStatus()
-    // Reload status every 30 seconds if not actively polling
+  }, [])
+
+  // Only poll if Strava is connected and not already polling for a job
+  useEffect(() => {
+    // Don't poll if Strava is not connected (syncStatus is null)
+    if (!syncStatus || isPolling) {
+      return
+    }
+
+    // Reload status every 30 seconds
     const interval = setInterval(() => {
-      if (!isPolling) {
-        loadStatus()
-      }
+      loadStatus()
     }, 30000)
+
     return () => clearInterval(interval)
-  }, [isPolling])
+  }, [syncStatus, isPolling])
 
   const loadStatus = async () => {
     try {

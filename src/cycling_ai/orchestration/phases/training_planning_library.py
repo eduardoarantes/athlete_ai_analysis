@@ -196,11 +196,13 @@ class LibraryBasedTrainingPlanningWeeks:
             "weekday": weekday,
             "description": "Strength Training",
             "workout_type": "strength",  # Explicit type for validation
+            "source": "library",  # Strength workouts are pre-defined templates
+            "library_workout_id": "strength_default",
             "segments": [
                 {
                     "type": "strength",
                     "duration_min": 30,
-                    "description": "Strength training session (bodyweight, weights, or resistance exercises)",
+                    "description": "Strength training session",
                 }
             ],
         }
@@ -429,6 +431,9 @@ class LibraryBasedTrainingPlanningWeeks:
                     # Preserve original workout_type from library for validation
                     # This prevents mis-classification of cycling workouts with "strength" in name
                     workout_dict["workout_type"] = workout.type
+                    # Track workout source for debugging/admin purposes
+                    workout_dict["source"] = "library"
+                    workout_dict["library_workout_id"] = workout.id
 
                     # Ensure all segments have duration_min calculated (for interval sets)
                     for segment in workout_dict.get("segments", []):

@@ -7,6 +7,7 @@ import { Calendar, Target, TrendingUp, Zap } from 'lucide-react'
 import { InstanceCalendar } from '@/components/training/instance-calendar'
 import { CancelInstanceButton } from '@/components/training/cancel-instance-button'
 import type { PlanInstance, TrainingPlanData } from '@/lib/types/training-plan'
+import { formatWithGoalLabels } from '@/lib/utils/format-utils'
 
 interface InstancePageProps {
   params: Promise<{ instanceId: string }>
@@ -15,6 +16,7 @@ interface InstancePageProps {
 export default async function InstancePage({ params }: InstancePageProps) {
   const { instanceId } = await params
   const t = await getTranslations('schedule')
+  const tGoals = await getTranslations('goals')
   const supabase = await createClient()
 
   const {
@@ -69,7 +71,7 @@ export default async function InstancePage({ params }: InstancePageProps) {
       <div className="flex items-start justify-between">
         <div className="space-y-2">
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold">{instance.name}</h1>
+            <h1 className="text-3xl font-bold">{formatWithGoalLabels(instance.name, tGoals)}</h1>
             <Badge variant={getStatusVariant(instance.status)}>
               {t(`status.${instance.status}`)}
             </Badge>
@@ -91,7 +93,7 @@ export default async function InstancePage({ params }: InstancePageProps) {
           </p>
         </div>
         {(instance.status === 'scheduled' || instance.status === 'active') && (
-          <CancelInstanceButton instanceId={instance.id} instanceName={instance.name} />
+          <CancelInstanceButton instanceId={instance.id} instanceName={formatWithGoalLabels(instance.name, tGoals)} />
         )}
       </div>
 

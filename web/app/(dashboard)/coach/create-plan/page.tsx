@@ -26,6 +26,7 @@ interface WizardData {
     ftp: number
     weight: number
     maxHR: number
+    age: number
     weeklyHours: string
     experienceLevel: string
     trainingDays: string[]
@@ -60,21 +61,41 @@ export default function CreateTrainingPlanPage() {
         const sessionResponse = await fetch('/api/coach/wizard/session')
         const sessionData = await sessionResponse.json()
 
+        // Build profile from database (always use current profile values)
+        const freshProfile = {
+          ftp: initData.profile.ftp || 0,
+          weight: initData.profile.weight || 0,
+          maxHR: initData.profile.maxHR || 0,
+          age: initData.profile.age || 0,
+          weeklyHours: '',
+          experienceLevel: initData.experienceLevel || 'intermediate',
+          trainingDays: ['monday', 'wednesday', 'friday', 'saturday'],
+        }
+
         if (sessionData.session) {
-          // Resume from saved session
-          setWizardData(sessionData.session.wizardData)
+          // Resume from saved session, but merge with fresh profile data
+          // Fresh profile values take precedence for FTP/weight/maxHR/age (may have been updated)
+          const sessionProfile = sessionData.session.wizardData.profile || {}
+          setWizardData({
+            ...sessionData.session.wizardData,
+            profile: {
+              ...freshProfile,
+              // Keep session values for non-profile fields
+              weeklyHours: sessionProfile.weeklyHours || freshProfile.weeklyHours,
+              experienceLevel: sessionProfile.experienceLevel || freshProfile.experienceLevel,
+              trainingDays: sessionProfile.trainingDays || freshProfile.trainingDays,
+              // Use fresh profile data if available, otherwise fall back to session
+              ftp: initData.profile.ftp || sessionProfile.ftp || 0,
+              weight: initData.profile.weight || sessionProfile.weight || 0,
+              maxHR: initData.profile.maxHR || sessionProfile.maxHR || 0,
+              age: initData.profile.age || sessionProfile.age || 0,
+            },
+          })
           setCurrentStep(sessionData.session.currentStep)
         } else {
-          // Fresh start - pre-populate profile data
+          // Fresh start - use profile data from database
           setWizardData({
-            profile: {
-              ftp: initData.profile.ftp || 0,
-              weight: initData.profile.weight || 0,
-              maxHR: initData.profile.maxHR || 0,
-              weeklyHours: '',
-              experienceLevel: initData.experienceLevel || 'intermediate',
-              trainingDays: ['monday', 'wednesday', 'friday', 'saturday'],
-            },
+            profile: freshProfile,
           })
         }
       } catch (error) {

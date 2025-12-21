@@ -905,6 +905,11 @@ class AddWeekDetailsTool(BaseTool):
 
             # --- End Multi-Scenario Validation ---
 
+            # Mark workouts without source as LLM-generated
+            for workout in workouts:
+                if "source" not in workout:
+                    workout["source"] = "llm"
+
             # Create week data structure
             week_data = {
                 "week_number": week_number,

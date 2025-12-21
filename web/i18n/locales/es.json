@@ -1,4 +1,11 @@
 {
+  "goals": {
+    "improve-ftp": "Mejorar FTP",
+    "build-endurance": "Desarrollar Resistencia",
+    "race-prep": "Preparación para Carrera",
+    "weight-loss": "Pérdida de Peso",
+    "general-fitness": "Condición Física General"
+  },
   "common": {
     "next": "Siguiente",
     "back": "Atrás",

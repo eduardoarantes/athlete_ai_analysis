@@ -13,13 +13,14 @@ import type { PlanInstance, TrainingPlanData, Workout, WeeklyPlan } from '@/lib/
 interface InstanceCalendarProps {
   instance: PlanInstance
   planData: TrainingPlanData
+  isAdmin?: boolean
 }
 
 const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 const DAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const WEEKS_PER_PAGE = 4
 
-export function InstanceCalendar({ instance, planData }: InstanceCalendarProps) {
+export function InstanceCalendar({ instance, planData, isAdmin = false }: InstanceCalendarProps) {
   const t = useTranslations('trainingPlan')
   const totalWeeks = planData.weekly_plan.length
 
@@ -259,6 +260,7 @@ export function InstanceCalendar({ instance, planData }: InstanceCalendarProps) 
         ftp={ftp}
         open={modalOpen}
         onOpenChange={setModalOpen}
+        isAdmin={isAdmin}
       />
     </div>
   )

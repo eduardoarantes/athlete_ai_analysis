@@ -13,6 +13,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Shield } from 'lucide-react'
+import { useIsAdmin } from '@/lib/hooks/use-is-admin'
 
 export function MobileNav() {
   const router = useRouter()
@@ -20,6 +22,7 @@ export function MobileNav() {
   const t = useTranslations('nav')
   const tUser = useTranslations('userMenu')
   const [isOpen, setIsOpen] = useState(false)
+  const isAdmin = useIsAdmin()
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -70,6 +73,17 @@ export function MobileNav() {
         <DropdownMenuItem asChild>
           <Link href="/settings">{t('settings')}</Link>
         </DropdownMenuItem>
+        {isAdmin && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href="/admin" className="flex items-center">
+                <Shield className="mr-2 h-4 w-4" />
+                {tUser('admin')}
+              </Link>
+            </DropdownMenuItem>
+          </>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout} className="text-red-600">
           {tUser('logout')}

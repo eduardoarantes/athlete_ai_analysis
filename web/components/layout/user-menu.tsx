@@ -13,12 +13,15 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useEffect, useState } from 'react'
+import { Shield } from 'lucide-react'
+import { useIsAdmin } from '@/lib/hooks/use-is-admin'
 
 export function UserMenu() {
   const router = useRouter()
   const supabase = createClient()
   const t = useTranslations('userMenu')
   const [userEmail, setUserEmail] = useState<string>('')
+  const isAdmin = useIsAdmin()
 
   useEffect(() => {
     const getUser = async () => {
@@ -62,6 +65,15 @@ export function UserMenu() {
         <DropdownMenuItem onClick={() => router.push('/settings')}>
           {t('settings')}
         </DropdownMenuItem>
+        {isAdmin && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => router.push('/admin')}>
+              <Shield className="mr-2 h-4 w-4" />
+              {t('admin')}
+            </DropdownMenuItem>
+          </>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout} className="text-red-600">
           {t('logout')}

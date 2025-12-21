@@ -39,6 +39,10 @@ export interface Workout {
     | string
   tss?: number
   segments?: WorkoutSegment[]
+  /** Source of the workout: 'library' for pre-defined workouts, 'llm' for AI-generated */
+  source?: 'library' | 'llm'
+  /** ID of the workout in the library (only present when source='library') */
+  library_workout_id?: string
 }
 
 export interface WeeklyPlan {
