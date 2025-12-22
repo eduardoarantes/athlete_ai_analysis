@@ -103,11 +103,7 @@ variable "custom_domain" {
   default     = ""
 }
 
-variable "certificate_arn" {
-  description = "ACM certificate ARN for custom domain (required if custom_domain is set)"
-  type        = string
-  default     = ""
-}
+# Note: ACM certificate is auto-created in acm.tf when custom_domain is set
 
 # GitHub Configuration for Amplify
 variable "github_repository" {

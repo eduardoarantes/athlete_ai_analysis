@@ -101,12 +101,15 @@ resource "aws_cloudfront_distribution" "web" {
   }
 
   viewer_certificate {
-    # Use ACM certificate if custom domain, otherwise CloudFront default
-    cloudfront_default_certificate = var.certificate_arn == ""
-    acm_certificate_arn            = var.certificate_arn != "" ? var.certificate_arn : null
-    ssl_support_method             = var.certificate_arn != "" ? "sni-only" : null
+    # Use auto-created ACM certificate if custom domain, otherwise CloudFront default
+    cloudfront_default_certificate = var.custom_domain == ""
+    acm_certificate_arn            = var.custom_domain != "" ? aws_acm_certificate.main[0].arn : null
+    ssl_support_method             = var.custom_domain != "" ? "sni-only" : null
     minimum_protocol_version       = "TLSv1.2_2021"
   }
+
+  # Wait for certificate validation before creating distribution
+  depends_on = [aws_acm_certificate_validation.main]
 
   tags = {
     Name = "${local.name_prefix}-web"
