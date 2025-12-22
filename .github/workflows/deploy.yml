@@ -183,15 +183,21 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Terraform Init
+        env:
+          # Unset TF_WORKSPACE during init to prevent "workspace doesn't exist" prompt
+          TF_WORKSPACE: ""
         run: |
-          # Remove any stale workspace selection to prevent init prompts
           rm -f .terraform/environment
           terraform init -backend-config="bucket=${{ secrets.TERRAFORM_STATE_BUCKET }}"
 
       - name: Select Terraform Workspace
+        env:
+          # Unset during workspace selection to use CLI commands
+          TF_WORKSPACE: ""
         run: |
           # Create workspace if it doesn't exist, then select it
-          terraform workspace select ${{ env.TF_WORKSPACE }} 2>/dev/null || terraform workspace new ${{ env.TF_WORKSPACE }}
+          terraform workspace select ${{ github.event.inputs.environment || 'prod' }} 2>/dev/null || \
+            terraform workspace new ${{ github.event.inputs.environment || 'prod' }}
           echo "Using workspace: $(terraform workspace show)"
 
       - name: Terraform Plan
