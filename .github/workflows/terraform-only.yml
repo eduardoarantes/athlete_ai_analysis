@@ -44,7 +44,9 @@ jobs:
       - name: Create dummy Lambda zip
         run: |
           mkdir -p ../../dist
-          echo "placeholder" > ../../dist/lambda.zip
+          echo "# placeholder" > /tmp/placeholder.py
+          cd /tmp && zip -j ../../dist/lambda.zip placeholder.py
+        working-directory: infrastructure/terraform
 
       - name: Terraform Init
         run: |
