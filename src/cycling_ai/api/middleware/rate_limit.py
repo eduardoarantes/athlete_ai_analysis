@@ -191,7 +191,7 @@ def rate_limit(config: RateLimitConfig) -> Callable[..., Any]:
 
 def check_rate_limit_dependency(
     config: RateLimitConfig,
-) -> Callable[..., None]:
+) -> Callable[..., Any]:
     """FastAPI dependency for rate limiting.
 
     Usage:
