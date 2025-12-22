@@ -100,7 +100,7 @@ resource "aws_lambda_function_url" "api" {
   cors {
     allow_credentials = true
     allow_origins     = ["*"] # Will be restricted in production
-    allow_methods     = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    allow_methods     = ["*"] # Use wildcard to avoid AWS validation issues
     allow_headers     = ["*"]
     expose_headers    = ["*"]
     max_age           = 86400
