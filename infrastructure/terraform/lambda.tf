@@ -39,6 +39,10 @@ resource "aws_lambda_function" "api" {
   memory_size       = local.config.lambda_memory
   source_code_hash  = filebase64sha256("${path.module}/../../dist/lambda.zip")
 
+  # Limit concurrent executions to prevent abuse/cost overruns
+  # This protects against spam attacks on LLM endpoints
+  reserved_concurrent_executions = local.config.lambda_max_concurrency
+
   environment {
     variables = {
       ENVIRONMENT               = local.environment

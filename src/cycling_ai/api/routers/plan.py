@@ -16,6 +16,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 
 from cycling_ai.api.middleware.auth import User, get_current_user
+from cycling_ai.api.middleware.rate_limit import RATE_LIMITS, rate_limit
 from cycling_ai.api.models.common import ErrorResponse
 from cycling_ai.api.models.plan import JobStatusResponse, TrainingPlanRequest
 from cycling_ai.api.services.job_store import JobStatus, get_job_store
@@ -185,6 +186,7 @@ async def _execute_skeleton_plan_generation(
 
 
 @router.post("/generate", response_model=JobStatusResponse, status_code=202)
+@rate_limit(RATE_LIMITS["plan_generate"])
 async def generate_plan(
     request: TrainingPlanRequest,
     background_tasks: BackgroundTasks,

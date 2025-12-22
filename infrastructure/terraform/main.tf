@@ -42,18 +42,21 @@ locals {
     dev = {
       lambda_memory              = 256
       lambda_timeout             = 60
+      lambda_max_concurrency     = 3 # Limit concurrent LLM calls
       log_retention              = 3
       enable_deletion_protection = false
     }
     staging = {
       lambda_memory              = 512
       lambda_timeout             = 180
+      lambda_max_concurrency     = 5 # Limit concurrent LLM calls
       log_retention              = 7
       enable_deletion_protection = false
     }
     prod = {
       lambda_memory              = 512
       lambda_timeout             = 300
+      lambda_max_concurrency     = 10 # Limit concurrent LLM calls
       log_retention              = 14
       enable_deletion_protection = true
     }

@@ -16,6 +16,7 @@ from fastapi.responses import JSONResponse
 
 from cycling_ai.api.config import settings
 from cycling_ai.api.middleware.auth import User, get_current_user
+from cycling_ai.api.middleware.rate_limit import RATE_LIMITS, rate_limit
 from cycling_ai.api.models.analysis import (
     AnalysisJobStatusResponse,
     PerformanceAnalysisRequest,
@@ -218,6 +219,7 @@ async def _execute_performance_analysis(
 
 
 @router.post("/performance", response_model=AnalysisJobStatusResponse, status_code=202)
+@rate_limit(RATE_LIMITS["analysis_performance"])
 async def analyze_performance(
     request: PerformanceAnalysisRequest,
     background_tasks: BackgroundTasks,
