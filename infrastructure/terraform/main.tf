@@ -74,6 +74,17 @@ provider "aws" {
   }
 }
 
+# Provider alias for us-east-1 (needed to destroy orphaned ACM resources)
+# Can be removed after ACM resources are destroyed from state
+provider "aws" {
+  alias  = "us_east_1"
+  region = "us-east-1"
+
+  default_tags {
+    tags = local.common_tags
+  }
+}
+
 # Data sources for AWS account info
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
