@@ -262,13 +262,25 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Get AWS Account ID
+        id: aws-account
+        run: echo "account_id=$(aws sts get-caller-identity --query Account --output text)" >> $GITHUB_OUTPUT
+
+      - name: Upload Lambda package to S3
+        run: |
+          S3_BUCKET="cycling-ai-${{ env.TF_WORKSPACE }}-lambda-code-${{ steps.aws-account.outputs.account_id }}"
+          echo "Uploading to S3 bucket: $S3_BUCKET"
+          aws s3 cp dist/lambda.zip "s3://${S3_BUCKET}/lambda.zip"
+
       - name: Deploy to Lambda
         run: |
           FUNCTION_NAME="cycling-ai-${{ env.TF_WORKSPACE }}-api"
-          echo "Deploying to Lambda function: $FUNCTION_NAME"
+          S3_BUCKET="cycling-ai-${{ env.TF_WORKSPACE }}-lambda-code-${{ steps.aws-account.outputs.account_id }}"
+          echo "Deploying to Lambda function: $FUNCTION_NAME from S3"
           aws lambda update-function-code \
             --function-name "$FUNCTION_NAME" \
-            --zip-file fileb://dist/lambda.zip \
+            --s3-bucket "$S3_BUCKET" \
+            --s3-key "lambda.zip" \
             --publish
 
       - name: Wait for Lambda update
