@@ -11,57 +11,69 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/python-test
+  PYTHON_IMAGE_NAME: ${{ github.repository }}/python-test
+  WEB_IMAGE_NAME: ${{ github.repository }}/web-test
 
 jobs:
   web-quality-checks:
-    name: Web App Quality Checks
+    name: Web App Quality Checks (Docker)
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./web
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          version: 9
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Get pnpm store directory
-        shell: bash
+      # Generate a cache key based on pnpm-lock.yaml
+      - name: Generate cache key
+        id: cache-key
+        run: echo "key=deps-${{ hashFiles('web/pnpm-lock.yaml') }}" >> $GITHUB_OUTPUT
+
+      - name: Build and cache test image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/web-test.Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}:${{ steps.cache-key.outputs.key }}
+            ${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}:latest
+          cache-from: |
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}:${{ steps.cache-key.outputs.key }}
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}:latest
+
+      - name: Run type check
         run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+          docker run --rm ${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}:${{ github.sha }} \
+            pnpm type-check
 
-      - name: Setup pnpm cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+      - name: Run lint
+        run: |
+          docker run --rm ${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}:${{ github.sha }} \
+            pnpm lint
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Run format check
+        run: |
+          docker run --rm ${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}:${{ github.sha }} \
+            pnpm format:check
 
-      - name: Type check
-        run: pnpm type-check
-
-      - name: Lint
-        run: pnpm lint
-
-      - name: Format check
-        run: pnpm format:check
-
-      - name: Build
-        run: pnpm build
+      - name: Run build
+        run: |
+          docker run --rm ${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}:${{ github.sha }} \
+            pnpm build
 
   python-tests:
     name: Python Tests (Docker)
@@ -96,25 +108,25 @@ jobs:
           file: docker/python-test.Dockerfile
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.cache-key.outputs.key }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.PYTHON_IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.PYTHON_IMAGE_NAME }}:${{ steps.cache-key.outputs.key }}
+            ${{ env.REGISTRY }}/${{ env.PYTHON_IMAGE_NAME }}:latest
           # Use registry as cache source - no local cache needed
           cache-from: |
-            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.cache-key.outputs.key }}
-            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.PYTHON_IMAGE_NAME }}:${{ steps.cache-key.outputs.key }}
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.PYTHON_IMAGE_NAME }}:latest
 
       - name: Run tests
         run: |
-          docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+          docker run --rm ${{ env.REGISTRY }}/${{ env.PYTHON_IMAGE_NAME }}:${{ github.sha }} \
             pytest tests/ -v --tb=short --cov=src/cycling_ai --cov-report=term-missing
 
       - name: Run type check
         run: |
-          docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+          docker run --rm ${{ env.REGISTRY }}/${{ env.PYTHON_IMAGE_NAME }}:${{ github.sha }} \
             mypy src/cycling_ai --strict
 
       - name: Run lint check
         run: |
-          docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+          docker run --rm ${{ env.REGISTRY }}/${{ env.PYTHON_IMAGE_NAME }}:${{ github.sha }} \
             ruff check src/cycling_ai
