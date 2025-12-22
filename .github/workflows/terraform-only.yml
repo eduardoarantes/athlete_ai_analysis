@@ -41,23 +41,12 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Download Lambda artifact from latest deploy
+      - name: Create dummy Lambda zip
         run: |
           mkdir -p dist
-          # Get latest deploy run ID that has Lambda artifact
-          RUN_ID=$(gh run list --workflow=deploy.yml --limit=5 --json databaseId -q '.[0].databaseId')
-          if [ -n "$RUN_ID" ]; then
-            gh run download $RUN_ID -n lambda-package -D dist/ 2>/dev/null || true
-          fi
-          # Create valid placeholder if download failed (Lambda needs handler)
-          if [ ! -f dist/lambda.zip ]; then
-            echo "Creating placeholder Lambda zip..."
-            echo 'def handler(event, context): return {"statusCode": 200}' > /tmp/lambda_function.py
-            zip -j dist/lambda.zip /tmp/lambda_function.py
-          fi
+          echo 'def handler(event, context): return {"statusCode": 200}' > /tmp/lambda_function.py
+          zip -j dist/lambda.zip /tmp/lambda_function.py
           ls -la dist/
-        env:
-          GH_TOKEN: ${{ github.token }}
 
       - name: Terraform Init
         run: |
