@@ -85,6 +85,21 @@ resource "aws_lambda_permission" "cloudwatch" {
   source_arn    = "${aws_cloudwatch_log_group.lambda.arn}:*"
 }
 
-# NOTE: Lambda is now PRIVATE - no public URL or API Gateway
-# EC2 instance invokes Lambda directly using AWS SDK via IAM role
+# Lambda Function URL for direct HTTPS access
+# Required for Amplify (and other clients) to call the API
+resource "aws_lambda_function_url" "api" {
+  function_name      = aws_lambda_function.api.function_name
+  authorization_type = "NONE" # Public access - API handles its own auth via JWT
+
+  cors {
+    allow_credentials = true
+    allow_origins     = ["*"] # Will be restricted in production
+    allow_methods     = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    allow_headers     = ["*"]
+    expose_headers    = ["*"]
+    max_age           = 86400
+  }
+}
+
+# NOTE: EC2 can still invoke Lambda directly via IAM role
 # See ec2_web.tf for the IAM policy that grants invoke permission

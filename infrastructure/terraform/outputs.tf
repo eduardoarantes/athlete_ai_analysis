@@ -22,6 +22,11 @@ output "lambda_function_arn" {
   value       = aws_lambda_function.api.arn
 }
 
+output "lambda_function_url" {
+  description = "Lambda Function URL for direct HTTPS access"
+  value       = aws_lambda_function_url.api.function_url
+}
+
 # ECR outputs
 output "ecr_repository_url" {
   description = "ECR repository URL for Next.js Docker image"
@@ -105,4 +110,31 @@ output "web_env_vars" {
     LAMBDA_FUNCTION_NAME = aws_lambda_function.api.function_name
   }
   sensitive = true
+}
+
+# AWS Amplify outputs
+output "amplify_app_id" {
+  description = "Amplify App ID"
+  value       = aws_amplify_app.web.id
+}
+
+output "amplify_app_arn" {
+  description = "Amplify App ARN"
+  value       = aws_amplify_app.web.arn
+}
+
+output "amplify_default_domain" {
+  description = "Amplify default domain (auto-generated)"
+  value       = aws_amplify_app.web.default_domain
+}
+
+output "amplify_main_branch_url" {
+  description = "URL for the main branch deployment"
+  value       = "https://main.${aws_amplify_app.web.default_domain}"
+}
+
+output "amplify_webhook_url" {
+  description = "Webhook URL to trigger deployments"
+  value       = aws_amplify_webhook.main.url
+  sensitive   = true
 }

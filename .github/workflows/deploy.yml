@@ -1,13 +1,13 @@
 name: Deploy
 
 on:
-  # Push to main: Only build and test, no automatic deployment
+  # Push to main: Only build and test Lambda, no automatic deployment
+  # NOTE: Web is auto-deployed by AWS Amplify (not this workflow)
   push:
     branches:
       - main
     paths:
       - 'src/**'
-      - 'web/**'
       - 'infrastructure/**'
       - 'requirements-lambda.txt'
       - '.github/workflows/deploy.yml'
@@ -28,11 +28,7 @@ on:
         required: false
         default: true
         type: boolean
-      deploy_web:
-        description: 'Deploy web application'
-        required: false
-        default: true
-        type: boolean
+      # NOTE: Web is auto-deployed by AWS Amplify on push to main
       terraform_apply:
         description: 'Apply Terraform changes'
         required: false
@@ -42,7 +38,6 @@ on:
 env:
   AWS_REGION: ap-southeast-2
   PYTHON_VERSION: '3.11'
-  NODE_VERSION: '20'
   TERRAFORM_VERSION: '1.6.0'
   TF_WORKSPACE: ${{ github.event.inputs.environment || 'prod' }}
   # Flag to check if this is a manual deployment trigger
@@ -139,70 +134,20 @@ jobs:
           path: dist/lambda.zip
           retention-days: 1
 
-  # Build Next.js static export
-  # NOTE: Static export (output: 'export') is incompatible with Next.js API routes.
-  # The app has 26 API routes that require server-side execution.
-  # This job only runs on manual deployment trigger, not on push.
-  # CI workflow validates builds work (without static export mode).
-  # TODO: Consider alternative deployment strategies:
-  #   - Deploy Next.js as standalone to Lambda/EC2
-  #   - Move API routes to Python Lambda
-  #   - Use Vercel/Amplify for proper Next.js hosting
-  build-web:
-    name: Build Web Application
-    runs-on: ubuntu-latest
-    needs: test
-    # Only run on manual trigger - static export won't work with API routes
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_web == 'true'
-    outputs:
-      artifact-name: web-build
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-
-      - name: Setup pnpm cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
-      - name: Install dependencies
-        working-directory: ./web
-        run: pnpm install --frozen-lockfile
-
-      - name: Build static export
-        working-directory: ./web
-        env:
-          NEXT_EXPORT: 'true'
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
-          NEXT_PUBLIC_ENV: production
-        run: pnpm build
-
-      - name: Upload web artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: web-build
-          path: web/out
-          retention-days: 1
+  # =============================================================================
+  # WEB APPLICATION DEPLOYMENT
+  # =============================================================================
+  # The Next.js web app is now deployed via AWS Amplify (configured in Terraform).
+  # Amplify automatically builds and deploys on push to main branch.
+  #
+  # Benefits:
+  # - Full SSR support (all 26 API routes work)
+  # - Automatic builds on push
+  # - Preview deployments for PRs
+  # - No manual deployment needed
+  #
+  # See: infrastructure/terraform/amplify.tf
+  # =============================================================================
 
   # Deploy infrastructure with Terraform (manual trigger only)
   terraform:
@@ -253,6 +198,7 @@ jobs:
             -var="supabase_service_role_key=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
             -var="supabase_jwt_secret=${{ secrets.SUPABASE_JWT_SECRET }}" \
             -var="anthropic_api_key=${{ secrets.ANTHROPIC_API_KEY }}" \
+            -var="github_access_token=${{ secrets.GH_ACCESS_TOKEN }}" \
             -out=tfplan
 
       - name: Terraform Apply
@@ -296,73 +242,15 @@ jobs:
           aws lambda wait function-updated \
             --function-name "$FUNCTION_NAME"
 
-  # Deploy web to S3/CloudFront (manual trigger only)
-  deploy-web:
-    name: Deploy Web (${{ github.event.inputs.environment || 'prod' }})
-    runs-on: ubuntu-latest
-    needs: [build-web, terraform]
-    # Only run on manual trigger - no automatic deployment
-    if: always() && needs.build-web.result == 'success' && github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_web == 'true'
-    environment: ${{ github.event.inputs.environment || 'prod' }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Download web artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: web-build
-          path: web/out
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ${{ env.TERRAFORM_VERSION }}
-          terraform_wrapper: false
-
-      - name: Get deployment outputs from Terraform
-        id: tf-outputs
-        working-directory: infrastructure/terraform
-        run: |
-          terraform init -backend-config="bucket=${{ secrets.TERRAFORM_STATE_BUCKET }}"
-          terraform workspace select ${{ env.TF_WORKSPACE }} || terraform workspace new ${{ env.TF_WORKSPACE }}
-          echo "s3_bucket=$(terraform output -raw s3_bucket_name)" >> $GITHUB_OUTPUT
-          echo "cloudfront_id=$(terraform output -raw cloudfront_distribution_id)" >> $GITHUB_OUTPUT
-
-      - name: Deploy to S3
-        run: |
-          echo "Deploying to S3 bucket: ${{ steps.tf-outputs.outputs.s3_bucket }}"
-          aws s3 sync web/out/ s3://${{ steps.tf-outputs.outputs.s3_bucket }} \
-            --delete \
-            --cache-control "public, max-age=31536000, immutable" \
-            --exclude "*.html" \
-            --exclude "*.json"
-
-          # HTML and JSON files with shorter cache
-          aws s3 sync web/out/ s3://${{ steps.tf-outputs.outputs.s3_bucket }} \
-            --cache-control "public, max-age=0, must-revalidate" \
-            --include "*.html" \
-            --include "*.json"
-
-      - name: Invalidate CloudFront
-        run: |
-          echo "Invalidating CloudFront distribution: ${{ steps.tf-outputs.outputs.cloudfront_id }}"
-          aws cloudfront create-invalidation \
-            --distribution-id ${{ steps.tf-outputs.outputs.cloudfront_id }} \
-            --paths "/*"
+  # NOTE: Web deployment is now handled by AWS Amplify automatically.
+  # Amplify builds and deploys on every push to main.
+  # See: infrastructure/terraform/amplify.tf
 
   # Summary job
   summary:
     name: Deployment Summary
     runs-on: ubuntu-latest
-    needs: [deploy-lambda, deploy-web]
+    needs: [deploy-lambda]
     if: always()
     steps:
       - name: Summary
@@ -371,7 +259,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Environment:** ${{ env.TF_WORKSPACE }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Component | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Lambda | ${{ needs.deploy-lambda.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Web | ${{ needs.deploy-web.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Component | Status | Notes |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Lambda | ${{ needs.deploy-lambda.result }} | Manual deploy via this workflow |" >> $GITHUB_STEP_SUMMARY
+          echo "| Web | N/A | Auto-deployed via AWS Amplify |" >> $GITHUB_STEP_SUMMARY

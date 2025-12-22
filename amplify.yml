@@ -1,0 +1,27 @@
+version: 1
+applications:
+  - appRoot: web
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            # Install pnpm package manager
+            - npm install -g pnpm
+            # Install dependencies with frozen lockfile
+            - pnpm install --frozen-lockfile
+        build:
+          commands:
+            # Build Next.js in SSR mode (NOT static export)
+            # Amplify automatically sets NODE_ENV=production
+            - pnpm build
+      artifacts:
+        # Next.js build output directory
+        baseDirectory: .next
+        files:
+          - '**/*'
+      cache:
+        paths:
+          # Cache node_modules for faster builds
+          - node_modules/**/*
+          # Cache Next.js build cache
+          - .next/cache/**/*

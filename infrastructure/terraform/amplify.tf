@@ -1,0 +1,145 @@
+# AWS Amplify Configuration for Next.js Web Application
+#
+# This replaces the S3/CloudFront static hosting with Amplify,
+# which natively supports Next.js SSR and API routes.
+
+# Amplify App
+resource "aws_amplify_app" "web" {
+  name       = "${local.name_prefix}-web"
+  repository = var.github_repository
+
+  # GitHub access token for repository connection
+  access_token = var.github_access_token
+
+  # Build specification
+  build_spec = <<-EOT
+    version: 1
+    applications:
+      - appRoot: web
+        frontend:
+          phases:
+            preBuild:
+              commands:
+                - npm install -g pnpm
+                - pnpm install --frozen-lockfile
+            build:
+              commands:
+                - pnpm build
+          artifacts:
+            baseDirectory: .next
+            files:
+              - '**/*'
+          cache:
+            paths:
+              - node_modules/**/*
+              - .next/cache/**/*
+  EOT
+
+  # Environment variables for all branches
+  environment_variables = {
+    NEXT_PUBLIC_ENV = local.environment
+    # Note: Sensitive vars are set per-branch below
+  }
+
+  # Enable auto branch creation for feature branches (optional)
+  enable_auto_branch_creation = false
+
+  # Enable branch auto-build
+  enable_branch_auto_build = true
+
+  # Enable branch auto-deletion when branch is deleted in GitHub
+  enable_branch_auto_deletion = true
+
+  # Platform configuration for Next.js SSR
+  platform = "WEB_COMPUTE"
+
+  # Custom rules for SPA routing (handled by Next.js, but good fallback)
+  custom_rule {
+    source = "/<*>"
+    status = "404-200"
+    target = "/index.html"
+  }
+
+  tags = {
+    Name = "${local.name_prefix}-amplify-app"
+  }
+}
+
+# Main branch configuration
+resource "aws_amplify_branch" "main" {
+  app_id      = aws_amplify_app.web.id
+  branch_name = "main"
+
+  # Framework for Next.js SSR
+  framework = "Next.js - SSR"
+
+  # Enable auto-build on push
+  enable_auto_build = true
+
+  # Stage for this branch
+  stage = local.environment == "prod" ? "PRODUCTION" : "DEVELOPMENT"
+
+  # Environment variables specific to this branch
+  environment_variables = {
+    NEXT_PUBLIC_SUPABASE_URL      = var.supabase_url
+    NEXT_PUBLIC_SUPABASE_ANON_KEY = var.supabase_anon_key
+    NEXT_PUBLIC_API_URL           = aws_lambda_function_url.api.function_url
+    NEXT_PUBLIC_ENV               = local.environment
+    NEXT_PUBLIC_STRAVA_CLIENT_ID  = var.strava_client_id
+  }
+
+  tags = {
+    Name = "${local.name_prefix}-amplify-main"
+  }
+}
+
+# Optional: Development branch for staging
+resource "aws_amplify_branch" "develop" {
+  count = local.environment == "prod" ? 0 : 1
+
+  app_id      = aws_amplify_app.web.id
+  branch_name = "develop"
+
+  framework         = "Next.js - SSR"
+  enable_auto_build = true
+  stage             = "DEVELOPMENT"
+
+  environment_variables = {
+    NEXT_PUBLIC_SUPABASE_URL      = var.supabase_url
+    NEXT_PUBLIC_SUPABASE_ANON_KEY = var.supabase_anon_key
+    NEXT_PUBLIC_API_URL           = aws_lambda_function_url.api.function_url
+    NEXT_PUBLIC_ENV               = "development"
+    NEXT_PUBLIC_STRAVA_CLIENT_ID  = var.strava_client_id
+  }
+
+  tags = {
+    Name = "${local.name_prefix}-amplify-develop"
+  }
+}
+
+# Optional: Custom domain configuration
+resource "aws_amplify_domain_association" "main" {
+  count = var.custom_domain != "" ? 1 : 0
+
+  app_id      = aws_amplify_app.web.id
+  domain_name = var.custom_domain
+
+  # Main branch serves the apex domain
+  sub_domain {
+    branch_name = aws_amplify_branch.main.branch_name
+    prefix      = ""
+  }
+
+  # www subdomain redirects to apex
+  sub_domain {
+    branch_name = aws_amplify_branch.main.branch_name
+    prefix      = "www"
+  }
+}
+
+# Webhook for manual/programmatic deployments (optional)
+resource "aws_amplify_webhook" "main" {
+  app_id      = aws_amplify_app.web.id
+  branch_name = aws_amplify_branch.main.branch_name
+  description = "Trigger deployment for main branch"
+}

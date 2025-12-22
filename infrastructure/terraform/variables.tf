@@ -108,3 +108,17 @@ variable "certificate_arn" {
   type        = string
   default     = ""
 }
+
+# GitHub Configuration for Amplify
+variable "github_repository" {
+  description = "GitHub repository URL (e.g., https://github.com/username/repo)"
+  type        = string
+  default     = "https://github.com/eduardoarantes/athlete_ai_analysis"
+}
+
+variable "github_access_token" {
+  description = "GitHub personal access token for Amplify to access the repository"
+  type        = string
+  sensitive   = true
+  default     = ""
+}

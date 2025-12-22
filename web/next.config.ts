@@ -23,7 +23,6 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: isStaticExport,
   },
-  reactCompiler: true, // Enable React Compiler for automatic memoization
   async headers() {
     return [
       {
