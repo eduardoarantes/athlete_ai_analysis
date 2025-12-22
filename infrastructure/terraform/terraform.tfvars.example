@@ -28,5 +28,13 @@ lambda_memory_size = 512  # MB
 lambda_timeout     = 300  # seconds (5 min)
 
 # Custom Domain (optional)
-# custom_domain   = "app.yourdomain.com"
+# When set, Route 53 hosted zone is created and Amplify domain association is configured
+# After applying, update your domain registrar's nameservers to the Route 53 values
+custom_domain = "planmypeak.com"
+
+# Certificate ARN (optional - only needed for CloudFront, Amplify handles SSL automatically)
 # certificate_arn = "arn:aws:acm:us-east-1:123456789:certificate/..."
+
+# GitHub Configuration for Amplify
+github_repository    = "https://github.com/eduardoarantes/athlete_ai_analysis"
+github_access_token  = "ghp_xxxxxxxxxxxx"  # GitHub PAT with repo access

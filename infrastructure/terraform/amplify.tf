@@ -86,6 +86,7 @@ resource "aws_amplify_branch" "main" {
     NEXT_PUBLIC_API_URL           = aws_lambda_function_url.api.function_url
     NEXT_PUBLIC_ENV               = local.environment
     NEXT_PUBLIC_STRAVA_CLIENT_ID  = var.strava_client_id
+    NEXT_PUBLIC_APP_URL           = var.custom_domain != "" ? "https://${var.custom_domain}" : "https://${aws_amplify_app.web.default_domain}"
   }
 
   tags = {
@@ -110,6 +111,7 @@ resource "aws_amplify_branch" "develop" {
     NEXT_PUBLIC_API_URL           = aws_lambda_function_url.api.function_url
     NEXT_PUBLIC_ENV               = "development"
     NEXT_PUBLIC_STRAVA_CLIENT_ID  = var.strava_client_id
+    NEXT_PUBLIC_APP_URL           = "https://${aws_amplify_app.web.default_domain}"
   }
 
   tags = {

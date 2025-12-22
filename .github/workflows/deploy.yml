@@ -199,11 +199,36 @@ jobs:
             -var="supabase_jwt_secret=${{ secrets.SUPABASE_JWT_SECRET }}" \
             -var="anthropic_api_key=${{ secrets.ANTHROPIC_API_KEY }}" \
             -var="github_access_token=${{ secrets.GH_ACCESS_TOKEN }}" \
+            -var="strava_client_id=${{ secrets.STRAVA_CLIENT_ID }}" \
+            -var="strava_client_secret=${{ secrets.STRAVA_CLIENT_SECRET }}" \
+            -var="custom_domain=${{ vars.CUSTOM_DOMAIN }}" \
             -out=tfplan
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main'
         run: terraform apply -auto-approve tfplan
+
+      - name: Show Domain Configuration
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "## Domain Configuration" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Get Route 53 nameservers if custom domain is configured
+          NAMESERVERS=$(terraform output -json route53_nameservers 2>/dev/null || echo "[]")
+          if [ "$NAMESERVERS" != "[]" ]; then
+            echo "### Route 53 Nameservers" >> $GITHUB_STEP_SUMMARY
+            echo "Configure these in your domain registrar (Squarespace):" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "$NAMESERVERS" | jq -r '.[]' >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Show Amplify domain status
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Amplify App" >> $GITHUB_STEP_SUMMARY
+          terraform output -raw amplify_app_default_domain 2>/dev/null >> $GITHUB_STEP_SUMMARY || echo "Not available" >> $GITHUB_STEP_SUMMARY
 
   # Deploy Lambda function (manual trigger only)
   deploy-lambda:
