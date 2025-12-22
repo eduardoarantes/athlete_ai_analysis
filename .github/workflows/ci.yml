@@ -9,6 +9,10 @@ on:
     branches:
       - main
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/python-test
+
 jobs:
   web-quality-checks:
     name: Web App Quality Checks
@@ -60,50 +64,57 @@ jobs:
         run: pnpm build
 
   python-tests:
-    name: Python Tests
+    name: Python Tests (Docker)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          python-version: '3.11'
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
+      # Generate a cache key based on pyproject.toml and uv.lock
+      - name: Generate cache key
+        id: cache-key
+        run: echo "key=deps-${{ hashFiles('pyproject.toml', 'uv.lock') }}" >> $GITHUB_OUTPUT
+
+      - name: Build and cache test image
+        uses: docker/build-push-action@v5
         with:
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-
-      - name: Load cached venv
-        id: cached-poetry-dependencies
-        uses: actions/cache@v4
-        with:
-          path: .venv
-          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
-
-      - name: Install dependencies
-        run: poetry install --no-interaction --no-root
-
-      - name: Install project in editable mode with dev dependencies
-        run: |
-          source .venv/bin/activate
-          pip install -e ".[dev]"
+          context: .
+          file: docker/python-test.Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.cache-key.outputs.key }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          cache-from: |
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.cache-key.outputs.key }}
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          cache-to: type=inline
 
       - name: Run tests
         run: |
-          source .venv/bin/activate
-          pytest tests/ -v --tb=short
+          docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            pytest tests/ -v --tb=short --cov=src/cycling_ai --cov-report=term-missing
 
-      - name: Type check
+      - name: Run type check
         run: |
-          source .venv/bin/activate
-          mypy src/cycling_ai --strict
+          docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            mypy src/cycling_ai --strict
 
-      - name: Lint check
+      - name: Run lint check
         run: |
-          source .venv/bin/activate
-          ruff check src/cycling_ai
+          docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            ruff check src/cycling_ai
