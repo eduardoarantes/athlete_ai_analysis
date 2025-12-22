@@ -183,11 +183,15 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Terraform Init
-        run: terraform init -backend-config="bucket=${{ secrets.TERRAFORM_STATE_BUCKET }}"
+        run: |
+          # Remove any stale workspace selection to prevent init prompts
+          rm -f .terraform/environment
+          terraform init -backend-config="bucket=${{ secrets.TERRAFORM_STATE_BUCKET }}"
 
       - name: Select Terraform Workspace
         run: |
-          terraform workspace select ${{ env.TF_WORKSPACE }} || terraform workspace new ${{ env.TF_WORKSPACE }}
+          # Create workspace if it doesn't exist, then select it
+          terraform workspace select ${{ env.TF_WORKSPACE }} 2>/dev/null || terraform workspace new ${{ env.TF_WORKSPACE }}
           echo "Using workspace: $(terraform workspace show)"
 
       - name: Terraform Plan
