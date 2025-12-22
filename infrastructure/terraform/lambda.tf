@@ -41,7 +41,9 @@ resource "aws_lambda_function" "api" {
 
   # Limit concurrent executions to prevent abuse/cost overruns
   # This protects against spam attacks on LLM endpoints
-  reserved_concurrent_executions = local.config.lambda_max_concurrency
+  # Use -1 for unreserved concurrency (avoids account limit issues)
+  # The account needs at least 10 unreserved, so we can't reserve any
+  reserved_concurrent_executions = -1
 
   environment {
     variables = {
