@@ -35,23 +35,5 @@ output "route53_zone_id" {
 
 output "domain_status" {
   description = "Instructions for domain setup"
-  value = var.custom_domain != "" ? <<-EOT
-
-    Domain Setup Instructions for ${var.custom_domain}:
-
-    1. Update nameservers at your domain registrar to:
-       ${join("\n       ", aws_route53_zone.main[0].name_servers)}
-
-    2. Wait for DNS propagation (can take up to 48 hours)
-
-    3. Amplify will automatically:
-       - Request an SSL certificate
-       - Verify domain ownership via DNS
-       - Configure the domain
-
-    4. Check Amplify Console for domain status:
-       https://console.aws.amazon.com/amplify/
-
-  EOT
-  : "No custom domain configured"
+  value       = var.custom_domain != "" ? "Domain ${var.custom_domain} configured. Update nameservers at your registrar." : "No custom domain configured"
 }
