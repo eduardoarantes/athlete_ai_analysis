@@ -107,5 +107,4 @@ resource "aws_lambda_function_url" "api" {
   }
 }
 
-# NOTE: EC2 can still invoke Lambda directly via IAM role
-# See ec2_web.tf for the IAM policy that grants invoke permission
+# NOTE: Amplify app calls Lambda via the function URL (HTTPS)

@@ -2,7 +2,7 @@ name: Deploy
 
 on:
   # Push to main: Only build and test Lambda, no automatic deployment
-  # NOTE: Web is auto-deployed by AWS Amplify (not this workflow)
+  # NOTE: Web is auto-deployed by AWS Amplify on push to main
   push:
     branches:
       - main
@@ -28,7 +28,6 @@ on:
         required: false
         default: true
         type: boolean
-      # NOTE: Web is auto-deployed by AWS Amplify on push to main
       terraform_apply:
         description: 'Apply Terraform changes'
         required: false
@@ -40,8 +39,6 @@ env:
   PYTHON_VERSION: '3.11'
   TERRAFORM_VERSION: '1.6.0'
   TF_WORKSPACE: ${{ github.event.inputs.environment || 'prod' }}
-  # Flag to check if this is a manual deployment trigger
-  IS_MANUAL_DEPLOY: ${{ github.event_name == 'workflow_dispatch' }}
 
 jobs:
   # Run tests using cached Docker image from GHCR
@@ -123,14 +120,15 @@ jobs:
   # =============================================================================
   # WEB APPLICATION DEPLOYMENT
   # =============================================================================
-  # The Next.js web app is now deployed via AWS Amplify (configured in Terraform).
+  # The Next.js web app is deployed via AWS Amplify (configured in Terraform).
   # Amplify automatically builds and deploys on push to main branch.
   #
   # Benefits:
-  # - Full SSR support (all 26 API routes work)
+  # - Full SSR support (all API routes work)
   # - Automatic builds on push
   # - Preview deployments for PRs
   # - No manual deployment needed
+  # - Custom domain support built-in
   #
   # See: infrastructure/terraform/amplify.tf
   # =============================================================================
@@ -170,7 +168,6 @@ jobs:
 
       - name: Terraform Init
         env:
-          # Unset TF_WORKSPACE during init to prevent "workspace doesn't exist" prompt
           TF_WORKSPACE: ""
         run: |
           rm -f .terraform/environment
@@ -178,10 +175,8 @@ jobs:
 
       - name: Select Terraform Workspace
         env:
-          # Unset during workspace selection to use CLI commands
           TF_WORKSPACE: ""
         run: |
-          # Create workspace if it doesn't exist, then select it
           terraform workspace select ${{ github.event.inputs.environment || 'prod' }} 2>/dev/null || \
             terraform workspace new ${{ github.event.inputs.environment || 'prod' }}
           echo "Using workspace: $(terraform workspace show)"
@@ -203,28 +198,6 @@ jobs:
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main'
         run: terraform apply -auto-approve tfplan
-
-      - name: Show Domain Configuration
-        if: github.ref == 'refs/heads/main'
-        run: |
-          echo "## Domain Configuration" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          # Get Route 53 nameservers if custom domain is configured
-          NAMESERVERS=$(terraform output -json route53_nameservers 2>/dev/null || echo "[]")
-          if [ "$NAMESERVERS" != "[]" ]; then
-            echo "### Route 53 Nameservers" >> $GITHUB_STEP_SUMMARY
-            echo "Configure these in your domain registrar (Squarespace):" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            echo "$NAMESERVERS" | jq -r '.[]' >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-          fi
-
-          # Show Amplify domain status
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Amplify App" >> $GITHUB_STEP_SUMMARY
-          terraform output -raw amplify_app_default_domain 2>/dev/null >> $GITHUB_STEP_SUMMARY || echo "Not available" >> $GITHUB_STEP_SUMMARY
 
   # Deploy Lambda function (manual trigger only)
   deploy-lambda:
@@ -275,10 +248,6 @@ jobs:
           aws lambda wait function-updated \
             --function-name "$FUNCTION_NAME"
 
-  # NOTE: Web deployment is now handled by AWS Amplify automatically.
-  # Amplify builds and deploys on every push to main.
-  # See: infrastructure/terraform/amplify.tf
-
   # Summary job
   summary:
     name: Deployment Summary
@@ -295,4 +264,4 @@ jobs:
           echo "| Component | Status | Notes |" >> $GITHUB_STEP_SUMMARY
           echo "|-----------|--------|-------|" >> $GITHUB_STEP_SUMMARY
           echo "| Lambda | ${{ needs.deploy-lambda.result }} | Manual deploy via this workflow |" >> $GITHUB_STEP_SUMMARY
-          echo "| Web | N/A | Auto-deployed via AWS Amplify |" >> $GITHUB_STEP_SUMMARY
+          echo "| Web | N/A | Auto-deployed via AWS Amplify on push |" >> $GITHUB_STEP_SUMMARY

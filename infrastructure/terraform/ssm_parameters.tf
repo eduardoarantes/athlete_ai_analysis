@@ -78,12 +78,10 @@ resource "aws_ssm_parameter" "app_url" {
   name        = "${local.ssm_prefix}/app/url"
   description = "Application public URL"
   type        = "String"
-  value       = var.custom_domain != "" ? "https://${var.custom_domain}" : "https://${aws_cloudfront_distribution.web.domain_name}"
+  value       = var.custom_domain != "" ? "https://${var.custom_domain}" : "https://${aws_amplify_app.web.default_domain}"
 
   tags = {
     Name        = "${local.name_prefix}-app-url"
     Environment = local.environment
   }
-
-  depends_on = [aws_cloudfront_distribution.web]
 }
