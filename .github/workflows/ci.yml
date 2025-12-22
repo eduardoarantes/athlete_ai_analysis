@@ -99,10 +99,10 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.cache-key.outputs.key }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          # Use registry as cache source - no local cache needed
           cache-from: |
             type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.cache-key.outputs.key }}
             type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          cache-to: type=inline
 
       - name: Run tests
         run: |
