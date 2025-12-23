@@ -35,11 +35,14 @@ resource "aws_amplify_app" "web" {
               - .next/cache/**/*
   EOT
 
-  # Environment variables for all branches
+  # Environment variables for all branches (app-level)
+  # Server-side env vars must be set here for SSR functions
   environment_variables = {
     AMPLIFY_MONOREPO_APP_ROOT = "web"
     NEXT_PUBLIC_ENV           = local.environment
-    # Note: Sensitive vars are set per-branch below
+    # Server-side Strava OAuth (required for SSR API routes)
+    STRAVA_CLIENT_ID     = var.strava_client_id
+    STRAVA_CLIENT_SECRET = var.strava_client_secret
   }
 
   # Enable auto branch creation for feature branches (optional)
