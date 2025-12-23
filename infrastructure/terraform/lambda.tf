@@ -54,6 +54,11 @@ resource "aws_lambda_function" "api" {
       ANTHROPIC_API_KEY         = var.anthropic_api_key
       GOOGLE_API_KEY            = var.google_api_key
       OPENAI_API_KEY            = var.openai_api_key
+      # Strava OAuth
+      STRAVA_CLIENT_ID     = var.strava_client_id
+      STRAVA_CLIENT_SECRET = var.strava_client_secret
+      # App URL for OAuth callbacks
+      APP_URL = var.custom_domain != "" ? "https://${var.custom_domain}" : ""
       # AI Plan Generation
       WORKOUT_SOURCE = var.workout_source
       # Disable buffering for Lambda
