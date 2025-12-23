@@ -88,6 +88,9 @@ resource "aws_amplify_branch" "main" {
     NEXT_PUBLIC_ENV               = local.environment
     NEXT_PUBLIC_STRAVA_CLIENT_ID  = var.strava_client_id
     NEXT_PUBLIC_APP_URL           = var.custom_domain != "" ? "https://${var.custom_domain}" : "https://${aws_amplify_app.web.default_domain}"
+    # Server-side Strava OAuth credentials (not exposed to browser)
+    STRAVA_CLIENT_ID     = var.strava_client_id
+    STRAVA_CLIENT_SECRET = var.strava_client_secret
   }
 
   tags = {
@@ -113,6 +116,9 @@ resource "aws_amplify_branch" "develop" {
     NEXT_PUBLIC_ENV               = "development"
     NEXT_PUBLIC_STRAVA_CLIENT_ID  = var.strava_client_id
     NEXT_PUBLIC_APP_URL           = "https://${aws_amplify_app.web.default_domain}"
+    # Server-side Strava OAuth credentials (not exposed to browser)
+    STRAVA_CLIENT_ID     = var.strava_client_id
+    STRAVA_CLIENT_SECRET = var.strava_client_secret
   }
 
   tags = {
