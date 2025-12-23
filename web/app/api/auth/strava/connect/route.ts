@@ -9,6 +9,29 @@ import { randomBytes } from 'crypto'
  */
 export async function GET(_request: NextRequest) {
   try {
+    // Debug: Check env vars availability
+    const hasClientId = !!process.env.STRAVA_CLIENT_ID
+    const hasClientSecret = !!process.env.STRAVA_CLIENT_SECRET
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL
+
+    console.log('Strava connect debug:', {
+      hasClientId,
+      hasClientSecret,
+      appUrl,
+      clientIdLength: process.env.STRAVA_CLIENT_ID?.length,
+    })
+
+    if (!hasClientId || !hasClientSecret) {
+      console.error('Strava credentials missing in environment')
+      return NextResponse.json(
+        {
+          error: 'Strava not configured',
+          debug: { hasClientId, hasClientSecret, appUrl },
+        },
+        { status: 500 }
+      )
+    }
+
     // Check if user is authenticated
     const supabase = await createClient()
     const {
