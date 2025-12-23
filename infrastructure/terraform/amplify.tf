@@ -37,7 +37,8 @@ resource "aws_amplify_app" "web" {
 
   # Environment variables for all branches
   environment_variables = {
-    NEXT_PUBLIC_ENV = local.environment
+    AMPLIFY_MONOREPO_APP_ROOT = "web"
+    NEXT_PUBLIC_ENV           = local.environment
     # Note: Sensitive vars are set per-branch below
   }
 
