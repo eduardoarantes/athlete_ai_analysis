@@ -195,9 +195,9 @@ export class CyclingCoachService {
     const {
       data: { session },
     } = await supabase.auth.getSession()
-    const authHeaders = session?.access_token
+    const authHeaders: Record<string, string> = session?.access_token
       ? { Authorization: `Bearer ${session.access_token}` }
-      : undefined
+      : {}
 
     const poll = async (): Promise<void> => {
       try {

@@ -234,25 +234,67 @@ class AIPlanService:
 
         logger.info(f"[AI PLAN SERVICE] Step 2 complete: {library_result.get('weeks_added')} weeks added")
 
-        # Step 3: Load the finalized plan
-        plan_path = Path("/tmp") / f"{plan_id}_plan.json"
-        if not plan_path.exists():
-            raise ValueError(f"Plan file not found: {plan_path}")
+        # Step 3: Assemble the finalized plan from overview + week files
+        logger.info("[AI PLAN SERVICE] Step 3: Assembling plan from overview and week files...")
 
-        with open(plan_path) as f:
-            plan_data = json.load(f)
+        overview_path = Path("/tmp") / f"{plan_id}_overview.json"
+        if not overview_path.exists():
+            raise ValueError(f"Plan overview not found: {overview_path}")
 
-        # Clean up temporary files
-        for temp_file in [f"{plan_id}_overview.json", f"{plan_id}_plan.json"]:
-            temp_path = Path("/tmp") / temp_file
-            if temp_path.exists():
-                temp_path.unlink()
+        with open(overview_path) as f:
+            overview_data = json.load(f)
 
-        # Also clean up week files
+        # Load and combine all week details
+        weekly_plan = []
         for week_num in range(1, request.weeks + 1):
             week_path = Path("/tmp") / f"{plan_id}_week_{week_num}.json"
-            if week_path.exists():
-                week_path.unlink()
+            if not week_path.exists():
+                raise ValueError(f"Week {week_num} file not found: {week_path}")
+
+            with open(week_path) as f:
+                week_data = json.load(f)
+
+            # Get overview metadata for this week
+            week_overview = overview_data["weekly_overview"][week_num - 1]
+
+            # Merge: week metadata from overview + workouts from week file
+            merged_week = {
+                "week_number": week_num,
+                "phase": week_overview.get("phase"),
+                "phase_rationale": week_overview.get("phase_rationale"),
+                "weekly_focus": week_overview.get("weekly_focus"),
+                "weekly_watch_points": week_overview.get("weekly_watch_points"),
+                "week_tss": week_overview.get("target_tss", 0),
+                "workouts": week_data.get("workouts", []),
+            }
+            weekly_plan.append(merged_week)
+
+        logger.info(f"[AI PLAN SERVICE] Assembled {len(weekly_plan)} weeks into plan")
+
+        # Build complete plan structure matching TypeScript TrainingPlanData interface
+        plan_data = {
+            "athlete_profile": {
+                "ftp": request.athlete_profile.ftp,
+                "weight_kg": request.athlete_profile.weight_kg,
+                "max_hr": request.athlete_profile.max_hr,
+                "age": request.athlete_profile.age,
+                "goals": request.athlete_profile.goals or ["General fitness"],
+            },
+            "plan_metadata": {
+                "total_weeks": request.weeks,
+                "current_ftp": request.athlete_profile.ftp,
+                "target_ftp": request.target_ftp or request.athlete_profile.ftp * 1.05,
+            },
+            "coaching_notes": overview_data.get("coaching_notes", ""),
+            "monitoring_guidance": overview_data.get("monitoring_guidance", ""),
+            "weekly_plan": weekly_plan,
+        }
+
+        # Clean up temporary files
+        overview_path.unlink(missing_ok=True)
+        for week_num in range(1, request.weeks + 1):
+            week_path = Path("/tmp") / f"{plan_id}_week_{week_num}.json"
+            week_path.unlink(missing_ok=True)
 
         # Add metadata
         result = {
