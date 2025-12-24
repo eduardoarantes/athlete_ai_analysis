@@ -2,11 +2,22 @@
  * Strava API Service
  * Handles OAuth flow and API interactions with Strava
  *
- * In Amplify SSR, env vars are written to .env.production during build
- * and embedded into the Next.js server bundle by Next.js.
+ * Credentials are loaded from:
+ * 1. Environment variables (local dev)
+ * 2. Build-time generated config (Amplify SSR - lib/config/strava-credentials.js)
  */
 
 import { createClient } from '@/lib/supabase/server'
+
+// Load build-time generated credentials (for Amplify SSR)
+let buildTimeCredentials: { STRAVA_CLIENT_ID?: string; STRAVA_CLIENT_SECRET?: string } = {}
+try {
+  // This file is generated during Amplify build
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  buildTimeCredentials = require('@/lib/config/strava-credentials')
+} catch {
+  // File doesn't exist in local dev - that's expected
+}
 
 export interface StravaTokenResponse {
   token_type: 'Bearer'
@@ -72,12 +83,19 @@ export class StravaService {
   }
 
   /**
-   * Create a StravaService instance with credentials from environment
-   * In Amplify SSR, these are embedded at build time via .env.production
+   * Create a StravaService instance with credentials
+   * Tries: env vars first (local dev), then build-time config (Amplify SSR)
    */
   static async create(): Promise<StravaService> {
-    const clientId = process.env.STRAVA_CLIENT_ID
-    const clientSecret = process.env.STRAVA_CLIENT_SECRET
+    // Try environment variables first (local dev)
+    let clientId = process.env.STRAVA_CLIENT_ID
+    let clientSecret = process.env.STRAVA_CLIENT_SECRET
+
+    // Fall back to build-time generated config (Amplify SSR)
+    if (!clientId || !clientSecret) {
+      clientId = buildTimeCredentials.STRAVA_CLIENT_ID
+      clientSecret = buildTimeCredentials.STRAVA_CLIENT_SECRET
+    }
 
     if (!clientId || !clientSecret) {
       throw new Error(
