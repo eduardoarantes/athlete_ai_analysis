@@ -15,6 +15,9 @@ resource "aws_amplify_app" "web" {
   iam_service_role_arn = aws_iam_role.amplify_service_role.arn
 
   # Build specification
+  # Note: During build phase, the service role has SSM access
+  # We fetch secrets from SSM and write to .env.production.local
+  # which gets bundled into the server for runtime access
   build_spec = <<-EOT
     version: 1
     applications:
@@ -25,6 +28,19 @@ resource "aws_amplify_app" "web" {
               commands:
                 - npm install -g pnpm
                 - pnpm install --frozen-lockfile
+                # Fetch Strava credentials from SSM and write to .env.production.local
+                # These will be bundled into the server for runtime access
+                - echo "Fetching Strava credentials from SSM..."
+                - |
+                  STRAVA_CLIENT_ID=$(aws ssm get-parameter --name "${SSM_PARAMETER_PREFIX}/strava/client-id" --query 'Parameter.Value' --output text 2>/dev/null || echo "")
+                  STRAVA_CLIENT_SECRET=$(aws ssm get-parameter --name "${SSM_PARAMETER_PREFIX}/strava/client-secret" --with-decryption --query 'Parameter.Value' --output text 2>/dev/null || echo "")
+                  if [ -n "$STRAVA_CLIENT_ID" ] && [ -n "$STRAVA_CLIENT_SECRET" ]; then
+                    echo "STRAVA_CLIENT_ID=$STRAVA_CLIENT_ID" >> .env.production.local
+                    echo "STRAVA_CLIENT_SECRET=$STRAVA_CLIENT_SECRET" >> .env.production.local
+                    echo "Strava credentials written to .env.production.local"
+                  else
+                    echo "Warning: Could not fetch Strava credentials from SSM"
+                  fi
             build:
               commands:
                 - pnpm build
