@@ -76,8 +76,14 @@ export async function getParameter(name: string, withDecryption = true): Promise
 
     return value
   } catch (error) {
-    // Log error but don't expose details
-    console.error(`Failed to fetch SSM parameter ${fullPath}:`, error)
+    // Log detailed error for debugging
+    const errorDetails = {
+      fullPath,
+      errorName: error instanceof Error ? error.name : 'Unknown',
+      errorMessage: error instanceof Error ? error.message : String(error),
+      region: process.env.AWS_REGION,
+    }
+    console.error(`Failed to fetch SSM parameter:`, JSON.stringify(errorDetails))
     return null
   }
 }

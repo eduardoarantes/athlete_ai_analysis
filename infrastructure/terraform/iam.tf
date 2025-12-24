@@ -1,6 +1,7 @@
 # Cycling AI Analysis - IAM Roles and Policies
 
 # Amplify service role for SSR functions
+# Note: Lambda needs to be in trust policy for SSR functions to access AWS services
 resource "aws_iam_role" "amplify_service_role" {
   name = "${local.name_prefix}-amplify-service-role"
 
@@ -11,6 +12,13 @@ resource "aws_iam_role" "amplify_service_role" {
         Effect = "Allow"
         Principal = {
           Service = "amplify.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      },
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
         }
         Action = "sts:AssumeRole"
       }
