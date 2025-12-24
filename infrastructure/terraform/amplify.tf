@@ -15,9 +15,8 @@ resource "aws_amplify_app" "web" {
   iam_service_role_arn = aws_iam_role.amplify_service_role.arn
 
   # Build specification
-  # Note: During build phase, the service role has SSM access
-  # We fetch secrets from SSM and write to .env.production.local
-  # which gets bundled into the server for runtime access
+  # Note: STRAVA_CLIENT_ID and STRAVA_CLIENT_SECRET are set as branch env vars
+  # Amplify automatically writes them to .env.production for SSR runtime access
   build_spec = <<-EOT
     version: 1
     applications:
@@ -28,19 +27,6 @@ resource "aws_amplify_app" "web" {
               commands:
                 - npm install -g pnpm
                 - pnpm install --frozen-lockfile
-                # Fetch Strava credentials from SSM and write to .env.production.local
-                # These will be bundled into the server for runtime access
-                - echo "Fetching Strava credentials from SSM..."
-                - |
-                  STRAVA_CLIENT_ID=$(aws ssm get-parameter --name "${SSM_PARAMETER_PREFIX}/strava/client-id" --query 'Parameter.Value' --output text 2>/dev/null || echo "")
-                  STRAVA_CLIENT_SECRET=$(aws ssm get-parameter --name "${SSM_PARAMETER_PREFIX}/strava/client-secret" --with-decryption --query 'Parameter.Value' --output text 2>/dev/null || echo "")
-                  if [ -n "$STRAVA_CLIENT_ID" ] && [ -n "$STRAVA_CLIENT_SECRET" ]; then
-                    echo "STRAVA_CLIENT_ID=$STRAVA_CLIENT_ID" >> .env.production.local
-                    echo "STRAVA_CLIENT_SECRET=$STRAVA_CLIENT_SECRET" >> .env.production.local
-                    echo "Strava credentials written to .env.production.local"
-                  else
-                    echo "Warning: Could not fetch Strava credentials from SSM"
-                  fi
             build:
               commands:
                 - pnpm build
@@ -103,6 +89,10 @@ resource "aws_amplify_branch" "main" {
 
   # Environment variables specific to this branch
   # Note: AWS_REGION is automatically set by Amplify for SSR functions
+  # Note: STRAVA_CLIENT_ID and STRAVA_CLIENT_SECRET are set separately via CLI
+  # to avoid storing secrets in Terraform state. They are needed for SSR runtime.
+  # Command: aws amplify update-branch --app-id <app-id> --branch-name main \
+  #          --environment-variables "STRAVA_CLIENT_ID=xxx,STRAVA_CLIENT_SECRET=yyy"
   environment_variables = {
     NEXT_PUBLIC_SUPABASE_URL      = var.supabase_url
     NEXT_PUBLIC_SUPABASE_ANON_KEY = var.supabase_anon_key
@@ -110,8 +100,6 @@ resource "aws_amplify_branch" "main" {
     NEXT_PUBLIC_ENV               = local.environment
     NEXT_PUBLIC_STRAVA_CLIENT_ID  = var.strava_client_id
     NEXT_PUBLIC_APP_URL           = var.custom_domain != "" ? "https://${var.custom_domain}" : "https://${aws_amplify_app.web.default_domain}"
-    # SSM parameter path prefix for runtime secrets (credentials fetched at runtime)
-    SSM_PARAMETER_PREFIX = "/${local.name_prefix}"
   }
 
   tags = {
