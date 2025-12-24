@@ -50,6 +50,17 @@ export async function GET(_request: NextRequest) {
     return response
   } catch (error) {
     console.error('Strava connect error:', error)
-    return NextResponse.json({ error: 'Failed to initiate Strava connection' }, { status: 500 })
+    // Include debug info in development/production for troubleshooting
+    const debugInfo = {
+      hasSSMPrefix: !!process.env.SSM_PARAMETER_PREFIX,
+      ssmPrefix: process.env.SSM_PARAMETER_PREFIX,
+      hasRegion: !!process.env.AWS_REGION,
+      region: process.env.AWS_REGION,
+      errorMessage: error instanceof Error ? error.message : String(error),
+    }
+    return NextResponse.json(
+      { error: 'Failed to initiate Strava connection', debug: debugInfo },
+      { status: 500 }
+    )
   }
 }
