@@ -12,6 +12,14 @@ Design a high-level {training_plan_weeks}-week training plan overview for this a
 - Weekly time budget: {weekly_time_budget_hours} hours
 - Daily time caps: {daily_time_caps_json}
 
+**CRITICAL RULES FOR TRAINING DAYS**:
+- MAXIMUM 5 training days per week (cycling workouts: recovery, endurance, tempo, sweetspot, threshold, vo2max, mixed)
+- MINIMUM 2 rest days per week (use "rest" as the workout_type)
+- Strength-only days do NOT count as cycling training days
+- A day with ["endurance", "strength"] counts as 1 cycling training day
+- A day with ["strength"] only does NOT count as a cycling training day
+- A day with ["rest"] is a rest day - cannot combine rest with other workout types
+
 **Power Zones** (for reference):
 {power_zones}
 
@@ -59,7 +67,7 @@ Example for a 3-week plan (you must create {training_plan_weeks} weeks):
         {{"weekday": "Monday", "workout_types": ["rest"]}},
         {{"weekday": "Tuesday", "workout_types": ["endurance", "strength"]}},
         {{"weekday": "Wednesday", "workout_types": ["sweetspot"]}},
-        {{"weekday": "Thursday", "workout_types": ["recovery"]}},
+        {{"weekday": "Thursday", "workout_types": ["rest"]}},
         {{"weekday": "Friday", "workout_types": ["tempo", "strength"]}},
         {{"weekday": "Saturday", "workout_types": ["endurance"]}},
         {{"weekday": "Sunday", "workout_types": ["endurance"]}}
@@ -73,13 +81,13 @@ Example for a 3-week plan (you must create {training_plan_weeks} weeks):
       "weekly_focus": "FTP development",
       "weekly_watch_points": "Monitor power at threshold",
       "training_days": [
-        {{"weekday": "Monday", "workout_types": ["rest"]},
-        {{"weekday": "Tuesday", "workout_types": ["sweetspot"]},
+        {{"weekday": "Monday", "workout_types": ["rest"]}},
+        {{"weekday": "Tuesday", "workout_types": ["sweetspot"]}},
         {{"weekday": "Wednesday", "workout_types": ["recovery", "strength"]}},
-        {{"weekday": "Thursday", "workout_types": ["threshold"]},
-        {{"weekday": "Friday", "workout_types": ["rest"]},
-        {{"weekday": "Saturday", "workout_types": ["endurance"]},
-        {{"weekday": "Sunday", "workout_types": ["sweetspot", "strength"]}},
+        {{"weekday": "Thursday", "workout_types": ["threshold"]}},
+        {{"weekday": "Friday", "workout_types": ["rest"]}},
+        {{"weekday": "Saturday", "workout_types": ["endurance"]}},
+        {{"weekday": "Sunday", "workout_types": ["sweetspot", "strength"]}}
       ],
       "total_hours": 7.8
     }}

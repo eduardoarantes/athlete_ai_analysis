@@ -24,10 +24,11 @@ resource "aws_amplify_app" "web" {
                 - pnpm install --frozen-lockfile
             build:
               commands:
-                # Write server-side env vars to .env.production for SSR runtime
-                # (Amplify env vars are only available at build time, not runtime)
+                - echo "DEBUG - STRAVA_CLIENT_ID length = ${#STRAVA_CLIENT_ID}"
+                - echo "DEBUG - STRAVA_CLIENT_SECRET length = ${#STRAVA_CLIENT_SECRET}"
                 - echo "STRAVA_CLIENT_ID=$STRAVA_CLIENT_ID" >> .env.production
                 - echo "STRAVA_CLIENT_SECRET=$STRAVA_CLIENT_SECRET" >> .env.production
+                - cat .env.production | head -2
                 - pnpm build
           artifacts:
             baseDirectory: .next
