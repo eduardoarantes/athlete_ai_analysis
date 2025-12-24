@@ -28,6 +28,7 @@ const nextConfig: NextConfig = {
   serverRuntimeConfig: {
     stravaClientId: process.env.STRAVA_CLIENT_ID,
     stravaClientSecret: process.env.STRAVA_CLIENT_SECRET,
+    appUrl: process.env.NEXT_PUBLIC_APP_URL,
   },
   async headers() {
     return [

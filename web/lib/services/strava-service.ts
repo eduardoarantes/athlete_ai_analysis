@@ -70,10 +70,10 @@ export class StravaService {
   private clientSecret: string
   private readonly redirectUri: string
 
-  private constructor(clientId: string, clientSecret: string) {
+  private constructor(clientId: string, clientSecret: string, appUrl: string) {
     this.clientId = clientId
     this.clientSecret = clientSecret
-    this.redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/strava/callback`
+    this.redirectUri = `${appUrl}/api/auth/strava/callback`
   }
 
   /**
@@ -84,11 +84,15 @@ export class StravaService {
     // Try environment variables first (local dev)
     let clientId = process.env.STRAVA_CLIENT_ID
     let clientSecret = process.env.STRAVA_CLIENT_SECRET
+    let appUrl = process.env.NEXT_PUBLIC_APP_URL
 
     // Fall back to serverRuntimeConfig (embedded at build time for Amplify SSR)
     if (!clientId || !clientSecret) {
       clientId = serverRuntimeConfig?.stravaClientId
       clientSecret = serverRuntimeConfig?.stravaClientSecret
+    }
+    if (!appUrl) {
+      appUrl = serverRuntimeConfig?.appUrl
     }
 
     if (!clientId || !clientSecret) {
@@ -99,7 +103,11 @@ export class StravaService {
       )
     }
 
-    return new StravaService(clientId, clientSecret)
+    if (!appUrl) {
+      throw new Error('App URL not configured. NEXT_PUBLIC_APP_URL is missing.')
+    }
+
+    return new StravaService(clientId, clientSecret, appUrl)
   }
 
   /**
