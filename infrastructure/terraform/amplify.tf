@@ -39,13 +39,12 @@ resource "aws_amplify_app" "web" {
   EOT
 
   # Environment variables for all branches (app-level)
-  # SSM prefix for runtime credential fetching
+  # Note: AWS_REGION is automatically set by Amplify for SSR functions
   environment_variables = {
     AMPLIFY_MONOREPO_APP_ROOT = "web"
     NEXT_PUBLIC_ENV           = local.environment
-    # SSM parameter path prefix for runtime secrets
-    SSM_PARAMETER_PREFIX      = "/${local.name_prefix}"
-    AWS_REGION                = var.aws_region
+    # SSM parameter path prefix for runtime secrets (credentials fetched at runtime)
+    SSM_PARAMETER_PREFIX = "/${local.name_prefix}"
   }
 
   # Enable auto branch creation for feature branches (optional)
@@ -87,6 +86,7 @@ resource "aws_amplify_branch" "main" {
   stage = local.environment == "prod" ? "PRODUCTION" : "DEVELOPMENT"
 
   # Environment variables specific to this branch
+  # Note: AWS_REGION is automatically set by Amplify for SSR functions
   environment_variables = {
     NEXT_PUBLIC_SUPABASE_URL      = var.supabase_url
     NEXT_PUBLIC_SUPABASE_ANON_KEY = var.supabase_anon_key
@@ -94,9 +94,8 @@ resource "aws_amplify_branch" "main" {
     NEXT_PUBLIC_ENV               = local.environment
     NEXT_PUBLIC_STRAVA_CLIENT_ID  = var.strava_client_id
     NEXT_PUBLIC_APP_URL           = var.custom_domain != "" ? "https://${var.custom_domain}" : "https://${aws_amplify_app.web.default_domain}"
-    # SSM parameter path prefix for runtime secrets
-    SSM_PARAMETER_PREFIX          = "/${local.name_prefix}"
-    AWS_REGION                    = var.aws_region
+    # SSM parameter path prefix for runtime secrets (credentials fetched at runtime)
+    SSM_PARAMETER_PREFIX = "/${local.name_prefix}"
   }
 
   tags = {
@@ -115,6 +114,7 @@ resource "aws_amplify_branch" "develop" {
   enable_auto_build = true
   stage             = "DEVELOPMENT"
 
+  # Note: AWS_REGION is automatically set by Amplify for SSR functions
   environment_variables = {
     NEXT_PUBLIC_SUPABASE_URL      = var.supabase_url
     NEXT_PUBLIC_SUPABASE_ANON_KEY = var.supabase_anon_key
@@ -122,9 +122,8 @@ resource "aws_amplify_branch" "develop" {
     NEXT_PUBLIC_ENV               = "development"
     NEXT_PUBLIC_STRAVA_CLIENT_ID  = var.strava_client_id
     NEXT_PUBLIC_APP_URL           = "https://${aws_amplify_app.web.default_domain}"
-    # SSM parameter path prefix for runtime secrets
-    SSM_PARAMETER_PREFIX          = "/${local.name_prefix}"
-    AWS_REGION                    = var.aws_region
+    # SSM parameter path prefix for runtime secrets (credentials fetched at runtime)
+    SSM_PARAMETER_PREFIX = "/${local.name_prefix}"
   }
 
   tags = {
