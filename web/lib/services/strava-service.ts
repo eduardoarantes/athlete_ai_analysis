@@ -1,9 +1,13 @@
 /**
  * Strava API Service
  * Handles OAuth flow and API interactions with Strava
+ *
+ * Credentials are fetched from AWS SSM Parameter Store at runtime
+ * to support Amplify SSR environments where env vars are not available.
  */
 
 import { createClient } from '@/lib/supabase/server'
+import { getStravaCredentials } from './ssm-service'
 
 export interface StravaTokenResponse {
   token_type: 'Bearer'
@@ -58,18 +62,37 @@ interface StravaConnectionRow {
 }
 
 export class StravaService {
-  private readonly clientId: string
-  private readonly clientSecret: string
+  private clientId: string
+  private clientSecret: string
   private readonly redirectUri: string
 
-  constructor() {
-    this.clientId = process.env.STRAVA_CLIENT_ID!
-    this.clientSecret = process.env.STRAVA_CLIENT_SECRET!
+  private constructor(clientId: string, clientSecret: string) {
+    this.clientId = clientId
+    this.clientSecret = clientSecret
     this.redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/strava/callback`
+  }
 
-    if (!this.clientId || !this.clientSecret) {
-      throw new Error('Strava credentials not configured')
+  /**
+   * Create a StravaService instance with credentials from SSM
+   * This is the preferred way to instantiate the service.
+   */
+  static async create(): Promise<StravaService> {
+    // First, try environment variables (for local development)
+    let clientId = process.env.STRAVA_CLIENT_ID
+    let clientSecret = process.env.STRAVA_CLIENT_SECRET
+
+    // If not in env, fetch from SSM (for Amplify SSR)
+    if (!clientId || !clientSecret) {
+      const credentials = await getStravaCredentials()
+      clientId = credentials.clientId || undefined
+      clientSecret = credentials.clientSecret || undefined
     }
+
+    if (!clientId || !clientSecret) {
+      throw new Error('Strava credentials not configured (checked env and SSM)')
+    }
+
+    return new StravaService(clientId, clientSecret)
   }
 
   /**

@@ -32,8 +32,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/dashboard?strava_error=invalid_state', request.url))
     }
 
-    // Exchange code for tokens
-    const stravaService = new StravaService()
+    // Exchange code for tokens (credentials from SSM)
+    const stravaService = await StravaService.create()
     const tokenResponse = await stravaService.exchangeCodeForToken(code)
 
     // Store connection in database

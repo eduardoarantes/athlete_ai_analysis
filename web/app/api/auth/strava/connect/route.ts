@@ -9,23 +9,6 @@ import { randomBytes } from 'crypto'
  */
 export async function GET(_request: NextRequest) {
   try {
-    // Debug: Check env vars availability
-    const debugInfo = {
-      hasClientId: !!process.env.STRAVA_CLIENT_ID,
-      hasClientSecret: !!process.env.STRAVA_CLIENT_SECRET,
-      appUrl: process.env.NEXT_PUBLIC_APP_URL,
-      nodeEnv: process.env.NODE_ENV,
-      clientIdLength: process.env.STRAVA_CLIENT_ID?.length,
-    }
-    console.log('Strava connect debug:', debugInfo)
-
-    if (!process.env.STRAVA_CLIENT_ID || !process.env.STRAVA_CLIENT_SECRET) {
-      return NextResponse.json(
-        { error: 'Strava not configured', debug: debugInfo },
-        { status: 500 }
-      )
-    }
-
     // Check if user is authenticated
     const supabase = await createClient()
     const {
@@ -39,8 +22,8 @@ export async function GET(_request: NextRequest) {
     // Generate state token for CSRF protection
     const state = randomBytes(32).toString('hex')
 
-    // Generate Strava authorization URL
-    const stravaService = new StravaService()
+    // Generate Strava authorization URL (credentials from SSM)
+    const stravaService = await StravaService.create()
     const authUrl = stravaService.getAuthorizationUrl(state)
 
     // Create redirect response to Strava with cookies

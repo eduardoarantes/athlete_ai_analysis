@@ -21,7 +21,7 @@ export async function executeStravaSyncJob(
   payload: StravaSyncJobPayload
 ): Promise<StravaSyncJobResult> {
   const startTime = new Date().toISOString()
-  const syncService = new StravaSyncService()
+  const syncService = await StravaSyncService.create()
 
   errorLogger.logInfo(`Starting Strava sync job ${jobId}`, {
     userId: payload.userId,

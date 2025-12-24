@@ -27,7 +27,7 @@ export async function POST(_request: NextRequest) {
     // Revoke access on Strava
     if (connection?.access_token) {
       try {
-        const stravaService = new StravaService()
+        const stravaService = await StravaService.create()
         await stravaService.deauthorize(connection.access_token)
       } catch (error) {
         // Continue even if deauthorization fails

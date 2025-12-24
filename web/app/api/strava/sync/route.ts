@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
         syncOptions.after = after
       } else if (isIncremental) {
         // NEW: Auto-calculate 'after' from last_sync_at
-        const syncService = new StravaSyncService()
+        const syncService = await StravaSyncService.create()
         const lastSync = await syncService.getLastSyncTime(user.id)
 
         if (lastSync) {
@@ -290,7 +290,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Strava not connected' }, { status: 400 })
     }
 
-    const syncService = new StravaSyncService()
+    const syncService = await StravaSyncService.create()
     const activityCount = await syncService.getActivityCount(user.id)
 
     return NextResponse.json({

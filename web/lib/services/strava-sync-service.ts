@@ -30,8 +30,17 @@ export interface SyncProgress {
 export class StravaSyncService {
   private stravaService: StravaService
 
-  constructor() {
-    this.stravaService = new StravaService()
+  private constructor(stravaService: StravaService) {
+    this.stravaService = stravaService
+  }
+
+  /**
+   * Create a StravaSyncService instance
+   * Uses async factory pattern to fetch credentials from SSM
+   */
+  static async create(): Promise<StravaSyncService> {
+    const stravaService = await StravaService.create()
+    return new StravaSyncService(stravaService)
   }
 
   /**

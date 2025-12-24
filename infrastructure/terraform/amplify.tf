@@ -11,6 +11,9 @@ resource "aws_amplify_app" "web" {
   # GitHub access token for repository connection
   access_token = var.github_access_token
 
+  # IAM service role for SSM access
+  iam_service_role_arn = aws_iam_role.amplify_service_role.arn
+
   # Build specification
   build_spec = <<-EOT
     version: 1
@@ -24,11 +27,6 @@ resource "aws_amplify_app" "web" {
                 - pnpm install --frozen-lockfile
             build:
               commands:
-                - echo "DEBUG - STRAVA_CLIENT_ID length = ${#STRAVA_CLIENT_ID}"
-                - echo "DEBUG - STRAVA_CLIENT_SECRET length = ${#STRAVA_CLIENT_SECRET}"
-                - echo "STRAVA_CLIENT_ID=$STRAVA_CLIENT_ID" >> .env.production
-                - echo "STRAVA_CLIENT_SECRET=$STRAVA_CLIENT_SECRET" >> .env.production
-                - cat .env.production | head -2
                 - pnpm build
           artifacts:
             baseDirectory: .next
@@ -41,13 +39,13 @@ resource "aws_amplify_app" "web" {
   EOT
 
   # Environment variables for all branches (app-level)
-  # Server-side env vars must be set here for SSR functions
+  # SSM prefix for runtime credential fetching
   environment_variables = {
     AMPLIFY_MONOREPO_APP_ROOT = "web"
     NEXT_PUBLIC_ENV           = local.environment
-    # Server-side Strava OAuth (required for SSR API routes)
-    STRAVA_CLIENT_ID     = var.strava_client_id
-    STRAVA_CLIENT_SECRET = var.strava_client_secret
+    # SSM parameter path prefix for runtime secrets
+    SSM_PARAMETER_PREFIX      = "/${local.name_prefix}"
+    AWS_REGION                = var.aws_region
   }
 
   # Enable auto branch creation for feature branches (optional)
@@ -96,9 +94,9 @@ resource "aws_amplify_branch" "main" {
     NEXT_PUBLIC_ENV               = local.environment
     NEXT_PUBLIC_STRAVA_CLIENT_ID  = var.strava_client_id
     NEXT_PUBLIC_APP_URL           = var.custom_domain != "" ? "https://${var.custom_domain}" : "https://${aws_amplify_app.web.default_domain}"
-    # Server-side Strava OAuth credentials (not exposed to browser)
-    STRAVA_CLIENT_ID     = var.strava_client_id
-    STRAVA_CLIENT_SECRET = var.strava_client_secret
+    # SSM parameter path prefix for runtime secrets
+    SSM_PARAMETER_PREFIX          = "/${local.name_prefix}"
+    AWS_REGION                    = var.aws_region
   }
 
   tags = {
@@ -124,9 +122,9 @@ resource "aws_amplify_branch" "develop" {
     NEXT_PUBLIC_ENV               = "development"
     NEXT_PUBLIC_STRAVA_CLIENT_ID  = var.strava_client_id
     NEXT_PUBLIC_APP_URL           = "https://${aws_amplify_app.web.default_domain}"
-    # Server-side Strava OAuth credentials (not exposed to browser)
-    STRAVA_CLIENT_ID     = var.strava_client_id
-    STRAVA_CLIENT_SECRET = var.strava_client_secret
+    # SSM parameter path prefix for runtime secrets
+    SSM_PARAMETER_PREFIX          = "/${local.name_prefix}"
+    AWS_REGION                    = var.aws_region
   }
 
   tags = {

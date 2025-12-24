@@ -243,7 +243,7 @@ async function processWebhookEvent(event: StravaWebhookEvent): Promise<void> {
       })
     } else {
       // For create/update: fetch activity details from Strava
-      const stravaService = new StravaService()
+      const stravaService = await StravaService.create()
 
       // Get valid access token (refreshes automatically if expired)
       const accessToken = await stravaService.getValidAccessToken(connection.user_id)
