@@ -15,8 +15,7 @@ resource "aws_amplify_app" "web" {
   iam_service_role_arn = aws_iam_role.amplify_service_role.arn
 
   # Build specification
-  # Note: STRAVA credentials are generated into lib/config/strava-credentials.js at build time
-  # This file is then bundled into the Next.js server for SSR runtime access
+  # Note: STRAVA credentials are embedded via next.config.ts serverRuntimeConfig at build time
   # (Amplify SSR Lambda doesn't have access to console env vars at runtime)
   build_spec = <<-EOT
     version: 1
@@ -28,16 +27,6 @@ resource "aws_amplify_app" "web" {
               commands:
                 - npm install -g pnpm
                 - pnpm install --frozen-lockfile
-                - |
-                  echo "Creating server config with embedded credentials..."
-                  cat > lib/config/strava-credentials.js << EOJS
-                  // Auto-generated at build time - embedded credentials for SSR runtime
-                  module.exports = {
-                    STRAVA_CLIENT_ID: "$${STRAVA_CLIENT_ID}",
-                    STRAVA_CLIENT_SECRET: "$${STRAVA_CLIENT_SECRET}"
-                  };
-                  EOJS
-                  echo "Server config created"
             build:
               commands:
                 - pnpm build
