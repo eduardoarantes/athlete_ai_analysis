@@ -2,12 +2,11 @@
  * Strava API Service
  * Handles OAuth flow and API interactions with Strava
  *
- * Credentials are fetched from AWS SSM Parameter Store at runtime
- * to support Amplify SSR environments where env vars are not available.
+ * In Amplify SSR, env vars are written to .env.production during build
+ * and embedded into the Next.js server bundle by Next.js.
  */
 
 import { createClient } from '@/lib/supabase/server'
-import { getStravaCredentials } from './ssm-service'
 
 export interface StravaTokenResponse {
   token_type: 'Bearer'
@@ -73,23 +72,19 @@ export class StravaService {
   }
 
   /**
-   * Create a StravaService instance with credentials from SSM
-   * This is the preferred way to instantiate the service.
+   * Create a StravaService instance with credentials from environment
+   * In Amplify SSR, these are embedded at build time via .env.production
    */
   static async create(): Promise<StravaService> {
-    // First, try environment variables (for local development)
-    let clientId = process.env.STRAVA_CLIENT_ID
-    let clientSecret = process.env.STRAVA_CLIENT_SECRET
-
-    // If not in env, fetch from SSM (for Amplify SSR)
-    if (!clientId || !clientSecret) {
-      const credentials = await getStravaCredentials()
-      clientId = credentials.clientId || undefined
-      clientSecret = credentials.clientSecret || undefined
-    }
+    const clientId = process.env.STRAVA_CLIENT_ID
+    const clientSecret = process.env.STRAVA_CLIENT_SECRET
 
     if (!clientId || !clientSecret) {
-      throw new Error('Strava credentials not configured (checked env and SSM)')
+      throw new Error(
+        'Strava credentials not configured. ' +
+          `STRAVA_CLIENT_ID: ${clientId ? 'set' : 'missing'}, ` +
+          `STRAVA_CLIENT_SECRET: ${clientSecret ? 'set' : 'missing'}`
+      )
     }
 
     return new StravaService(clientId, clientSecret)

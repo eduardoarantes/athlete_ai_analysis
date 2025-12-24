@@ -1,0 +1,22 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm install -g pnpm
+        - pnpm install --frozen-lockfile
+    build:
+      commands:
+        # Write Strava credentials to .env.production for Next.js to embed during build
+        - echo "STRAVA_CLIENT_ID=${STRAVA_CLIENT_ID}" >> .env.production
+        - echo "STRAVA_CLIENT_SECRET=${STRAVA_CLIENT_SECRET}" >> .env.production
+        - echo "Created .env.production with Strava credentials"
+        - pnpm build
+  artifacts:
+    baseDirectory: .next
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
+      - .next/cache/**/*
