@@ -115,9 +115,9 @@ export class CyclingCoachService {
       const {
         data: { session },
       } = await supabase.auth.getSession()
-      const authHeaders = session?.access_token
+      const authHeaders: Record<string, string> = session?.access_token
         ? { Authorization: `Bearer ${session.access_token}` }
-        : undefined
+        : {}
 
       // Call Python API to generate plan (via Lambda in production, HTTP in dev)
       const response = await invokePythonApi<{ job_id: string }>({
