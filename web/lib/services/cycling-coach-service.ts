@@ -111,10 +111,19 @@ export class CyclingCoachService {
         .map((day) => day.charAt(0).toUpperCase() + day.slice(1))
         .join(', ')
 
+      // Get auth token for Python API
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      const authHeaders = session?.access_token
+        ? { Authorization: `Bearer ${session.access_token}` }
+        : undefined
+
       // Call Python API to generate plan (via Lambda in production, HTTP in dev)
       const response = await invokePythonApi<{ job_id: string }>({
         method: 'POST',
         path: '/api/v1/plan/generate',
+        headers: authHeaders,
         body: {
           athlete_profile: {
             ftp: params.profile.ftp,
@@ -182,6 +191,14 @@ export class CyclingCoachService {
     const maxAttempts = 60 // 5 minutes max (5s intervals)
     let attempts = 0
 
+    // Get auth token for Python API calls
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    const authHeaders = session?.access_token
+      ? { Authorization: `Bearer ${session.access_token}` }
+      : undefined
+
     const poll = async (): Promise<void> => {
       try {
         const response = await invokePythonApi<{
@@ -192,6 +209,7 @@ export class CyclingCoachService {
         }>({
           method: 'GET',
           path: `/api/v1/plan/status/${apiJobId}`,
+          headers: authHeaders,
         })
 
         if (response.statusCode >= 400) {
