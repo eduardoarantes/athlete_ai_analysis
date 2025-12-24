@@ -52,8 +52,7 @@ class APISettings(BaseSettings):
     # Workout source: "library" (fast, deterministic) or "llm" (flexible)
     # "library" uses LLM for plan structure, then selects workouts from curated library
     # "llm" generates entire plan including workouts via LLM
-    # Note: "library" mode requires LLM orchestration - use "llm" for direct API calls
-    workout_source: str = "llm"
+    workout_source: str = "library"
 
     # Model configuration
     model_config = SettingsConfigDict(

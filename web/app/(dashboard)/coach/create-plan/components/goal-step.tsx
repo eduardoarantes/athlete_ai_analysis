@@ -70,13 +70,14 @@ export function GoalStep({ data, onUpdate }: GoalStepProps) {
               <Label
                 key={goalId}
                 htmlFor={goalId}
+                onClick={() => handleGoalSelect(goalId)}
                 className={`flex items-start gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
                   isSelected
                     ? 'border-primary bg-primary/5'
                     : 'border-border hover:border-primary/50'
                 }`}
               >
-                <RadioGroupItem value={goalId} id={goalId} className="mt-1" />
+                <RadioGroupItem value={goalId} id={goalId} className="mt-1" onClick={(e) => e.stopPropagation()} />
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <Icon className={`h-5 w-5 ${color}`} />
