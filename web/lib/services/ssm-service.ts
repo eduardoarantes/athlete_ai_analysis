@@ -27,13 +27,21 @@ function getSSMClient(): SSMClient {
 
 /**
  * Get parameter path prefix from environment
+ *
+ * Note: SSM_PARAMETER_PREFIX is set at build time but not available at SSR runtime
+ * in Amplify. We derive it from NEXT_PUBLIC_ENV which IS available at runtime
+ * (since NEXT_PUBLIC_* vars are baked into the bundle).
  */
 function getParameterPrefix(): string {
+  // Try SSM_PARAMETER_PREFIX first (works at build time and in local dev)
   const prefix = process.env.SSM_PARAMETER_PREFIX
-  if (!prefix) {
-    throw new Error('SSM_PARAMETER_PREFIX environment variable is not set')
+  if (prefix) {
+    return prefix
   }
-  return prefix
+
+  // Derive from NEXT_PUBLIC_ENV (available at SSR runtime in Amplify)
+  const env = process.env.NEXT_PUBLIC_ENV || 'dev'
+  return `/cycling-ai-${env}`
 }
 
 /**

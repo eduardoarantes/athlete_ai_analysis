@@ -51,9 +51,14 @@ export async function GET(_request: NextRequest) {
   } catch (error) {
     console.error('Strava connect error:', error)
     // Include debug info in development/production for troubleshooting
+    const env = process.env.NEXT_PUBLIC_ENV || 'dev'
+    const derivedPrefix = `/cycling-ai-${env}`
     const debugInfo = {
       hasSSMPrefix: !!process.env.SSM_PARAMETER_PREFIX,
       ssmPrefix: process.env.SSM_PARAMETER_PREFIX,
+      derivedPrefix,
+      hasPublicEnv: !!process.env.NEXT_PUBLIC_ENV,
+      publicEnv: process.env.NEXT_PUBLIC_ENV,
       hasRegion: !!process.env.AWS_REGION,
       region: process.env.AWS_REGION,
       errorMessage: error instanceof Error ? error.message : String(error),
