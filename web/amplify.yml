@@ -1,0 +1,24 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm install -g pnpm
+        - pnpm install --frozen-lockfile
+    build:
+      commands:
+        - echo "DEBUG - STRAVA_CLIENT_ID set = ${STRAVA_CLIENT_ID:+yes}"
+        - echo "DEBUG - STRAVA_CLIENT_SECRET set = ${STRAVA_CLIENT_SECRET:+yes}"
+        - echo "STRAVA_CLIENT_ID=${STRAVA_CLIENT_ID}" >> .env.production
+        - echo "STRAVA_CLIENT_SECRET=${STRAVA_CLIENT_SECRET}" >> .env.production
+        - echo "Created .env.production with $(wc -l < .env.production) lines"
+        - cat .env.production
+        - pnpm build
+  artifacts:
+    baseDirectory: .next
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
+      - .next/cache/**/*
