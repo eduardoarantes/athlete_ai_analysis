@@ -10,13 +10,15 @@
 import { createClient } from '@/lib/supabase/server'
 
 // Load build-time generated credentials (for Amplify SSR)
+// Using relative path for better compatibility with Next.js bundling
 let buildTimeCredentials: { STRAVA_CLIENT_ID?: string; STRAVA_CLIENT_SECRET?: string } = {}
 try {
   // This file is generated during Amplify build
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  buildTimeCredentials = require('@/lib/config/strava-credentials')
+  // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
+  const creds = require('../config/strava-credentials')
+  buildTimeCredentials = creds
 } catch {
-  // File doesn't exist in local dev - that's expected
+  // File doesn't exist or has placeholder values in local dev
 }
 
 export interface StravaTokenResponse {

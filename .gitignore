@@ -73,3 +73,4 @@ infrastructure/terraform/tfplan
 web/.open-next/
 web/web-lambda.zip
 .env
+supabase_errors.json

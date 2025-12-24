@@ -194,6 +194,7 @@ class LibraryBasedTrainingPlanningWeeks:
         """
         return {
             "weekday": weekday,
+            "name": "Strength Training",
             "description": "Strength Training",
             "workout_type": "strength",  # Explicit type for validation
             "source": "library",  # Strength workouts are pre-defined templates
