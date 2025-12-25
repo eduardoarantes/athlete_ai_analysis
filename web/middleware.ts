@@ -8,14 +8,17 @@ const publicRoutes = ['/', '/about', '/login', '/register', '/auth/callback', '/
 const publicPrefixes = ['/api/auth/', '/_next/', '/favicon']
 
 function isPublicRoute(pathname: string): boolean {
+  // Normalize pathname by removing trailing slash (except for root)
+  const normalizedPath = pathname === '/' ? pathname : pathname.replace(/\/$/, '')
+
   // Check exact matches
-  if (publicRoutes.includes(pathname)) {
+  if (publicRoutes.includes(normalizedPath)) {
     return true
   }
 
   // Check prefixes
   for (const prefix of publicPrefixes) {
-    if (pathname.startsWith(prefix)) {
+    if (normalizedPath.startsWith(prefix)) {
       return true
     }
   }
