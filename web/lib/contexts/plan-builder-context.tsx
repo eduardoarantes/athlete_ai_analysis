@@ -113,7 +113,7 @@ const PlanBuilderContext = createContext<PlanBuilderContextValue | undefined>(un
  */
 interface PlanBuilderProviderProps {
   children: ReactNode
-  initialState?: Partial<PlanBuilderState>
+  initialState?: Partial<PlanBuilderState> | undefined
 }
 
 /**
