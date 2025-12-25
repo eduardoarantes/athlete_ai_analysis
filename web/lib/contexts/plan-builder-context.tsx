@@ -15,6 +15,9 @@ import {
   useReducer,
   useCallback,
   useMemo,
+  useEffect,
+  useState,
+  useRef,
   type ReactNode,
   type Dispatch,
 } from 'react'
@@ -45,6 +48,9 @@ interface PlanBuilderContextValue {
 
   /** Whether redo is available */
   canRedo: boolean
+
+  /** Whether the plan is currently loading */
+  isLoading: boolean
 
   // Action helpers
   /** Initialize or reset the plan */
@@ -101,6 +107,12 @@ interface PlanBuilderContextValue {
 
   /** Get a specific week by number */
   getWeek: (weekNumber: number) => WeekState | undefined
+
+  /** Save the plan immediately */
+  saveNow: () => Promise<void>
+
+  /** Publish the plan (save and set as active) */
+  publishPlan: () => Promise<void>
 }
 
 /**
@@ -114,20 +126,150 @@ const PlanBuilderContext = createContext<PlanBuilderContextValue | undefined>(un
 interface PlanBuilderProviderProps {
   children: ReactNode
   initialState?: Partial<PlanBuilderState> | undefined
+  /** Plan ID to load (for editing existing plans) */
+  planId?: string | undefined
+  /** Whether auto-save is enabled (default: true) */
+  autoSaveEnabled?: boolean | undefined
+  /** Auto-save debounce in milliseconds (default: 2000) */
+  autoSaveDebounceMs?: number | undefined
+}
+
+/**
+ * Save plan to API
+ */
+async function savePlanToApi(
+  state: PlanBuilderState,
+  publish: boolean = false
+): Promise<{ planId: string; savedAt: string }> {
+  const isUpdate = Boolean(state.planId)
+  const url = isUpdate ? `/api/custom-plans/${state.planId}` : '/api/custom-plans'
+  const method = isUpdate ? 'PUT' : 'POST'
+
+  const response = await fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      planId: state.planId ?? undefined,
+      metadata: state.metadata,
+      weeks: state.weeks.map((week) => ({
+        weekNumber: week.weekNumber,
+        phase: week.phase,
+        workouts: week.workouts,
+        weeklyTss: week.weeklyTss,
+        notes: week.notes,
+      })),
+      publish,
+    }),
+  })
+
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.error || 'Failed to save plan')
+  }
+
+  return response.json()
 }
 
 /**
  * Plan Builder Provider Component
  */
-export function PlanBuilderProvider({ children, initialState }: PlanBuilderProviderProps) {
+export function PlanBuilderProvider({
+  children,
+  initialState,
+  planId,
+  autoSaveEnabled = true,
+  autoSaveDebounceMs = 2000,
+}: PlanBuilderProviderProps) {
   const [state, dispatch] = useReducer(
     planBuilderReducer,
     createInitialPlanBuilderState(
-      initialState?.planId ?? undefined,
+      planId ?? initialState?.planId ?? undefined,
       initialState?.metadata,
       initialState?.weeks
     )
   )
+
+  const [isLoading, setIsLoading] = useState(Boolean(planId))
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const isSavingRef = useRef(false)
+
+  // Load existing plan if planId is provided
+  useEffect(() => {
+    if (!planId) return
+
+    async function loadPlan() {
+      setIsLoading(true)
+      try {
+        const response = await fetch(`/api/custom-plans/${planId}`)
+        if (!response.ok) {
+          throw new Error('Failed to load plan')
+        }
+        const data = await response.json()
+
+        dispatch({
+          type: 'INIT_PLAN',
+          payload: {
+            planId: data.plan.id,
+            metadata: {
+              name: data.plan.name,
+              description: data.plan.description,
+              goal: data.plan.goal,
+              targetFtp: data.plan.targetFtp,
+            },
+            weeks: data.weeks,
+            isDirty: false,
+          },
+        })
+      } catch (error) {
+        dispatch({
+          type: 'SAVE_ERROR',
+          payload: { error: error instanceof Error ? error.message : 'Failed to load plan' },
+        })
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadPlan()
+  }, [planId])
+
+  // Auto-save effect
+  useEffect(() => {
+    if (!autoSaveEnabled || !state.isDirty || !state.metadata.name || isSavingRef.current) {
+      return
+    }
+
+    // Clear existing timeout
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current)
+    }
+
+    // Set new timeout for auto-save
+    autoSaveTimeoutRef.current = setTimeout(async () => {
+      if (isSavingRef.current) return
+
+      isSavingRef.current = true
+      dispatch({ type: 'MARK_SAVING' })
+
+      try {
+        const result = await savePlanToApi(state)
+        dispatch({ type: 'MARK_SAVED', payload: { planId: result.planId } })
+      } catch (error) {
+        dispatch({
+          type: 'SAVE_ERROR',
+          payload: { error: error instanceof Error ? error.message : 'Failed to save' },
+        })
+      } finally {
+        isSavingRef.current = false
+      }
+    }, autoSaveDebounceMs)
+
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current)
+      }
+    }
+  }, [state, autoSaveEnabled, autoSaveDebounceMs])
 
   // Action helpers - memoized for stability
   const initPlan = useCallback((data: Partial<PlanBuilderState>) => {
@@ -227,6 +369,60 @@ export function PlanBuilderProvider({ children, initialState }: PlanBuilderProvi
     [state.weeks]
   )
 
+  // Manual save function
+  const saveNow = useCallback(async () => {
+    if (isSavingRef.current || !state.metadata.name) return
+
+    // Clear any pending auto-save
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current)
+      autoSaveTimeoutRef.current = null
+    }
+
+    isSavingRef.current = true
+    dispatch({ type: 'MARK_SAVING' })
+
+    try {
+      const result = await savePlanToApi(state)
+      dispatch({ type: 'MARK_SAVED', payload: { planId: result.planId } })
+    } catch (error) {
+      dispatch({
+        type: 'SAVE_ERROR',
+        payload: { error: error instanceof Error ? error.message : 'Failed to save' },
+      })
+      throw error
+    } finally {
+      isSavingRef.current = false
+    }
+  }, [state])
+
+  // Publish plan function (saves and sets as active)
+  const publishPlan = useCallback(async () => {
+    if (isSavingRef.current || !state.metadata.name) return
+
+    // Clear any pending auto-save
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current)
+      autoSaveTimeoutRef.current = null
+    }
+
+    isSavingRef.current = true
+    dispatch({ type: 'MARK_SAVING' })
+
+    try {
+      const result = await savePlanToApi(state, true) // publish = true
+      dispatch({ type: 'MARK_SAVED', payload: { planId: result.planId } })
+    } catch (error) {
+      dispatch({
+        type: 'SAVE_ERROR',
+        payload: { error: error instanceof Error ? error.message : 'Failed to publish' },
+      })
+      throw error
+    } finally {
+      isSavingRef.current = false
+    }
+  }, [state])
+
   // Memoized context value
   const value = useMemo<PlanBuilderContextValue>(
     () => ({
@@ -234,6 +430,7 @@ export function PlanBuilderProvider({ children, initialState }: PlanBuilderProvi
       dispatch,
       canUndo: canUndo(state),
       canRedo: canRedo(state),
+      isLoading,
       initPlan,
       updateMetadata,
       addWeek,
@@ -250,9 +447,12 @@ export function PlanBuilderProvider({ children, initialState }: PlanBuilderProvi
       validate,
       clearValidation,
       getWeek,
+      saveNow,
+      publishPlan,
     }),
     [
       state,
+      isLoading,
       initPlan,
       updateMetadata,
       addWeek,
@@ -269,6 +469,8 @@ export function PlanBuilderProvider({ children, initialState }: PlanBuilderProvi
       validate,
       clearValidation,
       getWeek,
+      saveNow,
+      publishPlan,
     ]
   )
 

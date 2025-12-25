@@ -79,6 +79,7 @@ function PlanBuilderInner() {
     state,
     canUndo,
     canRedo,
+    isLoading,
     updateMetadata,
     addWeek,
     removeWeek,
@@ -87,6 +88,8 @@ function PlanBuilderInner() {
     undo,
     redo,
     validate,
+    saveNow,
+    // publishPlan - available for future use
   } = usePlanBuilder()
 
   const [addWeekPhase, setAddWeekPhase] = useState<TrainingPhase>('Base')
@@ -132,6 +135,18 @@ function PlanBuilderInner() {
     // Result is automatically stored in state via context
   }
 
+  // Show loading state when loading an existing plan
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading plan...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <PlanBuilderDndContext>
       <div className="flex h-full">
@@ -158,9 +173,17 @@ function PlanBuilderInner() {
                 onChange={(e) => updateMetadata({ name: e.target.value })}
                 className="w-64"
               />
-              {state.isDirty && (
+              {state.isSaving ? (
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <span className="animate-pulse">●</span> Saving...
+                </span>
+              ) : state.isDirty ? (
                 <span className="text-xs text-muted-foreground">Unsaved changes</span>
-              )}
+              ) : state.lastSavedAt ? (
+                <span className="text-xs text-muted-foreground">
+                  Saved {new Date(state.lastSavedAt).toLocaleTimeString()}
+                </span>
+              ) : null}
             </div>
 
             <div className="flex items-center gap-2">
@@ -197,7 +220,10 @@ function PlanBuilderInner() {
               >
                 Validate
               </Button>
-              <Button disabled={!state.isDirty || state.isSaving}>
+              <Button
+                onClick={() => saveNow()}
+                disabled={!state.isDirty || state.isSaving || !state.metadata.name}
+              >
                 <Save className="h-4 w-4 mr-2" />
                 {state.isSaving ? 'Saving...' : 'Save'}
               </Button>
@@ -232,6 +258,16 @@ function PlanBuilderInner() {
             </Button>
           </div>
         </header>
+
+        {/* Save error message */}
+        {state.saveError && (
+          <div className="p-4">
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{state.saveError}</AlertDescription>
+            </Alert>
+          </div>
+        )}
 
         {/* Validation messages */}
         {(state.validationErrors.length > 0 || state.validationWarnings.length > 0) && (
