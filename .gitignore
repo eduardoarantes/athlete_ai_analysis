@@ -74,3 +74,7 @@ web/.open-next/
 web/web-lambda.zip
 .env
 supabase_errors.json
+
+# Root level npm (for husky only)
+/node_modules/
+/package-lock.json
