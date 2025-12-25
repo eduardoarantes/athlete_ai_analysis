@@ -77,7 +77,12 @@ export function GoalStep({ data, onUpdate }: GoalStepProps) {
                     : 'border-border hover:border-primary/50'
                 }`}
               >
-                <RadioGroupItem value={goalId} id={goalId} className="mt-1" onClick={(e) => e.stopPropagation()} />
+                <RadioGroupItem
+                  value={goalId}
+                  id={goalId}
+                  className="mt-1"
+                  onClick={(e) => e.stopPropagation()}
+                />
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <Icon className={`h-5 w-5 ${color}`} />
