@@ -4,22 +4,14 @@
  *
  * Credentials are loaded from:
  * 1. Environment variables (local dev)
- * 2. Build-time generated config (Amplify SSR - lib/config/strava-credentials.js)
+ * 2. Next.js serverRuntimeConfig (Amplify SSR - embedded at build time)
  */
 
 import { createClient } from '@/lib/supabase/server'
+import getConfig from 'next/config'
 
-// Load build-time generated credentials (for Amplify SSR)
-// Using relative path for better compatibility with Next.js bundling
-let buildTimeCredentials: { STRAVA_CLIENT_ID?: string; STRAVA_CLIENT_SECRET?: string } = {}
-try {
-  // This file is generated during Amplify build
-  // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
-  const creds = require('../config/strava-credentials')
-  buildTimeCredentials = creds
-} catch {
-  // File doesn't exist or has placeholder values in local dev
-}
+// Get server runtime config (embedded at build time in next.config.ts)
+const { serverRuntimeConfig } = getConfig() || { serverRuntimeConfig: {} }
 
 export interface StravaTokenResponse {
   token_type: 'Bearer'
@@ -78,25 +70,29 @@ export class StravaService {
   private clientSecret: string
   private readonly redirectUri: string
 
-  private constructor(clientId: string, clientSecret: string) {
+  private constructor(clientId: string, clientSecret: string, appUrl: string) {
     this.clientId = clientId
     this.clientSecret = clientSecret
-    this.redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/strava/callback`
+    this.redirectUri = `${appUrl}/api/auth/strava/callback`
   }
 
   /**
    * Create a StravaService instance with credentials
-   * Tries: env vars first (local dev), then build-time config (Amplify SSR)
+   * Tries: env vars first (local dev), then serverRuntimeConfig (Amplify SSR)
    */
   static async create(): Promise<StravaService> {
     // Try environment variables first (local dev)
     let clientId = process.env.STRAVA_CLIENT_ID
     let clientSecret = process.env.STRAVA_CLIENT_SECRET
+    let appUrl = process.env.NEXT_PUBLIC_APP_URL
 
-    // Fall back to build-time generated config (Amplify SSR)
+    // Fall back to serverRuntimeConfig (embedded at build time for Amplify SSR)
     if (!clientId || !clientSecret) {
-      clientId = buildTimeCredentials.STRAVA_CLIENT_ID
-      clientSecret = buildTimeCredentials.STRAVA_CLIENT_SECRET
+      clientId = serverRuntimeConfig?.stravaClientId
+      clientSecret = serverRuntimeConfig?.stravaClientSecret
+    }
+    if (!appUrl) {
+      appUrl = serverRuntimeConfig?.appUrl
     }
 
     if (!clientId || !clientSecret) {
@@ -107,7 +103,11 @@ export class StravaService {
       )
     }
 
-    return new StravaService(clientId, clientSecret)
+    if (!appUrl) {
+      throw new Error('App URL not configured. NEXT_PUBLIC_APP_URL is missing.')
+    }
+
+    return new StravaService(clientId, clientSecret, appUrl)
   }
 
   /**

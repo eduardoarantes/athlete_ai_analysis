@@ -23,6 +23,15 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: isStaticExport,
   },
+  // Server-side runtime configuration (embedded at build time)
+  // Used for credentials in Amplify SSR where env vars aren't available at runtime
+  serverRuntimeConfig: {
+    stravaClientId: process.env.STRAVA_CLIENT_ID,
+    stravaClientSecret: process.env.STRAVA_CLIENT_SECRET,
+    appUrl: process.env.NEXT_PUBLIC_APP_URL,
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  },
   async headers() {
     return [
       {

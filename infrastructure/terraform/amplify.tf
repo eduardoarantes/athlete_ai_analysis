@@ -15,8 +15,7 @@ resource "aws_amplify_app" "web" {
   iam_service_role_arn = aws_iam_role.amplify_service_role.arn
 
   # Build specification
-  # Note: STRAVA credentials are generated into lib/config/strava-credentials.js at build time
-  # This file is then bundled into the Next.js server for SSR runtime access
+  # Note: STRAVA credentials are embedded via next.config.ts serverRuntimeConfig at build time
   # (Amplify SSR Lambda doesn't have access to console env vars at runtime)
   build_spec = <<-EOT
     version: 1
@@ -28,16 +27,6 @@ resource "aws_amplify_app" "web" {
               commands:
                 - npm install -g pnpm
                 - pnpm install --frozen-lockfile
-                - |
-                  echo "Creating server config with embedded credentials..."
-                  cat > lib/config/strava-credentials.js << EOJS
-                  // Auto-generated at build time - embedded credentials for SSR runtime
-                  module.exports = {
-                    STRAVA_CLIENT_ID: "$${STRAVA_CLIENT_ID}",
-                    STRAVA_CLIENT_SECRET: "$${STRAVA_CLIENT_SECRET}"
-                  };
-                  EOJS
-                  echo "Server config created"
             build:
               commands:
                 - pnpm build
@@ -52,12 +41,14 @@ resource "aws_amplify_app" "web" {
   EOT
 
   # Environment variables for all branches (app-level)
-  # Note: AWS_REGION is automatically set by Amplify for SSR functions
+  # Note: STRAVA_CLIENT_ID and STRAVA_CLIENT_SECRET must be set via CLI to avoid
+  # storing secrets in Terraform state. They are read at build time by next.config.ts
+  # and embedded into the server bundle via serverRuntimeConfig.
+  # Command: aws amplify update-app --app-id <id> --environment-variables \
+  #          "STRAVA_CLIENT_ID=xxx,STRAVA_CLIENT_SECRET=yyy,AMPLIFY_MONOREPO_APP_ROOT=web,NEXT_PUBLIC_ENV=prod"
   environment_variables = {
     AMPLIFY_MONOREPO_APP_ROOT = "web"
     NEXT_PUBLIC_ENV           = local.environment
-    # SSM parameter path prefix for runtime secrets (credentials fetched at runtime)
-    SSM_PARAMETER_PREFIX = "/${local.name_prefix}"
   }
 
   # Enable auto branch creation for feature branches (optional)
@@ -100,10 +91,7 @@ resource "aws_amplify_branch" "main" {
 
   # Environment variables specific to this branch
   # Note: AWS_REGION is automatically set by Amplify for SSR functions
-  # Note: STRAVA_CLIENT_ID and STRAVA_CLIENT_SECRET are set separately via CLI
-  # to avoid storing secrets in Terraform state. They are needed for SSR runtime.
-  # Command: aws amplify update-branch --app-id <app-id> --branch-name main \
-  #          --environment-variables "STRAVA_CLIENT_ID=xxx,STRAVA_CLIENT_SECRET=yyy"
+  # Note: STRAVA credentials are set at app-level (not branch-level) via CLI
   environment_variables = {
     NEXT_PUBLIC_SUPABASE_URL      = var.supabase_url
     NEXT_PUBLIC_SUPABASE_ANON_KEY = var.supabase_anon_key
