@@ -13,6 +13,17 @@ function LoginPageContent() {
   const searchParams = useSearchParams()
   const oauthError = searchParams.get('error')
 
+  // Safely decode the OAuth error message
+  let decodedError: string | null = null
+  if (oauthError) {
+    try {
+      decodedError = decodeURIComponent(oauthError)
+    } catch {
+      // If decoding fails, use the raw error string
+      decodedError = oauthError
+    }
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
@@ -21,10 +32,10 @@ function LoginPageContent() {
           <CardDescription>Sign in to your Cycling AI account</CardDescription>
         </CardHeader>
         <CardContent>
-          {oauthError && (
+          {decodedError && (
             <Alert variant="destructive" className="mb-4">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{decodeURIComponent(oauthError)}</AlertDescription>
+              <AlertDescription>{decodedError}</AlertDescription>
             </Alert>
           )}
 
@@ -32,10 +43,10 @@ function LoginPageContent() {
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300 dark:border-gray-700"></div>
+              <span className="w-full border-t" />
             </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="bg-white dark:bg-gray-950 px-2 text-gray-500 dark:text-gray-400">
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-gray-500 dark:bg-gray-950 dark:text-gray-400">
                 Or continue with
               </span>
             </div>

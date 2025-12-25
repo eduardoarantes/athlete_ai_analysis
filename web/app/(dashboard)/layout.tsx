@@ -18,7 +18,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   // Check if user has an athlete profile
   try {
-    const { data: profile, error: profileError } = await supabase
+    const { error: profileError } = await supabase
       .from('athlete_profiles')
       .select('id')
       .eq('user_id', user.id)
@@ -47,16 +47,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
       }
     }
 
-    // Profile exists - log success and continue
-    if (profile) {
-      errorLogger.logInfo('User has athlete profile', {
-        userId: user.id,
-        path: '/dashboard',
-        metadata: {
-          profileId: profile.id,
-        },
-      })
-    }
+    // Profile exists - continue to dashboard
+    // Note: No logging here to avoid verbose logs on every request
   } catch (error) {
     // Re-throw errors that aren't related to profile checks
     if (error instanceof Error && error.message === 'Failed to check athlete profile') {
