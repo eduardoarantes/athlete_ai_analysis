@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
@@ -76,13 +77,20 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
-      {/* Hero Section */}
-      <section className="container max-w-6xl mx-auto px-4 py-16 text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary mb-8">
-          <Bike className="h-5 w-5" />
-          <span className="text-sm font-medium">{t('hero.badge')}</span>
+      {/* Header */}
+      <header className="container max-w-6xl mx-auto px-4 py-6">
+        <div className="flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2">
+            <Image src="/logo.png" alt="Cycling AI" width={48} height={48} className="rounded-lg" />
+          </Link>
+          <Link href="/login">
+            <Button variant="outline">{t('hero.cta.secondary')}</Button>
+          </Link>
         </div>
+      </header>
 
+      {/* Hero Section */}
+      <section className="container max-w-6xl mx-auto px-4 py-8 text-center">
         <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
           {t('hero.title.part1')} <span className="text-primary">{t('hero.title.highlight')}</span>{' '}
           {t('hero.title.part2')}
@@ -92,23 +100,16 @@ export default function Home() {
           {t('hero.subtitle')}
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href="/signup">
-            <Button size="lg" className="gap-2">
-              {t('hero.cta.primary')}
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
-          <Link href="/login">
-            <Button size="lg" variant="outline">
-              {t('hero.cta.secondary')}
-            </Button>
-          </Link>
-        </div>
+        <Link href="/signup">
+          <Button size="lg" className="gap-2">
+            {t('hero.cta.primary')}
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        </Link>
       </section>
 
       {/* Mission Section */}
-      <section className="container max-w-6xl mx-auto px-4 py-16">
+      <section className="container max-w-6xl mx-auto px-4 py-8">
         <Card className="border-none bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 overflow-hidden">
           <CardContent className="p-8 md:p-12">
             <div className="flex flex-col md:flex-row items-center gap-8">
