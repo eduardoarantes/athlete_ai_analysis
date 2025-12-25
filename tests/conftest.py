@@ -38,8 +38,4 @@ def patch_prompt_loader_version():
         "cycling_ai.orchestration.prompt_loader.get_prompt_loader",
         _patched_get_prompt_loader
     ):
-        with patch(
-            "cycling_ai.orchestration.prompts.get_prompt_loader",
-            _patched_get_prompt_loader
-        ):
-            yield
+        yield
