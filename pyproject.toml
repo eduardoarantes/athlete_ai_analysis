@@ -36,9 +36,6 @@ dependencies = [
     "pyyaml>=6.0.0",
     "pydantic>=2.0.0",
     "pydantic-settings>=2.1.0",
-    # CLI
-    "click>=8.1.0",
-    "rich>=13.0.0",
     # Templating
     "jinja2>=3.1.0",
     # Utilities
@@ -58,9 +55,6 @@ dependencies = [
     # JWT validation for Supabase auth
     "python-jose[cryptography]>=3.3.0",
 ]
-
-[project.scripts]
-cycling-ai = "cycling_ai.cli.main:main"
 
 [project.optional-dependencies]
 dev = [

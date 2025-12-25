@@ -1,26 +1,20 @@
 """
-Orchestration layer for tool execution.
+Orchestration layer for API services.
 
-Provides modular orchestration of multi-phase workflows with specialized agents.
+Provides prompt loading and training plan generation support for the API.
 
 Main Components:
-- MultiAgentOrchestrator: Backward compatibility wrapper (deprecated)
-- FullReportWorkflow: Complete 4-phase report generation workflow
-- BaseWorkflow: Abstract base for custom workflows
-- Individual phases: DataPreparationPhase, PerformanceAnalysisPhase, etc.
-- ToolExecutor: Direct tool execution
+- PromptLoader: Load and manage agent prompts
+- RAG integration: Retrieval-augmented generation support
+- TrainingPlanningLibrary: Library-based workout selection
 """
 
 from __future__ import annotations
 
-from .executor import ToolExecutor
-from .multi_agent import MultiAgentOrchestrator
-from .workflows.base_workflow import BaseWorkflow
-from .workflows.full_report import FullReportWorkflow
+from .prompt_loader import PromptLoader
+from .rag_integration import PromptAugmenter
 
 __all__ = [
-    "ToolExecutor",
-    "MultiAgentOrchestrator",  # Deprecated - use FullReportWorkflow
-    "FullReportWorkflow",
-    "BaseWorkflow",
+    "PromptLoader",
+    "PromptAugmenter",
 ]

@@ -1,20 +1,11 @@
 """
-Workflow phases for multi-agent orchestration.
+Training planning support for API.
 
-This package contains individual phase implementations that can be
-executed independently or composed into workflows.
+This package contains library-based training plan generation.
 """
 
-from .base_phase import BasePhase
-from .data_preparation import DataPreparationPhase
-from .performance_analysis import PerformanceAnalysisPhase
-from .report_preparation import ReportPreparationPhase
-from .training_planning import TrainingPlanningPhase
+from .training_planning_library import LibraryBasedTrainingPlanningWeeks
 
 __all__ = [
-    "BasePhase",
-    "DataPreparationPhase",
-    "PerformanceAnalysisPhase",
-    "TrainingPlanningPhase",
-    "ReportPreparationPhase",
+    "LibraryBasedTrainingPlanningWeeks",
 ]
