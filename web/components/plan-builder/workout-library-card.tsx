@@ -145,9 +145,7 @@ export function WorkoutLibraryCard({
         <div className="flex-1 min-w-0">
           <h4 className="font-medium text-sm leading-tight">{workout.name}</h4>
           <div className="flex items-center gap-2 mt-1">
-            <span className="text-xs text-muted-foreground">
-              {formatType(workout.type)}
-            </span>
+            <span className="text-xs text-muted-foreground">{formatType(workout.type)}</span>
             <span className={cn('text-xs px-1.5 py-0.5 rounded', intensityColor)}>
               {formatIntensity(workout.intensity)}
             </span>
@@ -229,7 +227,9 @@ export function WorkoutLibraryCard({
                         className="flex items-center justify-between text-xs bg-muted/50 rounded px-2 py-1"
                       >
                         <span className="flex items-center gap-2">
-                          <span className="font-medium">{formatDuration(segment.duration_min ?? 0)}</span>
+                          <span className="font-medium">
+                            {formatDuration(segment.duration_min ?? 0)}
+                          </span>
                           <span className="text-muted-foreground">
                             {segment.description || segment.type}
                           </span>

@@ -7,7 +7,12 @@
  * Part of Issue #21: Plan Builder Phase 1 - Foundation
  */
 
-import type { WorkoutFilters, WorkoutType, WorkoutIntensity, TrainingPhase } from '@/lib/types/workout-library'
+import type {
+  WorkoutFilters,
+  WorkoutType,
+  WorkoutIntensity,
+  TrainingPhase,
+} from '@/lib/types/workout-library'
 
 // Valid values for validation
 export const VALID_WORKOUT_TYPES = new Set<WorkoutType>([
@@ -52,7 +57,9 @@ export function validateWorkoutFilters(searchParams: URLSearchParams): FilterVal
   // Validate type
   const types = searchParams.getAll('type')
   if (types.length > 0) {
-    const validTypes = types.filter((t): t is WorkoutType => VALID_WORKOUT_TYPES.has(t as WorkoutType))
+    const validTypes = types.filter((t): t is WorkoutType =>
+      VALID_WORKOUT_TYPES.has(t as WorkoutType)
+    )
     const invalidTypes = types.filter((t) => !VALID_WORKOUT_TYPES.has(t as WorkoutType))
     if (invalidTypes.length > 0) {
       errors.push(`Invalid type(s): ${invalidTypes.join(', ')}`)

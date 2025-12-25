@@ -48,17 +48,13 @@ describe('validateWorkoutFilters', () => {
     })
 
     it('accepts multiple valid types', () => {
-      const result = validateWorkoutFilters(
-        createSearchParams({ type: ['endurance', 'tempo'] })
-      )
+      const result = validateWorkoutFilters(createSearchParams({ type: ['endurance', 'tempo'] }))
       expect(result.valid).toBe(true)
       expect(result.filters.type).toEqual(['endurance', 'tempo'])
     })
 
     it('reports multiple invalid types', () => {
-      const result = validateWorkoutFilters(
-        createSearchParams({ type: ['invalid1', 'invalid2'] })
-      )
+      const result = validateWorkoutFilters(createSearchParams({ type: ['invalid1', 'invalid2'] }))
       expect(result.valid).toBe(false)
       expect(result.errors).toContain('Invalid type(s): invalid1, invalid2')
     })

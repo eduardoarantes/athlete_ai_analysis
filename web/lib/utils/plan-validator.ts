@@ -7,12 +7,7 @@
  * Part of Issue #22: Plan Builder Phase 2 - State Management
  */
 
-import type {
-  WeekState,
-  PlanBuilderState,
-  WorkoutsData,
-  DayOfWeek,
-} from '@/lib/types/plan-builder'
+import type { WeekState, PlanBuilderState, WorkoutsData, DayOfWeek } from '@/lib/types/plan-builder'
 import type { TrainingPhase } from '@/lib/types/workout-library'
 import { calculateWeeklyTss } from './tss-calculator'
 

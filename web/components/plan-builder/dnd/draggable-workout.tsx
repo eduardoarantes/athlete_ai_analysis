@@ -56,11 +56,7 @@ export function DraggableLibraryWorkout({
     <div
       ref={setNodeRef}
       style={style}
-      className={cn(
-        'touch-none',
-        isDragging && 'opacity-50',
-        className
-      )}
+      className={cn('touch-none', isDragging && 'opacity-50', className)}
       {...listeners}
       {...attributes}
     >
@@ -111,11 +107,7 @@ export function DraggablePlacedWorkout({
     <div
       ref={setNodeRef}
       style={style}
-      className={cn(
-        'touch-none',
-        isDragging && 'opacity-50',
-        className
-      )}
+      className={cn('touch-none', isDragging && 'opacity-50', className)}
       {...listeners}
       {...attributes}
     >

@@ -29,12 +29,7 @@ interface DroppableDayProps {
  *
  * Wraps a day's content to make it a valid drop target.
  */
-export function DroppableDay({
-  weekNumber,
-  day,
-  children,
-  className,
-}: DroppableDayProps) {
+export function DroppableDay({ weekNumber, day, children, className }: DroppableDayProps) {
   const dropData: DayDropData = { weekNumber, day }
 
   const { isOver, setNodeRef, active } = useDroppable({

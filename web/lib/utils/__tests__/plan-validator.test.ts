@@ -7,12 +7,13 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import {
-  validateWeek,
-  validatePlan,
-  validateProgressiveOverload,
-} from '../plan-validator'
-import type { WeekState, PlanBuilderState, WorkoutsData, WorkoutPlacement } from '@/lib/types/plan-builder'
+import { validateWeek, validatePlan, validateProgressiveOverload } from '../plan-validator'
+import type {
+  WeekState,
+  PlanBuilderState,
+  WorkoutsData,
+  WorkoutPlacement,
+} from '@/lib/types/plan-builder'
 
 // Test fixtures
 const createEmptyWorkoutsData = (): WorkoutsData => ({

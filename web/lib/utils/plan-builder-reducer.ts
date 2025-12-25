@@ -49,10 +49,7 @@ export function canRedo(state: PlanBuilderState): boolean {
 /**
  * Create a history entry from current state
  */
-function createHistoryEntry(
-  state: PlanBuilderState,
-  actionDescription: string
-): HistoryEntry {
+function createHistoryEntry(state: PlanBuilderState, actionDescription: string): HistoryEntry {
   // Serialize only the data we need to restore
   const stateToSave = {
     planId: state.planId,
@@ -70,10 +67,7 @@ function createHistoryEntry(
 /**
  * Push state to history stack
  */
-function pushToHistory(
-  state: PlanBuilderState,
-  actionDescription: string
-): PlanBuilderState {
+function pushToHistory(state: PlanBuilderState, actionDescription: string): PlanBuilderState {
   // Create entry before the action
   const entry = createHistoryEntry(state, actionDescription)
 
@@ -308,10 +302,7 @@ export function planBuilderReducer(
 
     case 'REMOVE_WORKOUT': {
       const { weekNumber, day, placementId } = action.payload
-      const stateWithHistory = pushToHistory(
-        state,
-        `Remove workout from week ${weekNumber} ${day}`
-      )
+      const stateWithHistory = pushToHistory(state, `Remove workout from week ${weekNumber} ${day}`)
 
       const weekIndex = findWeekIndex(state.weeks, weekNumber)
       if (weekIndex === -1) {
@@ -341,8 +332,7 @@ export function planBuilderReducer(
     }
 
     case 'MOVE_WORKOUT': {
-      const { sourceWeek, sourceDay, targetWeek, targetDay, placementId, newOrder } =
-        action.payload
+      const { sourceWeek, sourceDay, targetWeek, targetDay, placementId, newOrder } = action.payload
 
       const stateWithHistory = pushToHistory(
         state,
@@ -421,10 +411,7 @@ export function planBuilderReducer(
 
     case 'REORDER_WORKOUTS': {
       const { weekNumber, day, placementIds } = action.payload
-      const stateWithHistory = pushToHistory(
-        state,
-        `Reorder workouts in week ${weekNumber} ${day}`
-      )
+      const stateWithHistory = pushToHistory(state, `Reorder workouts in week ${weekNumber} ${day}`)
 
       const weekIndex = findWeekIndex(state.weeks, weekNumber)
       if (weekIndex === -1) {

@@ -99,8 +99,8 @@ export const INTENSITY_FACTORS: Record<string, number> = {
   recovery: 0.55,
   endurance: 0.65,
   tempo: 0.85,
-  sweet_spot: 0.90,
+  sweet_spot: 0.9,
   threshold: 0.95,
-  vo2max: 1.10,
-  mixed: 0.80,
+  vo2max: 1.1,
+  mixed: 0.8,
 }

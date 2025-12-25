@@ -72,7 +72,9 @@ export async function POST(request: NextRequest) {
       }))
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error: weeksError } = await (supabase as any).from('custom_plan_weeks').insert(weeksToInsert)
+      const { error: weeksError } = await (supabase as any)
+        .from('custom_plan_weeks')
+        .insert(weeksToInsert)
 
       if (weeksError) {
         // Rollback: delete the plan if weeks insertion fails

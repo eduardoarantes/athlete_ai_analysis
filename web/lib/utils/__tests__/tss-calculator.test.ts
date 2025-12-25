@@ -11,11 +11,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import {
-  calculateWorkoutTss,
-  calculateDailyTss,
-  calculateWeeklyTss,
-} from '../tss-calculator'
+import { calculateWorkoutTss, calculateDailyTss, calculateWeeklyTss } from '../tss-calculator'
 import type { WorkoutsData, WorkoutPlacement } from '@/lib/types/plan-builder'
 import type { WorkoutLibraryItem } from '@/lib/types/workout-library'
 

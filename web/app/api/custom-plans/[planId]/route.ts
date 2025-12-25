@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { errorLogger } from '@/lib/monitoring/error-logger'
-import type { SavePlanRequest, SavePlanResponse, WeekState, WorkoutsData } from '@/lib/types/plan-builder'
+import type {
+  SavePlanRequest,
+  SavePlanResponse,
+  WeekState,
+  WorkoutsData,
+} from '@/lib/types/plan-builder'
 import type { TrainingPhase } from '@/lib/types/workout-library'
 
 // Note: custom_plan_weeks table and extended training_plans columns
@@ -82,7 +87,11 @@ export async function GET(
       .order('week_number', { ascending: true })
 
     if (weeksError) {
-      errorLogger.logDatabaseError(new Error(weeksError.message), 'fetch_custom_plan_weeks', user.id)
+      errorLogger.logDatabaseError(
+        new Error(weeksError.message),
+        'fetch_custom_plan_weeks',
+        user.id
+      )
       return NextResponse.json({ error: 'Failed to fetch plan weeks' }, { status: 500 })
     }
 
@@ -192,7 +201,11 @@ export async function PUT(
       .eq('plan_id', planId)
 
     if (deleteError) {
-      errorLogger.logDatabaseError(new Error(deleteError.message), 'delete_custom_plan_weeks', user.id)
+      errorLogger.logDatabaseError(
+        new Error(deleteError.message),
+        'delete_custom_plan_weeks',
+        user.id
+      )
       return NextResponse.json({ error: 'Failed to update plan weeks' }, { status: 500 })
     }
 
@@ -213,7 +226,11 @@ export async function PUT(
         .insert(weeksToInsert)
 
       if (weeksError) {
-        errorLogger.logDatabaseError(new Error(weeksError.message), 'insert_custom_plan_weeks', user.id)
+        errorLogger.logDatabaseError(
+          new Error(weeksError.message),
+          'insert_custom_plan_weeks',
+          user.id
+        )
         return NextResponse.json({ error: 'Failed to save plan weeks' }, { status: 500 })
       }
     }

@@ -310,12 +310,9 @@ export function PlanBuilderProvider({
     []
   )
 
-  const removeWorkout = useCallback(
-    (weekNumber: number, day: DayOfWeek, placementId: string) => {
-      dispatch({ type: 'REMOVE_WORKOUT', payload: { weekNumber, day, placementId } })
-    },
-    []
-  )
+  const removeWorkout = useCallback((weekNumber: number, day: DayOfWeek, placementId: string) => {
+    dispatch({ type: 'REMOVE_WORKOUT', payload: { weekNumber, day, placementId } })
+  }, [])
 
   const moveWorkout = useCallback(
     (

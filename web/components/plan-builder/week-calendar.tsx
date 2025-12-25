@@ -156,9 +156,7 @@ export function WeekCalendar({
       </div>
 
       {/* Week notes (if any) */}
-      {week.notes && (
-        <p className="mt-2 text-xs text-muted-foreground italic">{week.notes}</p>
-      )}
+      {week.notes && <p className="mt-2 text-xs text-muted-foreground italic">{week.notes}</p>}
     </div>
   )
 }

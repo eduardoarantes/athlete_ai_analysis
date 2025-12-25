@@ -254,10 +254,7 @@ describe('planBuilderReducer', () => {
 
       const stateWithWeeks: PlanBuilderState = {
         ...initialState,
-        weeks: [
-          createMockWeek(1, { workouts: sourceWorkouts, weeklyTss: 50 }),
-          createMockWeek(2),
-        ],
+        weeks: [createMockWeek(1, { workouts: sourceWorkouts, weeklyTss: 50 }), createMockWeek(2)],
       }
 
       const action: PlanBuilderAction = {
@@ -358,9 +355,24 @@ describe('planBuilderReducer', () => {
       const existingWorkouts: WorkoutsData = {
         ...createEmptyWorkoutsData(),
         monday: [
-          { id: 'p1', workoutKey: 'w1', order: 0, workout: { name: 'W1', type: 'endurance', base_duration_min: 60, base_tss: 50 } },
-          { id: 'p2', workoutKey: 'w2', order: 1, workout: { name: 'W2', type: 'tempo', base_duration_min: 60, base_tss: 60 } },
-          { id: 'p3', workoutKey: 'w3', order: 2, workout: { name: 'W3', type: 'threshold', base_duration_min: 60, base_tss: 70 } },
+          {
+            id: 'p1',
+            workoutKey: 'w1',
+            order: 0,
+            workout: { name: 'W1', type: 'endurance', base_duration_min: 60, base_tss: 50 },
+          },
+          {
+            id: 'p2',
+            workoutKey: 'w2',
+            order: 1,
+            workout: { name: 'W2', type: 'tempo', base_duration_min: 60, base_tss: 60 },
+          },
+          {
+            id: 'p3',
+            workoutKey: 'w3',
+            order: 2,
+            workout: { name: 'W3', type: 'threshold', base_duration_min: 60, base_tss: 70 },
+          },
         ],
       }
 
@@ -467,9 +479,24 @@ describe('planBuilderReducer', () => {
       const existingWorkouts: WorkoutsData = {
         ...createEmptyWorkoutsData(),
         monday: [
-          { id: 'p1', workoutKey: 'w1', order: 0, workout: { name: 'W1', type: 'endurance', base_duration_min: 60, base_tss: 50 } },
-          { id: 'p2', workoutKey: 'w2', order: 1, workout: { name: 'W2', type: 'tempo', base_duration_min: 60, base_tss: 60 } },
-          { id: 'p3', workoutKey: 'w3', order: 2, workout: { name: 'W3', type: 'threshold', base_duration_min: 60, base_tss: 70 } },
+          {
+            id: 'p1',
+            workoutKey: 'w1',
+            order: 0,
+            workout: { name: 'W1', type: 'endurance', base_duration_min: 60, base_tss: 50 },
+          },
+          {
+            id: 'p2',
+            workoutKey: 'w2',
+            order: 1,
+            workout: { name: 'W2', type: 'tempo', base_duration_min: 60, base_tss: 60 },
+          },
+          {
+            id: 'p3',
+            workoutKey: 'w3',
+            order: 2,
+            workout: { name: 'W3', type: 'threshold', base_duration_min: 60, base_tss: 70 },
+          },
         ],
       }
 

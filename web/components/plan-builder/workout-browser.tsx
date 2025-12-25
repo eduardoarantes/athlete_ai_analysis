@@ -11,7 +11,12 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Search, Filter } from 'lucide-react'
-import type { WorkoutLibraryItem, WorkoutType, WorkoutIntensity, TrainingPhase } from '@/lib/types/workout-library'
+import type {
+  WorkoutLibraryItem,
+  WorkoutType,
+  WorkoutIntensity,
+  TrainingPhase,
+} from '@/lib/types/workout-library'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -368,12 +373,7 @@ export function WorkoutBrowser({
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <p className="text-sm text-muted-foreground">No workouts found</p>
             {activeFilterCount > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-2"
-                onClick={clearFilters}
-              >
+              <Button variant="outline" size="sm" className="mt-2" onClick={clearFilters}>
                 Clear filters
               </Button>
             )}
