@@ -4,15 +4,17 @@
  * Week Calendar Component
  *
  * Displays a 7-day calendar grid for a single week in the plan builder.
- * Shows workout placements and allows drag-and-drop interactions.
+ * Shows workout placements and supports drag-and-drop interactions.
  *
  * Part of Issue #22: Plan Builder Phase 2 - Core UI
+ * Updated in Issue #23: Plan Builder Phase 3 - Drag-and-Drop
  */
 
 import { type DayOfWeek, DAYS_OF_WEEK, DAY_LABELS } from '@/lib/types/plan-builder'
 import type { WeekState, WorkoutPlacement } from '@/lib/types/plan-builder'
 import { cn } from '@/lib/utils'
 import { WorkoutCard } from './workout-card'
+import { DroppableDay, DraggablePlacedWorkout } from './dnd'
 
 /**
  * Props for the WeekCalendar component
@@ -22,8 +24,6 @@ interface WeekCalendarProps {
   week: WeekState
   /** Callback when a workout is removed */
   onRemoveWorkout?: ((day: DayOfWeek, placementId: string) => void) | undefined
-  /** Callback when workouts are dropped (for drag-and-drop) */
-  onDropWorkout?: ((day: DayOfWeek, placement: WorkoutPlacement) => void) | undefined
   /** Whether drag-and-drop is enabled */
   isDragEnabled?: boolean | undefined
   /** Optional className for styling */
@@ -34,17 +34,18 @@ interface WeekCalendarProps {
  * Day column component
  */
 interface DayColumnProps {
+  weekNumber: number
   day: DayOfWeek
   placements: WorkoutPlacement[]
   onRemove?: ((placementId: string) => void) | undefined
   isDragEnabled?: boolean | undefined
 }
 
-function DayColumn({ day, placements, onRemove, isDragEnabled }: DayColumnProps) {
+function DayColumn({ weekNumber, day, placements, onRemove, isDragEnabled }: DayColumnProps) {
   const dayLabel = DAY_LABELS[day]
   const hasWorkouts = placements.length > 0
 
-  return (
+  const content = (
     <div
       className={cn(
         'flex flex-col border border-border rounded-lg min-h-[120px]',
@@ -63,25 +64,51 @@ function DayColumn({ day, placements, onRemove, isDragEnabled }: DayColumnProps)
           !hasWorkouts && 'flex items-center justify-center',
           isDragEnabled && 'min-h-[80px]'
         )}
-        data-day={day}
-        data-droppable="true"
       >
         {hasWorkouts ? (
-          placements.map((placement) => (
-            <WorkoutCard
-              key={placement.id}
-              placement={placement}
-              onRemove={onRemove ? () => onRemove(placement.id) : undefined}
-              isDraggable={isDragEnabled}
-              isCompact
-            />
-          ))
+          placements.map((placement) =>
+            isDragEnabled ? (
+              <DraggablePlacedWorkout
+                key={placement.id}
+                placement={placement}
+                weekNumber={weekNumber}
+                day={day}
+              >
+                <WorkoutCard
+                  placement={placement}
+                  onRemove={onRemove ? () => onRemove(placement.id) : undefined}
+                  isDraggable
+                  isCompact
+                />
+              </DraggablePlacedWorkout>
+            ) : (
+              <WorkoutCard
+                key={placement.id}
+                placement={placement}
+                onRemove={onRemove ? () => onRemove(placement.id) : undefined}
+                isCompact
+              />
+            )
+          )
         ) : (
-          <span className="text-xs text-muted-foreground/50">Rest day</span>
+          <span className="text-xs text-muted-foreground/50">
+            {isDragEnabled ? 'Drop here' : 'Rest day'}
+          </span>
         )}
       </div>
     </div>
   )
+
+  // Wrap in droppable if drag is enabled
+  if (isDragEnabled) {
+    return (
+      <DroppableDay weekNumber={weekNumber} day={day}>
+        {content}
+      </DroppableDay>
+    )
+  }
+
+  return content
 }
 
 /**
@@ -119,6 +146,7 @@ export function WeekCalendar({
         {DAYS_OF_WEEK.map((day) => (
           <DayColumn
             key={day}
+            weekNumber={week.weekNumber}
             day={day}
             placements={week.workouts[day]}
             onRemove={onRemoveWorkout ? handleRemove(day) : undefined}

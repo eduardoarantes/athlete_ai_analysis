@@ -7,10 +7,11 @@
  * Combines the workout browser, week calendar grid, and controls.
  *
  * Part of Issue #22: Plan Builder Phase 2 - Core UI
+ * Updated in Issue #23: Plan Builder Phase 3 - Drag-and-Drop
  */
 
 import { useState } from 'react'
-import { Plus, Undo2, Redo2, Save, AlertCircle } from 'lucide-react'
+import { Plus, Undo2, Redo2, Save, AlertCircle, GripVertical } from 'lucide-react'
 import type { TrainingPhase, WorkoutLibraryItem } from '@/lib/types/workout-library'
 import type { DayOfWeek } from '@/lib/types/plan-builder'
 import { cn } from '@/lib/utils'
@@ -36,6 +37,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { PlanBuilderProvider, usePlanBuilder } from '@/lib/contexts/plan-builder-context'
 import { WeekCalendar } from './week-calendar'
 import { WorkoutBrowser } from './workout-browser'
+import { PlanBuilderDndContext } from './dnd'
 
 /**
  * All available training phases
@@ -91,6 +93,7 @@ function PlanBuilderInner() {
   const [addWorkoutDialog, setAddWorkoutDialog] = useState<AddWorkoutDialogState>(initialDialogState)
   const [selectedWeek] = useState<number | null>(null)
   const [selectedDay] = useState<DayOfWeek>('monday')
+  const [isDragMode, setIsDragMode] = useState(true) // Drag mode enabled by default
 
   // Handle workout selection from browser
   const handleSelectWorkout = (workout: WorkoutLibraryItem) => {
@@ -130,16 +133,18 @@ function PlanBuilderInner() {
   }
 
   return (
-    <div className="flex h-full">
-      {/* Sidebar - Workout Browser */}
-      <aside className="w-80 border-r border-border flex flex-col">
-        <div className="p-4 flex-1 overflow-hidden flex flex-col">
-          <WorkoutBrowser
-            onSelectWorkout={handleSelectWorkout}
-            className="flex-1"
-          />
-        </div>
-      </aside>
+    <PlanBuilderDndContext>
+      <div className="flex h-full">
+        {/* Sidebar - Workout Browser */}
+        <aside className="w-80 border-r border-border flex flex-col">
+          <div className="p-4 flex-1 overflow-hidden flex flex-col">
+            <WorkoutBrowser
+              onSelectWorkout={handleSelectWorkout}
+              isDragEnabled={isDragMode}
+              className="flex-1"
+            />
+          </div>
+        </aside>
 
       {/* Main content area */}
       <main className="flex-1 flex flex-col overflow-hidden">
@@ -159,6 +164,15 @@ function PlanBuilderInner() {
             </div>
 
             <div className="flex items-center gap-2">
+              <Button
+                variant={isDragMode ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setIsDragMode(!isDragMode)}
+                title={isDragMode ? 'Drag mode enabled' : 'Click mode'}
+              >
+                <GripVertical className="h-4 w-4 mr-1" />
+                {isDragMode ? 'Drag' : 'Click'}
+              </Button>
               <Button
                 variant="outline"
                 size="icon"
@@ -266,6 +280,7 @@ function PlanBuilderInner() {
                   <WeekCalendar
                     week={week}
                     onRemoveWorkout={handleRemoveWorkout(week.weekNumber)}
+                    isDragEnabled={isDragMode}
                     className={cn(
                       selectedWeek === week.weekNumber && 'ring-2 ring-primary rounded-lg'
                     )}
@@ -356,7 +371,8 @@ function PlanBuilderInner() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </PlanBuilderDndContext>
   )
 }
 

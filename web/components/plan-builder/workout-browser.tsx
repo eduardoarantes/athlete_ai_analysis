@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { WorkoutLibraryCard, WorkoutLibraryCardSkeleton } from './workout-library-card'
+import { DraggableLibraryWorkout } from './dnd'
 
 /**
  * Filter state interface
@@ -378,14 +379,23 @@ export function WorkoutBrowser({
             )}
           </div>
         ) : (
-          workouts.map((workout) => (
-            <WorkoutLibraryCard
-              key={workout.id}
-              workout={workout}
-              onClick={onSelectWorkout ? () => onSelectWorkout(workout) : undefined}
-              isDraggable={isDragEnabled}
-            />
-          ))
+          workouts.map((workout) =>
+            isDragEnabled ? (
+              <DraggableLibraryWorkout key={workout.id} workout={workout}>
+                <WorkoutLibraryCard
+                  workout={workout}
+                  onClick={onSelectWorkout ? () => onSelectWorkout(workout) : undefined}
+                  isDraggable
+                />
+              </DraggableLibraryWorkout>
+            ) : (
+              <WorkoutLibraryCard
+                key={workout.id}
+                workout={workout}
+                onClick={onSelectWorkout ? () => onSelectWorkout(workout) : undefined}
+              />
+            )
+          )
         )}
       </div>
     </div>
