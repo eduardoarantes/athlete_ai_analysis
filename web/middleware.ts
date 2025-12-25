@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 // Public routes that don't require authentication
-const publicRoutes = ['/', '/about', '/login', '/register', '/auth/callback', '/api/auth/callback']
+const publicRoutes = ['/', '/login', '/register', '/auth/callback', '/api/auth/callback']
 
 // Routes that start with these prefixes are public
 const publicPrefixes = ['/api/auth/', '/_next/', '/favicon']
