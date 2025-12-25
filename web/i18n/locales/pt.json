@@ -197,7 +197,15 @@
     "connectionErrorDescription": "Não foi possível conectar ao Strava. Por favor, tente novamente.",
     "errorAccessDenied": "Acesso negado. Por favor, tente novamente e autorize a conexão.",
     "errorInvalidScope": "Permissões ausentes. Por favor, tente novamente e conceda todas as permissões solicitadas.",
-    "errorDefault": "Algo deu errado. Por favor, tente novamente."
+    "errorDefault": "Algo deu errado. Por favor, tente novamente.",
+    "fullSyncStarted": "Sincronização completa iniciada...",
+    "incrementalSyncStarted": "Sincronizando novas atividades...",
+    "syncNew": "Sincronizar Novas Atividades",
+    "sinceLast": "Desde {date}",
+    "fullResync": "Ressincronização Completa",
+    "allActivities": "Todas as atividades",
+    "syncPending": "Sincronização pendente...",
+    "syncRunning": "Sincronização em andamento..."
   },
   "onboarding": {
     "title": "Bem-vindo! Vamos configurar seu perfil",

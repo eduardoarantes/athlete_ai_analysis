@@ -197,7 +197,15 @@
     "connectionErrorDescription": "Impossible de se connecter à Strava. Veuillez réessayer.",
     "errorAccessDenied": "Accès refusé. Veuillez réessayer et autoriser la connexion.",
     "errorInvalidScope": "Permissions manquantes. Veuillez réessayer et accorder toutes les permissions demandées.",
-    "errorDefault": "Une erreur s'est produite. Veuillez réessayer."
+    "errorDefault": "Une erreur s'est produite. Veuillez réessayer.",
+    "fullSyncStarted": "Synchronisation complète lancée...",
+    "incrementalSyncStarted": "Synchronisation des nouvelles activités...",
+    "syncNew": "Synchroniser les Nouvelles Activités",
+    "sinceLast": "Depuis le {date}",
+    "fullResync": "Resynchronisation Complète",
+    "allActivities": "Toutes les activités",
+    "syncPending": "Synchronisation en attente...",
+    "syncRunning": "Synchronisation en cours..."
   },
   "onboarding": {
     "title": "Bienvenue ! Configurons votre profil",

@@ -204,7 +204,15 @@
     "connectionErrorDescription": "Could not connect to Strava. Please try again.",
     "errorAccessDenied": "Access was denied. Please try again and authorize the connection.",
     "errorInvalidScope": "Missing permissions. Please try again and grant all requested permissions.",
-    "errorDefault": "Something went wrong. Please try again."
+    "errorDefault": "Something went wrong. Please try again.",
+    "fullSyncStarted": "Full sync started...",
+    "incrementalSyncStarted": "Syncing new activities...",
+    "syncNew": "Sync New Activities",
+    "sinceLast": "Since {date}",
+    "fullResync": "Full Re-sync",
+    "allActivities": "All activities",
+    "syncPending": "Sync pending...",
+    "syncRunning": "Sync in progress..."
   },
   "onboarding": {
     "title": "Welcome! Let's set up your profile",
