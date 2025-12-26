@@ -52,10 +52,10 @@ export function WorkoutCard({ workout, className, onClick }: WorkoutCardProps) {
             {formatDuration(duration)}
           </span>
         )}
-        {(workout.tss ?? 0) > 0 && (
+        {workout.tss != null && workout.tss > 0 && (
           <span className="flex items-center gap-1">
             <Zap className="h-3 w-3" />
-            {workout.tss} TSS
+            {Math.round(workout.tss)} TSS
           </span>
         )}
       </div>
