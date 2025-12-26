@@ -7,7 +7,7 @@ API endpoints for workout library access.
 from __future__ import annotations
 
 import logging
-from typing import Literal
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
@@ -113,12 +113,12 @@ def _filter_workouts(
 @router.get("", response_model=WorkoutLibraryResponse)
 @router.get("/", response_model=WorkoutLibraryResponse, include_in_schema=False)
 async def get_workouts(
-    type: list[WorkoutType] | None = Query(default=None, description="Filter by workout type"),
-    intensity: list[WorkoutIntensity] | None = Query(default=None, description="Filter by intensity"),
-    phase: list[TrainingPhase] | None = Query(default=None, description="Filter by training phase"),
-    min_duration: int | None = Query(default=None, alias="minDuration", ge=0, description="Minimum duration in minutes"),
-    max_duration: int | None = Query(default=None, alias="maxDuration", ge=0, description="Maximum duration in minutes"),
-    search: str | None = Query(default=None, description="Search in name and description"),
+    type: Annotated[list[WorkoutType] | None, Query(description="Filter by workout type")] = None,
+    intensity: Annotated[list[WorkoutIntensity] | None, Query(description="Filter by intensity")] = None,
+    phase: Annotated[list[TrainingPhase] | None, Query(description="Filter by training phase")] = None,
+    min_duration: Annotated[int | None, Query(alias="minDuration", ge=0, description="Minimum duration in minutes")] = None,
+    max_duration: Annotated[int | None, Query(alias="maxDuration", ge=0, description="Maximum duration in minutes")] = None,
+    search: Annotated[str | None, Query(description="Search in name and description")] = None,
 ) -> JSONResponse:
     """
     Get workout library with optional filtering.
