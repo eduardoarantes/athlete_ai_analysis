@@ -423,7 +423,7 @@ interface PlanBuilderProps {
  */
 export function PlanBuilder({ planId, className }: PlanBuilderProps) {
   return (
-    <PlanBuilderProvider initialState={planId ? { planId } : undefined}>
+    <PlanBuilderProvider planId={planId}>
       <div className={cn('h-full', className)}>
         <PlanBuilderInner />
       </div>
