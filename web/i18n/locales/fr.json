@@ -588,6 +588,7 @@
     "type": "Type",
     "restDay": "Jour de Repos",
     "noWorkout": "Aucun entraînement prévu",
+    "noWorkoutsScheduled": "Aucun entraînement programmé. Ajoutez des entraînements à votre plan pour les voir ici.",
     "today": "Aujourd'hui",
     "previousWeek": "Semaine Précédente",
     "nextWeek": "Semaine Suivante",

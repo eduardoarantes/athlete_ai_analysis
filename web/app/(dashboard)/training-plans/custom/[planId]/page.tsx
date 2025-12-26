@@ -20,16 +20,24 @@ export default async function EditCustomPlanPage({ params }: EditCustomPlanPageP
     redirect('/login')
   }
 
-  // Verify the plan exists and belongs to the user
+  // Verify the plan exists, belongs to the user, and is a custom plan
+  // Note: created_from column may not be in generated types yet
   const { data: plan, error } = await supabase
     .from('training_plans')
-    .select('id')
+    .select('id, created_from')
     .eq('id', planId)
     .eq('user_id', user.id)
     .single()
 
   if (error || !plan) {
     notFound()
+  }
+
+  // Only allow editing custom_builder plans - redirect AI plans to view page
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const createdFrom = (plan as any).created_from as string | undefined
+  if (createdFrom !== 'custom_builder') {
+    redirect(`/training-plans/${planId}`)
   }
 
   return (
