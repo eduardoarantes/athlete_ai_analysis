@@ -26,8 +26,8 @@ interface TrainingPlan {
   plan_data: PlanData
   weeks_total: number | null
   created_at: string
-  goal?: string
-  created_from?: 'wizard' | 'custom_builder' | 'imported'
+  goal?: string | undefined
+  created_from?: 'wizard' | 'custom_builder' | 'imported' | undefined
 }
 
 interface TrainingPlansListProps {

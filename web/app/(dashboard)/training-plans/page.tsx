@@ -13,6 +13,7 @@ interface PlanRow {
   plan_data: unknown
   weeks_total?: number | null
   created_at: string
+  created_from?: 'wizard' | 'custom_builder' | 'imported'
 }
 
 export default async function TrainingPlansPage() {
@@ -39,6 +40,7 @@ export default async function TrainingPlansPage() {
       ...plan,
       plan_data: typeof plan.plan_data === 'string' ? JSON.parse(plan.plan_data) : plan.plan_data,
       weeks_total: plan.weeks_total ?? null,
+      created_from: plan.created_from,
     })) || []
 
   return (
