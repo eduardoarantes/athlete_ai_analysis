@@ -357,4 +357,30 @@ pnpm test:headed         # Run E2E tests with browser
 # Database
 npx supabase migration new <name>  # Create migration
 npx supabase db push              # Apply migrations
+
+# Supabase Types (IMPORTANT)
+npx supabase gen types typescript --project-id smzefukhxabhjwdxhuhm --schema public > lib/types/database.ts
 ```
+
+---
+
+## Supabase Type Generation (REQUIRED)
+
+**After adding/modifying database columns, you MUST regenerate Supabase types:**
+
+```bash
+npx supabase gen types typescript --project-id smzefukhxabhjwdxhuhm --schema public > lib/types/database.ts
+```
+
+**When to regenerate:**
+
+- After running `npx supabase db push` with new migrations
+- After adding new columns to existing tables
+- After creating new tables
+- When you see `SelectQueryError` TypeScript errors about missing columns
+
+**Important:**
+
+- Types file location: `lib/types/database.ts` (NOT `lib/supabase/database.types.ts`)
+- The Supabase client imports types from `@/lib/types/database`
+- Do NOT use type assertions (`as any`) to work around missing column types - regenerate types instead

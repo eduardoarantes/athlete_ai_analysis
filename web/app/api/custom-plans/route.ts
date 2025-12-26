@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { errorLogger } from '@/lib/monitoring/error-logger'
 import type { SavePlanRequest, SavePlanResponse } from '@/lib/types/plan-builder'
-
-// Note: custom_plan_weeks table and extended training_plans columns
-// require regenerating Supabase types after migration is applied.
-// Using type assertions until types are regenerated.
+import type { Json } from '@/lib/types/database'
 
 /**
  * Create a new custom training plan
@@ -66,15 +63,12 @@ export async function POST(request: NextRequest) {
         plan_id: plan.id,
         week_number: week.weekNumber,
         phase: week.phase,
-        workouts_data: week.workouts,
+        workouts_data: week.workouts as unknown as Json,
         weekly_tss: week.weeklyTss,
         notes: week.notes ?? null,
       }))
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error: weeksError } = await (supabase as any)
-        .from('custom_plan_weeks')
-        .insert(weeksToInsert)
+      const { error: weeksError } = await supabase.from('custom_plan_weeks').insert(weeksToInsert)
 
       if (weeksError) {
         // Rollback: delete the plan if weeks insertion fails

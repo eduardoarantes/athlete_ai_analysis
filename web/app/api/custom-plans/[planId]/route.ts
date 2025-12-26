@@ -8,10 +8,7 @@ import type {
   WorkoutsData,
 } from '@/lib/types/plan-builder'
 import type { TrainingPhase } from '@/lib/types/workout-library'
-
-// Note: custom_plan_weeks table and extended training_plans columns
-// require regenerating Supabase types after migration is applied.
-// Using type assertions until types are regenerated.
+import type { Json } from '@/lib/types/database'
 
 // Extended training plan type with custom builder fields
 interface ExtendedTrainingPlan {
@@ -23,21 +20,6 @@ interface ExtendedTrainingPlan {
   target_ftp?: number | null
   is_draft?: boolean
   status: string | null
-  created_at: string
-  updated_at: string
-}
-
-/**
- * Custom plan week record from database
- */
-interface CustomPlanWeekRow {
-  id: string
-  plan_id: string
-  week_number: number
-  phase: string
-  workouts_data: WorkoutsData
-  weekly_tss: number | null
-  notes: string | null
   created_at: string
   updated_at: string
 }
@@ -79,8 +61,7 @@ export async function GET(
     }
 
     // Fetch the weeks
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: weeks, error: weeksError } = await (supabase as any)
+    const { data: weeks, error: weeksError } = await supabase
       .from('custom_plan_weeks')
       .select('*')
       .eq('plan_id', planId)
@@ -96,11 +77,11 @@ export async function GET(
     }
 
     // Transform weeks to WeekState format
-    const weekStates: WeekState[] = ((weeks || []) as CustomPlanWeekRow[]).map((row) => ({
+    const weekStates: WeekState[] = (weeks || []).map((row) => ({
       id: row.id,
       weekNumber: row.week_number,
       phase: row.phase as TrainingPhase,
-      workouts: row.workouts_data ?? {
+      workouts: (row.workouts_data as unknown as WorkoutsData) ?? {
         monday: [],
         tuesday: [],
         wednesday: [],
@@ -194,8 +175,7 @@ export async function PUT(
     }
 
     // Delete existing weeks and reinsert (simplest approach for now)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: deleteError } = await (supabase as any)
+    const { error: deleteError } = await supabase
       .from('custom_plan_weeks')
       .delete()
       .eq('plan_id', planId)
@@ -215,15 +195,12 @@ export async function PUT(
         plan_id: planId,
         week_number: week.weekNumber,
         phase: week.phase,
-        workouts_data: week.workouts,
+        workouts_data: week.workouts as unknown as Json,
         weekly_tss: week.weeklyTss,
         notes: week.notes ?? null,
       }))
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error: weeksError } = await (supabase as any)
-        .from('custom_plan_weeks')
-        .insert(weeksToInsert)
+      const { error: weeksError } = await supabase.from('custom_plan_weeks').insert(weeksToInsert)
 
       if (weeksError) {
         errorLogger.logDatabaseError(

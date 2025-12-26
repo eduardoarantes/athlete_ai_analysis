@@ -6,6 +6,8 @@
  * Returns workouts from the cycling-ai workout library with optional filtering.
  * Public endpoint - no authentication required (workout library is public data).
  *
+ * Calls the Python FastAPI backend which has the workout library.
+ *
  * Part of Issue #21: Plan Builder Phase 1 - Foundation
  *
  * Query Parameters:
@@ -25,14 +27,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { exec } from 'child_process'
-import { promisify } from 'util'
-import path from 'path'
 import { errorLogger } from '@/lib/monitoring/error-logger'
-import { validateWorkoutFilters, buildPythonArgs } from '@/lib/utils/workout-filters'
+import { validateWorkoutFilters } from '@/lib/utils/workout-filters'
+import { invokePythonApi } from '@/lib/services/lambda-client'
 import type { WorkoutLibraryResponse } from '@/lib/types/workout-library'
-
-const execAsync = promisify(exec)
 
 /**
  * GET /api/workouts
@@ -56,62 +54,75 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid parameters', details: errors }, { status: 400 })
     }
 
-    // 2. Build Python command
-    // Path to Python script (relative to project root)
-    const scriptPath = path.join(process.cwd(), '..', 'scripts', 'get_workout_library.py')
-    // Use Python from virtual environment if available, otherwise system Python
-    const pythonPath = path.join(process.cwd(), '..', '.venv', 'bin', 'python')
+    // 2. Build query string for Python API
+    const queryParams = new URLSearchParams()
 
-    const args = buildPythonArgs(filters)
-    const command = [pythonPath, scriptPath, ...args].join(' ')
-
-    errorLogger.logInfo('Fetching workout library', {
-      path: '/api/workouts',
-      method: 'GET',
-      metadata: { filters },
-    })
-
-    const { stdout, stderr } = await execAsync(command, {
-      timeout: 30000, // 30 second timeout
-      maxBuffer: 10 * 1024 * 1024, // 10MB buffer for large library
-    })
-
-    // Check for errors in stderr (Python script writes errors there)
-    if (stderr) {
-      try {
-        const errorData = JSON.parse(stderr)
-        if (errorData.error) {
-          errorLogger.logWarning('Python script returned error', {
-            path: '/api/workouts',
-            method: 'GET',
-            metadata: { errorData },
-          })
-
-          return NextResponse.json(
-            { error: errorData.message, details: errorData.details },
-            { status: 400 }
-          )
-        }
-      } catch {
-        // stderr was not JSON, might be warnings - log but continue
-        errorLogger.logInfo('Python script stderr (non-critical)', {
-          path: '/api/workouts',
-          metadata: { stderr: stderr.substring(0, 500) },
-        })
+    if (filters.type) {
+      for (const t of filters.type) {
+        queryParams.append('type', t)
       }
     }
 
-    // 3. Parse Python script output
-    const result: WorkoutLibraryResponse = JSON.parse(stdout)
+    if (filters.intensity) {
+      for (const i of filters.intensity) {
+        queryParams.append('intensity', i)
+      }
+    }
+
+    if (filters.phase) {
+      for (const p of filters.phase) {
+        queryParams.append('phase', p)
+      }
+    }
+
+    if (filters.minDuration !== undefined) {
+      queryParams.set('minDuration', filters.minDuration.toString())
+    }
+
+    if (filters.maxDuration !== undefined) {
+      queryParams.set('maxDuration', filters.maxDuration.toString())
+    }
+
+    if (filters.search) {
+      queryParams.set('search', filters.search)
+    }
+
+    const queryString = queryParams.toString()
+    const path = queryString ? `/api/v1/workouts?${queryString}` : '/api/v1/workouts'
+
+    errorLogger.logInfo('Fetching workout library from Python API', {
+      path: '/api/workouts',
+      method: 'GET',
+      metadata: { filters, pythonPath: path },
+    })
+
+    // 3. Call Python API
+    const response = await invokePythonApi<WorkoutLibraryResponse>({
+      method: 'GET',
+      path,
+    })
+
+    if (response.statusCode !== 200) {
+      errorLogger.logWarning('Python API returned error', {
+        path: '/api/workouts',
+        method: 'GET',
+        metadata: { statusCode: response.statusCode, body: response.body },
+      })
+
+      return NextResponse.json(
+        { error: 'Failed to fetch workout library', details: response.body },
+        { status: response.statusCode }
+      )
+    }
 
     errorLogger.logInfo('Workout library fetched successfully', {
       path: '/api/workouts',
       method: 'GET',
-      metadata: { total: result.total, filtersApplied: result.filters_applied },
+      metadata: { total: response.body.total, filtersApplied: response.body.filters_applied },
     })
 
     // 4. Return response with caching headers
-    return NextResponse.json(result, {
+    return NextResponse.json(response.body, {
       status: 200,
       headers: {
         'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400',
@@ -119,38 +130,10 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    // Handle script execution errors
-    const execError = error as Error & { stderr?: string; code?: number }
-
-    // Try to extract structured error from stderr
-    if (execError.stderr) {
-      try {
-        const errorData = JSON.parse(execError.stderr)
-        if (errorData.error) {
-          errorLogger.logWarning('Python script execution error', {
-            path: '/api/workouts',
-            method: 'GET',
-            metadata: { errorData },
-          })
-
-          return NextResponse.json(
-            { error: errorData.message, details: errorData.details },
-            { status: 400 }
-          )
-        }
-      } catch {
-        // stderr was not JSON
-      }
-    }
-
     errorLogger.logError(error as Error, {
       path: '/api/workouts',
       method: 'GET',
-      metadata: {
-        phase: 'script_execution',
-        stderr: execError.stderr?.substring(0, 500),
-        code: execError.code,
-      },
+      metadata: { phase: 'python_api_call' },
     })
 
     return NextResponse.json({ error: 'Failed to fetch workout library' }, { status: 500 })

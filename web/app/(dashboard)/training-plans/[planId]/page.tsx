@@ -47,9 +47,18 @@ export default async function TrainingPlanPage({ params }: TrainingPlanPageProps
     status: planRow.status as TrainingPlan['status'],
   }
 
-  // Calculate total TSS for the plan
-  const totalPlanTss = planData.weekly_plan.reduce((sum, week) => sum + (week.week_tss || 0), 0)
-  const weeksTotal = plan.weeks_total || planData.plan_metadata.total_weeks
+  // Calculate total TSS for the plan (handle custom plans without weekly_plan)
+  const totalPlanTss =
+    planData.weekly_plan?.reduce((sum, week) => sum + (week.week_tss || 0), 0) ?? 0
+  const weeksTotal = plan.weeks_total || planData.plan_metadata?.total_weeks || 0
+
+  // Get FTP values (custom plans may not have plan_metadata)
+  const currentFtp = planData.plan_metadata?.current_ftp
+  const targetFtp = planData.plan_metadata?.target_ftp
+  const ftpGainWatts =
+    planData.plan_metadata?.ftp_gain_watts ||
+    (currentFtp && targetFtp ? targetFtp - currentFtp : null)
+  const hasMetadata = currentFtp !== undefined && targetFtp !== undefined
 
   // Check if user is admin
   const isAdmin = await checkAdmin(supabase)
@@ -69,29 +78,33 @@ export default async function TrainingPlanPage({ params }: TrainingPlanPageProps
 
         {/* Inline Stats */}
         <div className="flex flex-wrap items-center gap-4 text-sm">
-          <div className="flex items-center gap-1.5">
-            <Target className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium">{weeksTotal} weeks</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium">
-              {planData.plan_metadata.current_ftp} &rarr; {planData.plan_metadata.target_ftp}W
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Zap className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium">
-              +
-              {planData.plan_metadata.ftp_gain_watts ||
-                planData.plan_metadata.target_ftp - planData.plan_metadata.current_ftp}
-              W
-            </span>
-          </div>
-          <div className="text-muted-foreground">
-            {Math.round(totalPlanTss)} TSS (
-            {Math.round(totalPlanTss / planData.plan_metadata.total_weeks)}/wk)
-          </div>
+          {weeksTotal > 0 && (
+            <div className="flex items-center gap-1.5">
+              <Target className="h-4 w-4 text-muted-foreground" />
+              <span className="font-medium">{weeksTotal} weeks</span>
+            </div>
+          )}
+          {hasMetadata && (
+            <>
+              <div className="flex items-center gap-1.5">
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                <span className="font-medium">
+                  {currentFtp} &rarr; {targetFtp}W
+                </span>
+              </div>
+              {ftpGainWatts !== null && ftpGainWatts > 0 && (
+                <div className="flex items-center gap-1.5">
+                  <Zap className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium">+{ftpGainWatts}W</span>
+                </div>
+              )}
+            </>
+          )}
+          {totalPlanTss > 0 && weeksTotal > 0 && (
+            <div className="text-muted-foreground">
+              {Math.round(totalPlanTss)} TSS ({Math.round(totalPlanTss / weeksTotal)}/wk)
+            </div>
+          )}
         </div>
 
         <SchedulePlanButton templateId={plan.id} templateName={plan.name} weeksTotal={weeksTotal} />

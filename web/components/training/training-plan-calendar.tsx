@@ -29,7 +29,8 @@ export function TrainingPlanCalendar({
 }: TrainingPlanCalendarProps) {
   const t = useTranslations('trainingPlan')
   const planData = plan.plan_data
-  const totalWeeks = planData.weekly_plan.length
+  const weeklyPlan = planData.weekly_plan ?? []
+  const totalWeeks = weeklyPlan.length
 
   // Start at first page for template mode, otherwise calculate based on dates
   const [currentPage, setCurrentPage] = useState(0)
@@ -53,10 +54,17 @@ export function TrainingPlanCalendar({
   const endWeek = Math.min(startWeek + WEEKS_PER_PAGE - 1, totalWeeks)
 
   const visibleWeeks: WeeklyPlan[] = useMemo(() => {
-    return planData.weekly_plan.filter(
-      (w) => w.week_number >= startWeek && w.week_number <= endWeek
+    return weeklyPlan.filter((w) => w.week_number >= startWeek && w.week_number <= endWeek)
+  }, [weeklyPlan, startWeek, endWeek])
+
+  // Handle custom plans without weekly_plan - must be after all hooks
+  if (totalWeeks === 0) {
+    return (
+      <Card className="p-8 text-center">
+        <p className="text-muted-foreground">{t('noWorkoutsScheduled')}</p>
+      </Card>
     )
-  }, [planData.weekly_plan, startWeek, endWeek])
+  }
 
   // Map workouts to day index for a specific week
   const getWorkoutsByDay = (weekData: WeeklyPlan): Map<number, Workout> => {

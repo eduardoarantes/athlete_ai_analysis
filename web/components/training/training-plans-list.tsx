@@ -26,7 +26,8 @@ interface TrainingPlan {
   plan_data: PlanData
   weeks_total: number | null
   created_at: string
-  goal?: string
+  goal?: string | undefined
+  created_from?: 'wizard' | 'custom_builder' | 'imported' | undefined
 }
 
 interface TrainingPlansListProps {
@@ -215,69 +216,75 @@ export function TrainingPlansList({ plans }: TrainingPlansListProps) {
         </Card>
       ) : (
         <div>
-          {filteredPlans.map((plan) => (
-            <Link key={plan.id} href={`/training-plans/${plan.id}`}>
-              <Card className="hover:bg-muted/50 transition-colors cursor-pointer mb-[10px]">
-                <CardContent className="px-4 py-3">
-                  <div className="flex items-center gap-4">
-                    {/* Plan Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold truncate">
-                          {formatWithGoalLabels(plan.name, tGoals)}
-                        </h3>
-                        {plan.goal && (
-                          <Badge variant="secondary" className="text-xs shrink-0">
-                            {tGoals(plan.goal)}
-                          </Badge>
+          {filteredPlans.map((plan) => {
+            const href =
+              plan.created_from === 'custom_builder'
+                ? `/training-plans/custom/${plan.id}`
+                : `/training-plans/${plan.id}`
+            return (
+              <Link key={plan.id} href={href}>
+                <Card className="hover:bg-muted/50 transition-colors cursor-pointer mb-[10px]">
+                  <CardContent className="px-4 py-3">
+                    <div className="flex items-center gap-4">
+                      {/* Plan Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold truncate">
+                            {formatWithGoalLabels(plan.name, tGoals)}
+                          </h3>
+                          {plan.goal && (
+                            <Badge variant="secondary" className="text-xs shrink-0">
+                              {tGoals(plan.goal)}
+                            </Badge>
+                          )}
+                        </div>
+                        {plan.description && (
+                          <p className="text-sm text-muted-foreground truncate">
+                            {formatWithGoalLabels(plan.description, tGoals)}
+                          </p>
                         )}
                       </div>
-                      {plan.description && (
-                        <p className="text-sm text-muted-foreground truncate">
-                          {formatWithGoalLabels(plan.description, tGoals)}
-                        </p>
-                      )}
-                    </div>
 
-                    {/* Stats */}
-                    <div className="hidden sm:flex items-center gap-6 text-sm shrink-0">
-                      <div className="flex items-center gap-1.5 text-muted-foreground">
-                        <Target className="h-4 w-4" />
-                        <span>{plan.weeks} weeks</span>
+                      {/* Stats */}
+                      <div className="hidden sm:flex items-center gap-6 text-sm shrink-0">
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <Target className="h-4 w-4" />
+                          <span>{plan.weeks} weeks</span>
+                        </div>
+
+                        {plan.currentFtp && plan.targetFtp && (
+                          <div className="flex items-center gap-1.5 text-muted-foreground">
+                            <TrendingUp className="h-4 w-4" />
+                            <span>
+                              {plan.currentFtp} → {plan.targetFtp}W
+                            </span>
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <Zap className="h-4 w-4" />
+                          <span>{Math.round(plan.totalTss)} TSS</span>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <Clock className="h-4 w-4" />
+                          <span>{formatDate(plan.created_at)}</span>
+                        </div>
                       </div>
 
-                      {plan.currentFtp && plan.targetFtp && (
-                        <div className="flex items-center gap-1.5 text-muted-foreground">
-                          <TrendingUp className="h-4 w-4" />
-                          <span>
-                            {plan.currentFtp} → {plan.targetFtp}W
-                          </span>
-                        </div>
-                      )}
-
-                      <div className="flex items-center gap-1.5 text-muted-foreground">
-                        <Zap className="h-4 w-4" />
+                      {/* Mobile Stats */}
+                      <div className="flex sm:hidden items-center gap-3 text-xs text-muted-foreground shrink-0">
+                        <span>{plan.weeks}w</span>
                         <span>{Math.round(plan.totalTss)} TSS</span>
                       </div>
 
-                      <div className="flex items-center gap-1.5 text-muted-foreground">
-                        <Clock className="h-4 w-4" />
-                        <span>{formatDate(plan.created_at)}</span>
-                      </div>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
                     </div>
-
-                    {/* Mobile Stats */}
-                    <div className="flex sm:hidden items-center gap-3 text-xs text-muted-foreground shrink-0">
-                      <span>{plan.weeks}w</span>
-                      <span>{Math.round(plan.totalTss)} TSS</span>
-                    </div>
-
-                    <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+                  </CardContent>
+                </Card>
+              </Link>
+            )
+          })}
         </div>
       )}
     </div>

@@ -4,7 +4,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: '13.0.5'
+    PostgrestVersion: '14.1'
   }
   public: {
     Tables: {
@@ -102,6 +102,50 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'admin_user_view'
             referencedColumns: ['user_id']
+          },
+        ]
+      }
+      custom_plan_weeks: {
+        Row: {
+          created_at: string | null
+          id: string
+          notes: string | null
+          phase: string
+          plan_id: string
+          updated_at: string | null
+          week_number: number
+          weekly_tss: number | null
+          workouts_data: Json
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          phase: string
+          plan_id: string
+          updated_at?: string | null
+          week_number: number
+          weekly_tss?: number | null
+          workouts_data?: Json
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          phase?: string
+          plan_id?: string
+          updated_at?: string | null
+          week_number?: number
+          weekly_tss?: number | null
+          workouts_data?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'custom_plan_weeks_plan_id_fkey'
+            columns: ['plan_id']
+            isOneToOne: false
+            referencedRelation: 'training_plans'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -575,36 +619,51 @@ export type Database = {
       training_plans: {
         Row: {
           created_at: string
+          created_from: string | null
           description: string | null
+          goal: string
           id: string
+          is_draft: boolean | null
           metadata: Json | null
           name: string
           plan_data: Json
           status: string | null
+          target_ftp: number | null
           updated_at: string
           user_id: string
+          weeks_total: number | null
         }
         Insert: {
           created_at?: string
+          created_from?: string | null
           description?: string | null
+          goal?: string
           id?: string
+          is_draft?: boolean | null
           metadata?: Json | null
           name: string
           plan_data: Json
           status?: string | null
+          target_ftp?: number | null
           updated_at?: string
           user_id: string
+          weeks_total?: number | null
         }
         Update: {
           created_at?: string
+          created_from?: string | null
           description?: string | null
+          goal?: string
           id?: string
+          is_draft?: boolean | null
           metadata?: Json | null
           name?: string
           plan_data?: Json
           status?: string | null
+          target_ftp?: number | null
           updated_at?: string
           user_id?: string
+          weeks_total?: number | null
         }
         Relationships: [
           {

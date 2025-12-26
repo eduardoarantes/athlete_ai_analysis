@@ -569,6 +569,7 @@
     "type": "Tipo",
     "restDay": "Día de Descanso",
     "noWorkout": "Sin entrenamiento programado",
+    "noWorkoutsScheduled": "Aún no hay entrenamientos programados. Añade entrenamientos a tu plan para verlos aquí.",
     "today": "Hoy",
     "previousWeek": "Semana Anterior",
     "nextWeek": "Próxima Semana",
