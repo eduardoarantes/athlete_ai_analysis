@@ -47,9 +47,10 @@ export default async function TrainingPlanPage({ params }: TrainingPlanPageProps
     status: planRow.status as TrainingPlan['status'],
   }
 
-  // Calculate total TSS for the plan
-  const totalPlanTss = planData.weekly_plan.reduce((sum, week) => sum + (week.week_tss || 0), 0)
-  const weeksTotal = plan.weeks_total || planData.plan_metadata.total_weeks
+  // Calculate total TSS for the plan (handle custom plans without weekly_plan)
+  const totalPlanTss =
+    planData.weekly_plan?.reduce((sum, week) => sum + (week.week_tss || 0), 0) ?? 0
+  const weeksTotal = plan.weeks_total || planData.plan_metadata?.total_weeks || 0
 
   // Check if user is admin
   const isAdmin = await checkAdmin(supabase)
