@@ -40,9 +40,10 @@ COPY src/ ./src/
 COPY tests/ ./tests/
 COPY README.md ./
 
-# Copy data and prompts directories needed for tests
+# Copy data, prompts, and scripts directories needed for tests
 COPY data/ ./data/
 COPY prompts/ ./prompts/
+COPY scripts/ ./scripts/
 
 # Now install the local project (uses cached dependencies)
 RUN uv sync --frozen --all-extras --dev
