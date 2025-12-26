@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { StravaConnection } from '@/components/strava/strava-connection'
+import { TrainingPeaksConnection } from '@/components/trainingpeaks/trainingpeaks-connection'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Activity, Watch, Cloud, Lock } from 'lucide-react'
@@ -48,8 +49,9 @@ const integrations: Integration[] = [
     nameKey: 'trainingpeaks',
     descriptionKey: 'trainingpeaksDescription',
     icon: <Activity className="h-6 w-6" />,
-    status: 'coming-soon',
+    status: 'available',
     category: 'training-platforms',
+    component: TrainingPeaksConnection,
   },
 ]
 
