@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
+import { Plus, Pencil } from 'lucide-react'
 import { TrainingPlansList } from '@/components/training/training-plans-list'
 
 interface PlanRow {
@@ -48,12 +48,20 @@ export default async function TrainingPlansPage() {
           <h1 className="text-3xl font-bold">{t('title')}</h1>
           <p className="text-muted-foreground">Your personalized training plans</p>
         </div>
-        <Button asChild>
-          <Link href="/coach/create-plan">
-            <Plus className="h-4 w-4 mr-2" />
-            Create Plan
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" asChild>
+            <Link href="/training-plans/custom/new">
+              <Pencil className="h-4 w-4 mr-2" />
+              Custom Plan
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link href="/coach/create-plan">
+              <Plus className="h-4 w-4 mr-2" />
+              AI Plan
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <TrainingPlansList plans={parsedPlans} />
