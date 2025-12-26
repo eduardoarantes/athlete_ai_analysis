@@ -172,13 +172,15 @@ export default function ReportDetailPage() {
   return (
     <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button asChild variant="ghost" size="sm">
-          <Link href="/reports">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            {t('backToReports')}
-          </Link>
-        </Button>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button asChild variant="ghost" size="sm">
+            <Link href="/reports/all">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              {t('viewAllReports')}
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="flex items-start justify-between">
