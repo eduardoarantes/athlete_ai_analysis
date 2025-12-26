@@ -12,27 +12,27 @@ export default function ReportsPage() {
   const router = useRouter()
 
   useEffect(() => {
-    redirectToLatestReport()
-  }, [])
+    const redirectToLatestReport = async () => {
+      try {
+        const supabase = createClient()
+        const { data } = await supabase
+          .from('reports')
+          .select('id')
+          .eq('status', 'completed')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single()
 
-  const redirectToLatestReport = async () => {
-    try {
-      const supabase = createClient()
-      const { data } = await supabase
-        .from('reports')
-        .select('id')
-        .eq('status', 'completed')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single()
-
-      if (data) {
-        router.replace(`/reports/${data.id}`)
+        if (data) {
+          router.replace(`/reports/${data.id}`)
+        }
+      } catch {
+        // No reports found, stay on this page
       }
-    } catch {
-      // No reports found, stay on this page
     }
-  }
+
+    redirectToLatestReport()
+  }, [router])
 
   return (
     <div className="container mx-auto py-6 flex items-center justify-center min-h-[400px]">
