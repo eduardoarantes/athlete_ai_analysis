@@ -627,6 +627,9 @@
   "reports": {
     "title": "Performance Reports",
     "subtitle": "Your AI-generated performance analysis reports",
+    "loading": "Loading latest report...",
+    "allReportsTitle": "All Reports",
+    "allReportsSubtitle": "Browse all your performance analysis reports",
     "noReportsTitle": "No reports yet",
     "noReportsDescription": "Performance reports will appear here once generated.",
     "status": {
@@ -644,6 +647,7 @@
     "detail": {
       "title": "Performance Analysis Report",
       "backToReports": "Back to Reports",
+      "viewAllReports": "View All Reports",
       "activitiesAnalyzed": "{count} activities analyzed",
       "aiSummary": "AI Analysis Summary",
       "trainingFocus": "Training Focus",
