@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { Badge } from '@/components/ui/badge'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -23,11 +23,7 @@ export function SyncStatusBadge({ instanceId, size = 'sm' }: SyncStatusBadgeProp
   const [status, setStatus] = useState<SyncStatus | null>(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    loadStatus()
-  }, [instanceId])
-
-  const loadStatus = async () => {
+  const loadStatus = useCallback(async () => {
     try {
       const res = await fetch(`/api/trainingpeaks/sync/${instanceId}`)
       if (res.ok) {
@@ -39,7 +35,11 @@ export function SyncStatusBadge({ instanceId, size = 'sm' }: SyncStatusBadgeProp
     } finally {
       setLoading(false)
     }
-  }
+  }, [instanceId])
+
+  useEffect(() => {
+    loadStatus()
+  }, [loadStatus])
 
   if (loading) {
     return null

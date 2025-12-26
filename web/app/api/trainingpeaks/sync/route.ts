@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { TrainingPeaksSyncService } from '@/lib/services/trainingpeaks-sync-service'
+import { errorLogger } from '@/lib/monitoring/error-logger'
 import type { PlanInstance } from '@/lib/types/training-plan'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -79,7 +80,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result)
   } catch (error) {
-    console.error('TrainingPeaks sync error:', error)
+    errorLogger.logIntegrationError(
+      error instanceof Error ? error : new Error('TrainingPeaks sync failed'),
+      'trainingpeaks'
+    )
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to sync' },
       { status: 500 }

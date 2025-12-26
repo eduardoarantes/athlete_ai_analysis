@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { errorLogger } from '@/lib/monitoring/error-logger'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type UntypedSupabaseClient = any
@@ -44,7 +45,10 @@ export async function GET(_request: NextRequest) {
       is_premium: connection.is_premium,
     })
   } catch (error) {
-    console.error('TrainingPeaks status error:', error)
+    errorLogger.logIntegrationError(
+      error instanceof Error ? error : new Error('TrainingPeaks status check failed'),
+      'trainingpeaks'
+    )
     return NextResponse.json({ error: 'Failed to get status' }, { status: 500 })
   }
 }

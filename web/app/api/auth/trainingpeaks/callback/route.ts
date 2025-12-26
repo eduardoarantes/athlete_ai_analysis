@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { TrainingPeaksService } from '@/lib/services/trainingpeaks-service'
+import { errorLogger } from '@/lib/monitoring/error-logger'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type UntypedSupabaseClient = any
@@ -71,7 +72,11 @@ export async function GET(request: NextRequest) {
     )
 
     if (dbError) {
-      console.error('Failed to store TrainingPeaks connection:', dbError)
+      errorLogger.logDatabaseError(
+        new Error(`Failed to store TrainingPeaks connection: ${dbError.message}`),
+        'trainingpeaks_connections.upsert',
+        storedUserId
+      )
       return NextResponse.redirect(
         new URL('/dashboard/settings/integrations?tp_error=db_error', request.url)
       )
@@ -86,7 +91,10 @@ export async function GET(request: NextRequest) {
 
     return response
   } catch (error) {
-    console.error('TrainingPeaks callback error:', error)
+    errorLogger.logIntegrationError(
+      error instanceof Error ? error : new Error('TrainingPeaks callback failed'),
+      'trainingpeaks'
+    )
     return NextResponse.redirect(
       new URL('/dashboard/settings/integrations?tp_error=callback_failed', request.url)
     )

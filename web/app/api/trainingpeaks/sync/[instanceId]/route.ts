@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { TrainingPeaksSyncService } from '@/lib/services/trainingpeaks-sync-service'
+import { errorLogger } from '@/lib/monitoring/error-logger'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type UntypedSupabaseClient = any
@@ -45,7 +46,10 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json(status)
   } catch (error) {
-    console.error('TrainingPeaks sync status error:', error)
+    errorLogger.logIntegrationError(
+      error instanceof Error ? error : new Error('TrainingPeaks sync status check failed'),
+      'trainingpeaks'
+    )
     return NextResponse.json({ error: 'Failed to get sync status' }, { status: 500 })
   }
 }
@@ -94,7 +98,10 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json(result)
   } catch (error) {
-    console.error('TrainingPeaks delete sync error:', error)
+    errorLogger.logIntegrationError(
+      error instanceof Error ? error : new Error('TrainingPeaks delete sync failed'),
+      'trainingpeaks'
+    )
     return NextResponse.json({ error: 'Failed to delete synced workouts' }, { status: 500 })
   }
 }

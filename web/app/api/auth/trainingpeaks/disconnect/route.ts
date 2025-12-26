@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { errorLogger } from '@/lib/monitoring/error-logger'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type UntypedSupabaseClient = any
@@ -31,7 +32,11 @@ export async function POST(_request: NextRequest) {
       .eq('user_id', user.id)
 
     if (deleteError) {
-      console.error('Failed to delete connection:', deleteError)
+      errorLogger.logDatabaseError(
+        new Error(`Failed to delete TrainingPeaks connection: ${deleteError.message}`),
+        'trainingpeaks_connections.delete',
+        user.id
+      )
       return NextResponse.json({ error: 'Failed to disconnect' }, { status: 500 })
     }
 
@@ -40,7 +45,10 @@ export async function POST(_request: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('TrainingPeaks disconnect error:', error)
+    errorLogger.logIntegrationError(
+      error instanceof Error ? error : new Error('TrainingPeaks disconnect failed'),
+      'trainingpeaks'
+    )
     return NextResponse.json({ error: 'Failed to disconnect' }, { status: 500 })
   }
 }

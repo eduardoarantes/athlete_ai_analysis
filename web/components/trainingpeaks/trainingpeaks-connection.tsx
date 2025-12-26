@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { toast } from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
@@ -23,11 +23,7 @@ export function TrainingPeaksConnection() {
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
-  useEffect(() => {
-    loadStatus()
-  }, [])
-
-  const loadStatus = async () => {
+  const loadStatus = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -42,7 +38,11 @@ export function TrainingPeaksConnection() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [t])
+
+  useEffect(() => {
+    loadStatus()
+  }, [loadStatus])
 
   const handleConnect = () => {
     window.location.href = '/api/auth/trainingpeaks/connect'
