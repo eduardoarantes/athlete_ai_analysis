@@ -14,8 +14,9 @@ const LAMBDA_FUNCTION_NAME = process.env.LAMBDA_FUNCTION_NAME
 const FASTAPI_URL =
   process.env.FASTAPI_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
-// Determine if we should use Lambda (production on EC2) or HTTP (local development)
-const USE_LAMBDA = !!LAMBDA_FUNCTION_NAME && process.env.NODE_ENV === 'production'
+// Use Lambda SDK when LAMBDA_FUNCTION_NAME is set (regardless of NODE_ENV)
+// This enables BFF pattern in Amplify SSR where we call Lambda directly via SDK
+const USE_LAMBDA = !!LAMBDA_FUNCTION_NAME
 
 // Lambda client (only created in production)
 let lambdaClient: LambdaClient | null = null
@@ -50,6 +51,12 @@ export interface LambdaApiResponse<T = unknown> {
 export async function invokePythonApi<T = unknown>(
   request: LambdaApiRequest
 ): Promise<LambdaApiResponse<T>> {
+  errorLogger.logInfo('Invoking Python API', {
+    path: request.path,
+    method: request.method,
+    metadata: { useLambda: USE_LAMBDA, functionName: LAMBDA_FUNCTION_NAME || 'not set' },
+  })
+
   if (USE_LAMBDA) {
     return invokeLambda<T>(request)
   } else {
@@ -63,12 +70,26 @@ export async function invokePythonApi<T = unknown>(
 async function invokeLambda<T>(request: LambdaApiRequest): Promise<LambdaApiResponse<T>> {
   const client = getLambdaClient()
 
-  // Format request as API Gateway v2 event
+  // Split path and query string
+  const [rawPath, rawQueryString = ''] = request.path.split('?')
+
+  // Parse query string into parameters object
+  const queryStringParameters: Record<string, string> = {}
+  if (rawQueryString) {
+    const params = new URLSearchParams(rawQueryString)
+    params.forEach((value, key) => {
+      queryStringParameters[key] = value
+    })
+  }
+
+  // Format request as API Gateway v2 event (Lambda Function URL format)
   const event = {
     version: '2.0',
-    routeKey: `${request.method} ${request.path}`,
-    rawPath: request.path,
-    rawQueryString: '',
+    routeKey: `${request.method} ${rawPath}`,
+    rawPath,
+    rawQueryString,
+    queryStringParameters:
+      Object.keys(queryStringParameters).length > 0 ? queryStringParameters : undefined,
     headers: {
       'content-type': 'application/json',
       ...request.headers,
@@ -76,7 +97,7 @@ async function invokeLambda<T>(request: LambdaApiRequest): Promise<LambdaApiResp
     requestContext: {
       http: {
         method: request.method,
-        path: request.path,
+        path: rawPath,
         protocol: 'HTTP/1.1',
       },
       requestId: `next-${Date.now()}`,
