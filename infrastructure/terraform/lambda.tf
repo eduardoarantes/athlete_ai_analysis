@@ -97,11 +97,14 @@ resource "aws_lambda_permission" "cloudwatch" {
 }
 
 # Lambda Function URL for direct HTTPS access
-# NOTE: This is NOT publicly accessible - Amplify SSR calls Lambda via AWS SDK (IAM auth)
-# The function URL is kept for potential future direct API access with IAM auth
+# NOTE: Auth type is NONE because Amplify SSR functions cannot get AWS credentials
+# to sign requests. Security is handled by:
+# 1. Input validation in the Lambda handler
+# 2. Rate limiting via Lambda reserved concurrency
+# 3. Not exposing the URL directly to users (only called by SSR functions)
 resource "aws_lambda_function_url" "api" {
   function_name      = aws_lambda_function.api.function_name
-  authorization_type = "AWS_IAM" # IAM authentication required - more secure than NONE
+  authorization_type = "NONE" # Amplify SSR cannot sign IAM requests
 
   cors {
     allow_credentials = true
