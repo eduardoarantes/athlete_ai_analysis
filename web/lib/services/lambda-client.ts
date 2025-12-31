@@ -5,11 +5,16 @@
  */
 
 import { LambdaClient, InvokeCommand, InvocationType } from '@aws-sdk/client-lambda'
+import getConfig from 'next/config'
 import { errorLogger } from '@/lib/monitoring/error-logger'
 
-// Configuration
-const AWS_REGION = process.env.AWS_REGION || 'ap-southeast-2'
-const LAMBDA_FUNCTION_NAME = process.env.LAMBDA_FUNCTION_NAME
+// Get serverRuntimeConfig (embedded at build time for Amplify SSR)
+const { serverRuntimeConfig } = getConfig() || { serverRuntimeConfig: {} }
+
+// Configuration - try serverRuntimeConfig first (for Amplify SSR), then env vars
+const AWS_REGION = serverRuntimeConfig?.awsRegion || process.env.AWS_REGION || 'ap-southeast-2'
+const LAMBDA_FUNCTION_NAME =
+  serverRuntimeConfig?.lambdaFunctionName || process.env.LAMBDA_FUNCTION_NAME
 // FASTAPI_URL fallback chain: explicit env var -> Lambda function URL -> localhost for dev
 const FASTAPI_URL =
   process.env.FASTAPI_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'

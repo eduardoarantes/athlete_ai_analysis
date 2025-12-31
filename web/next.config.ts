@@ -31,6 +31,8 @@ const nextConfig: NextConfig = {
     appUrl: process.env.NEXT_PUBLIC_APP_URL,
     supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
     supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    lambdaFunctionName: process.env.LAMBDA_FUNCTION_NAME,
+    awsRegion: process.env.AWS_REGION || 'ap-southeast-2',
   },
   async headers() {
     return [
