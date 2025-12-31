@@ -112,4 +112,14 @@ resource "aws_lambda_function_url" "api" {
   }
 }
 
+# Permission for Function URL public access
+# Required when authorization_type is NONE to allow public invocation
+resource "aws_lambda_permission" "function_url" {
+  statement_id           = "FunctionURLAllowPublicAccess"
+  action                 = "lambda:InvokeFunctionUrl"
+  function_name          = aws_lambda_function.api.function_name
+  principal              = "*"
+  function_url_auth_type = "NONE"
+}
+
 # NOTE: Amplify app calls Lambda via the function URL (HTTPS)
