@@ -10,7 +10,9 @@ import { errorLogger } from '@/lib/monitoring/error-logger'
 // Configuration
 const AWS_REGION = process.env.AWS_REGION || 'ap-southeast-2'
 const LAMBDA_FUNCTION_NAME = process.env.LAMBDA_FUNCTION_NAME
-const FASTAPI_URL = process.env.FASTAPI_URL || 'http://localhost:8000'
+// FASTAPI_URL fallback chain: explicit env var -> Lambda function URL -> localhost for dev
+const FASTAPI_URL =
+  process.env.FASTAPI_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
 // Determine if we should use Lambda (production on EC2) or HTTP (local development)
 const USE_LAMBDA = !!LAMBDA_FUNCTION_NAME && process.env.NODE_ENV === 'production'
@@ -147,10 +149,18 @@ async function invokeLambda<T>(request: LambdaApiRequest): Promise<LambdaApiResp
 }
 
 /**
- * Invoke via HTTP (for local development)
+ * Invoke via HTTP (for local development or Amplify SSR)
  */
 async function invokeHttp<T>(request: LambdaApiRequest): Promise<LambdaApiResponse<T>> {
-  const url = `${FASTAPI_URL}${request.path}`
+  // Remove trailing slash from base URL if present to avoid double slashes
+  const baseUrl = FASTAPI_URL.replace(/\/$/, '')
+  const url = `${baseUrl}${request.path}`
+
+  errorLogger.logInfo('Invoking Python API via HTTP', {
+    path: request.path,
+    method: request.method,
+    metadata: { url, baseUrl: FASTAPI_URL },
+  })
 
   const fetchOptions: RequestInit = {
     method: request.method,
