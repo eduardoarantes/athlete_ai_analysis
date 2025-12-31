@@ -56,6 +56,14 @@ resource "aws_iam_role_policy" "amplify_service_policy" {
           "ssm:GetParameters"
         ]
         Resource = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/${local.name_prefix}/*"
+      },
+      # Invoke Python Lambda function (BFF pattern - Next.js SSR calls Lambda via SDK)
+      {
+        Effect = "Allow"
+        Action = [
+          "lambda:InvokeFunction"
+        ]
+        Resource = "arn:aws:lambda:${var.aws_region}:${data.aws_caller_identity.current.account_id}:function:${local.name_prefix}-api"
       }
     ]
   })

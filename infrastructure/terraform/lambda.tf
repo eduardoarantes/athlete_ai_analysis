@@ -97,29 +97,22 @@ resource "aws_lambda_permission" "cloudwatch" {
 }
 
 # Lambda Function URL for direct HTTPS access
-# Required for Amplify (and other clients) to call the API
+# NOTE: This is NOT publicly accessible - Amplify SSR calls Lambda via AWS SDK (IAM auth)
+# The function URL is kept for potential future direct API access with IAM auth
 resource "aws_lambda_function_url" "api" {
   function_name      = aws_lambda_function.api.function_name
-  authorization_type = "NONE" # Public access - API handles its own auth via JWT
+  authorization_type = "AWS_IAM" # IAM authentication required - more secure than NONE
 
   cors {
     allow_credentials = true
-    allow_origins     = ["*"] # Will be restricted in production
-    allow_methods     = ["*"] # Use wildcard to avoid AWS validation issues
+    allow_origins     = ["*"]
+    allow_methods     = ["*"]
     allow_headers     = ["*"]
     expose_headers    = ["*"]
     max_age           = 86400
   }
 }
 
-# Permission for Function URL public access
-# Required when authorization_type is NONE to allow public invocation
-resource "aws_lambda_permission" "function_url" {
-  statement_id           = "FunctionURLAllowPublicAccess"
-  action                 = "lambda:InvokeFunctionUrl"
-  function_name          = aws_lambda_function.api.function_name
-  principal              = "*"
-  function_url_auth_type = "NONE"
-}
-
-# NOTE: Amplify app calls Lambda via the function URL (HTTPS)
+# NOTE: Amplify SSR functions call Lambda directly via AWS SDK (lambda:InvokeFunction)
+# This is the Backend-for-Frontend (BFF) pattern - more secure than public HTTP access
+# The Amplify service role has lambda:InvokeFunction permission (see iam.tf)
