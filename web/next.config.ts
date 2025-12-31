@@ -31,8 +31,8 @@ const nextConfig: NextConfig = {
     appUrl: process.env.NEXT_PUBLIC_APP_URL,
     supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
     supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    lambdaFunctionName: process.env.LAMBDA_FUNCTION_NAME,
-    awsRegion: process.env.AWS_REGION || 'ap-southeast-2',
+    // Note: Lambda is called via HTTP to function URL (not SDK)
+    // See GitHub issue #37 for secure BFF with SSM credentials
   },
   async headers() {
     return [

@@ -130,21 +130,12 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    const err = error as Error
-    errorLogger.logError(err, {
+    errorLogger.logError(error as Error, {
       path: '/api/workouts',
       method: 'GET',
-      metadata: { phase: 'python_api_call', errorMessage: err.message },
+      metadata: { phase: 'python_api_call' },
     })
 
-    // Include error details in response for debugging
-    return NextResponse.json(
-      {
-        error: 'Failed to fetch workout library',
-        details: err.message,
-        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
-      },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to fetch workout library' }, { status: 500 })
   }
 }
