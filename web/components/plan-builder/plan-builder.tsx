@@ -38,6 +38,7 @@ import { PlanBuilderProvider, usePlanBuilder } from '@/lib/contexts/plan-builder
 import { WeekCalendar } from './week-calendar'
 import { WorkoutBrowser } from './workout-browser'
 import { PlanBuilderDndContext } from './dnd'
+import { SchedulePlanButton } from '@/components/training/schedule-plan-button'
 
 /**
  * All available training phases
@@ -225,6 +226,14 @@ function PlanBuilderInner() {
                   <Save className="h-4 w-4 mr-2" />
                   {state.isSaving ? 'Saving...' : 'Save'}
                 </Button>
+                {/* Show Schedule button after plan is saved and has no unsaved changes */}
+                {state.planId && !state.isDirty && state.weeks.length > 0 && (
+                  <SchedulePlanButton
+                    templateId={state.planId}
+                    templateName={state.metadata.name}
+                    weeksTotal={state.weeks.length}
+                  />
+                )}
               </div>
             </div>
 
