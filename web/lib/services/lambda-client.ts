@@ -82,28 +82,40 @@ async function invokeLambda<T>(request: LambdaApiRequest): Promise<LambdaApiResp
     })
   }
 
-  // Format request as API Gateway v2 event (Lambda Function URL format)
+  // Format request as Lambda Function URL event (exactly matching AWS format)
+  // See: https://docs.aws.amazon.com/lambda/latest/dg/urls-invocation.html
+  const requestId = `next-${Date.now()}`
   const event = {
     version: '2.0',
-    routeKey: `${request.method} ${rawPath}`,
+    routeKey: '$default', // Function URLs always use $default
     rawPath,
     rawQueryString,
     queryStringParameters:
       Object.keys(queryStringParameters).length > 0 ? queryStringParameters : undefined,
     headers: {
       'content-type': 'application/json',
+      host: 'lambda-internal',
       ...request.headers,
     },
     requestContext: {
+      accountId: 'anonymous',
+      apiId: 'lambda-internal',
+      domainName: 'lambda-internal',
+      domainPrefix: 'lambda-internal',
       http: {
         method: request.method,
         path: rawPath,
         protocol: 'HTTP/1.1',
+        sourceIp: '127.0.0.1',
+        userAgent: 'NextJS-SSR',
       },
-      requestId: `next-${Date.now()}`,
+      requestId,
+      routeKey: '$default',
       stage: '$default',
+      time: new Date().toISOString(),
+      timeEpoch: Date.now(),
     },
-    body: request.body ? JSON.stringify(request.body) : undefined,
+    body: request.body ? JSON.stringify(request.body) : null,
     isBase64Encoded: false,
   }
 
