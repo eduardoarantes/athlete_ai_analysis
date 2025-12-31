@@ -285,11 +285,12 @@ export default function ActivitiesPage() {
                             href={`https://www.strava.com/activities/${activity.strava_activity_id}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
-                            title={t('viewOnStrava')}
+                            className="inline-flex items-center gap-1 hover:opacity-80 transition-opacity"
+                            style={{ color: '#FC5200' }}
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <ExternalLink className="h-4 w-4" />
+                            View on Strava
+                            <ExternalLink className="h-3 w-3" />
                           </a>
                         )}
                       </td>
