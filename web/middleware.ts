@@ -5,7 +5,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 const publicRoutes = ['/', '/login', '/register', '/auth/callback', '/api/auth/callback']
 
 // Routes that start with these prefixes are public
-const publicPrefixes = ['/api/auth/', '/_next/', '/favicon']
+const publicPrefixes = ['/api/auth/', '/api/workouts', '/_next/', '/favicon']
 
 function isPublicRoute(pathname: string): boolean {
   // Normalize pathname by removing trailing slash (except for root)
