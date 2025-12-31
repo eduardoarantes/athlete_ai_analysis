@@ -8,29 +8,61 @@ import { LambdaClient, InvokeCommand, InvocationType } from '@aws-sdk/client-lam
 import getConfig from 'next/config'
 import { errorLogger } from '@/lib/monitoring/error-logger'
 
-// Get serverRuntimeConfig (embedded at build time for Amplify SSR)
-const { serverRuntimeConfig } = getConfig() || { serverRuntimeConfig: {} }
+// Cache for runtime config (initialized lazily to work in SSR context)
+let cachedConfig: {
+  awsRegion: string
+  lambdaFunctionName: string | undefined
+  useLambda: boolean
+  fastApiUrl: string
+} | null = null
 
-// Configuration - try serverRuntimeConfig first (for Amplify SSR), then env vars
-const AWS_REGION = serverRuntimeConfig?.awsRegion || process.env.AWS_REGION || 'ap-southeast-2'
-const LAMBDA_FUNCTION_NAME =
-  serverRuntimeConfig?.lambdaFunctionName || process.env.LAMBDA_FUNCTION_NAME
-// FASTAPI_URL fallback chain: explicit env var -> Lambda function URL -> localhost for dev
-const FASTAPI_URL =
-  process.env.FASTAPI_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+/**
+ * Get Lambda configuration lazily.
+ * This defers getConfig() call until it's actually needed, which works better in SSR.
+ */
+function getServerConfig() {
+  if (cachedConfig) return cachedConfig
 
-// Use Lambda SDK when LAMBDA_FUNCTION_NAME is set (regardless of NODE_ENV)
-// This enables BFF pattern in Amplify SSR where we call Lambda directly via SDK
-const USE_LAMBDA = !!LAMBDA_FUNCTION_NAME
+  // Get serverRuntimeConfig (embedded at build time for Amplify SSR)
+  const config = getConfig()
+  const serverRuntimeConfig = config?.serverRuntimeConfig || {}
 
-// Lambda client (only created in production)
+  // Configuration - try serverRuntimeConfig first (for Amplify SSR), then env vars
+  const awsRegion = serverRuntimeConfig?.awsRegion || process.env.AWS_REGION || 'ap-southeast-2'
+  const lambdaFunctionName =
+    serverRuntimeConfig?.lambdaFunctionName || process.env.LAMBDA_FUNCTION_NAME
+
+  // FASTAPI_URL fallback chain: explicit env var -> Lambda function URL -> localhost for dev
+  const fastApiUrl =
+    process.env.FASTAPI_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+
+  // Use Lambda SDK when LAMBDA_FUNCTION_NAME is set (regardless of NODE_ENV)
+  // This enables BFF pattern in Amplify SSR where we call Lambda directly via SDK
+  const useLambda = !!lambdaFunctionName
+
+  cachedConfig = { awsRegion, lambdaFunctionName, useLambda, fastApiUrl }
+
+  errorLogger.logInfo('Lambda client config initialized', {
+    metadata: {
+      awsRegion,
+      lambdaFunctionName: lambdaFunctionName || 'not set',
+      useLambda,
+      hasServerRuntimeConfig: !!config?.serverRuntimeConfig,
+    },
+  })
+
+  return cachedConfig
+}
+
+// Lambda client (only created when needed)
 let lambdaClient: LambdaClient | null = null
 
 function getLambdaClient(): LambdaClient {
+  const config = getServerConfig()
   if (!lambdaClient) {
     lambdaClient = new LambdaClient({
-      region: AWS_REGION,
-      // In EC2, credentials are automatically provided by IAM role
+      region: config.awsRegion,
+      // In EC2/Amplify, credentials are automatically provided by IAM role
     })
   }
   return lambdaClient
@@ -56,13 +88,15 @@ export interface LambdaApiResponse<T = unknown> {
 export async function invokePythonApi<T = unknown>(
   request: LambdaApiRequest
 ): Promise<LambdaApiResponse<T>> {
+  const config = getServerConfig()
+
   errorLogger.logInfo('Invoking Python API', {
     path: request.path,
     method: request.method,
-    metadata: { useLambda: USE_LAMBDA, functionName: LAMBDA_FUNCTION_NAME || 'not set' },
+    metadata: { useLambda: config.useLambda, functionName: config.lambdaFunctionName || 'not set' },
   })
 
-  if (USE_LAMBDA) {
+  if (config.useLambda) {
     return invokeLambda<T>(request)
   } else {
     return invokeHttp<T>(request)
@@ -73,6 +107,7 @@ export async function invokePythonApi<T = unknown>(
  * Invoke Lambda directly via AWS SDK
  */
 async function invokeLambda<T>(request: LambdaApiRequest): Promise<LambdaApiResponse<T>> {
+  const config = getServerConfig()
   const client = getLambdaClient()
 
   // Split path and query string
@@ -126,7 +161,7 @@ async function invokeLambda<T>(request: LambdaApiRequest): Promise<LambdaApiResp
 
   try {
     const command = new InvokeCommand({
-      FunctionName: LAMBDA_FUNCTION_NAME,
+      FunctionName: config.lambdaFunctionName,
       InvocationType: InvocationType.RequestResponse,
       Payload: new TextEncoder().encode(JSON.stringify(event)),
     })
@@ -180,7 +215,7 @@ async function invokeLambda<T>(request: LambdaApiRequest): Promise<LambdaApiResp
     errorLogger.logError(error as Error, {
       path: request.path,
       method: request.method,
-      metadata: { functionName: LAMBDA_FUNCTION_NAME },
+      metadata: { functionName: config.lambdaFunctionName },
     })
     throw error
   }
@@ -190,14 +225,15 @@ async function invokeLambda<T>(request: LambdaApiRequest): Promise<LambdaApiResp
  * Invoke via HTTP (for local development or Amplify SSR)
  */
 async function invokeHttp<T>(request: LambdaApiRequest): Promise<LambdaApiResponse<T>> {
+  const config = getServerConfig()
   // Remove trailing slash from base URL if present to avoid double slashes
-  const baseUrl = FASTAPI_URL.replace(/\/$/, '')
+  const baseUrl = config.fastApiUrl.replace(/\/$/, '')
   const url = `${baseUrl}${request.path}`
 
   errorLogger.logInfo('Invoking Python API via HTTP', {
     path: request.path,
     method: request.method,
-    metadata: { url, baseUrl: FASTAPI_URL },
+    metadata: { url, baseUrl: config.fastApiUrl },
   })
 
   const fetchOptions: RequestInit = {
