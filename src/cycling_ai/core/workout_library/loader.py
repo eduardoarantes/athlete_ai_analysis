@@ -47,9 +47,23 @@ class WorkoutLibraryLoader:
 
         # Default path: data/workout_library.json relative to project root
         if library_path is None:
-            # From src/cycling_ai/core/workout_library/loader.py
-            # Go up: loader.py -> workout_library/ -> core/ -> cycling_ai/ -> src/ -> project_root
-            library_path = Path(__file__).parent.parent.parent.parent.parent / "data" / "workout_library.json"
+            # Try multiple possible locations:
+            # 1. Lambda: cycling_ai/core/workout_library/loader.py -> 4 parents -> data/
+            # 2. Development: src/cycling_ai/core/workout_library/loader.py -> 5 parents -> data/
+            base = Path(__file__).parent.parent.parent.parent
+            lambda_path = base / "data" / "workout_library.json"
+            dev_path = base.parent / "data" / "workout_library.json"
+
+            if lambda_path.exists():
+                library_path = lambda_path
+            elif dev_path.exists():
+                library_path = dev_path
+            else:
+                raise FileNotFoundError(
+                    f"Workout library not found. Tried:\n"
+                    f"  - {lambda_path}\n"
+                    f"  - {dev_path}"
+                )
 
         if not library_path.exists():
             raise FileNotFoundError(f"Workout library not found: {library_path}")

@@ -98,8 +98,9 @@ jobs:
             --upgrade \
             -r requirements-lambda.txt
 
-          # Copy source code
+          # Copy source code and data
           cp -r src/cycling_ai dist/package/
+          cp -r data dist/package/
 
           # Clean up unnecessary files
           cd dist/package
