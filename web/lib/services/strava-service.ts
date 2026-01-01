@@ -7,7 +7,9 @@
  * 2. Next.js serverRuntimeConfig (Amplify SSR - embedded at build time)
  */
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/lib/types/database'
 import getConfig from 'next/config'
 
 // Get server runtime config (embedded at build time in next.config.ts)
@@ -247,9 +249,27 @@ export class StravaService {
   /**
    * Get a valid access token for a user, refreshing if necessary
    * This method handles automatic token refresh and database updates
+   *
+   * @param userId - The user ID to get the access token for
+   * @param options.useServiceClient - Use service client to bypass RLS (for webhooks/background jobs)
+   * @param options.supabaseClient - Optional pre-created Supabase client to use
    */
-  async getValidAccessToken(userId: string): Promise<string> {
-    const supabase = await createClient()
+  async getValidAccessToken(
+    userId: string,
+    options?: {
+      useServiceClient?: boolean
+      supabaseClient?: SupabaseClient<Database>
+    }
+  ): Promise<string> {
+    let supabase: SupabaseClient<Database>
+
+    if (options?.supabaseClient) {
+      supabase = options.supabaseClient
+    } else if (options?.useServiceClient) {
+      supabase = createServiceClient()
+    } else {
+      supabase = await createClient()
+    }
 
     // Fetch the current connection from database
     const { data: connection, error } = await supabase

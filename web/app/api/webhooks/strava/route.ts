@@ -307,7 +307,10 @@ async function processWebhookEvent(event: StravaWebhookEvent): Promise<void> {
       const stravaService = await StravaService.create()
 
       // Get valid access token (refreshes automatically if expired)
-      const accessToken = await stravaService.getValidAccessToken(connection.user_id)
+      // Use service client to bypass RLS since webhooks have no user session
+      const accessToken = await stravaService.getValidAccessToken(connection.user_id, {
+        useServiceClient: true,
+      })
 
       const activityResponse = await fetch(
         `https://www.strava.com/api/v3/activities/${event.object_id}`,
