@@ -3,6 +3,17 @@
 # This replaces the S3/CloudFront static hosting with Amplify,
 # which natively supports Next.js SSR and API routes.
 
+# Read Strava credentials from SSM Parameter Store
+# These are stored securely in SSM and read at Terraform apply time
+data "aws_ssm_parameter" "strava_client_id" {
+  name = "/${local.name_prefix}/strava/client-id"
+}
+
+data "aws_ssm_parameter" "strava_client_secret" {
+  name            = "/${local.name_prefix}/strava/client-secret"
+  with_decryption = true
+}
+
 # Amplify App
 resource "aws_amplify_app" "web" {
   name       = "${local.name_prefix}-web"
@@ -41,14 +52,13 @@ resource "aws_amplify_app" "web" {
   EOT
 
   # Environment variables for all branches (app-level)
-  # Note: STRAVA_CLIENT_ID and STRAVA_CLIENT_SECRET must be set via CLI to avoid
-  # storing secrets in Terraform state. They are read at build time by next.config.ts
-  # and embedded into the server bundle via serverRuntimeConfig.
-  # Command: aws amplify update-app --app-id <id> --environment-variables \
-  #          "STRAVA_CLIENT_ID=xxx,STRAVA_CLIENT_SECRET=yyy,AMPLIFY_MONOREPO_APP_ROOT=web,NEXT_PUBLIC_ENV=prod"
+  # Strava credentials are read from SSM Parameter Store at Terraform apply time
+  # and embedded at build time via next.config.ts serverRuntimeConfig
   environment_variables = {
     AMPLIFY_MONOREPO_APP_ROOT = "web"
     NEXT_PUBLIC_ENV           = local.environment
+    STRAVA_CLIENT_ID          = data.aws_ssm_parameter.strava_client_id.value
+    STRAVA_CLIENT_SECRET      = data.aws_ssm_parameter.strava_client_secret.value
   }
 
   # Enable auto branch creation for feature branches (optional)
@@ -91,7 +101,7 @@ resource "aws_amplify_branch" "main" {
 
   # Environment variables specific to this branch
   # Note: AWS_REGION is automatically set by Amplify for SSR functions
-  # Note: STRAVA credentials are set at app-level (not branch-level) via CLI
+  # Note: STRAVA credentials are set at app-level via Terraform (read from SSM)
   environment_variables = {
     NEXT_PUBLIC_SUPABASE_URL      = var.supabase_url
     NEXT_PUBLIC_SUPABASE_ANON_KEY = var.supabase_anon_key
