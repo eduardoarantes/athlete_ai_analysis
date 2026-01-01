@@ -78,22 +78,14 @@ export class StravaService {
 
   /**
    * Create a StravaService instance with credentials
-   * Tries: env vars first (local dev), then serverRuntimeConfig (Amplify SSR)
+   * Tries: serverRuntimeConfig first (Amplify SSR), then env vars (local dev)
    */
   static async create(): Promise<StravaService> {
-    // Try environment variables first (local dev)
-    let clientId = process.env.STRAVA_CLIENT_ID
-    let clientSecret = process.env.STRAVA_CLIENT_SECRET
-    let appUrl = process.env.NEXT_PUBLIC_APP_URL
-
-    // Fall back to serverRuntimeConfig (embedded at build time for Amplify SSR)
-    if (!clientId || !clientSecret) {
-      clientId = serverRuntimeConfig?.stravaClientId
-      clientSecret = serverRuntimeConfig?.stravaClientSecret
-    }
-    if (!appUrl) {
-      appUrl = serverRuntimeConfig?.appUrl
-    }
+    // Try serverRuntimeConfig first (embedded at build time, reliable in Amplify SSR)
+    // Then fall back to environment variables (local dev)
+    const clientId = serverRuntimeConfig?.stravaClientId || process.env.STRAVA_CLIENT_ID
+    const clientSecret = serverRuntimeConfig?.stravaClientSecret || process.env.STRAVA_CLIENT_SECRET
+    const appUrl = serverRuntimeConfig?.appUrl || process.env.NEXT_PUBLIC_APP_URL
 
     if (!clientId || !clientSecret) {
       throw new Error(
