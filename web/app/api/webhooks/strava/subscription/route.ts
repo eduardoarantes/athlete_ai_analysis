@@ -1,11 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
-const STRAVA_CLIENT_ID = process.env.STRAVA_CLIENT_ID!
-const STRAVA_CLIENT_SECRET = process.env.STRAVA_CLIENT_SECRET!
-const WEBHOOK_VERIFY_TOKEN = process.env.STRAVA_WEBHOOK_VERIFY_TOKEN || 'CYCLING_AI'
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-const CALLBACK_URL = `${APP_URL}/api/webhooks/strava`
+/**
+ * Get Strava credentials at runtime (not build time)
+ * This prevents build failures when env vars are not set during CI
+ */
+function getStravaCredentials() {
+  const clientId = process.env.STRAVA_CLIENT_ID
+  const clientSecret = process.env.STRAVA_CLIENT_SECRET
+
+  if (!clientId || !clientSecret) {
+    throw new Error('STRAVA_CLIENT_ID and STRAVA_CLIENT_SECRET environment variables are required')
+  }
+
+  return { clientId, clientSecret }
+}
+
+/**
+ * Get webhook verify token at runtime
+ * SECURITY: No default value - must be explicitly configured
+ */
+function getWebhookVerifyToken(): string {
+  const token = process.env.STRAVA_WEBHOOK_VERIFY_TOKEN
+  if (!token) {
+    throw new Error(
+      'STRAVA_WEBHOOK_VERIFY_TOKEN environment variable is required. ' +
+        'Generate a secure token with: openssl rand -base64 32'
+    )
+  }
+  return token
+}
+
+function getCallbackUrl(): string {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  return `${appUrl}/api/webhooks/strava`
+}
 
 /**
  * Create or view webhook subscription
@@ -24,6 +53,11 @@ export async function POST(_request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Get credentials at runtime
+    const { clientId, clientSecret } = getStravaCredentials()
+    const verifyToken = getWebhookVerifyToken()
+    const callbackUrl = getCallbackUrl()
+
     // Create subscription with Strava
     const response = await fetch('https://www.strava.com/api/v3/push_subscriptions', {
       method: 'POST',
@@ -31,10 +65,10 @@ export async function POST(_request: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        client_id: STRAVA_CLIENT_ID,
-        client_secret: STRAVA_CLIENT_SECRET,
-        callback_url: CALLBACK_URL,
-        verify_token: WEBHOOK_VERIFY_TOKEN,
+        client_id: clientId,
+        client_secret: clientSecret,
+        callback_url: callbackUrl,
+        verify_token: verifyToken,
       }),
     })
 
@@ -56,8 +90,8 @@ export async function POST(_request: NextRequest) {
     await supabase.from('strava_webhook_subscriptions').upsert(
       {
         subscription_id: subscription.id,
-        callback_url: CALLBACK_URL,
-        verify_token: WEBHOOK_VERIFY_TOKEN,
+        callback_url: callbackUrl,
+        verify_token: verifyToken,
       } as never,
       {
         onConflict: 'subscription_id',
@@ -94,9 +128,13 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Get credentials at runtime
+    const { clientId, clientSecret } = getStravaCredentials()
+    const callbackUrl = getCallbackUrl()
+
     // Get subscription from Strava
     const response = await fetch(
-      `https://www.strava.com/api/v3/push_subscriptions?client_id=${STRAVA_CLIENT_ID}&client_secret=${STRAVA_CLIENT_SECRET}`
+      `https://www.strava.com/api/v3/push_subscriptions?client_id=${clientId}&client_secret=${clientSecret}`
     )
 
     if (!response.ok) {
@@ -115,7 +153,7 @@ export async function GET() {
 
     return NextResponse.json({
       subscriptions,
-      callback_url: CALLBACK_URL,
+      callback_url: callbackUrl,
     })
   } catch (error) {
     console.error('[Subscription] Get error:', error)
@@ -150,9 +188,12 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Subscription ID required' }, { status: 400 })
     }
 
+    // Get credentials at runtime
+    const { clientId, clientSecret } = getStravaCredentials()
+
     // Delete subscription from Strava
     const response = await fetch(
-      `https://www.strava.com/api/v3/push_subscriptions/${subscriptionId}?client_id=${STRAVA_CLIENT_ID}&client_secret=${STRAVA_CLIENT_SECRET}`,
+      `https://www.strava.com/api/v3/push_subscriptions/${subscriptionId}?client_id=${clientId}&client_secret=${clientSecret}`,
       {
         method: 'DELETE',
       }
