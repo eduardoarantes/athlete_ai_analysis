@@ -73,6 +73,20 @@ resource "aws_ssm_parameter" "strava_client_secret" {
   }
 }
 
+# Strava Webhook Verify Token (optional - use placeholder if not set)
+resource "aws_ssm_parameter" "strava_webhook_verify_token" {
+  count       = var.strava_webhook_verify_token != "" ? 1 : 0
+  name        = "${local.ssm_prefix}/strava/webhook-verify-token"
+  description = "Strava webhook verification token"
+  type        = "SecureString"
+  value       = var.strava_webhook_verify_token
+
+  tags = {
+    Name        = "${local.name_prefix}-strava-webhook-verify-token"
+    Environment = local.environment
+  }
+}
+
 # App URL (for OAuth callbacks)
 resource "aws_ssm_parameter" "app_url" {
   name        = "${local.ssm_prefix}/app/url"

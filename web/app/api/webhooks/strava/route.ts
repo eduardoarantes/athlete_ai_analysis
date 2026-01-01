@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { errorLogger } from '@/lib/monitoring/error-logger'
 import { StravaService } from '@/lib/services/strava-service'
@@ -8,6 +9,22 @@ import {
   type AthleteData,
   type TSSResult,
 } from '@/lib/services/tss-calculation-service'
+
+/**
+ * Zod schema for Strava webhook event payload
+ * This validates the structure before processing
+ */
+const StravaWebhookEventSchema = z.object({
+  object_type: z.enum(['activity', 'athlete']),
+  object_id: z.number(),
+  aspect_type: z.enum(['create', 'update', 'delete']),
+  owner_id: z.number(),
+  subscription_id: z.number(),
+  event_time: z.number(),
+  updates: z.record(z.string(), z.unknown()).optional(),
+})
+
+type StravaWebhookEvent = z.infer<typeof StravaWebhookEventSchema>
 
 /**
  * Get webhook verify token at runtime (not build time)
@@ -24,16 +41,6 @@ function getWebhookVerifyToken(): string {
     )
   }
   return token
-}
-
-interface StravaWebhookEvent {
-  object_type: 'activity' | 'athlete'
-  object_id: number
-  aspect_type: 'create' | 'update' | 'delete'
-  owner_id: number
-  subscription_id: number
-  event_time: number
-  updates?: Record<string, unknown>
 }
 
 /**
@@ -80,7 +87,20 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const event: StravaWebhookEvent = await request.json()
+    const body = await request.json()
+
+    // Validate payload structure with Zod
+    const parseResult = StravaWebhookEventSchema.safeParse(body)
+    if (!parseResult.success) {
+      errorLogger.logWarning('Invalid webhook payload', {
+        path: '/api/webhooks/strava',
+        method: 'POST',
+        metadata: { errors: parseResult.error.issues },
+      })
+      return NextResponse.json({ error: 'Invalid payload' }, { status: 400 })
+    }
+
+    const event = parseResult.data
 
     errorLogger.logInfo('Webhook event received', {
       metadata: {
@@ -203,15 +223,54 @@ function calculateWebhookActivityTSS(
  * This fetches the activity details and stores them in the database
  */
 async function processWebhookEvent(event: StravaWebhookEvent): Promise<void> {
-  // Only process activity events
+  const supabase = await createClient()
+
+  // Handle athlete deauthorization (user revoked access)
+  if (event.object_type === 'athlete' && event.aspect_type === 'delete') {
+    errorLogger.logInfo('Processing athlete deauthorization', {
+      metadata: { athleteId: event.owner_id },
+    })
+
+    // Delete the Strava connection for this athlete
+    const { error: deleteError } = await supabase
+      .from('strava_connections')
+      .delete()
+      .eq('strava_athlete_id', event.owner_id)
+
+    if (deleteError) {
+      errorLogger.logError(new Error(`Failed to delete connection: ${deleteError.message}`), {
+        path: '/api/webhooks/strava',
+        metadata: { athleteId: event.owner_id, phase: 'athlete_deauthorization' },
+      })
+    } else {
+      errorLogger.logInfo('Athlete deauthorization processed - connection removed', {
+        metadata: { athleteId: event.owner_id },
+      })
+    }
+
+    // Mark event as processed
+    await supabase
+      .from('strava_webhook_events')
+      .update({
+        processed: true,
+        processed_at: new Date().toISOString(),
+      } as never)
+      .match({
+        subscription_id: event.subscription_id,
+        object_id: event.object_id,
+        event_time: new Date(event.event_time * 1000).toISOString(),
+      } as never)
+
+    return
+  }
+
+  // Skip other non-activity events (e.g., athlete updates)
   if (event.object_type !== 'activity') {
     errorLogger.logInfo('Skipping non-activity webhook event', {
       metadata: { objectType: event.object_type, objectId: event.object_id },
     })
     return
   }
-
-  const supabase = await createClient()
 
   // Find the user associated with this Strava athlete
   const { data: connection, error: connectionError } = await supabase

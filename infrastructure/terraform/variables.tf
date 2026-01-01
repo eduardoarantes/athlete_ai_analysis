@@ -55,6 +55,13 @@ variable "strava_client_secret" {
   sensitive   = true
 }
 
+variable "strava_webhook_verify_token" {
+  description = "Strava webhook verification token. Generate with: openssl rand -base64 32"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
 # API Keys
 variable "anthropic_api_key" {
   description = "Anthropic API key for Claude"
