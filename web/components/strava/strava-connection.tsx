@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { toast } from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
@@ -79,11 +79,7 @@ export function StravaConnection() {
     },
   })
 
-  useEffect(() => {
-    loadStatus()
-  }, [])
-
-  const loadStatus = async () => {
+  const loadStatus = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -108,7 +104,11 @@ export function StravaConnection() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [t])
+
+  useEffect(() => {
+    loadStatus()
+  }, [loadStatus])
 
   const handleConnect = () => {
     window.location.href = '/api/auth/strava/connect'
@@ -245,179 +245,164 @@ export function StravaConnection() {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Connection Status */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('connectionTitle')}</CardTitle>
-          <CardDescription>
-            {t('athleteId')}: {status.athlete_id}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {successMessage && (
-            <Alert>
-              <AlertDescription>{successMessage}</AlertDescription>
-            </Alert>
-          )}
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          <div className="flex gap-2">
-            {syncStatus?.lastSyncAt ? (
-              // Show dropdown with sync options for users with existing syncs
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button disabled={isPolling || status.token_expired} variant="default">
-                    <RefreshCw className={`h-4 w-4 mr-2 ${isPolling ? 'animate-spin' : ''}`} />
-                    {isPolling ? t('syncing') : t('syncActivities')}
-                    <ChevronDown className="h-4 w-4 ml-2" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  <DropdownMenuItem onClick={() => handleSync(false)} disabled={isPolling}>
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    <div className="flex flex-col">
-                      <span>{t('syncNew') || 'Sync New Activities'}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {t('sinceLast', {
-                          date: new Date(syncStatus.lastSyncAt).toLocaleDateString(),
-                        }) || `Since ${new Date(syncStatus.lastSyncAt).toLocaleDateString()}`}
-                      </span>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleSync(true)} disabled={isPolling}>
-                    <RotateCcw className="h-4 w-4 mr-2" />
-                    <div className="flex flex-col">
-                      <span>{t('fullResync') || 'Full Re-sync'}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {t('allActivities') || 'All activities'}
-                      </span>
-                    </div>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              // First sync - just show simple button
-              <Button
-                onClick={() => handleSync(true)}
-                disabled={isPolling || status.token_expired}
-                variant="default"
-              >
-                <RefreshCw className={`h-4 w-4 mr-2 ${isPolling ? 'animate-spin' : ''}`} />
-                {isPolling ? t('syncing') : t('syncActivities')}
-              </Button>
-            )}
-            <Button onClick={handleDisconnect} variant="outline">
-              {t('disconnect')}
-            </Button>
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>{t('connectionTitle')}</CardTitle>
+            <CardDescription>
+              {t('athleteId')}: {status.athlete_id}
+            </CardDescription>
           </div>
+          <Button onClick={handleDisconnect} variant="ghost" size="sm">
+            {t('disconnect')}
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Alerts */}
+        {successMessage && (
+          <Alert>
+            <AlertDescription>{successMessage}</AlertDescription>
+          </Alert>
+        )}
+        {error && (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+        {status.token_expired && (
+          <Alert variant="destructive">
+            <AlertDescription>{t('tokenExpired')}</AlertDescription>
+          </Alert>
+        )}
+        {isPolling && jobStatus && (
+          <Alert>
+            <AlertDescription>
+              {jobStatus.status === 'pending' && (t('syncPending') || 'Sync pending...')}
+              {jobStatus.status === 'running' && (t('syncRunning') || 'Sync in progress...')}
+            </AlertDescription>
+          </Alert>
+        )}
+        {syncStatus?.syncError && (
+          <Alert variant="destructive">
+            <AlertDescription>{syncStatus.syncError}</AlertDescription>
+          </Alert>
+        )}
 
-          {/* Show sync progress if polling */}
-          {isPolling && jobStatus && (
-            <Alert>
-              <AlertDescription>
-                {jobStatus.status === 'pending' && (t('syncPending') || 'Sync pending...')}
-                {jobStatus.status === 'running' && (t('syncRunning') || 'Sync in progress...')}
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {status.token_expired && (
-            <Alert variant="destructive">
-              <AlertDescription>{t('tokenExpired')}</AlertDescription>
-            </Alert>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Sync Status */}
-      {syncStatus && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('activitySync')}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-muted-foreground">{t('totalActivities')}</p>
-                <p className="text-2xl font-bold">{syncStatus.activityCount}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">{t('syncStatus')}</p>
-                <p className="text-lg font-semibold capitalize">{syncStatus.syncStatus}</p>
-              </div>
+        {/* Stats Row */}
+        {syncStatus && (
+          <div className="grid grid-cols-3 gap-4 py-2 border-y">
+            <div className="text-center">
+              <p className="text-2xl font-bold">{syncStatus.activityCount}</p>
+              <p className="text-xs text-muted-foreground">{t('totalActivities')}</p>
             </div>
-            {syncStatus.lastSyncAt && (
-              <p className="text-sm text-muted-foreground">
-                {t('lastSynced')}: {new Date(syncStatus.lastSyncAt).toLocaleString()}
+            <div className="text-center">
+              <p className="text-lg font-semibold capitalize">{syncStatus.syncStatus}</p>
+              <p className="text-xs text-muted-foreground">{t('syncStatus')}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-medium">
+                {syncStatus.lastSyncAt ? new Date(syncStatus.lastSyncAt).toLocaleDateString() : '-'}
               </p>
-            )}
-            {syncStatus.syncError && (
-              <Alert variant="destructive">
-                <AlertDescription>{syncStatus.syncError}</AlertDescription>
-              </Alert>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* FTP Detection */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('ftpDetection')}</CardTitle>
-          <CardDescription>{t('ftpDetectionDescription')}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-2">
-            <Button
-              onClick={() => handleDetectFTP(false)}
-              disabled={detectingFTP}
-              variant="outline"
-            >
-              {detectingFTP ? t('detecting') : t('detectFtp')}
-            </Button>
-            {ftpEstimate && ftpEstimate.estimatedFTP > 0 && (
-              <Button onClick={() => handleDetectFTP(true)} disabled={detectingFTP}>
-                {t('detectAndUpdate')}
-              </Button>
-            )}
+              <p className="text-xs text-muted-foreground">{t('lastSynced')}</p>
+            </div>
           </div>
+        )}
 
-          {ftpEstimate && (
-            <div className="rounded-lg border p-4 space-y-2">
-              {ftpEstimate.estimatedFTP > 0 ? (
-                <>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold">{ftpEstimate.estimatedFTP}</span>
-                    <span className="text-muted-foreground">{t('watts')}</span>
-                    <span
-                      className={`ml-auto text-sm px-2 py-1 rounded ${
-                        ftpEstimate.confidence === 'high'
-                          ? 'bg-green-100 text-green-800'
-                          : ftpEstimate.confidence === 'medium'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {ftpEstimate.confidence} {t('confidence')}
+        {/* Actions Row */}
+        <div className="flex flex-wrap gap-2">
+          {syncStatus?.lastSyncAt ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button disabled={isPolling || status.token_expired} size="sm">
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isPolling ? 'animate-spin' : ''}`} />
+                  {isPolling ? t('syncing') : t('syncActivities')}
+                  <ChevronDown className="h-4 w-4 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem onClick={() => handleSync(false)} disabled={isPolling}>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  <div className="flex flex-col">
+                    <span>{t('syncNew') || 'Sync New Activities'}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {t('sinceLast', {
+                        date: new Date(syncStatus.lastSyncAt).toLocaleDateString(),
+                      }) || `Since ${new Date(syncStatus.lastSyncAt).toLocaleDateString()}`}
                     </span>
                   </div>
-                  <p className="text-sm text-muted-foreground">
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleSync(true)} disabled={isPolling}>
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  <div className="flex flex-col">
+                    <span>{t('fullResync') || 'Full Re-sync'}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {t('allActivities') || 'All activities'}
+                    </span>
+                  </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button
+              onClick={() => handleSync(true)}
+              disabled={isPolling || status.token_expired}
+              size="sm"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isPolling ? 'animate-spin' : ''}`} />
+              {isPolling ? t('syncing') : t('syncActivities')}
+            </Button>
+          )}
+
+          <Button
+            onClick={() => handleDetectFTP(false)}
+            disabled={detectingFTP}
+            variant="outline"
+            size="sm"
+          >
+            {detectingFTP ? t('detecting') : t('detectFtp')}
+          </Button>
+
+          {ftpEstimate && ftpEstimate.estimatedFTP > 0 && (
+            <Button onClick={() => handleDetectFTP(true)} disabled={detectingFTP} size="sm">
+              {t('detectAndUpdate')}
+            </Button>
+          )}
+        </div>
+
+        {/* FTP Estimate Result */}
+        {ftpEstimate && (
+          <div className="rounded-lg border p-3 bg-muted/30">
+            {ftpEstimate.estimatedFTP > 0 ? (
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-2xl font-bold">{ftpEstimate.estimatedFTP}</span>
+                    <span className="text-sm text-muted-foreground">{t('watts')}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
                     {t('basedOnActivities', { count: ftpEstimate.dataPoints })}
                   </p>
-                  <p className="text-sm">{ftpEstimate.reasoning}</p>
-                </>
-              ) : (
-                <p className="text-sm text-muted-foreground">{ftpEstimate.reasoning}</p>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+                </div>
+                <span
+                  className={`text-xs px-2 py-1 rounded ${
+                    ftpEstimate.confidence === 'high'
+                      ? 'bg-green-100 text-green-800'
+                      : ftpEstimate.confidence === 'medium'
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : 'bg-red-100 text-red-800'
+                  }`}
+                >
+                  {ftpEstimate.confidence} {t('confidence')}
+                </span>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">{ftpEstimate.reasoning}</p>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   )
 }
