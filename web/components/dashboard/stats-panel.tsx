@@ -15,13 +15,13 @@ interface ActivityStats {
 
 interface StatsPanelProps {
   yearActivities: ActivityStats[]
-  monthActivities: ActivityStats[]
-  lastWeekActivities: ActivityStats[]
+  last4WeeksActivities: ActivityStats[]
+  lastYearActivities: ActivityStats[]
   translations: {
     stats: string
     thisYear: string
-    thisMonth: string
-    lastWeek: string
+    last4Weeks: string
+    lastYear: string
   }
 }
 
@@ -86,15 +86,18 @@ function formatNumber(num: number): string {
 
 export function StatsPanel({
   yearActivities,
-  monthActivities,
-  lastWeekActivities,
+  last4WeeksActivities,
+  lastYearActivities,
   translations: t,
 }: StatsPanelProps) {
-  // Get top 4 sports from yearly activities (most activities)
+  // Get top 4 sports from yearly activities (or last year if current year is empty)
   const topSports = useMemo(() => {
     const sportCounts: Record<string, number> = {}
 
-    yearActivities.forEach((activity) => {
+    // Use current year activities if available, otherwise fall back to last year
+    const activitiesToCount = yearActivities.length > 0 ? yearActivities : lastYearActivities
+
+    activitiesToCount.forEach((activity) => {
       const groupedSport = getGroupedSport(activity.sport_type)
       sportCounts[groupedSport] = (sportCounts[groupedSport] || 0) + 1
     })
@@ -103,7 +106,7 @@ export function StatsPanel({
       .sort((a, b) => b[1] - a[1])
       .slice(0, 4)
       .map(([sport]) => sport)
-  }, [yearActivities])
+  }, [yearActivities, lastYearActivities])
 
   // Default to most common sport, or 'all' if no activities
   const [selectedSport, setSelectedSport] = useState<string | null>(null)
@@ -121,17 +124,17 @@ export function StatsPanel({
   )
 
   // Calculate filtered stats
+  const last4WeeksStats = useMemo(
+    () => calculateStats(filterBySport(last4WeeksActivities)),
+    [last4WeeksActivities, filterBySport]
+  )
   const yearStats = useMemo(
     () => calculateStats(filterBySport(yearActivities)),
     [yearActivities, filterBySport]
   )
-  const monthStats = useMemo(
-    () => calculateStats(filterBySport(monthActivities)),
-    [monthActivities, filterBySport]
-  )
-  const lastWeekStats = useMemo(
-    () => calculateStats(filterBySport(lastWeekActivities)),
-    [lastWeekActivities, filterBySport]
+  const lastYearStats = useMemo(
+    () => calculateStats(filterBySport(lastYearActivities)),
+    [lastYearActivities, filterBySport]
   )
 
   if (topSports.length === 0) {
@@ -162,6 +165,32 @@ export function StatsPanel({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Last 4 Weeks */}
+        <div className="space-y-1">
+          <p className="text-xs font-medium text-muted-foreground">{t.last4Weeks}</p>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div>
+              <p className="text-lg font-bold">{formatNumber(last4WeeksStats.count)}</p>
+              <p className="text-[10px] text-muted-foreground">activities</p>
+            </div>
+            <div>
+              <p className="text-lg font-bold">
+                {formatNumber(Math.round(last4WeeksStats.distance / 1000))}
+              </p>
+              <p className="text-[10px] text-muted-foreground">km</p>
+            </div>
+            <div className="flex flex-col items-center">
+              <div className="flex items-center gap-0.5">
+                <Mountain className="h-3 w-3 text-muted-foreground" />
+                <p className="text-lg font-bold">
+                  {formatNumber(Math.round(last4WeeksStats.elevation))}
+                </p>
+              </div>
+              <p className="text-[10px] text-muted-foreground">m</p>
+            </div>
+          </div>
+        </div>
+
         {/* This Year */}
         <div className="space-y-1">
           <p className="text-xs font-medium text-muted-foreground">{t.thisYear}</p>
@@ -186,17 +215,17 @@ export function StatsPanel({
           </div>
         </div>
 
-        {/* This Month */}
+        {/* Last Year */}
         <div className="space-y-1">
-          <p className="text-xs font-medium text-muted-foreground">{t.thisMonth}</p>
+          <p className="text-xs font-medium text-muted-foreground">{t.lastYear}</p>
           <div className="grid grid-cols-3 gap-2 text-center">
             <div>
-              <p className="text-lg font-bold">{formatNumber(monthStats.count)}</p>
+              <p className="text-lg font-bold">{formatNumber(lastYearStats.count)}</p>
               <p className="text-[10px] text-muted-foreground">activities</p>
             </div>
             <div>
               <p className="text-lg font-bold">
-                {formatNumber(Math.round(monthStats.distance / 1000))}
+                {formatNumber(Math.round(lastYearStats.distance / 1000))}
               </p>
               <p className="text-[10px] text-muted-foreground">km</p>
             </div>
@@ -204,33 +233,7 @@ export function StatsPanel({
               <div className="flex items-center gap-0.5">
                 <Mountain className="h-3 w-3 text-muted-foreground" />
                 <p className="text-lg font-bold">
-                  {formatNumber(Math.round(monthStats.elevation))}
-                </p>
-              </div>
-              <p className="text-[10px] text-muted-foreground">m</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Last Week */}
-        <div className="space-y-1">
-          <p className="text-xs font-medium text-muted-foreground">{t.lastWeek}</p>
-          <div className="grid grid-cols-3 gap-2 text-center">
-            <div>
-              <p className="text-lg font-bold">{formatNumber(lastWeekStats.count)}</p>
-              <p className="text-[10px] text-muted-foreground">activities</p>
-            </div>
-            <div>
-              <p className="text-lg font-bold">
-                {formatNumber(Math.round(lastWeekStats.distance / 1000))}
-              </p>
-              <p className="text-[10px] text-muted-foreground">km</p>
-            </div>
-            <div className="flex flex-col items-center">
-              <div className="flex items-center gap-0.5">
-                <Mountain className="h-3 w-3 text-muted-foreground" />
-                <p className="text-lg font-bold">
-                  {formatNumber(Math.round(lastWeekStats.elevation))}
+                  {formatNumber(Math.round(lastYearStats.elevation))}
                 </p>
               </div>
               <p className="text-[10px] text-muted-foreground">m</p>

@@ -107,9 +107,9 @@ export default async function DashboardPage() {
 
   // Fetch activity statistics
   let recentActivities: any[] = []
-  let lastWeekActivities: any[] = []
-  let monthActivities: any[] = []
+  let last4WeeksActivities: any[] = []
   let yearActivities: any[] = []
+  let lastYearActivities: any[] = []
   let stravaConnected = false
 
   if (user?.id) {
@@ -154,36 +154,26 @@ export default async function DashboardPage() {
     const startOfWeek = new Date(todayInUserTz)
     startOfWeek.setDate(todayInUserTz.getDate() - daysFromMonday)
 
-    // Start of last week (previous Monday)
-    const startOfLastWeek = new Date(startOfWeek)
-    startOfLastWeek.setDate(startOfWeek.getDate() - 7)
-    const endOfLastWeek = new Date(startOfWeek) // End of last week = start of this week
+    // Start of last 4 weeks (4 Mondays ago)
+    const startOfLast4Weeks = new Date(startOfWeek)
+    startOfLast4Weeks.setDate(startOfWeek.getDate() - 28)
 
-    // Start of current month (1st)
-    const startOfMonth = new Date(todayInUserTz)
-    startOfMonth.setDate(1)
+    // Start of last year (Jan 1st of previous year)
+    const startOfLastYear = new Date(todayInUserTz.getFullYear() - 1, 0, 1)
+    const endOfLastYear = new Date(todayInUserTz.getFullYear(), 0, 1) // Jan 1st of current year
 
     // Start of current year (Jan 1st)
     const startOfYear = new Date(todayInUserTz.getFullYear(), 0, 1)
 
-    // Get last week activities
-    const { data: lastWeekData } = await supabase
+    // Get last 4 weeks activities
+    const { data: last4WeeksData } = await supabase
       .from('strava_activities')
       .select('sport_type, distance, moving_time, total_elevation_gain, start_date')
       .eq('user_id', user.id)
-      .gte('start_date', startOfLastWeek.toISOString())
-      .lt('start_date', endOfLastWeek.toISOString())
+      .gte('start_date', startOfLast4Weeks.toISOString())
+      .lt('start_date', startOfWeek.toISOString())
 
-    lastWeekActivities = lastWeekData || []
-
-    // Get monthly activities
-    const { data: monthData } = await supabase
-      .from('strava_activities')
-      .select('sport_type, distance, moving_time, total_elevation_gain, start_date')
-      .eq('user_id', user.id)
-      .gte('start_date', startOfMonth.toISOString())
-
-    monthActivities = monthData || []
+    last4WeeksActivities = last4WeeksData || []
 
     // Get yearly activities
     const { data: yearData } = await supabase
@@ -193,6 +183,16 @@ export default async function DashboardPage() {
       .gte('start_date', startOfYear.toISOString())
 
     yearActivities = yearData || []
+
+    // Get last year activities
+    const { data: lastYearData } = await supabase
+      .from('strava_activities')
+      .select('sport_type, distance, moving_time, total_elevation_gain, start_date')
+      .eq('user_id', user.id)
+      .gte('start_date', startOfLastYear.toISOString())
+      .lt('start_date', endOfLastYear.toISOString())
+
+    lastYearActivities = lastYearData || []
   }
 
   // Fetch active/scheduled plan instances for upcoming workouts
@@ -327,17 +327,17 @@ export default async function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Stats Panel with Sport Filter - Show if there are any activities */}
-          {yearActivities.length > 0 && (
+          {/* Stats Panel with Sport Filter - Show if there are any activities (current or last year) */}
+          {(yearActivities.length > 0 || lastYearActivities.length > 0) && (
             <StatsPanel
               yearActivities={yearActivities}
-              monthActivities={monthActivities}
-              lastWeekActivities={lastWeekActivities}
+              last4WeeksActivities={last4WeeksActivities}
+              lastYearActivities={lastYearActivities}
               translations={{
                 stats: t('stats'),
                 thisYear: t('thisYear'),
-                thisMonth: t('thisMonth'),
-                lastWeek: t('lastWeek'),
+                last4Weeks: t('last4Weeks'),
+                lastYear: t('lastYear'),
               }}
             />
           )}
