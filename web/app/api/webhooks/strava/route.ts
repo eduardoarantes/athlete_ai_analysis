@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { errorLogger } from '@/lib/monitoring/error-logger'
 import { StravaService } from '@/lib/services/strava-service'
 import {
@@ -111,7 +111,8 @@ export async function POST(request: NextRequest) {
     })
 
     // Store event in database for processing
-    const supabase = await createClient()
+    // Use service client to bypass RLS (webhooks have no user session)
+    const supabase = createServiceClient()
 
     const { error } = await supabase.from('strava_webhook_events').insert({
       subscription_id: event.subscription_id,
@@ -166,7 +167,7 @@ export async function POST(request: NextRequest) {
  * Returns null if profile not found or missing required fields
  */
 async function getAthleteDataForWebhook(userId: string): Promise<AthleteData | null> {
-  const supabase = await createClient()
+  const supabase = createServiceClient()
 
   const { data: profile, error } = await supabase
     .from('athlete_profiles')
@@ -223,7 +224,8 @@ function calculateWebhookActivityTSS(
  * This fetches the activity details and stores them in the database
  */
 async function processWebhookEvent(event: StravaWebhookEvent): Promise<void> {
-  const supabase = await createClient()
+  // Use service client to bypass RLS (webhooks have no user session)
+  const supabase = createServiceClient()
 
   // Handle athlete deauthorization (user revoked access)
   if (event.object_type === 'athlete' && event.aspect_type === 'delete') {
