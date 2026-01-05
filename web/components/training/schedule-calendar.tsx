@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
 import { WorkoutCard } from './workout-card'
-import { WorkoutDetailModal } from './workout-detail-modal'
+import { WorkoutDetailModal, type MatchedActivityData } from './workout-detail-modal'
 import type { PlanInstance, Workout } from '@/lib/types/training-plan'
 import { parseLocalDate } from '@/lib/utils/date-utils'
 import { formatWithGoalLabels } from '@/lib/utils/format-utils'
@@ -25,6 +25,7 @@ interface ScheduledWorkout {
   instance: PlanInstance
   weekNumber: number
   date: Date
+  index?: number
 }
 
 export function ScheduleCalendar({ instances, isAdmin = false }: ScheduleCalendarProps) {
@@ -48,6 +49,130 @@ export function ScheduleCalendar({ instances, isAdmin = false }: ScheduleCalenda
 
   const [selectedWorkout, setSelectedWorkout] = useState<ScheduledWorkout | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
+
+  // Matches state: Map of "instanceId:date:index" -> MatchedActivityData
+  const [matchesMap, setMatchesMap] = useState<Map<string, MatchedActivityData>>(new Map())
+  const [matchesRefreshKey, setMatchesRefreshKey] = useState(0)
+  const autoMatchedRef = useRef<Set<string>>(new Set())
+
+  // Build workouts list for auto-matching
+  const buildWorkoutsList = useCallback(
+    (instance: PlanInstance) => {
+      const workouts: Array<{ date: string; index: number; tss?: number; type?: string }> = []
+
+      if (!instance.plan_data?.weekly_plan) return workouts
+
+      const startDate = parseLocalDate(instance.start_date)
+
+      instance.plan_data.weekly_plan.forEach((week) => {
+        if (!week.workouts) return
+
+        week.workouts.forEach((workout, workoutIdx) => {
+          const dayIndex = DAYS_OF_WEEK.findIndex(
+            (d) => d.toLowerCase() === workout.weekday.toLowerCase()
+          )
+          if (dayIndex === -1) return
+
+          const startDayOfWeek = startDate.getDay()
+          const daysToMonday = startDayOfWeek === 0 ? -6 : 1 - startDayOfWeek
+          const weekOneMonday = new Date(startDate)
+          weekOneMonday.setDate(startDate.getDate() + daysToMonday)
+
+          const adjustedDayIndex = dayIndex === 0 ? 6 : dayIndex - 1
+          const workoutDate = new Date(weekOneMonday)
+          workoutDate.setDate(
+            weekOneMonday.getDate() + (week.week_number - 1) * 7 + adjustedDayIndex
+          )
+
+          const workoutEntry: { date: string; index: number; tss?: number; type?: string } = {
+            date: workoutDate.toISOString().split('T')[0]!,
+            index: workoutIdx,
+          }
+          if (workout.tss !== undefined) workoutEntry.tss = workout.tss
+          if (workout.type !== undefined) workoutEntry.type = workout.type
+          workouts.push(workoutEntry)
+        })
+      })
+
+      return workouts
+    },
+    []
+  )
+
+  // Fetch matches and run auto-matching
+  useEffect(() => {
+    const instanceIds = instances.map((i) => i.id)
+    if (instanceIds.length === 0) return
+
+    const fetchMatchesAndAutoMatch = async () => {
+      try {
+        // Fetch existing matches
+        const response = await fetch(`/api/schedule/matches?instanceIds=${instanceIds.join(',')}`)
+        if (response.ok) {
+          const data = await response.json()
+          const newMap = new Map<string, MatchedActivityData>()
+          for (const [key, value] of Object.entries(data.matches)) {
+            newMap.set(key, value as MatchedActivityData)
+          }
+          setMatchesMap(newMap)
+
+          // Auto-match for each instance (only once per instance)
+          let matchedAny = false
+          for (const instance of instances) {
+            if (autoMatchedRef.current.has(instance.id)) continue
+
+            const workouts = buildWorkoutsList(instance)
+            if (workouts.length === 0) continue
+
+            try {
+              const autoResponse = await fetch('/api/schedule/matches/auto', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  plan_instance_id: instance.id,
+                  workouts,
+                }),
+              })
+
+              if (autoResponse.ok) {
+                const autoData = await autoResponse.json()
+                if (autoData.matched > 0) {
+                  matchedAny = true
+                }
+              }
+
+              autoMatchedRef.current.add(instance.id)
+            } catch {
+              // Silently fail auto-matching
+            }
+          }
+
+          // Refresh matches if any were auto-matched
+          if (matchedAny) {
+            const refreshResponse = await fetch(
+              `/api/schedule/matches?instanceIds=${instanceIds.join(',')}`
+            )
+            if (refreshResponse.ok) {
+              const refreshData = await refreshResponse.json()
+              const refreshMap = new Map<string, MatchedActivityData>()
+              for (const [key, value] of Object.entries(refreshData.matches)) {
+                refreshMap.set(key, value as MatchedActivityData)
+              }
+              setMatchesMap(refreshMap)
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch matches:', error)
+      }
+    }
+
+    fetchMatchesAndAutoMatch()
+  }, [instances, matchesRefreshKey, buildWorkoutsList])
+
+  const handleMatchChange = () => {
+    setMatchesRefreshKey((prev) => prev + 1)
+  }
 
   // Get FTP from first instance's athlete profile
   const ftp = instances[0]?.plan_data?.athlete_profile?.ftp || 200
@@ -231,8 +356,9 @@ export function ScheduleCalendar({ instances, isAdmin = false }: ScheduleCalenda
                         )}
                         <WorkoutCard
                           workout={sw.workout}
+                          matchedActivity={matchesMap.get(`${sw.instance.id}:${dateKey}:${idx}`)}
                           className="text-[9px]"
-                          onClick={() => handleWorkoutClick(sw)}
+                          onClick={() => handleWorkoutClick({ ...sw, index: idx })}
                         />
                       </div>
                     ))}
@@ -274,6 +400,17 @@ export function ScheduleCalendar({ instances, isAdmin = false }: ScheduleCalenda
         open={modalOpen}
         onOpenChange={setModalOpen}
         isAdmin={isAdmin}
+        planInstanceId={selectedWorkout?.instance.id}
+        workoutDate={selectedWorkout?.date.toISOString().split('T')[0]}
+        workoutIndex={selectedWorkout?.index}
+        matchedActivity={
+          selectedWorkout
+            ? matchesMap.get(
+                `${selectedWorkout.instance.id}:${selectedWorkout.date.toISOString().split('T')[0]}:${selectedWorkout.index}`
+              )
+            : undefined
+        }
+        onMatchChange={handleMatchChange}
       />
     </div>
   )

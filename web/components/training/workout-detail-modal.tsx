@@ -1,8 +1,18 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { Clock, Zap, Activity, Repeat, Code } from 'lucide-react'
+import {
+  Clock,
+  Zap,
+  Activity,
+  Repeat,
+  Code,
+  CheckCircle2,
+  Link2,
+  Unlink,
+  Loader2,
+} from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -14,11 +24,43 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   type Workout,
   type WorkoutSegment,
   formatDuration,
   calculateWorkoutDuration,
 } from '@/lib/types/training-plan'
+
+export interface MatchedActivityData {
+  id: string
+  strava_activity_id: number
+  name: string
+  type: string
+  sport_type: string
+  start_date: string
+  distance: number | null
+  moving_time: number | null
+  tss: number | null
+  average_watts: number | null
+  match_type: 'auto' | 'manual'
+  match_score: number | null
+}
+
+interface UnmatchedActivity {
+  id: string
+  strava_activity_id: number
+  name: string
+  type: string
+  start_date: string
+  tss: number | null
+  moving_time: number | null
+}
 
 interface WorkoutDetailModalProps {
   workout: Workout | null
@@ -27,6 +69,11 @@ interface WorkoutDetailModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   isAdmin?: boolean
+  planInstanceId?: string | undefined
+  workoutDate?: string | undefined
+  workoutIndex?: number | undefined
+  matchedActivity?: MatchedActivityData | null | undefined
+  onMatchChange?: () => void
 }
 
 interface ExpandedSegment {
@@ -292,8 +339,99 @@ export function WorkoutDetailModal({
   open,
   onOpenChange,
   isAdmin = false,
+  planInstanceId,
+  workoutDate,
+  workoutIndex = 0,
+  matchedActivity,
+  onMatchChange,
 }: WorkoutDetailModalProps) {
   const t = useTranslations('trainingPlan')
+  const [isMatching, setIsMatching] = useState(false)
+  const [isUnmatching, setIsUnmatching] = useState(false)
+  const [showActivitySelector, setShowActivitySelector] = useState(false)
+  const [availableActivities, setAvailableActivities] = useState<UnmatchedActivity[]>([])
+  const [loadingActivities, setLoadingActivities] = useState(false)
+  const [selectedActivityId, setSelectedActivityId] = useState<string>('')
+
+  // Fetch available activities when showing selector
+  useEffect(() => {
+    if (!showActivitySelector || !workoutDate) return
+
+    const fetchActivities = async () => {
+      setLoadingActivities(true)
+      try {
+        // Get activities within +/- 3 days of the workout date
+        const date = new Date(workoutDate)
+        const startDate = new Date(date)
+        startDate.setDate(date.getDate() - 3)
+        const endDate = new Date(date)
+        endDate.setDate(date.getDate() + 3)
+
+        const response = await fetch(
+          `/api/schedule/matches/activities?start_date=${startDate.toISOString().split('T')[0]}&end_date=${endDate.toISOString().split('T')[0]}`
+        )
+        if (response.ok) {
+          const data = await response.json()
+          setAvailableActivities(data.activities || [])
+        }
+      } catch (error) {
+        console.error('Failed to fetch activities:', error)
+      } finally {
+        setLoadingActivities(false)
+      }
+    }
+
+    fetchActivities()
+  }, [showActivitySelector, workoutDate])
+
+  const handleMatch = async () => {
+    if (!planInstanceId || !workoutDate || !selectedActivityId) return
+
+    setIsMatching(true)
+    try {
+      const response = await fetch('/api/schedule/matches', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          plan_instance_id: planInstanceId,
+          workout_date: workoutDate,
+          workout_index: workoutIndex,
+          strava_activity_id: selectedActivityId,
+          match_type: 'manual',
+        }),
+      })
+
+      if (response.ok) {
+        setShowActivitySelector(false)
+        setSelectedActivityId('')
+        onMatchChange?.()
+      }
+    } catch (error) {
+      console.error('Failed to match activity:', error)
+    } finally {
+      setIsMatching(false)
+    }
+  }
+
+  const handleUnmatch = async () => {
+    if (!planInstanceId || !workoutDate) return
+
+    setIsUnmatching(true)
+    try {
+      const response = await fetch(
+        `/api/schedule/matches?plan_instance_id=${planInstanceId}&workout_date=${workoutDate}&workout_index=${workoutIndex}`,
+        { method: 'DELETE' }
+      )
+
+      if (response.ok) {
+        onMatchChange?.()
+      }
+    } catch (error) {
+      console.error('Failed to unmatch activity:', error)
+    } finally {
+      setIsUnmatching(false)
+    }
+  }
 
   const handleViewJson = () => {
     if (!workout) return
@@ -459,6 +597,143 @@ export function WorkoutDetailModal({
                     </div>
                   )
                 })}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Matched Activity Section */}
+          {planInstanceId && workoutDate && (
+            <Card className="gap-1 py-3">
+              <CardHeader className="pb-0">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Activity className="h-4 w-4" />
+                  Completed Activity
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {matchedActivity ? (
+                  <div className="space-y-3">
+                    {/* Matched Activity Info */}
+                    <div className="flex items-start gap-3 p-3 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg">
+                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-green-900 dark:text-green-100 truncate">
+                          {matchedActivity.name}
+                        </div>
+                        <div className="text-sm text-green-700 dark:text-green-300 mt-1">
+                          <span className="capitalize">
+                            {(matchedActivity.sport_type || 'Unknown').replace('_', ' ')}
+                          </span>
+                          {matchedActivity.tss != null && (
+                            <span className="ml-2">• {Math.round(matchedActivity.tss)} TSS</span>
+                          )}
+                          {matchedActivity.average_watts != null && (
+                            <span className="ml-2">
+                              • {Math.round(matchedActivity.average_watts)}W avg
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-green-600 dark:text-green-400 mt-1">
+                          {new Date(matchedActivity.start_date).toLocaleDateString()} •{' '}
+                          <span className="capitalize">{matchedActivity.match_type} match</span>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Unmatch Button */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleUnmatch}
+                      disabled={isUnmatching}
+                      className="w-full"
+                    >
+                      {isUnmatching ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Unlink className="h-4 w-4 mr-2" />
+                      )}
+                      Remove Match
+                    </Button>
+                  </div>
+                ) : showActivitySelector ? (
+                  <div className="space-y-3">
+                    {loadingActivities ? (
+                      <div className="flex items-center justify-center py-4">
+                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                        <span className="ml-2 text-sm text-muted-foreground">
+                          Loading activities...
+                        </span>
+                      </div>
+                    ) : availableActivities.length === 0 ? (
+                      <div className="text-sm text-muted-foreground text-center py-4">
+                        No unmatched activities found within ±3 days of this workout
+                      </div>
+                    ) : (
+                      <>
+                        <Select value={selectedActivityId} onValueChange={setSelectedActivityId}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select an activity to match" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {availableActivities.map((activity) => (
+                              <SelectItem key={activity.id} value={activity.id}>
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{activity.name}</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {new Date(activity.start_date).toLocaleDateString()} •{' '}
+                                    {(activity.type || 'Unknown').replace('_', ' ')}
+                                    {activity.tss != null && ` • ${Math.round(activity.tss)} TSS`}
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setShowActivitySelector(false)
+                              setSelectedActivityId('')
+                            }}
+                            className="flex-1"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={handleMatch}
+                            disabled={!selectedActivityId || isMatching}
+                            className="flex-1"
+                          >
+                            {isMatching ? (
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            ) : (
+                              <Link2 className="h-4 w-4 mr-2" />
+                            )}
+                            Match
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="text-sm text-muted-foreground text-center py-2">
+                      No activity matched to this workout yet
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowActivitySelector(true)}
+                      className="w-full"
+                    >
+                      <Link2 className="h-4 w-4 mr-2" />
+                      Match Activity
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
