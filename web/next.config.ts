@@ -32,6 +32,7 @@ const nextConfig: NextConfig = {
     appUrl: process.env.NEXT_PUBLIC_APP_URL,
     supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
     supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
     // Note: Lambda is called via HTTP to function URL (not SDK)
     // See GitHub issue #37 for secure BFF with SSM credentials
   },
