@@ -387,6 +387,35 @@ export default function ComplianceGuidePage() {
             </p>
           </div>
 
+          <div className="p-4 bg-green-50 dark:bg-green-950/30 rounded-lg">
+            <h4 className="font-medium mb-2">Adaptive Analysis for All Workout Types</h4>
+            <p className="text-sm text-muted-foreground mb-3">
+              The algorithm automatically adjusts its sensitivity based on your workout structure:
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+              <div className="text-center p-2 bg-white/50 dark:bg-black/20 rounded">
+                <div className="font-medium">Sprints</div>
+                <div className="text-xs text-muted-foreground">5-15 sec efforts</div>
+                <div className="text-xs text-green-600 dark:text-green-400">3 sec precision</div>
+              </div>
+              <div className="text-center p-2 bg-white/50 dark:bg-black/20 rounded">
+                <div className="font-medium">Tabata</div>
+                <div className="text-xs text-muted-foreground">20/10 sec on/off</div>
+                <div className="text-xs text-green-600 dark:text-green-400">5 sec precision</div>
+              </div>
+              <div className="text-center p-2 bg-white/50 dark:bg-black/20 rounded">
+                <div className="font-medium">VO2max</div>
+                <div className="text-xs text-muted-foreground">30-60 sec efforts</div>
+                <div className="text-xs text-green-600 dark:text-green-400">10 sec precision</div>
+              </div>
+              <div className="text-center p-2 bg-white/50 dark:bg-black/20 rounded">
+                <div className="font-medium">Threshold</div>
+                <div className="text-xs text-muted-foreground">3-20 min efforts</div>
+                <div className="text-xs text-green-600 dark:text-green-400">30 sec precision</div>
+              </div>
+            </div>
+          </div>
+
           <div className="border-t" />
 
           <div className="space-y-4">
@@ -402,7 +431,7 @@ export default function ComplianceGuidePage() {
               </p>
               <p>
                 <span className="text-blue-600 dark:text-blue-400">Step 2:</span> Smooth out the
-                noise (30-second rolling average)
+                noise (adaptive window: 3-30 sec based on workout type)
               </p>
               <p>
                 <span className="text-blue-600 dark:text-blue-400">Step 3:</span> Classify each
@@ -439,7 +468,7 @@ export default function ComplianceGuidePage() {
                   </li>
                   <li>
                     <ChevronRight className="h-3 w-3 inline mr-1" />
-                    Adding extra warmup time
+                    Short intervals (sprints, Tabata, 30/30s)
                   </li>
                 </ul>
               </div>
@@ -451,10 +480,6 @@ export default function ComplianceGuidePage() {
                 <ul className="text-sm text-muted-foreground space-y-1">
                   <li>
                     <ChevronRight className="h-3 w-3 inline mr-1" />
-                    Very short intervals (&lt;30 sec)
-                  </li>
-                  <li>
-                    <ChevronRight className="h-3 w-3 inline mr-1" />
                     Highly variable outdoor conditions
                   </li>
                   <li>
@@ -464,6 +489,10 @@ export default function ComplianceGuidePage() {
                   <li>
                     <ChevronRight className="h-3 w-3 inline mr-1" />
                     Radically different workout execution
+                  </li>
+                  <li>
+                    <ChevronRight className="h-3 w-3 inline mr-1" />
+                    Power meter dropouts or glitches
                   </li>
                 </ul>
               </div>

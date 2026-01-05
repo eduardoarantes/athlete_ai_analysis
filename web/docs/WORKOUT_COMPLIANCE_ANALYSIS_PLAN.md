@@ -292,19 +292,108 @@ Using athlete's FTP (e.g., 250W):
 [6] cooldown: 125-150W (Z1-Z2)
 ```
 
-#### 1.3 Smooth Power Stream
+#### 1.3 Determine Adaptive Parameters
 
-Apply 30-second rolling average to reduce noise:
+**Critical:** The algorithm parameters must adapt to the workout structure. A workout with 10-second sprints needs different settings than one with 10-minute Sweet Spot intervals.
+
+```typescript
+interface AdaptiveParameters {
+  smoothingWindowSec: number    // Rolling average window
+  minSegmentDurationSec: number // Minimum time to consider a segment
+  boundaryStabilitySec: number  // Time zone must be stable to mark boundary
+}
+
+function calculateAdaptiveParameters(
+  plannedSegments: PlannedSegment[]
+): AdaptiveParameters {
+  // Find the shortest planned segment
+  const shortestSegmentSec = Math.min(
+    ...plannedSegments.map(s => s.duration_sec)
+  )
+
+  // Adaptive rules based on shortest segment
+  if (shortestSegmentSec <= 15) {
+    // Sprint/Neuromuscular workouts (≤15 sec efforts)
+    return {
+      smoothingWindowSec: 3,        // Minimal smoothing
+      minSegmentDurationSec: 5,     // Detect very short efforts
+      boundaryStabilitySec: 3       // Quick transitions
+    }
+  } else if (shortestSegmentSec <= 30) {
+    // Short intervals (15-30 sec)
+    return {
+      smoothingWindowSec: 5,
+      minSegmentDurationSec: 10,
+      boundaryStabilitySec: 5
+    }
+  } else if (shortestSegmentSec <= 60) {
+    // Micro intervals (30-60 sec)
+    return {
+      smoothingWindowSec: 10,
+      minSegmentDurationSec: 15,
+      boundaryStabilitySec: 10
+    }
+  } else if (shortestSegmentSec <= 180) {
+    // Standard intervals (1-3 min)
+    return {
+      smoothingWindowSec: 15,
+      minSegmentDurationSec: 20,
+      boundaryStabilitySec: 15
+    }
+  } else {
+    // Long intervals / steady state (>3 min)
+    return {
+      smoothingWindowSec: 30,
+      minSegmentDurationSec: 30,
+      boundaryStabilitySec: 20
+    }
+  }
+}
+```
+
+**Parameter Guidelines by Workout Type:**
+
+| Workout Type | Shortest Effort | Smoothing | Min Segment | Example |
+|--------------|-----------------|-----------|-------------|---------|
+| Sprints | 5-15 sec | 3 sec | 5 sec | 6x10sec sprints |
+| Tabata | 20 sec | 5 sec | 10 sec | 8x20sec on/10sec off |
+| VO2max | 30-60 sec | 10 sec | 15 sec | 30/30s, 40/20s |
+| Threshold | 1-5 min | 15 sec | 20 sec | 5x3min @ FTP |
+| Sweet Spot | 5-20 min | 30 sec | 30 sec | 2x20min @ 90% |
+| Endurance | 30+ min | 30 sec | 30 sec | 2hr Z2 |
+
+#### 1.4 Smooth Power Stream
+
+Apply rolling average to reduce noise, using the **adaptive smoothing window**:
+
+```typescript
+function smoothPowerStream(
+  power: number[],
+  windowSec: number  // From adaptive parameters
+): number[] {
+  const smoothed: number[] = []
+
+  for (let i = 0; i < power.length; i++) {
+    const windowStart = Math.max(0, i - windowSec + 1)
+    const window = power.slice(windowStart, i + 1)
+    const avg = window.reduce((a, b) => a + b, 0) / window.length
+    smoothed.push(Math.round(avg))
+  }
+
+  return smoothed
+}
+```
 
 ```
 Raw:      [145, 280, 142, 275, 148, 268, ...]  ← Noisy (pedal strokes, coasting)
 Smoothed: [148, 152, 158, 185, 210, 242, ...]  ← Cleaner signal
 ```
 
-**Why 30 seconds?**
-- Short enough to detect interval starts
-- Long enough to filter out pedal stroke variations
-- Standard in cycling analytics
+**Why adaptive smoothing?**
+- Sprint workouts: 3-5 sec window captures short explosive efforts
+- Standard intervals: 15-30 sec window filters noise while detecting changes
+- Too much smoothing on sprints = missed efforts
+- Too little smoothing on endurance = false positives
 
 ---
 
@@ -355,13 +444,13 @@ Zone Timeline: [2,2,2,2,2,2,2,2,2,2,...,5,5,5,5,5,5,...,1,1,1,1,...]
 
 A **segment boundary** occurs when the zone changes significantly and stays changed.
 
-**Algorithm:**
+**Algorithm (using adaptive parameters):**
 ```
 1. Scan the zone timeline
 2. Mark a boundary when:
    - Zone changes by ≥1 level AND
-   - New zone is maintained for ≥30 seconds (minimum segment duration)
-3. Ignore brief zone excursions (< 30 seconds)
+   - New zone is maintained for ≥ boundaryStabilitySec (from adaptive params)
+3. Ignore brief zone excursions (< minSegmentDurationSec)
 ```
 
 **Example:**
@@ -960,14 +1049,39 @@ function calculateOverallCompliance(segments: SegmentAnalysis[]): {
 - Algorithm works the same
 - Indoor workouts typically score higher due to better power control
 
-### Case 5: Very Short Segments (< 30 seconds)
+### Case 5: Very Short Segments (Sprints, Tabata, Micro-Intervals)
 
-**Scenario:** Sprint intervals of 20 seconds
+**Scenario:** Workouts with segments under 30 seconds (sprints, Tabata, 30/30s, etc.)
 
-**Handling:**
-- Reduce smoothing window for short efforts
-- Use 10-second rolling average instead of 30-second
-- Segment boundary detection uses 15-second minimum
+**Examples:**
+- 6x10 second sprints with 50 sec recovery
+- Tabata: 8x (20 sec on / 10 sec off)
+- 30/30s: 10x (30 sec hard / 30 sec easy)
+- Neuromuscular: 15x5 sec max sprints
+
+**Handling (via Adaptive Parameters):**
+
+| Effort Duration | Smoothing | Min Segment | Boundary Stability |
+|-----------------|-----------|-------------|-------------------|
+| ≤15 sec (sprints) | 3 sec | 5 sec | 3 sec |
+| 15-30 sec (Tabata) | 5 sec | 10 sec | 5 sec |
+| 30-60 sec (micro) | 10 sec | 15 sec | 10 sec |
+
+**Special Considerations for Short Efforts:**
+- Peak power matters more than average for sprints
+- Use max power within window rather than average for efforts <15 sec
+- Recovery segments may not reach Z1 before next effort starts
+- Consider "on/off" pattern matching rather than zone-based for Tabata-style workouts
+
+**Alternative Scoring for Sprint Workouts:**
+```typescript
+// For sprints ≤15 sec, use peak power instead of average
+if (segment.duration_sec <= 15) {
+  const peakPower = Math.max(...segmentPowerData)
+  // Score based on hitting target peak, not sustained average
+  return calculatePeakPowerScore(peakPower, segment.target_peak)
+}
+```
 
 ---
 
@@ -1323,8 +1437,9 @@ interface DetectedBlock {
 
 function detectSegmentBoundaries(
   zoneTimeline: number[],
-  minSegmentDuration: number = 30
+  params: AdaptiveParameters  // Use adaptive parameters!
 ): DetectedBlock[] {
+  const { minSegmentDurationSec, boundaryStabilitySec } = params
   const blocks: DetectedBlock[] = []
   let blockStart = 0
   let currentZone = zoneTimeline[0]
@@ -1336,11 +1451,11 @@ function detectSegmentBoundaries(
     // Zone changed
     if (zone !== currentZone) {
       // Check if this is a sustained change (look ahead)
-      const lookAhead = zoneTimeline.slice(i, i + minSegmentDuration)
+      const lookAhead = zoneTimeline.slice(i, i + boundaryStabilitySec)
       const newZoneCount = lookAhead.filter(z => z === zone).length
 
-      // If new zone is dominant for next 30 sec, it's a real transition
-      if (newZoneCount >= minSegmentDuration * 0.7) {
+      // If new zone is dominant for the stability window, it's a real transition
+      if (newZoneCount >= boundaryStabilitySec * 0.7) {
         // Save current block
         blocks.push({
           start_sec: blockStart,
