@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import getConfig from 'next/config'
 import { createServiceClient } from '@/lib/supabase/server'
 import { errorLogger } from '@/lib/monitoring/error-logger'
 import { StravaService } from '@/lib/services/strava-service'
@@ -27,11 +28,14 @@ const StravaWebhookEventSchema = z.object({
 type StravaWebhookEvent = z.infer<typeof StravaWebhookEventSchema>
 
 /**
- * Get webhook verify token at runtime (not build time)
- * This prevents build failures when the env var is not set during CI
+ * Get webhook verify token from serverRuntimeConfig (embedded at build time)
+ * Falls back to process.env for local development
  */
 function getWebhookVerifyToken(): string {
-  const token = process.env.STRAVA_WEBHOOK_VERIFY_TOKEN
+  // Try serverRuntimeConfig first (for Amplify SSR where env vars aren't available at runtime)
+  const { serverRuntimeConfig } = getConfig() || {}
+  const token = serverRuntimeConfig?.stravaWebhookVerifyToken || process.env.STRAVA_WEBHOOK_VERIFY_TOKEN
+
   if (!token) {
     throw new Error(
       'STRAVA_WEBHOOK_VERIFY_TOKEN environment variable is required. ' +

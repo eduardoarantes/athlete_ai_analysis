@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
+import getConfig from 'next/config'
 import { createClient } from '@/lib/supabase/server'
 
 /**
- * Get Strava credentials at runtime (not build time)
- * This prevents build failures when env vars are not set during CI
+ * Get Strava credentials from serverRuntimeConfig (embedded at build time)
+ * Falls back to process.env for local development
  */
 function getStravaCredentials() {
-  const clientId = process.env.STRAVA_CLIENT_ID
-  const clientSecret = process.env.STRAVA_CLIENT_SECRET
+  const { serverRuntimeConfig } = getConfig() || {}
+  const clientId = serverRuntimeConfig?.stravaClientId || process.env.STRAVA_CLIENT_ID
+  const clientSecret = serverRuntimeConfig?.stravaClientSecret || process.env.STRAVA_CLIENT_SECRET
 
   if (!clientId || !clientSecret) {
     throw new Error('STRAVA_CLIENT_ID and STRAVA_CLIENT_SECRET environment variables are required')
@@ -17,11 +19,13 @@ function getStravaCredentials() {
 }
 
 /**
- * Get webhook verify token at runtime
- * SECURITY: No default value - must be explicitly configured
+ * Get webhook verify token from serverRuntimeConfig (embedded at build time)
+ * Falls back to process.env for local development
  */
 function getWebhookVerifyToken(): string {
-  const token = process.env.STRAVA_WEBHOOK_VERIFY_TOKEN
+  const { serverRuntimeConfig } = getConfig() || {}
+  const token = serverRuntimeConfig?.stravaWebhookVerifyToken || process.env.STRAVA_WEBHOOK_VERIFY_TOKEN
+
   if (!token) {
     throw new Error(
       'STRAVA_WEBHOOK_VERIFY_TOKEN environment variable is required. ' +

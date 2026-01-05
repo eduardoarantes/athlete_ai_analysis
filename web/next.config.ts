@@ -28,6 +28,7 @@ const nextConfig: NextConfig = {
   serverRuntimeConfig: {
     stravaClientId: process.env.STRAVA_CLIENT_ID,
     stravaClientSecret: process.env.STRAVA_CLIENT_SECRET,
+    stravaWebhookVerifyToken: process.env.STRAVA_WEBHOOK_VERIFY_TOKEN,
     appUrl: process.env.NEXT_PUBLIC_APP_URL,
     supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
     supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
