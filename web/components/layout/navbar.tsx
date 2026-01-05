@@ -48,6 +48,12 @@ export function Navbar() {
           >
             {t('schedule')}
           </Link>
+          <Link
+            href="/guides/compliance"
+            className="transition-colors hover:text-foreground/80 text-foreground/60"
+          >
+            {t('guides')}
+          </Link>
         </nav>
 
         {/* Right side actions */}
