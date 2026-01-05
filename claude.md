@@ -298,12 +298,106 @@ uvicorn cycling_ai.api.main:app --host 0.0.0.0 --port 8000
 
 ---
 
+## Service Management with Makefile
+
+The project includes a `Makefile` at the root to manage both the Python API (FastAPI) and Web (Next.js) services.
+
+### Quick Start
+
+```bash
+make install    # Install all dependencies (Python + Node)
+make start      # Start both API and Web servers in background
+make status     # Check if services are running
+make stop       # Stop all services
+make restart    # Restart all services
+```
+
+### Service URLs
+
+| Service | URL | Logs |
+|---------|-----|------|
+| **API** (FastAPI) | http://localhost:8000 | `make api-logs` |
+| **API Docs** | http://localhost:8000/docs | - |
+| **Web** (Next.js) | http://localhost:3000 | `make web-logs` |
+
+### All Available Commands
+
+**Combined Commands:**
+```bash
+make status     # Check status of all services
+make start      # Start all services (API + Web)
+make stop       # Stop all services
+make restart    # Restart all services
+make install    # Install all dependencies
+make test       # Run all tests (Python + Web)
+make check      # Run all checks (types, lint, format)
+make clean      # Clean build artifacts and logs
+make up         # Alias for start
+make down       # Alias for stop
+```
+
+**API-specific Commands (Python FastAPI on port 8000):**
+```bash
+make api-status   # Check if API server is running
+make api-start    # Start API server in background
+make api-stop     # Stop API server
+make api-restart  # Restart API server
+make api-logs     # Tail API server logs
+make api-dev      # Run API in foreground (interactive)
+```
+
+**Web-specific Commands (Next.js on port 3000):**
+```bash
+make web-status   # Check if web server is running
+make web-start    # Start web server in background
+make web-stop     # Stop web server
+make web-restart  # Restart web server
+make web-logs     # Tail web server logs
+make web-dev      # Run web in foreground (interactive)
+make web-build    # Build for production
+```
+
+### Common Workflows
+
+**Starting development:**
+```bash
+make install      # First time setup
+make start        # Start both services
+# API: http://localhost:8000/docs
+# Web: http://localhost:3000
+```
+
+**After code changes:**
+```bash
+make web-restart  # Hot reload usually works, but restart if needed
+make api-restart  # Restart API after Python changes
+```
+
+**Before committing:**
+```bash
+make check        # Run type checks and linting
+make test         # Run all tests
+```
+
+**Debugging:**
+```bash
+make api-logs     # View API server logs
+make web-logs     # View Next.js logs
+```
+
+---
+
 ## Quick Reference
 
 ### Common Commands
 
 ```bash
-# Run API server
+# Service management (preferred)
+make start              # Start all services
+make status             # Check service status
+make stop               # Stop all services
+
+# Run API server manually
 uvicorn cycling_ai.api.main:app --reload
 
 # Run tests
