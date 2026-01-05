@@ -1,4 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import type { Database } from '@/lib/types/database'
 import getConfig from 'next/config'
@@ -18,6 +19,25 @@ function getSupabaseConfig() {
   }
 
   return { url, anonKey }
+}
+
+/**
+ * Get Supabase service role config for server-side operations that bypass RLS
+ * Used for webhooks and background jobs that don't have a user session
+ */
+function getSupabaseServiceConfig() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || serverRuntimeConfig?.supabaseUrl
+  const serviceRoleKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY || serverRuntimeConfig?.supabaseServiceRoleKey
+
+  if (!url || !serviceRoleKey) {
+    throw new Error(
+      `Supabase service config missing. URL: ${url ? 'set' : 'missing'}, SERVICE_ROLE_KEY: ${serviceRoleKey ? 'set' : 'missing'}. ` +
+        'Set SUPABASE_SERVICE_ROLE_KEY environment variable for webhook operations.'
+    )
+  }
+
+  return { url, serviceRoleKey }
 }
 
 export async function createClient() {
@@ -40,6 +60,26 @@ export async function createClient() {
           // user sessions.
         }
       },
+    },
+  })
+}
+
+/**
+ * Create a Supabase client with service role key that bypasses RLS
+ * USE WITH CAUTION: This client has full database access
+ *
+ * Use cases:
+ * - Webhook handlers (no user session available)
+ * - Background jobs
+ * - Admin operations
+ */
+export function createServiceClient() {
+  const { url, serviceRoleKey } = getSupabaseServiceConfig()
+
+  return createSupabaseClient<Database>(url, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
     },
   })
 }
