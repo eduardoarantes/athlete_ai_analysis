@@ -10,6 +10,8 @@ import {
   type AthleteData,
   type TSSResult,
 } from '@/lib/services/tss-calculation-service'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/lib/types/database'
 
 /**
  * Zod schema for Strava webhook event payload
@@ -34,7 +36,8 @@ type StravaWebhookEvent = z.infer<typeof StravaWebhookEventSchema>
 function getWebhookVerifyToken(): string {
   // Try serverRuntimeConfig first (for Amplify SSR where env vars aren't available at runtime)
   const { serverRuntimeConfig } = getConfig() || {}
-  const token = serverRuntimeConfig?.stravaWebhookVerifyToken || process.env.STRAVA_WEBHOOK_VERIFY_TOKEN
+  const token =
+    serverRuntimeConfig?.stravaWebhookVerifyToken || process.env.STRAVA_WEBHOOK_VERIFY_TOKEN
 
   if (!token) {
     throw new Error(
@@ -45,6 +48,163 @@ function getWebhookVerifyToken(): string {
     )
   }
   return token
+}
+
+/**
+ * Auto-match a newly uploaded activity to scheduled workouts
+ */
+async function autoMatchActivity(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  activityId: string,
+  activityDate: string,
+  activityType: string,
+  activityTss: number | null
+): Promise<void> {
+  try {
+    const dateOnly = activityDate.split('T')[0]!
+
+    // Get user's active plan instances
+    const { data: instances } = await supabase
+      .from('plan_instances')
+      .select('id, plan_data, start_date')
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .lte('start_date', dateOnly)
+
+    if (!instances || instances.length === 0) return
+
+    // Cycling activity types that match cycling workouts
+    const cyclingTypes = ['Ride', 'VirtualRide', 'EBikeRide', 'MountainBikeRide', 'GravelRide']
+    const isCyclingActivity = cyclingTypes.includes(activityType)
+
+    // For each instance, check if there's a workout on this date
+    for (const instance of instances) {
+      const planData = instance.plan_data as {
+        weekly_plan?: Array<{
+          week_number: number
+          workouts?: Array<{
+            weekday: string
+            tss?: number
+            type?: string
+          }>
+        }>
+      }
+
+      if (!planData?.weekly_plan) continue
+
+      const startDate = new Date(instance.start_date)
+
+      // Find workouts scheduled for this date
+      for (const week of planData.weekly_plan) {
+        if (!week.workouts) continue
+
+        for (let workoutIdx = 0; workoutIdx < week.workouts.length; workoutIdx++) {
+          const workout = week.workouts[workoutIdx]!
+
+          // Calculate workout date
+          const daysOfWeek = [
+            'Sunday',
+            'Monday',
+            'Tuesday',
+            'Wednesday',
+            'Thursday',
+            'Friday',
+            'Saturday',
+          ]
+          const dayIndex = daysOfWeek.findIndex(
+            (d) => d.toLowerCase() === workout.weekday.toLowerCase()
+          )
+          if (dayIndex === -1) continue
+
+          const startDayOfWeek = startDate.getDay()
+          const daysToMonday = startDayOfWeek === 0 ? -6 : 1 - startDayOfWeek
+          const weekOneMonday = new Date(startDate)
+          weekOneMonday.setDate(startDate.getDate() + daysToMonday)
+
+          const adjustedDayIndex = dayIndex === 0 ? 6 : dayIndex - 1
+          const workoutDate = new Date(weekOneMonday)
+          workoutDate.setDate(
+            weekOneMonday.getDate() + (week.week_number - 1) * 7 + adjustedDayIndex
+          )
+
+          const workoutDateStr = workoutDate.toISOString().split('T')[0]
+
+          // Check if this workout is on the same day as the activity
+          if (workoutDateStr !== dateOnly) continue
+
+          // Check if workout is already matched
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data: existingMatch } = await (supabase as any)
+            .from('workout_activity_matches')
+            .select('id')
+            .eq('plan_instance_id', instance.id)
+            .eq('workout_date', dateOnly)
+            .eq('workout_index', workoutIdx)
+            .single()
+
+          if (existingMatch) continue // Already matched
+
+          // Calculate match score
+          let score = 50 // Base score for same-day match
+          const isCyclingWorkout = !workout.type || workout.type !== 'rest'
+
+          if (isCyclingActivity && isCyclingWorkout) {
+            score += 20
+          }
+
+          // TSS similarity
+          if (workout.tss && activityTss) {
+            const tssDiff = Math.abs(workout.tss - activityTss)
+            const tssPercent = tssDiff / workout.tss
+            if (tssPercent < 0.1) score += 20
+            else if (tssPercent < 0.2) score += 15
+            else if (tssPercent < 0.3) score += 10
+            else if (tssPercent < 0.5) score += 5
+          }
+
+          // Only match if score is high enough
+          if (score >= 50) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await (supabase as any).from('workout_activity_matches').upsert(
+              {
+                user_id: userId,
+                plan_instance_id: instance.id,
+                workout_date: dateOnly,
+                workout_index: workoutIdx,
+                strava_activity_id: activityId,
+                match_type: 'auto',
+                match_score: score,
+              },
+              { onConflict: 'plan_instance_id,workout_date,workout_index' }
+            )
+
+            errorLogger.logInfo('Auto-matched activity to workout', {
+              userId,
+              metadata: {
+                activityId,
+                planInstanceId: instance.id,
+                workoutDate: dateOnly,
+                workoutIndex: workoutIdx,
+                score,
+              },
+            })
+
+            return // Only match to one workout
+          }
+        }
+      }
+    }
+  } catch (error) {
+    // Log but don't fail the webhook processing
+    errorLogger.logWarning('Auto-match failed', {
+      userId,
+      metadata: {
+        activityId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
+    })
+  }
 }
 
 /**
@@ -419,6 +579,25 @@ async function processWebhookEvent(event: StravaWebhookEvent): Promise<void> {
           tssConfidence: tssResult?.confidence ?? null,
         },
       })
+
+      // Auto-match activity to scheduled workouts
+      // Get the saved activity's UUID
+      const { data: savedActivity } = await supabase
+        .from('strava_activities')
+        .select('id')
+        .eq('strava_activity_id', activity.id)
+        .single()
+
+      if (savedActivity) {
+        await autoMatchActivity(
+          supabase,
+          connection.user_id,
+          savedActivity.id,
+          activity.start_date,
+          activity.type,
+          tssResult?.tss ?? null
+        )
+      }
     }
 
     // Mark event as processed

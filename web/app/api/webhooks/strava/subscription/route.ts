@@ -24,7 +24,8 @@ function getStravaCredentials() {
  */
 function getWebhookVerifyToken(): string {
   const { serverRuntimeConfig } = getConfig() || {}
-  const token = serverRuntimeConfig?.stravaWebhookVerifyToken || process.env.STRAVA_WEBHOOK_VERIFY_TOKEN
+  const token =
+    serverRuntimeConfig?.stravaWebhookVerifyToken || process.env.STRAVA_WEBHOOK_VERIFY_TOKEN
 
   if (!token) {
     throw new Error(
