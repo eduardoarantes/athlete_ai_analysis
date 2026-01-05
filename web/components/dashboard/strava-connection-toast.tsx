@@ -1,15 +1,17 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { CheckCircle2, XCircle, X } from 'lucide-react'
+import { CheckCircle2, XCircle, X, Loader2 } from 'lucide-react'
 
 export function StravaConnectionToast() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const t = useTranslations('strava')
   const [dismissed, setDismissed] = useState(false)
+  const [syncStarted, setSyncStarted] = useState(false)
+  const syncTriggeredRef = useRef(false)
 
   const stravaConnected = searchParams.get('strava_connected') === 'true'
   const stravaError = searchParams.get('strava_error')
@@ -42,6 +44,26 @@ export function StravaConnectionToast() {
     }
     return undefined
   }, [stravaConnected, stravaError, router])
+
+  // Auto-trigger initial sync on successful connection
+  // Uses ref to prevent duplicate triggers on re-renders
+  useEffect(() => {
+    if (stravaConnected && !syncTriggeredRef.current) {
+      syncTriggeredRef.current = true
+      setSyncStarted(true)
+
+      // Trigger initial sync in background
+      fetch('/api/strava/sync', { method: 'POST' })
+        .then((res) => {
+          if (!res.ok) {
+            console.error('Failed to start initial sync')
+          }
+        })
+        .catch((err) => {
+          console.error('Error starting initial sync:', err)
+        })
+    }
+  }, [stravaConnected])
 
   // Auto-dismiss after 5 seconds for success
   useEffect(() => {
@@ -83,8 +105,18 @@ export function StravaConnectionToast() {
               isSuccess ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'
             }`}
           >
-            {isSuccess ? t('connectionSuccessDescription') : getErrorMessage(stravaError || '')}
+            {isSuccess
+              ? syncStarted
+                ? t('syncingActivities') || 'Syncing your activities in the background...'
+                : t('connectionSuccessDescription')
+              : getErrorMessage(stravaError || '')}
           </p>
+          {isSuccess && syncStarted && (
+            <div className="flex items-center gap-2 mt-2 text-green-600 dark:text-green-400">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span className="text-xs">{t('initialSyncStarted') || 'Initial sync started'}</span>
+            </div>
+          )}
         </div>
         <button
           onClick={() => setDismissed(true)}

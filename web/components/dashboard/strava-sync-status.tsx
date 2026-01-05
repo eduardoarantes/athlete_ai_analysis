@@ -55,20 +55,8 @@ export function StravaSyncStatus() {
     loadStatus()
   }, [])
 
-  // Only poll if Strava is connected and not already polling for a job
-  useEffect(() => {
-    // Don't poll if Strava is not connected (syncStatus is null)
-    if (!syncStatus || isPolling) {
-      return
-    }
-
-    // Reload status every 30 seconds
-    const interval = setInterval(() => {
-      loadStatus()
-    }, 30000)
-
-    return () => clearInterval(interval)
-  }, [syncStatus, isPolling])
+  // Note: Removed 30-second auto-polling since webhooks now handle real-time updates
+  // Status is refreshed after manual sync completes via onComplete callback
 
   const loadStatus = async () => {
     try {
@@ -135,8 +123,11 @@ export function StravaSyncStatus() {
   const hasError = syncStatus.syncStatus === 'error'
   const hasSyncedBefore = syncStatus.lastSyncAt !== null
 
-  // Hide the panel when sync completed successfully and not currently syncing
-  // Only show when: never synced, currently syncing, or has error
+  // With webhooks handling real-time updates, this panel only shows for:
+  // 1. Initial sync (never synced) - auto-triggered after OAuth connect
+  // 2. Currently syncing - shows progress during manual or initial sync
+  // 3. Sync errors - allows retry
+  // Once initial sync completes successfully, webhooks keep activities in sync
   if (!isSyncing && !hasError && hasSyncedBefore) {
     return null
   }
