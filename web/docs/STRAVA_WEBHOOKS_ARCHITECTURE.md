@@ -1,14 +1,15 @@
 # Strava Webhooks - Architecture & Implementation Plan
 
 **Created:** 2026-01-01
-**Status:** In Progress
-**Priority:** High
+**Updated:** 2026-01-05
+**Status:** Production Ready ✅
+**Subscription ID:** 323728
 
 ---
 
 ## Executive Summary
 
-This document outlines the architecture analysis and implementation plan for Strava webhooks. The current implementation is ~80% production-ready with some gaps to address.
+Strava webhooks are fully implemented and deployed to production. The system automatically syncs activities when users create, update, or delete them in Strava, including TSS calculation.
 
 ---
 
@@ -21,7 +22,7 @@ This document outlines the architecture analysis and implementation plan for Str
 | Webhook verification (GET) | ✅ Complete | `web/app/api/webhooks/strava/route.ts:50-73`  |
 | Event receiver (POST)      | ✅ Complete | `web/app/api/webhooks/strava/route.ts:81-142` |
 | Durable event storage      | ✅ Complete | `strava_webhook_events` table                 |
-| Duplicate prevention       | ✅ Complete | Unique constraint on `(event_id, object_id)`  |
+| Duplicate prevention       | ✅ Complete | Composite PK `(subscription_id, object_id, event_time)` |
 | Async processing           | ✅ Complete | Returns 200 before processing                 |
 | Token refresh              | ✅ Complete | Uses `getValidAccessToken()`                  |
 | TSS calculation            | ✅ Complete | Integrated in `processWebhookEvent()`         |
@@ -108,14 +109,23 @@ STRAVA_WEBHOOK_VERIFY_TOKEN=$(openssl rand -base64 32)
 NEXT_PUBLIC_APP_URL=https://your-ngrok-url.ngrok.io
 ```
 
-### Production
+### Production (Amplify SSR)
+
+Amplify SSR doesn't have access to `process.env` at runtime. Environment variables must be embedded at build time via Next.js `serverRuntimeConfig` in `next.config.ts`.
+
+**Required Amplify Environment Variables:**
 
 ```bash
-# SSM Parameters (via Terraform)
-/cycling-ai/strava/client-id
-/cycling-ai/strava/client-secret
-/cycling-ai/strava/webhook-verify-token
-/cycling-ai/app/url
+STRAVA_CLIENT_ID=<your-client-id>
+STRAVA_CLIENT_SECRET=<your-client-secret>
+STRAVA_WEBHOOK_VERIFY_TOKEN=<your-verify-token>
+SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
+```
+
+**Important:** The callback URL must include a trailing slash due to Next.js `trailingSlash: true`:
+
+```
+https://planmypeak.com/api/webhooks/strava/
 ```
 
 ### Local Development with ngrok
@@ -140,21 +150,25 @@ curl -X POST https://your-ngrok-url.ngrok.io/api/webhooks/strava/subscription
 
 ```sql
 CREATE TABLE strava_webhook_events (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  event_id BIGINT NOT NULL,
+  -- Composite primary key (prevents duplicates)
+  subscription_id BIGINT NOT NULL,
+  object_id BIGINT NOT NULL,
+  event_time TIMESTAMPTZ NOT NULL,
+
+  -- Event details
   object_type TEXT NOT NULL,  -- 'activity' or 'athlete'
   aspect_type TEXT NOT NULL,  -- 'create', 'update', 'delete'
-  object_id BIGINT NOT NULL,
   owner_id BIGINT NOT NULL,
-  subscription_id BIGINT NOT NULL,
-  event_time TIMESTAMPTZ NOT NULL,
   raw_data JSONB NOT NULL,
+
+  -- Processing status
   processed BOOLEAN DEFAULT false,
   processed_at TIMESTAMPTZ,
   error TEXT,
-  retry_count INT DEFAULT 0,  -- NEW: Track retry attempts
+  retry_count INT DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE (event_id, object_id)
+
+  PRIMARY KEY (subscription_id, object_id, event_time)
 );
 ```
 
