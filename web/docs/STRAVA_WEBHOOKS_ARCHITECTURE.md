@@ -17,18 +17,18 @@ Strava webhooks are fully implemented and deployed to production. The system aut
 
 ### What's Already Implemented (and Working Well)
 
-| Component                  | Status      | Location                                      |
-| -------------------------- | ----------- | --------------------------------------------- |
-| Webhook verification (GET) | ✅ Complete | `web/app/api/webhooks/strava/route.ts:50-73`  |
-| Event receiver (POST)      | ✅ Complete | `web/app/api/webhooks/strava/route.ts:81-142` |
-| Durable event storage      | ✅ Complete | `strava_webhook_events` table                 |
+| Component                  | Status      | Location                                                |
+| -------------------------- | ----------- | ------------------------------------------------------- |
+| Webhook verification (GET) | ✅ Complete | `web/app/api/webhooks/strava/route.ts:50-73`            |
+| Event receiver (POST)      | ✅ Complete | `web/app/api/webhooks/strava/route.ts:81-142`           |
+| Durable event storage      | ✅ Complete | `strava_webhook_events` table                           |
 | Duplicate prevention       | ✅ Complete | Composite PK `(subscription_id, object_id, event_time)` |
-| Async processing           | ✅ Complete | Returns 200 before processing                 |
-| Token refresh              | ✅ Complete | Uses `getValidAccessToken()`                  |
-| TSS calculation            | ✅ Complete | Integrated in `processWebhookEvent()`         |
-| Subscription management    | ✅ Complete | `/api/webhooks/strava/subscription`           |
-| Error tracking             | ✅ Complete | Stores error in event record                  |
-| RLS security               | ✅ Complete | Users only see their events                   |
+| Async processing           | ✅ Complete | Returns 200 before processing                           |
+| Token refresh              | ✅ Complete | Uses `getValidAccessToken()`                            |
+| TSS calculation            | ✅ Complete | Integrated in `processWebhookEvent()`                   |
+| Subscription management    | ✅ Complete | `/api/webhooks/strava/subscription`                     |
+| Error tracking             | ✅ Complete | Stores error in event record                            |
+| RLS security               | ✅ Complete | Users only see their events                             |
 
 ### Architecture Diagram
 
