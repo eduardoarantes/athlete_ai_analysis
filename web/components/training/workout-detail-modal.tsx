@@ -6,7 +6,6 @@ import {
   Clock,
   Zap,
   Activity,
-  Repeat,
   Code,
   CheckCircle2,
   Link2,
@@ -366,39 +365,54 @@ export function WorkoutDetailModal({
               <CardContent className="space-y-3">
                 {groupedSegments.map((group, index) => {
                   if (group.type === 'repeat' && group.segments) {
+                    // Repeat group with dashed amber border
                     return (
-                      <div key={index} className="bg-muted/50 border border-dashed rounded-lg p-3">
-                        {(group.repeat_count ?? 0) > 1 && (
-                          <div className="flex items-center gap-2 mb-3 pb-2 border-b">
-                            <Badge variant="secondary" className="font-bold">
-                              <Repeat className="h-3 w-3 mr-1" />
-                              {group.repeat_count}x
-                            </Badge>
-                            <span className="text-sm text-muted-foreground">
-                              {t('repeatSet', { count: group.repeat_count ?? 0 })}
-                            </span>
-                          </div>
-                        )}
+                      <div
+                        key={index}
+                        className="bg-amber-50/50 dark:bg-amber-950/20 border-2 border-dashed border-amber-400 dark:border-amber-600 rounded-lg p-4"
+                      >
+                        {/* Repeat header */}
+                        <div className="flex items-center gap-2 mb-3">
+                          <Badge className="bg-amber-500 hover:bg-amber-500 text-white font-bold px-2.5 py-0.5">
+                            {group.repeat_count}x
+                          </Badge>
+                          <span className="text-sm text-amber-700 dark:text-amber-400">
+                            {t('repeatSet', { count: group.repeat_count ?? 0 })}
+                          </span>
+                        </div>
+                        {/* Segments within repeat */}
                         <div className="space-y-2">
                           {group.segments.map((seg, segIndex) => (
                             <div
                               key={segIndex}
-                              className="bg-background p-2 rounded border-l-4 grid grid-cols-3 gap-2 items-center text-sm"
-                              style={{
-                                borderLeftColor: getPowerRangeColor(
-                                  seg.power_low_pct ?? 50,
-                                  seg.power_high_pct ?? 60
-                                ),
-                              }}
+                              className="bg-background rounded-lg overflow-hidden"
                             >
-                              <div className="font-medium">
-                                {formatSegmentDuration(seg.duration_min)}
-                              </div>
-                              <div className="text-muted-foreground">
-                                {formatPowerRange(ftp, seg.power_low_pct, seg.power_high_pct)}
-                              </div>
-                              <div className="text-xs text-muted-foreground capitalize">
-                                {seg.description || seg.type}
+                              <div
+                                className="flex items-center gap-4 p-3 border-l-4"
+                                style={{
+                                  borderLeftColor: getPowerRangeColor(
+                                    seg.power_low_pct ?? 50,
+                                    seg.power_high_pct ?? 60
+                                  ),
+                                }}
+                              >
+                                <div className="font-semibold min-w-[70px]">
+                                  {formatSegmentDuration(seg.duration_min)}
+                                </div>
+                                <div
+                                  className="font-medium"
+                                  style={{
+                                    color: getPowerRangeColor(
+                                      seg.power_low_pct ?? 50,
+                                      seg.power_high_pct ?? 60
+                                    ),
+                                  }}
+                                >
+                                  {formatPowerRange(ftp, seg.power_low_pct, seg.power_high_pct)}
+                                </div>
+                                <div className="text-sm text-muted-foreground capitalize">
+                                  {seg.description || seg.type}
+                                </div>
                               </div>
                             </div>
                           ))}
@@ -407,24 +421,36 @@ export function WorkoutDetailModal({
                     )
                   }
 
+                  // Single segment row
                   const seg = group.segment!
                   return (
-                    <div
-                      key={index}
-                      className="bg-muted/30 p-2 rounded border-l-4 grid grid-cols-3 gap-2 items-center text-sm"
-                      style={{
-                        borderLeftColor: getPowerRangeColor(
-                          seg.power_low_pct ?? 50,
-                          seg.power_high_pct ?? 60
-                        ),
-                      }}
-                    >
-                      <div className="font-medium">{formatSegmentDuration(seg.duration_min)}</div>
-                      <div className="text-muted-foreground">
-                        {formatPowerRange(ftp, seg.power_low_pct, seg.power_high_pct)}
-                      </div>
-                      <div className="text-xs text-muted-foreground capitalize">
-                        {seg.description || seg.type}
+                    <div key={index} className="bg-muted/30 rounded-lg overflow-hidden">
+                      <div
+                        className="flex items-center gap-4 p-3 border-l-4"
+                        style={{
+                          borderLeftColor: getPowerRangeColor(
+                            seg.power_low_pct ?? 50,
+                            seg.power_high_pct ?? 60
+                          ),
+                        }}
+                      >
+                        <div className="font-semibold min-w-[70px]">
+                          {formatSegmentDuration(seg.duration_min)}
+                        </div>
+                        <div
+                          className="font-medium"
+                          style={{
+                            color: getPowerRangeColor(
+                              seg.power_low_pct ?? 50,
+                              seg.power_high_pct ?? 60
+                            ),
+                          }}
+                        >
+                          {formatPowerRange(ftp, seg.power_low_pct, seg.power_high_pct)}
+                        </div>
+                        <div className="text-sm text-muted-foreground capitalize">
+                          {seg.description || seg.type}
+                        </div>
                       </div>
                     </div>
                   )
