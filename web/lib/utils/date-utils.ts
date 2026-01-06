@@ -76,3 +76,14 @@ export function isPastDate(dateString: string): boolean {
   today.setHours(0, 0, 0, 0)
   return date < today
 }
+
+/**
+ * Extract local date string from an ISO timestamp.
+ * Converts UTC timestamp to local timezone date.
+ *
+ * Example: "2025-12-28T20:36:07+00:00" in UTC+11 becomes "2025-12-29"
+ */
+export function getLocalDateFromTimestamp(isoTimestamp: string): string {
+  const date = new Date(isoTimestamp)
+  return formatDateString(date)
+}

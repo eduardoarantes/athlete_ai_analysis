@@ -17,6 +17,8 @@ import {
 import { asPlanInstances } from '@/lib/types/type-guards'
 import type { PlanInstance, Workout } from '@/lib/types/training-plan'
 import { User, Zap, Heart, Scale, TrendingUp } from 'lucide-react'
+import { PowerZonesHoverCard } from '@/components/profile/power-zones-hover-card'
+import { HeartZonesHoverCard } from '@/components/profile/heart-zones-hover-card'
 
 const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
@@ -269,33 +271,59 @@ export default async function DashboardPage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-3">
-                  {/* FTP */}
-                  <div className="flex items-center gap-2">
-                    <div className="h-7 w-7 rounded-md bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
-                      <Zap className="h-3.5 w-3.5 text-orange-600 dark:text-orange-400" />
+                  {/* FTP with Power Zones Hover */}
+                  {profile.ftp ? (
+                    <PowerZonesHoverCard ftp={profile.ftp}>
+                      <div className="flex items-center gap-2">
+                        <div className="h-7 w-7 rounded-md bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
+                          <Zap className="h-3.5 w-3.5 text-orange-600 dark:text-orange-400" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] text-muted-foreground leading-tight">{t('ftp')}</p>
+                          <p className="text-xs font-semibold">{profile.ftp}W</p>
+                        </div>
+                      </div>
+                    </PowerZonesHoverCard>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <div className="h-7 w-7 rounded-md bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
+                        <Zap className="h-3.5 w-3.5 text-orange-600 dark:text-orange-400" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-muted-foreground leading-tight">{t('ftp')}</p>
+                        <p className="text-xs font-semibold">—</p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] text-muted-foreground leading-tight">{t('ftp')}</p>
-                      <p className="text-xs font-semibold">
-                        {profile.ftp ? `${profile.ftp}W` : '—'}
-                      </p>
-                    </div>
-                  </div>
+                  )}
 
-                  {/* Max HR */}
-                  <div className="flex items-center gap-2">
-                    <div className="h-7 w-7 rounded-md bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
-                      <Heart className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
+                  {/* Max HR with Heart Rate Zones Hover */}
+                  {profile.max_hr ? (
+                    <HeartZonesHoverCard maxHr={profile.max_hr} restingHr={profile.resting_hr}>
+                      <div className="flex items-center gap-2">
+                        <div className="h-7 w-7 rounded-md bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+                          <Heart className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] text-muted-foreground leading-tight">
+                            {t('maxHr')}
+                          </p>
+                          <p className="text-xs font-semibold">{profile.max_hr}</p>
+                        </div>
+                      </div>
+                    </HeartZonesHoverCard>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <div className="h-7 w-7 rounded-md bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+                        <Heart className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-muted-foreground leading-tight">
+                          {t('maxHr')}
+                        </p>
+                        <p className="text-xs font-semibold">—</p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] text-muted-foreground leading-tight">
-                        {t('maxHr')}
-                      </p>
-                      <p className="text-xs font-semibold">
-                        {profile.max_hr ? `${profile.max_hr}` : '—'}
-                      </p>
-                    </div>
-                  </div>
+                  )}
 
                   {/* Weight */}
                   <div className="flex items-center gap-2">

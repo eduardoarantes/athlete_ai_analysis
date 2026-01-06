@@ -1,0 +1,363 @@
+/**
+ * API Route: POST /api/compliance/analyze
+ *
+ * Analyzes workout compliance by comparing planned workout segments
+ * with actual activity power data from Strava.
+ *
+ * Request body:
+ * - plan_instance_id: string - ID of the plan instance
+ * - workout_date: string - Date of the workout (YYYY-MM-DD)
+ * - workout_index?: number - Index of workout on that date (default 0)
+ * - strava_activity_id: string - Strava activity ID to analyze
+ *
+ * Or alternatively:
+ * - match_id: string - ID of the workout_activity_match record
+ *
+ * Returns: WorkoutComplianceAnalysis
+ */
+
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { StravaService } from '@/lib/services/strava-service'
+import { analyzeWorkoutCompliance } from '@/lib/services/compliance-analysis-service'
+import { errorLogger } from '@/lib/monitoring/error-logger'
+import type { WorkoutSegment, TrainingPlanData, Workout } from '@/lib/types/training-plan'
+import type { Json } from '@/lib/types/database'
+
+interface AnalyzeRequest {
+  // Option 1: Direct specification
+  plan_instance_id?: string
+  workout_date?: string
+  workout_index?: number
+  strava_activity_id?: string
+
+  // Option 2: From match record
+  match_id?: string
+
+  // Optional override for FTP (otherwise fetched from profile)
+  ftp_override?: number
+}
+
+interface PlanInstanceRow {
+  id: string
+  user_id: string
+  plan_data: TrainingPlanData
+  start_date: string
+}
+
+interface ProfileRow {
+  ftp: number | null
+  lthr: number | null
+}
+
+interface AnalyzeRequestWithSave extends AnalyzeRequest {
+  // Whether to save the analysis to the database (default: true)
+  save?: boolean
+}
+
+/**
+ * Get workout from plan instance for a specific date and index
+ */
+function getWorkoutFromPlan(
+  planData: TrainingPlanData,
+  startDate: string,
+  targetDate: string,
+  workoutIndex: number
+): Workout | null {
+  // Calculate which week this date falls in
+  const start = new Date(startDate)
+  const target = new Date(targetDate)
+  const diffDays = Math.floor((target.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+  const weekNumber = Math.floor(diffDays / 7) + 1
+  const dayOfWeek = target.getDay() // 0 = Sunday
+
+  // Map day of week to weekday name
+  const weekdayMap: Record<number, string> = {
+    0: 'Sunday',
+    1: 'Monday',
+    2: 'Tuesday',
+    3: 'Wednesday',
+    4: 'Thursday',
+    5: 'Friday',
+    6: 'Saturday',
+  }
+  const targetWeekday = weekdayMap[dayOfWeek]
+
+  // Find the week
+  const week = planData.weekly_plan?.find((w) => w.week_number === weekNumber)
+  if (!week) {
+    return null
+  }
+
+  // Find workouts for this day
+  const dayWorkouts = week.workouts.filter(
+    (w) => w.weekday?.toLowerCase() === targetWeekday?.toLowerCase()
+  )
+
+  return dayWorkouts[workoutIndex] || null
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body: AnalyzeRequestWithSave = await request.json()
+    const shouldSave = body.save !== false // Default to true
+
+    // Get current user
+    const supabase = await createClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    let planInstanceId: string
+    let workoutDate: string
+    let workoutIndex: number
+    let stravaActivityId: string
+    let matchId: string | null = body.match_id || null
+
+    // Resolve inputs - either from match_id or direct parameters
+    if (body.match_id) {
+      // Fetch from match record
+      const { data: match, error: matchError } = await supabase
+        .from('workout_activity_matches')
+        .select('id, plan_instance_id, workout_date, workout_index, strava_activity_id')
+        .eq('id', body.match_id)
+        .single()
+
+      if (matchError || !match) {
+        return NextResponse.json({ error: 'Match not found' }, { status: 404 })
+      }
+
+      matchId = match.id
+      planInstanceId = match.plan_instance_id
+      workoutDate = match.workout_date
+      workoutIndex = match.workout_index
+      stravaActivityId = match.strava_activity_id
+    } else {
+      // Use direct parameters
+      if (!body.plan_instance_id || !body.workout_date || !body.strava_activity_id) {
+        return NextResponse.json(
+          {
+            error:
+              'Either match_id or (plan_instance_id, workout_date, strava_activity_id) required',
+          },
+          { status: 400 }
+        )
+      }
+
+      planInstanceId = body.plan_instance_id
+      workoutDate = body.workout_date
+      workoutIndex = body.workout_index ?? 0
+      stravaActivityId = body.strava_activity_id
+
+      // Try to find existing match or create one if saving
+      if (shouldSave) {
+        const { data: existingMatch } = await supabase
+          .from('workout_activity_matches')
+          .select('id')
+          .eq('plan_instance_id', planInstanceId)
+          .eq('workout_date', workoutDate)
+          .eq('workout_index', workoutIndex)
+          .single()
+
+        if (existingMatch) {
+          matchId = existingMatch.id
+        }
+        // Note: We don't create a new match here - that should be done separately
+        // The match record links a specific workout slot to an activity
+      }
+    }
+
+    // Fetch plan instance
+    const { data: planInstance, error: planError } = await supabase
+      .from('plan_instances')
+      .select('id, user_id, plan_data, start_date')
+      .eq('id', planInstanceId)
+      .eq('user_id', user.id)
+      .single<PlanInstanceRow>()
+
+    if (planError || !planInstance) {
+      return NextResponse.json({ error: 'Plan instance not found' }, { status: 404 })
+    }
+
+    // Get workout from plan
+    const workout = getWorkoutFromPlan(
+      planInstance.plan_data,
+      planInstance.start_date,
+      workoutDate,
+      workoutIndex
+    )
+
+    if (!workout) {
+      return NextResponse.json(
+        { error: `No workout found for date ${workoutDate} index ${workoutIndex}` },
+        { status: 404 }
+      )
+    }
+
+    // Get workout segments
+    const segments: WorkoutSegment[] = workout.segments || []
+
+    if (segments.length === 0) {
+      return NextResponse.json(
+        {
+          error: 'Workout has no segments defined for compliance analysis',
+          workout_name: workout.name,
+          workout_type: workout.type,
+        },
+        { status: 400 }
+      )
+    }
+
+    // Get athlete FTP and LTHR
+    let ftp = body.ftp_override
+    let lthr: number | null = null
+
+    const { data: profile } = await supabase
+      .from('athlete_profiles')
+      .select('ftp, lthr')
+      .eq('user_id', user.id)
+      .single<ProfileRow>()
+
+    if (!ftp) {
+      ftp = profile?.ftp ?? undefined
+
+      if (!ftp) {
+        return NextResponse.json(
+          { error: 'Athlete FTP not found. Please set your FTP in your profile.' },
+          { status: 400 }
+        )
+      }
+    }
+
+    lthr = profile?.lthr ?? null
+
+    // Fetch power stream from Strava
+    const stravaService = await StravaService.create()
+    const streams = await stravaService.getActivityStreamsWithRefresh(user.id, stravaActivityId, [
+      'watts',
+      'time',
+    ])
+
+    const powerStream = streams.watts?.data
+
+    if (!powerStream || powerStream.length === 0) {
+      return NextResponse.json(
+        {
+          error: 'No power data available for this activity',
+          activity_id: stravaActivityId,
+        },
+        { status: 400 }
+      )
+    }
+
+    // Run compliance analysis
+    const analysis = analyzeWorkoutCompliance(segments, powerStream, ftp)
+
+    // Store analysis to database if we have a match_id and save is enabled
+    let savedAnalysisId: string | null = null
+    if (shouldSave && matchId) {
+      // Check if analysis already exists for this match
+      const { data: existingAnalysis } = await supabase
+        .from('workout_compliance_analyses')
+        .select('id')
+        .eq('match_id', matchId)
+        .single()
+
+      if (existingAnalysis) {
+        // Update existing analysis
+        const { data: updated, error: updateError } = await supabase
+          .from('workout_compliance_analyses')
+          .update({
+            overall_score: analysis.overall.score,
+            overall_grade: analysis.overall.grade,
+            overall_summary: analysis.overall.summary,
+            segments_completed: analysis.overall.segments_completed,
+            segments_skipped: analysis.overall.segments_skipped,
+            segments_total: analysis.overall.segments_total,
+            analysis_data: analysis as unknown as Json,
+            athlete_ftp: ftp,
+            athlete_lthr: lthr,
+            algorithm_version: analysis.metadata.algorithm_version,
+            power_data_quality: analysis.metadata.power_data_quality,
+            analyzed_at: new Date().toISOString(),
+          })
+          .eq('id', existingAnalysis.id)
+          .select('id')
+          .single()
+
+        if (!updateError && updated) {
+          savedAnalysisId = updated.id
+        }
+      } else {
+        // Insert new analysis
+        const { data: inserted, error: insertError } = await supabase
+          .from('workout_compliance_analyses')
+          .insert({
+            match_id: matchId,
+            user_id: user.id,
+            overall_score: analysis.overall.score,
+            overall_grade: analysis.overall.grade,
+            overall_summary: analysis.overall.summary,
+            segments_completed: analysis.overall.segments_completed,
+            segments_skipped: analysis.overall.segments_skipped,
+            segments_total: analysis.overall.segments_total,
+            analysis_data: analysis as unknown as Json,
+            athlete_ftp: ftp,
+            athlete_lthr: lthr,
+            algorithm_version: analysis.metadata.algorithm_version,
+            power_data_quality: analysis.metadata.power_data_quality,
+          })
+          .select('id')
+          .single()
+
+        if (!insertError && inserted) {
+          savedAnalysisId = inserted.id
+        }
+      }
+    }
+
+    errorLogger.logInfo('Compliance analysis completed', {
+      userId: user.id,
+      metadata: {
+        planInstanceId,
+        workoutDate,
+        workoutIndex,
+        activityId: stravaActivityId,
+        workoutName: workout.name,
+        overallScore: analysis.overall.score,
+        overallGrade: analysis.overall.grade,
+        savedAnalysisId,
+      },
+    })
+
+    // Return analysis with workout context
+    return NextResponse.json({
+      analysis,
+      context: {
+        workout_name: workout.name,
+        workout_type: workout.type,
+        workout_date: workoutDate,
+        workout_tss: workout.tss,
+        activity_id: stravaActivityId,
+        athlete_ftp: ftp,
+        athlete_lthr: lthr,
+        power_stream_length: powerStream.length,
+        planned_segments: segments.length,
+        saved_analysis_id: savedAnalysisId,
+      },
+    })
+  } catch (error) {
+    errorLogger.logError(error as Error, {
+      path: '/api/compliance/analyze',
+      method: 'POST',
+    })
+
+    const message = error instanceof Error ? error.message : 'Failed to analyze compliance'
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
+}

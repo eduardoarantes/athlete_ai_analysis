@@ -34,6 +34,7 @@
     "training": "Training Plans",
     "trainingPlans": "Training Plans",
     "schedule": "My Schedule",
+    "guides": "Guides",
     "logout": "Logout"
   },
   "userMenu": {
@@ -294,6 +295,9 @@
       "restingHr": "Resting Heart Rate",
       "restingHrPlaceholder": "Enter your resting HR in bpm",
       "restingHrDescription": "Used for hrTSS calculation. Measure first thing in the morning.",
+      "lthr": "Lactate Threshold Heart Rate",
+      "lthrPlaceholder": "Enter your LTHR in bpm",
+      "lthrDescription": "Used for HR zone calculations in workout compliance analysis. Typically 95-105% of 30-min max HR.",
       "weight": "Weight",
       "weightPlaceholder": "Enter your weight",
       "weightTooltip": "Your current weight helps us calculate power-to-weight ratio and other metrics.",

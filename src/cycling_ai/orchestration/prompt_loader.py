@@ -441,6 +441,48 @@ class PromptLoader:
         """
         return self.load_prompt("profile_onboarding")
 
+    def get_compliance_coach_prompt(self) -> str:
+        """
+        Get compliance coach system prompt.
+
+        Returns system prompt for analyzing workout compliance and
+        generating personalized coaching feedback.
+
+        Returns:
+            System prompt for compliance coaching
+
+        Raises:
+            FileNotFoundError: If prompt file doesn't exist
+        """
+        return self.load_prompt("compliance_coach")
+
+    def get_compliance_coach_user_prompt(self, **kwargs: Any) -> str:
+        """
+        Get compliance coach user prompt with workout compliance data.
+
+        Args:
+            **kwargs: Template variables including:
+                - workout_name: Name of the workout
+                - workout_type: Type of workout (endurance, intervals, etc.)
+                - workout_date: Date of the workout
+                - workout_description: Description of the workout
+                - athlete_ftp: Athlete's FTP in watts
+                - athlete_lthr: Athlete's LTHR in bpm (or "Not set")
+                - overall_score: Compliance score (0-100)
+                - overall_grade: Letter grade (A-F)
+                - overall_summary: Text summary of compliance
+                - segments_completed: Number of segments completed
+                - segments_skipped: Number of segments skipped
+                - segments_total: Total number of segments
+                - power_data_quality: Quality assessment of power data
+                - power_stream_length: Length of power stream in seconds
+                - segment_details: Formatted string of segment-by-segment analysis
+
+        Returns:
+            Formatted user prompt with compliance data
+        """
+        return self.load_user_prompt("compliance_coach", **kwargs)
+
     @staticmethod
     def list_available_models(prompts_base_dir: Path | str | None = None) -> list[str]:
         """

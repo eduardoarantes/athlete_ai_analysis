@@ -66,6 +66,9 @@ export function MobileNav() {
         <DropdownMenuItem asChild>
           <Link href="/schedule">{t('schedule')}</Link>
         </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/guides/compliance">{t('guides')}</Link>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link href="/profile">{t('profile')}</Link>

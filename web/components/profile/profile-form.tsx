@@ -29,6 +29,8 @@ import {
 import { Checkbox } from '@/components/ui/checkbox'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Loader2, Check, AlertCircle } from 'lucide-react'
+import { PowerZonesCard } from './power-zones-card'
+import { HeartZonesCard } from './heart-zones-card'
 
 interface ProfileFormProps {
   initialData: CompleteProfileData
@@ -334,8 +336,43 @@ export function ProfileForm({ initialData, onSave }: ProfileFormProps) {
                   )}
                 />
               </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="lthr"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{tStep2('lthr')}</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder={tStep2('lthrPlaceholder')}
+                          {...field}
+                          value={field.value || ''}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            field.onChange(value === '' ? null : parseInt(value, 10))
+                          }}
+                        />
+                      </FormControl>
+                      <FormDescription>{tStep2('lthrDescription')}</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </CardContent>
           </Card>
+
+          {/* Power Zones - Auto-calculated from FTP */}
+          <PowerZonesCard ftp={formData.ftp ?? null} />
+
+          {/* Heart Rate Zones - Auto-calculated from Max HR */}
+          <HeartZonesCard
+            maxHr={formData.maxHr ?? null}
+            restingHr={formData.restingHr ?? null}
+          />
 
           {/* Goals */}
           <Card>

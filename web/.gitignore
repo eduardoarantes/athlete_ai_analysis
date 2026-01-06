@@ -43,3 +43,6 @@ next-env.d.ts
 
 # Override parent gitignore - lib/ is needed for Next.js
 !lib/
+
+# Test results
+test-results/

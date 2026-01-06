@@ -11,7 +11,9 @@ import {
   Link2,
   Unlink,
   Loader2,
+  BarChart3,
 } from 'lucide-react'
+import Link from 'next/link'
 import {
   Dialog,
   DialogContent,
@@ -39,7 +41,8 @@ import { PowerProfileSVG } from './power-profile-svg'
 import { getPowerRangeColor } from '@/lib/types/power-zones'
 
 export interface MatchedActivityData {
-  id: string
+  id: string // strava_activities.id
+  match_id: string // workout_activity_matches.id (for compliance link)
   strava_activity_id: number
   name: string
   type: string
@@ -497,21 +500,32 @@ export function WorkoutDetailModal({
                         </div>
                       </div>
                     </div>
-                    {/* Unmatch Button */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleUnmatch}
-                      disabled={isUnmatching}
-                      className="w-full"
-                    >
-                      {isUnmatching ? (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      ) : (
-                        <Unlink className="h-4 w-4 mr-2" />
-                      )}
-                      Remove Match
-                    </Button>
+                    {/* Action Buttons */}
+                    <div className="flex gap-2">
+                      <Button
+                        variant="default"
+                        size="sm"
+                        asChild
+                        className="flex-1"
+                      >
+                        <Link href={`/compliance/${matchedActivity.match_id}`}>
+                          <BarChart3 className="h-4 w-4 mr-2" />
+                          View Compliance
+                        </Link>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleUnmatch}
+                        disabled={isUnmatching}
+                      >
+                        {isUnmatching ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Unlink className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 ) : showActivitySelector ? (
                   <div className="space-y-3">

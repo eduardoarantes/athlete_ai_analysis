@@ -67,6 +67,33 @@ interface StravaConnectionRow {
   expires_at: string
 }
 
+/**
+ * Strava stream data structure
+ * Each stream contains data array with values at each second
+ */
+export interface StravaStreamData {
+  type: string
+  data: number[]
+  series_type: string
+  original_size: number
+  resolution: string
+}
+
+/**
+ * Activity streams response from Strava API
+ */
+export interface StravaActivityStreams {
+  time?: StravaStreamData
+  watts?: StravaStreamData
+  heartrate?: StravaStreamData
+  cadence?: StravaStreamData
+  distance?: StravaStreamData
+  altitude?: StravaStreamData
+  velocity_smooth?: StravaStreamData
+  moving?: StravaStreamData
+  grade_smooth?: StravaStreamData
+}
+
 export class StravaService {
   private clientId: string
   private clientSecret: string
@@ -333,5 +360,54 @@ export class StravaService {
   ): Promise<StravaActivity[]> {
     const accessToken = await this.getValidAccessToken(userId)
     return this.getActivities(accessToken, params)
+  }
+
+  /**
+   * Get activity streams (power, HR, cadence, etc.)
+   * @param accessToken - Valid Strava access token
+   * @param activityId - Strava activity ID
+   * @param keys - Array of stream types to fetch (e.g., ['watts', 'heartrate', 'time'])
+   * @returns Object containing requested streams
+   */
+  async getActivityStreams(
+    accessToken: string,
+    activityId: string | number,
+    keys: string[] = ['time', 'watts', 'heartrate', 'cadence']
+  ): Promise<StravaActivityStreams> {
+    const keysParam = keys.join(',')
+    const url = `https://www.strava.com/api/v3/activities/${activityId}/streams?keys=${keysParam}&key_by_type=true`
+
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+
+    if (!response.ok) {
+      const error = await response.text()
+      throw new Error(`Failed to get activity streams: ${error}`)
+    }
+
+    return response.json()
+  }
+
+  /**
+   * Get activity streams with automatic token refresh
+   * @param userId - User ID for token lookup
+   * @param activityId - Strava activity ID
+   * @param keys - Array of stream types to fetch
+   * @param options - Options for token retrieval
+   */
+  async getActivityStreamsWithRefresh(
+    userId: string,
+    activityId: string | number,
+    keys: string[] = ['time', 'watts', 'heartrate', 'cadence'],
+    options?: {
+      useServiceClient?: boolean
+      supabaseClient?: SupabaseClient<Database>
+    }
+  ): Promise<StravaActivityStreams> {
+    const accessToken = await this.getValidAccessToken(userId, options)
+    return this.getActivityStreams(accessToken, activityId, keys)
   }
 }
