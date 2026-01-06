@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Sparkles,
   ThumbsUp,
@@ -73,6 +73,10 @@ export function CoachFeedbackCard({
   const [isInitialLoad, setIsInitialLoad] = useState(!initialFeedback)
   const [error, setError] = useState<string | null>(null)
 
+  // Use ref for callback to avoid useEffect dependency issues
+  const onFeedbackGeneratedRef = useRef(onFeedbackGenerated)
+  onFeedbackGeneratedRef.current = onFeedbackGenerated
+
   // Fetch cached feedback on mount
   useEffect(() => {
     if (initialFeedback || !matchId) return
@@ -83,7 +87,7 @@ export function CoachFeedbackCard({
         if (response.ok) {
           const data: CoachFeedbackResponse = await response.json()
           setFeedback(data)
-          onFeedbackGenerated?.(data)
+          onFeedbackGeneratedRef.current?.(data)
         }
         // 404 is expected if no feedback exists yet - don't treat as error
       } catch {
@@ -95,7 +99,7 @@ export function CoachFeedbackCard({
     }
 
     fetchCachedFeedback()
-  }, [matchId, initialFeedback, onFeedbackGenerated])
+  }, [matchId, initialFeedback])
 
   const generateFeedback = async (regenerate = false) => {
     setIsLoading(true)
@@ -115,7 +119,7 @@ export function CoachFeedbackCard({
 
       const data: CoachFeedbackResponse = await response.json()
       setFeedback(data)
-      onFeedbackGenerated?.(data)
+      onFeedbackGeneratedRef.current?.(data)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate feedback')
     } finally {
