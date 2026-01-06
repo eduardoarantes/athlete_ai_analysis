@@ -1087,6 +1087,108 @@ describe('Real Strava Data Integration Tests', () => {
     expect(result.segments.length).toBeGreaterThan(0)
   })
 
+  it('processes real activity 14429811505 (Sub Threshold Efforts)', () => {
+    const fixture = realFixtures.find((f) => f.activityId === '14429811505')!
+    expect(fixture).toBeDefined()
+    expect(fixture.powerStream.length).toBe(7168) // ~119 minutes
+
+    const result = analyzeWorkoutCompliance(fixture.segments, fixture.powerStream, fixture.athleteFtp)
+
+    // Collect for report
+    reportEntries.push({ fixture, result, timestamp: new Date() })
+
+    expect(result.overall.score).toBeGreaterThanOrEqual(0)
+    expect(result.overall.score).toBeLessThanOrEqual(100)
+
+    // Sub-threshold workout has long 30-min intervals
+    expect(result.segments.length).toBeGreaterThan(0)
+  })
+
+  it('processes real activity 14256926250 (Threshold Efforts - rxniUsbsBD)', () => {
+    const fixture = realFixtures.find((f) => f.activityId === '14256926250')!
+    expect(fixture).toBeDefined()
+    expect(fixture.powerStream.length).toBe(3961) // ~66 minutes
+
+    const result = analyzeWorkoutCompliance(fixture.segments, fixture.powerStream, fixture.athleteFtp)
+
+    // Collect for report
+    reportEntries.push({ fixture, result, timestamp: new Date() })
+
+    expect(result.overall.score).toBeGreaterThanOrEqual(0)
+    expect(result.overall.score).toBeLessThanOrEqual(100)
+
+    // Descending threshold intervals (7/6/5/4 min)
+    expect(result.segments.length).toBeGreaterThan(0)
+  })
+
+  it('processes real activity 11205974269 (5min Strength Efforts)', () => {
+    const fixture = realFixtures.find((f) => f.activityId === '11205974269')!
+    expect(fixture).toBeDefined()
+    expect(fixture.powerStream.length).toBe(3428) // ~57 minutes
+
+    const result = analyzeWorkoutCompliance(fixture.segments, fixture.powerStream, fixture.athleteFtp)
+
+    // Collect for report
+    reportEntries.push({ fixture, result, timestamp: new Date() })
+
+    expect(result.overall.score).toBeGreaterThanOrEqual(0)
+    expect(result.overall.score).toBeLessThanOrEqual(100)
+
+    // 4x5min strength efforts with recoveries
+    expect(result.segments.length).toBeGreaterThan(0)
+  })
+
+  it('processes real activity 11145023577 (Base Fitness Training)', () => {
+    const fixture = realFixtures.find((f) => f.activityId === '11145023577')!
+    expect(fixture).toBeDefined()
+    expect(fixture.powerStream.length).toBe(5949) // ~99 minutes
+
+    const result = analyzeWorkoutCompliance(fixture.segments, fixture.powerStream, fixture.athleteFtp)
+
+    // Collect for report
+    reportEntries.push({ fixture, result, timestamp: new Date() })
+
+    expect(result.overall.score).toBeGreaterThanOrEqual(0)
+    expect(result.overall.score).toBeLessThanOrEqual(100)
+
+    // Simple Z2 endurance ride
+    expect(result.segments.length).toBeGreaterThan(0)
+  })
+
+  it('processes real activity 11123154345 (4hr Base Fitness)', () => {
+    const fixture = realFixtures.find((f) => f.activityId === '11123154345')!
+    expect(fixture).toBeDefined()
+    expect(fixture.powerStream.length).toBe(14172) // ~240 minutes
+
+    const result = analyzeWorkoutCompliance(fixture.segments, fixture.powerStream, fixture.athleteFtp)
+
+    // Collect for report
+    reportEntries.push({ fixture, result, timestamp: new Date() })
+
+    expect(result.overall.score).toBeGreaterThanOrEqual(0)
+    expect(result.overall.score).toBeLessThanOrEqual(100)
+
+    // Long Z2 endurance ride with warmup and cooldown
+    expect(result.segments.length).toBeGreaterThan(0)
+  })
+
+  it('processes real activity 11010699309 (1hr Base Fitness - incomplete)', () => {
+    const fixture = realFixtures.find((f) => f.activityId === '11010699309')!
+    expect(fixture).toBeDefined()
+    expect(fixture.powerStream.length).toBe(636) // ~10 minutes (incomplete ride)
+
+    const result = analyzeWorkoutCompliance(fixture.segments, fixture.powerStream, fixture.athleteFtp)
+
+    // Collect for report
+    reportEntries.push({ fixture, result, timestamp: new Date() })
+
+    expect(result.overall.score).toBeGreaterThanOrEqual(0)
+    expect(result.overall.score).toBeLessThanOrEqual(100)
+
+    // Incomplete ride - activity much shorter than planned workout
+    expect(result.segments.length).toBeGreaterThan(0)
+  })
+
   it('detects power dropouts in real data', () => {
     const fixture = realFixtures[0]!
 

@@ -10,6 +10,12 @@ import {
   ACTIVITY_15664598790_POWER_STREAM,
   ACTIVITY_14698802921_POWER_STREAM,
   ACTIVITY_14677009311_POWER_STREAM,
+  ACTIVITY_14429811505_POWER_STREAM,
+  ACTIVITY_14256926250_POWER_STREAM,
+  ACTIVITY_11205974269_POWER_STREAM,
+  ACTIVITY_11145023577_POWER_STREAM,
+  ACTIVITY_11123154345_POWER_STREAM,
+  ACTIVITY_11010699309_POWER_STREAM,
 } from './real-activity-streams'
 
 // ============================================================================
@@ -264,6 +270,278 @@ export const PAIR_3_WORKOUT_SEGMENTS: WorkoutSegment[] = [
 ]
 
 // ============================================================================
+// Pair 4: h6XLqTB7j2 - 14429811505
+// Workout: Sub Threshold Efforts
+// ============================================================================
+
+export const PAIR_4_WORKOUT_SEGMENTS: WorkoutSegment[] = [
+  {
+    type: 'warmup',
+    duration_min: 20.0,
+    power_low_pct: 56,
+    power_high_pct: 75,
+    description: 'Warm up',
+  },
+  {
+    type: 'interval',
+    duration_min: 0, // Intervals use work/recovery durations instead
+    sets: 2,
+    work: {
+      duration_min: 30.0,
+      power_low_pct: 84,
+      power_high_pct: 90,
+    },
+    recovery: {
+      duration_min: 10.0,
+      power_low_pct: 56,
+      power_high_pct: 74,
+    },
+  },
+  {
+    type: 'steady',
+    duration_min: 20.0,
+    power_low_pct: 84,
+    power_high_pct: 90,
+    description: 'Hard',
+  },
+  {
+    type: 'cooldown',
+    duration_min: 10.0,
+    power_low_pct: 56,
+    power_high_pct: 66,
+    description: 'Cool Down',
+  },
+]
+
+// ============================================================================
+// Pair 5: rxniUsbsBD - 14256926250
+// Workout: Threshold Efforts (variant)
+// ============================================================================
+
+export const PAIR_5_WORKOUT_SEGMENTS: WorkoutSegment[] = [
+  {
+    type: 'warmup',
+    duration_min: 10.0,
+    power_low_pct: 56,
+    power_high_pct: 66,
+    description: 'Warm up',
+  },
+  {
+    type: 'interval',
+    duration_min: 0, // Intervals use work/recovery durations instead
+    sets: 5,
+    work: {
+      duration_min: 0.25, // 15 seconds
+      power_low_pct: 91,
+      power_high_pct: 105,
+    },
+    recovery: {
+      duration_min: 0.75, // 45 seconds
+      power_low_pct: 56,
+      power_high_pct: 66,
+    },
+  },
+  {
+    type: 'interval',
+    duration_min: 0, // Intervals use work/recovery durations instead
+    sets: 1,
+    work: {
+      duration_min: 7.0,
+      power_low_pct: 95,
+      power_high_pct: 105,
+    },
+    recovery: {
+      duration_min: 3.0,
+      power_low_pct: 56,
+      power_high_pct: 66,
+    },
+  },
+  {
+    type: 'interval',
+    duration_min: 0, // Intervals use work/recovery durations instead
+    sets: 1,
+    work: {
+      duration_min: 6.0,
+      power_low_pct: 95,
+      power_high_pct: 105,
+    },
+    recovery: {
+      duration_min: 3.0,
+      power_low_pct: 56,
+      power_high_pct: 66,
+    },
+  },
+  {
+    type: 'interval',
+    duration_min: 0, // Intervals use work/recovery durations instead
+    sets: 1,
+    work: {
+      duration_min: 5.0,
+      power_low_pct: 95,
+      power_high_pct: 105,
+    },
+    recovery: {
+      duration_min: 3.0,
+      power_low_pct: 56,
+      power_high_pct: 66,
+    },
+  },
+  {
+    type: 'interval',
+    duration_min: 0, // Intervals use work/recovery durations instead
+    sets: 1,
+    work: {
+      duration_min: 4.0,
+      power_low_pct: 95,
+      power_high_pct: 105,
+    },
+    recovery: {
+      duration_min: 3.0,
+      power_low_pct: 56,
+      power_high_pct: 66,
+    },
+  },
+  {
+    type: 'cooldown',
+    duration_min: 5.0,
+    power_low_pct: 65,
+    power_high_pct: 75,
+    description: 'Cool Down 1',
+  },
+  {
+    type: 'cooldown',
+    duration_min: 5.0,
+    power_low_pct: 56,
+    power_high_pct: 66,
+    description: 'Cool Down 2',
+  },
+]
+
+// ============================================================================
+// Pair 6: C2kCY0ykdB - 11205974269
+// Workout: 5min Strength Efforts (Zone 3)
+// ============================================================================
+
+export const PAIR_6_WORKOUT_SEGMENTS: WorkoutSegment[] = [
+  {
+    type: 'steady',
+    duration_min: 15.0,
+    power_low_pct: 50,
+    power_high_pct: 60,
+    description: 'Warmup',
+  },
+  {
+    type: 'interval',
+    duration_min: 0, // Intervals use work/recovery durations instead
+    sets: 4,
+    work: {
+      duration_min: 5.0,
+      power_low_pct: 85,
+      power_high_pct: 95,
+    },
+    recovery: {
+      duration_min: 3.0,
+      power_low_pct: 45,
+      power_high_pct: 55,
+    },
+  },
+  {
+    type: 'cooldown',
+    duration_min: 10.0,
+    power_low_pct: 50,
+    power_high_pct: 60,
+    description: 'Cool Down',
+  },
+]
+
+// ============================================================================
+// Pair 7: SLArVTlccR - 11145023577
+// Workout: Base Fitness Training (Zone Two)
+// ============================================================================
+
+export const PAIR_7_WORKOUT_SEGMENTS: WorkoutSegment[] = [
+  {
+    type: 'steady',
+    duration_min: 5.0,
+    power_low_pct: 45,
+    power_high_pct: 55,
+    description: 'Warm-up',
+  },
+  {
+    type: 'steady',
+    duration_min: 90.0,
+    power_low_pct: 65,
+    power_high_pct: 70,
+    description: 'The Complete Session',
+  },
+  {
+    type: 'steady',
+    duration_min: 10.0,
+    power_low_pct: 45,
+    power_high_pct: 55,
+    description: 'Cooldown',
+  },
+]
+
+// ============================================================================
+// Pair 8: GoneJ-oasb - 11123154345
+// Workout: 4hr Base Fitness
+// ============================================================================
+
+export const PAIR_8_WORKOUT_SEGMENTS: WorkoutSegment[] = [
+  {
+    type: 'warmup',
+    duration_min: 5.0,
+    power_low_pct: 40,
+    power_high_pct: 50,
+    description: 'Warm up',
+  },
+  {
+    type: 'steady',
+    duration_min: 230.0,
+    power_low_pct: 60,
+    power_high_pct: 65,
+    description: 'Active',
+  },
+  {
+    type: 'cooldown',
+    duration_min: 5.0,
+    power_low_pct: 40,
+    power_high_pct: 50,
+    description: 'Cool Down',
+  },
+]
+
+// ============================================================================
+// Pair 9: _mGszlLEZM - 11010699309
+// Workout: 1hr Base Fitness @ 60-65% (incomplete ride - ~10 min)
+// ============================================================================
+
+export const PAIR_9_WORKOUT_SEGMENTS: WorkoutSegment[] = [
+  {
+    type: 'warmup',
+    duration_min: 5.0,
+    power_low_pct: 40,
+    power_high_pct: 50,
+    description: 'Warm up',
+  },
+  {
+    type: 'steady',
+    duration_min: 60.0,
+    power_low_pct: 60,
+    power_high_pct: 65,
+    description: 'Active',
+  },
+  {
+    type: 'cooldown',
+    duration_min: 5.0,
+    power_low_pct: 40,
+    power_high_pct: 50,
+    description: 'Cool Down',
+  },
+]
+
+// ============================================================================
 // Activity Power Streams
 // TODO: Replace with real Strava stream data
 // These are placeholder patterns that simulate realistic power data
@@ -360,6 +638,66 @@ export function getTestFixtures(): WorkoutActivityPair[] {
       powerStream: generateSimulatedPowerStream(PAIR_3_WORKOUT_SEGMENTS, FTP),
       description: 'Progressive threshold intervals (6/7/8 min)',
     },
+    {
+      id: 'pair-4',
+      workoutId: 'h6XLqTB7j2',
+      activityId: '14429811505',
+      workoutName: 'Sub Threshold Efforts',
+      athleteFtp: FTP,
+      segments: PAIR_4_WORKOUT_SEGMENTS,
+      powerStream: generateSimulatedPowerStream(PAIR_4_WORKOUT_SEGMENTS, FTP),
+      description: 'Long sub-threshold intervals with Z2 recoveries (~130 min)',
+    },
+    {
+      id: 'pair-5',
+      workoutId: 'rxniUsbsBD',
+      activityId: '14256926250',
+      workoutName: 'Threshold Efforts',
+      athleteFtp: FTP,
+      segments: PAIR_5_WORKOUT_SEGMENTS,
+      powerStream: generateSimulatedPowerStream(PAIR_5_WORKOUT_SEGMENTS, FTP),
+      description: 'Descending threshold intervals 7/6/5/4 min (~59 min)',
+    },
+    {
+      id: 'pair-6',
+      workoutId: 'C2kCY0ykdB',
+      activityId: '11205974269',
+      workoutName: '5min Strength Efforts (Zone 3)',
+      athleteFtp: FTP,
+      segments: PAIR_6_WORKOUT_SEGMENTS,
+      powerStream: generateSimulatedPowerStream(PAIR_6_WORKOUT_SEGMENTS, FTP),
+      description: '4x5min strength efforts with 3min recoveries (~57 min)',
+    },
+    {
+      id: 'pair-7',
+      workoutId: 'SLArVTlccR',
+      activityId: '11145023577',
+      workoutName: 'Base Fitness Training (Zone Two)',
+      athleteFtp: FTP,
+      segments: PAIR_7_WORKOUT_SEGMENTS,
+      powerStream: generateSimulatedPowerStream(PAIR_7_WORKOUT_SEGMENTS, FTP),
+      description: 'Z2 endurance ride with warmup/cooldown (~99 min)',
+    },
+    {
+      id: 'pair-8',
+      workoutId: 'GoneJ-oasb',
+      activityId: '11123154345',
+      workoutName: '4hr Base Fitness',
+      athleteFtp: FTP,
+      segments: PAIR_8_WORKOUT_SEGMENTS,
+      powerStream: generateSimulatedPowerStream(PAIR_8_WORKOUT_SEGMENTS, FTP),
+      description: '4hr Z2 endurance ride (~236 min)',
+    },
+    {
+      id: 'pair-9',
+      workoutId: '_mGszlLEZM',
+      activityId: '11010699309',
+      workoutName: '1hr Base Fitness @ 60-65%',
+      athleteFtp: FTP,
+      segments: PAIR_9_WORKOUT_SEGMENTS,
+      powerStream: generateSimulatedPowerStream(PAIR_9_WORKOUT_SEGMENTS, FTP),
+      description: '1hr base fitness (incomplete ride ~10 min)',
+    },
   ]
 }
 
@@ -401,6 +739,66 @@ export function getTestFixturesWithRealData(): WorkoutActivityPair[] {
       segments: PAIR_3_WORKOUT_SEGMENTS,
       powerStream: ACTIVITY_14677009311_POWER_STREAM,
       description: 'Real data: Progressive threshold intervals (~32 min)',
+    },
+    {
+      id: 'pair-4-real',
+      workoutId: 'h6XLqTB7j2',
+      activityId: '14429811505',
+      workoutName: 'Sub Threshold Efforts',
+      athleteFtp: FTP,
+      segments: PAIR_4_WORKOUT_SEGMENTS,
+      powerStream: ACTIVITY_14429811505_POWER_STREAM,
+      description: 'Real data: Long sub-threshold intervals (~119 min)',
+    },
+    {
+      id: 'pair-5-real',
+      workoutId: 'rxniUsbsBD',
+      activityId: '14256926250',
+      workoutName: 'Threshold Efforts',
+      athleteFtp: FTP,
+      segments: PAIR_5_WORKOUT_SEGMENTS,
+      powerStream: ACTIVITY_14256926250_POWER_STREAM,
+      description: 'Real data: Descending threshold intervals (~66 min)',
+    },
+    {
+      id: 'pair-6-real',
+      workoutId: 'C2kCY0ykdB',
+      activityId: '11205974269',
+      workoutName: '5min Strength Efforts (Zone 3)',
+      athleteFtp: FTP,
+      segments: PAIR_6_WORKOUT_SEGMENTS,
+      powerStream: ACTIVITY_11205974269_POWER_STREAM,
+      description: 'Real data: 4x5min strength efforts (~57 min)',
+    },
+    {
+      id: 'pair-7-real',
+      workoutId: 'SLArVTlccR',
+      activityId: '11145023577',
+      workoutName: 'Base Fitness Training (Zone Two)',
+      athleteFtp: FTP,
+      segments: PAIR_7_WORKOUT_SEGMENTS,
+      powerStream: ACTIVITY_11145023577_POWER_STREAM,
+      description: 'Real data: Z2 endurance ride (~99 min)',
+    },
+    {
+      id: 'pair-8-real',
+      workoutId: 'GoneJ-oasb',
+      activityId: '11123154345',
+      workoutName: '4hr Base Fitness (Zone Two)',
+      athleteFtp: FTP,
+      segments: PAIR_8_WORKOUT_SEGMENTS,
+      powerStream: ACTIVITY_11123154345_POWER_STREAM,
+      description: 'Real data: Long Z2 endurance ride (~240 min)',
+    },
+    {
+      id: 'pair-9-real',
+      workoutId: '_mGszlLEZM',
+      activityId: '11010699309',
+      workoutName: '1hr Base Fitness @ 60-65%',
+      athleteFtp: FTP,
+      segments: PAIR_9_WORKOUT_SEGMENTS,
+      powerStream: ACTIVITY_11010699309_POWER_STREAM,
+      description: 'Real data: Incomplete base fitness ride (~10 min)',
     },
   ]
 }
