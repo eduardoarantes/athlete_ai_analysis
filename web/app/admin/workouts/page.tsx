@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -54,6 +55,10 @@ const PHASES: TrainingPhase[] = ['Base', 'Build', 'Peak', 'Recovery', 'Taper', '
 const PAGE_SIZE = 20
 
 export default function AdminWorkoutsPage() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const workoutIdFromUrl = searchParams.get('id')
+
   const [workouts, setWorkouts] = useState<WorkoutLibraryItem[]>([])
   const [filteredWorkouts, setFilteredWorkouts] = useState<WorkoutLibraryItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -70,6 +75,19 @@ export default function AdminWorkoutsPage() {
 
   // Detail modal
   const [selectedWorkout, setSelectedWorkout] = useState<WorkoutLibraryItem | null>(null)
+
+  // Update URL when workout is selected/deselected
+  const selectWorkout = useCallback(
+    (workout: WorkoutLibraryItem | null) => {
+      setSelectedWorkout(workout)
+      if (workout) {
+        router.push(`/admin/workouts?id=${workout.id}`, { scroll: false })
+      } else {
+        router.push('/admin/workouts', { scroll: false })
+      }
+    },
+    [router]
+  )
 
   // Fetch workouts from API
   useEffect(() => {
@@ -91,6 +109,16 @@ export default function AdminWorkoutsPage() {
     }
     fetchWorkouts()
   }, [])
+
+  // Open workout from URL on initial load or URL change
+  useEffect(() => {
+    if (workoutIdFromUrl && workouts.length > 0) {
+      const workout = workouts.find((w) => w.id === workoutIdFromUrl)
+      if (workout) {
+        setSelectedWorkout(workout)
+      }
+    }
+  }, [workoutIdFromUrl, workouts])
 
   // Apply filters
   const applyFilters = useCallback(() => {
@@ -292,7 +320,7 @@ export default function AdminWorkoutsPage() {
                     <TableRow
                       key={workout.id}
                       className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => setSelectedWorkout(workout)}
+                      onClick={() => selectWorkout(workout)}
                     >
                       <TableCell className="font-medium">{workout.name}</TableCell>
                       <TableCell>
@@ -362,7 +390,7 @@ export default function AdminWorkoutsPage() {
       </Card>
 
       {/* Workout Detail Modal */}
-      <Dialog open={!!selectedWorkout} onOpenChange={() => setSelectedWorkout(null)}>
+      <Dialog open={!!selectedWorkout} onOpenChange={() => selectWorkout(null)}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           {selectedWorkout && (
             <>
