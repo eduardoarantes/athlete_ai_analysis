@@ -36,7 +36,8 @@ import {
   formatDuration,
   calculateWorkoutDuration,
 } from '@/lib/types/training-plan'
-import { PowerProfileSVG, getSegmentColor } from './power-profile-svg'
+import { PowerProfileSVG } from './power-profile-svg'
+import { getPowerRangeColor } from '@/lib/types/power-zones'
 
 export interface MatchedActivityData {
   id: string
@@ -383,7 +384,12 @@ export function WorkoutDetailModal({
                             <div
                               key={segIndex}
                               className="bg-background p-2 rounded border-l-4 grid grid-cols-3 gap-2 items-center text-sm"
-                              style={{ borderLeftColor: getSegmentColor(seg.type) }}
+                              style={{
+                                borderLeftColor: getPowerRangeColor(
+                                  seg.power_low_pct ?? 50,
+                                  seg.power_high_pct ?? 60
+                                ),
+                              }}
                             >
                               <div className="font-medium">
                                 {formatSegmentDuration(seg.duration_min)}
@@ -406,7 +412,12 @@ export function WorkoutDetailModal({
                     <div
                       key={index}
                       className="bg-muted/30 p-2 rounded border-l-4 grid grid-cols-3 gap-2 items-center text-sm"
-                      style={{ borderLeftColor: getSegmentColor(seg.type) }}
+                      style={{
+                        borderLeftColor: getPowerRangeColor(
+                          seg.power_low_pct ?? 50,
+                          seg.power_high_pct ?? 60
+                        ),
+                      }}
                     >
                       <div className="font-medium">{formatSegmentDuration(seg.duration_min)}</div>
                       <div className="text-muted-foreground">

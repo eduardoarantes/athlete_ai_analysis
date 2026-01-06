@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
+import { getPowerZoneLabel, getPowerRangeColor, type PowerZone } from '@/lib/types/power-zones'
 
 /**
  * Shared Power Profile SVG Component
@@ -8,6 +9,9 @@ import { useMemo } from 'react'
  * Used by:
  * - workout-detail-modal.tsx (training plans)
  * - admin/workouts/page.tsx (workout library)
+ *
+ * Colors are based on power zones (Z1-Z6), not segment types.
+ * See lib/types/power-zones.ts for zone definitions and colors.
  */
 
 export interface PowerSegment {
@@ -76,32 +80,10 @@ export function expandSegments(segments: WorkoutSegmentInput[]): PowerSegment[] 
 
 /**
  * Get power zone label from power percentage
+ * @deprecated Use getPowerZoneLabel from '@/lib/types/power-zones' instead
  */
-export function getPowerZone(powerPct: number): string {
-  if (powerPct < 56) return 'Z1'
-  if (powerPct < 76) return 'Z2'
-  if (powerPct < 90) return 'Z3'
-  if (powerPct < 105) return 'Z4'
-  if (powerPct < 120) return 'Z5'
-  return 'Z6'
-}
-
-/**
- * Get color for segment type
- */
-export function getSegmentColor(type: string): string {
-  const colors: Record<string, string> = {
-    warmup: '#94A3B8',
-    cooldown: '#94A3B8',
-    recovery: '#10B981',
-    interval: '#EF4444',
-    work: '#EF4444',
-    steady: '#10B981',
-    tempo: '#F59E0B',
-    threshold: '#EF4444',
-    vo2max: '#8B5CF6',
-  }
-  return colors[type] || '#3B82F6'
+export function getPowerZone(powerPct: number): PowerZone {
+  return getPowerZoneLabel(powerPct)
 }
 
 interface PowerProfileSVGProps {
@@ -151,9 +133,9 @@ export function PowerProfileSVG({ segments, ftp }: PowerProfileSVGProps) {
     const segmentWidth = (segment.duration_min / totalDuration) * width
     const barHeight = getBarHeight(segment.power_low_pct, segment.power_high_pct)
     const y = topMargin + graphHeight - barHeight
-    const color = getSegmentColor(segment.type)
-    const avgPowerPct = (segment.power_low_pct + segment.power_high_pct) / 2
-    const zone = getPowerZone(avgPowerPct)
+    // Color based on power zone, not segment type
+    const color = getPowerRangeColor(segment.power_low_pct, segment.power_high_pct)
+    const zone = getPowerZone((segment.power_low_pct + segment.power_high_pct) / 2)
 
     return (
       <g key={index}>
