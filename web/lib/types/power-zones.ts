@@ -157,3 +157,52 @@ export function getZoneFromPowerRange(lowPct: number, highPct: number): ZoneDefi
 export function getPowerRangeColor(lowPct: number, highPct: number): string {
   return getZoneFromPowerRange(lowPct, highPct).color
 }
+
+/**
+ * Zone with calculated wattage range based on FTP
+ */
+export interface ZoneWithWattage extends ZoneDefinition {
+  /** Lower bound in watts */
+  minWatts: number
+  /** Upper bound in watts (null for Z6) */
+  maxWatts: number | null
+}
+
+/**
+ * Calculate power zones with actual wattage ranges based on FTP
+ */
+export function calculateZonesForFtp(ftp: number): ZoneWithWattage[] {
+  return POWER_ZONES.map((zone) => ({
+    ...zone,
+    minWatts: Math.round((zone.minPct / 100) * ftp),
+    maxWatts: zone.maxPct !== null ? Math.round((zone.maxPct / 100) * ftp) : null,
+  }))
+}
+
+/**
+ * Custom zone percentages that can be stored per user
+ */
+export interface CustomZoneConfig {
+  zone: PowerZone
+  minPct: number
+  maxPct: number | null
+}
+
+/**
+ * Calculate zones with custom percentage thresholds
+ */
+export function calculateCustomZonesForFtp(
+  ftp: number,
+  customZones: CustomZoneConfig[]
+): ZoneWithWattage[] {
+  return customZones.map((custom) => {
+    const baseZone = POWER_ZONES.find((z) => z.zone === custom.zone) ?? POWER_ZONES[0]!
+    return {
+      ...baseZone,
+      minPct: custom.minPct,
+      maxPct: custom.maxPct,
+      minWatts: Math.round((custom.minPct / 100) * ftp),
+      maxWatts: custom.maxPct !== null ? Math.round((custom.maxPct / 100) * ftp) : null,
+    }
+  })
+}

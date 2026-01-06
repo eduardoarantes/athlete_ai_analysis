@@ -29,6 +29,8 @@ import {
 import { Checkbox } from '@/components/ui/checkbox'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Loader2, Check, AlertCircle } from 'lucide-react'
+import { PowerZonesCard } from './power-zones-card'
+import { HeartZonesCard } from './heart-zones-card'
 
 interface ProfileFormProps {
   initialData: CompleteProfileData
@@ -336,6 +338,15 @@ export function ProfileForm({ initialData, onSave }: ProfileFormProps) {
               </div>
             </CardContent>
           </Card>
+
+          {/* Power Zones - Auto-calculated from FTP */}
+          <PowerZonesCard ftp={formData.ftp ?? null} />
+
+          {/* Heart Rate Zones - Auto-calculated from Max HR */}
+          <HeartZonesCard
+            maxHr={formData.maxHr ?? null}
+            restingHr={formData.restingHr ?? null}
+          />
 
           {/* Goals */}
           <Card>
