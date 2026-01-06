@@ -28,7 +28,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Search, X, Loader2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Search, X, Loader2, ChevronLeft, ChevronRight, Code, FileText } from 'lucide-react'
 import type {
   WorkoutLibraryItem,
   WorkoutType,
@@ -75,6 +75,7 @@ export default function AdminWorkoutsPage() {
 
   // Detail modal
   const [selectedWorkout, setSelectedWorkout] = useState<WorkoutLibraryItem | null>(null)
+  const [showJson, setShowJson] = useState(false)
 
   // Update URL when workout is selected/deselected
   const selectWorkout = useCallback(
@@ -390,147 +391,173 @@ export default function AdminWorkoutsPage() {
       </Card>
 
       {/* Workout Detail Modal */}
-      <Dialog open={!!selectedWorkout} onOpenChange={() => selectWorkout(null)}>
+      <Dialog
+        open={!!selectedWorkout}
+        onOpenChange={() => {
+          selectWorkout(null)
+          setShowJson(false)
+        }}
+      >
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           {selectedWorkout && (
             <>
               <DialogHeader>
-                <DialogTitle>{selectedWorkout.name}</DialogTitle>
-                <DialogDescription className="font-mono text-xs">
-                  {selectedWorkout.id}
-                </DialogDescription>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <DialogTitle>{selectedWorkout.name}</DialogTitle>
+                    <DialogDescription className="font-mono text-xs">
+                      {selectedWorkout.id}
+                    </DialogDescription>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setShowJson(!showJson)}
+                    title={showJson ? 'Show formatted view' : 'Show JSON'}
+                    className="shrink-0"
+                  >
+                    {showJson ? <FileText className="h-4 w-4" /> : <Code className="h-4 w-4" />}
+                  </Button>
+                </div>
               </DialogHeader>
 
-              <div className="space-y-4">
-                {/* Meta badges */}
-                <div className="flex flex-wrap gap-2">
-                  <Badge className={WORKOUT_TYPE_COLORS[selectedWorkout.type]} variant="outline">
-                    {formatType(selectedWorkout.type)}
-                  </Badge>
-                  <Badge variant="secondary">
-                    {INTENSITY_LABELS[selectedWorkout.intensity]}
-                  </Badge>
-                  <Badge variant="outline">{selectedWorkout.base_duration_min} min</Badge>
-                  <Badge variant="outline">TSS {selectedWorkout.base_tss}</Badge>
+              {showJson ? (
+                <div className="rounded-md border bg-muted/30 p-4 overflow-x-auto">
+                  <pre className="text-xs font-mono whitespace-pre-wrap break-words">
+                    {JSON.stringify(selectedWorkout, null, 2)}
+                  </pre>
                 </div>
-
-                {/* Description */}
-                {selectedWorkout.detailed_description && (
-                  <div>
-                    <h4 className="font-medium mb-1">Description</h4>
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                      {selectedWorkout.detailed_description}
-                    </p>
+              ) : (
+                <div className="space-y-4">
+                  {/* Meta badges */}
+                  <div className="flex flex-wrap gap-2">
+                    <Badge className={WORKOUT_TYPE_COLORS[selectedWorkout.type]} variant="outline">
+                      {formatType(selectedWorkout.type)}
+                    </Badge>
+                    <Badge variant="secondary">{INTENSITY_LABELS[selectedWorkout.intensity]}</Badge>
+                    <Badge variant="outline">{selectedWorkout.base_duration_min} min</Badge>
+                    <Badge variant="outline">TSS {selectedWorkout.base_tss}</Badge>
                   </div>
-                )}
 
-                {/* Suitable Phases */}
-                {selectedWorkout.suitable_phases && selectedWorkout.suitable_phases.length > 0 && (
-                  <div>
-                    <h4 className="font-medium mb-1">Suitable Phases</h4>
-                    <div className="flex flex-wrap gap-1">
-                      {selectedWorkout.suitable_phases.map((phase) => (
-                        <Badge key={phase} variant="outline">
-                          {phase}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Suitable Weekdays */}
-                {selectedWorkout.suitable_weekdays &&
-                  selectedWorkout.suitable_weekdays.length > 0 && (
+                  {/* Description */}
+                  {selectedWorkout.detailed_description && (
                     <div>
-                      <h4 className="font-medium mb-1">Suitable Days</h4>
-                      <div className="flex flex-wrap gap-1">
-                        {selectedWorkout.suitable_weekdays.map((day) => (
-                          <Badge key={day} variant="outline">
-                            {day}
-                          </Badge>
-                        ))}
+                      <h4 className="font-medium mb-1">Description</h4>
+                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                        {selectedWorkout.detailed_description}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Suitable Phases */}
+                  {selectedWorkout.suitable_phases &&
+                    selectedWorkout.suitable_phases.length > 0 && (
+                      <div>
+                        <h4 className="font-medium mb-1">Suitable Phases</h4>
+                        <div className="flex flex-wrap gap-1">
+                          {selectedWorkout.suitable_phases.map((phase) => (
+                            <Badge key={phase} variant="outline">
+                              {phase}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                  {/* Suitable Weekdays */}
+                  {selectedWorkout.suitable_weekdays &&
+                    selectedWorkout.suitable_weekdays.length > 0 && (
+                      <div>
+                        <h4 className="font-medium mb-1">Suitable Days</h4>
+                        <div className="flex flex-wrap gap-1">
+                          {selectedWorkout.suitable_weekdays.map((day) => (
+                            <Badge key={day} variant="outline">
+                              {day}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                  {/* Power Profile Chart */}
+                  {selectedWorkout.segments && selectedWorkout.segments.length > 0 && (
+                    <div>
+                      <h4 className="font-medium mb-2">Power Profile</h4>
+                      <div className="rounded-md border p-3 bg-muted/30">
+                        <PowerProfileSVG segments={selectedWorkout.segments} />
                       </div>
                     </div>
                   )}
 
-                {/* Power Profile Chart */}
-                {selectedWorkout.segments && selectedWorkout.segments.length > 0 && (
-                  <div>
-                    <h4 className="font-medium mb-2">Power Profile</h4>
-                    <div className="rounded-md border p-3 bg-muted/30">
-                      <PowerProfileSVG segments={selectedWorkout.segments} />
-                    </div>
-                  </div>
-                )}
-
-                {/* Segments */}
-                {selectedWorkout.segments && selectedWorkout.segments.length > 0 && (
-                  <div>
-                    <h4 className="font-medium mb-2">Workout Segments</h4>
-                    <div className="rounded-md border">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Type</TableHead>
-                            <TableHead>Duration</TableHead>
-                            <TableHead>Power Range</TableHead>
-                            <TableHead>Details</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {selectedWorkout.segments.map((segment, idx) => (
-                            <TableRow key={idx}>
-                              <TableCell className="capitalize">{segment.type}</TableCell>
-                              <TableCell>
-                                {segment.sets
-                                  ? `${segment.sets} sets`
-                                  : segment.duration_min
-                                    ? `${segment.duration_min} min`
-                                    : '-'}
-                              </TableCell>
-                              <TableCell>
-                                {segment.power_low_pct && segment.power_high_pct
-                                  ? `${segment.power_low_pct}-${segment.power_high_pct}%`
-                                  : segment.work
-                                    ? `${segment.work.power_low_pct}-${segment.work.power_high_pct}%`
-                                    : '-'}
-                              </TableCell>
-                              <TableCell className="text-sm text-muted-foreground">
-                                {segment.description ||
-                                  (segment.work &&
-                                    segment.recovery &&
-                                    `${segment.work.duration_min}min work / ${segment.recovery.duration_min}min rest`)}
-                              </TableCell>
+                  {/* Segments */}
+                  {selectedWorkout.segments && selectedWorkout.segments.length > 0 && (
+                    <div>
+                      <h4 className="font-medium mb-2">Workout Segments</h4>
+                      <div className="rounded-md border">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Type</TableHead>
+                              <TableHead>Duration</TableHead>
+                              <TableHead>Power Range</TableHead>
+                              <TableHead>Details</TableHead>
                             </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
+                          </TableHeader>
+                          <TableBody>
+                            {selectedWorkout.segments.map((segment, idx) => (
+                              <TableRow key={idx}>
+                                <TableCell className="capitalize">{segment.type}</TableCell>
+                                <TableCell>
+                                  {segment.sets
+                                    ? `${segment.sets} sets`
+                                    : segment.duration_min
+                                      ? `${segment.duration_min} min`
+                                      : '-'}
+                                </TableCell>
+                                <TableCell>
+                                  {segment.power_low_pct && segment.power_high_pct
+                                    ? `${segment.power_low_pct}-${segment.power_high_pct}%`
+                                    : segment.work
+                                      ? `${segment.work.power_low_pct}-${segment.work.power_high_pct}%`
+                                      : '-'}
+                                </TableCell>
+                                <TableCell className="text-sm text-muted-foreground">
+                                  {segment.description ||
+                                    (segment.work &&
+                                      segment.recovery &&
+                                      `${segment.work.duration_min}min work / ${segment.recovery.duration_min}min rest`)}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Variable Components */}
-                {selectedWorkout.variable_components && (
-                  <div>
-                    <h4 className="font-medium mb-1">Variable Components</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Adjustable: {selectedWorkout.variable_components.adjustable_field} (
-                      {selectedWorkout.variable_components.min_value} -{' '}
-                      {selectedWorkout.variable_components.max_value})
-                      {selectedWorkout.variable_components.tss_per_unit &&
-                        ` | TSS per unit: ${selectedWorkout.variable_components.tss_per_unit}`}
-                    </p>
-                  </div>
-                )}
+                  {/* Variable Components */}
+                  {selectedWorkout.variable_components && (
+                    <div>
+                      <h4 className="font-medium mb-1">Variable Components</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Adjustable: {selectedWorkout.variable_components.adjustable_field} (
+                        {selectedWorkout.variable_components.min_value} -{' '}
+                        {selectedWorkout.variable_components.max_value})
+                        {selectedWorkout.variable_components.tss_per_unit &&
+                          ` | TSS per unit: ${selectedWorkout.variable_components.tss_per_unit}`}
+                      </p>
+                    </div>
+                  )}
 
-                {/* Source Info */}
-                {selectedWorkout.source_file && (
-                  <div className="text-xs text-muted-foreground border-t pt-2">
-                    Source: {selectedWorkout.source_file}
-                    {selectedWorkout.source_format && ` (${selectedWorkout.source_format})`}
-                  </div>
-                )}
-              </div>
+                  {/* Source Info */}
+                  {selectedWorkout.source_file && (
+                    <div className="text-xs text-muted-foreground border-t pt-2">
+                      Source: {selectedWorkout.source_file}
+                      {selectedWorkout.source_format && ` (${selectedWorkout.source_format})`}
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           )}
         </DialogContent>
