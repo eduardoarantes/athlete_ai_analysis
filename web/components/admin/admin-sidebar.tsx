@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { LayoutDashboard, Users, Settings, ArrowLeft } from 'lucide-react'
+import { LayoutDashboard, Users, Settings, ArrowLeft, Dumbbell } from 'lucide-react'
 
 const navItems = [
   {
@@ -15,6 +15,11 @@ const navItems = [
     title: 'Users',
     href: '/admin/users',
     icon: Users,
+  },
+  {
+    title: 'Workout Library',
+    href: '/admin/workouts',
+    icon: Dumbbell,
   },
   {
     title: 'Settings',

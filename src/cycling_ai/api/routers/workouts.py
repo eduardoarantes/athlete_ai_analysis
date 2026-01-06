@@ -14,7 +14,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from cycling_ai.core.workout_library.loader import WorkoutLibraryLoader
-from cycling_ai.core.workout_library.models import Workout
+from cycling_ai.core.workout_library.models import Workout, WorkoutSegment
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ TrainingPhase = Literal["Base", "Build", "Peak", "Recovery", "Taper", "Foundatio
 
 
 class WorkoutItem(BaseModel):
-    """Simplified workout item for API response."""
+    """Workout item for API response."""
 
     id: str
     name: str
@@ -36,6 +36,7 @@ class WorkoutItem(BaseModel):
     intensity: str
     suitable_phases: list[str] | None
     suitable_weekdays: list[str] | None
+    segments: list[WorkoutSegment]
     base_duration_min: float
     base_tss: float
     detailed_description: str | None = None
@@ -58,6 +59,7 @@ def _workout_to_item(workout: Workout) -> WorkoutItem:
         intensity=workout.intensity,
         suitable_phases=list(workout.suitable_phases) if workout.suitable_phases else None,
         suitable_weekdays=list(workout.suitable_weekdays) if workout.suitable_weekdays else None,
+        segments=workout.segments,
         base_duration_min=workout.base_duration_min,
         base_tss=workout.base_tss,
         detailed_description=workout.detailed_description,
