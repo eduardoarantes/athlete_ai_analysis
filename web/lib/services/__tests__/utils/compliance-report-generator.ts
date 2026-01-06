@@ -323,7 +323,11 @@ function formatSegmentDuration(durationMin: number): string {
   return `${durationMin} min`
 }
 
-function buildPowerProfileSVG(segments: ComplianceReportEntry['fixture']['segments'], ftp: number): string {
+function buildPowerProfileSVG(
+  segments: ComplianceReportEntry['fixture']['segments'],
+  ftp: number,
+  powerStream?: number[]
+): string {
   const width = 600
   const chartHeight = 170
   const graphHeight = 140
@@ -367,8 +371,8 @@ function buildPowerProfileSVG(segments: ComplianceReportEntry['fixture']['segmen
     }
   })
 
-  const totalDuration = expanded.reduce((sum, seg) => sum + seg.duration_min, 0)
-  if (totalDuration === 0 || expanded.length === 0) return ''
+  const totalDurationMin = expanded.reduce((sum, seg) => sum + seg.duration_min, 0)
+  if (totalDurationMin === 0 || expanded.length === 0) return ''
 
   const getBarHeight = (powerLowPct: number, powerHighPct: number) => {
     const avgPercent = (powerLowPct + powerHighPct) / 2
@@ -378,7 +382,7 @@ function buildPowerProfileSVG(segments: ComplianceReportEntry['fixture']['segmen
 
   let xOffset = 0
   const bars = expanded.map((seg) => {
-    const segWidth = (seg.duration_min / totalDuration) * width
+    const segWidth = (seg.duration_min / totalDurationMin) * width
     const barHeight = getBarHeight(seg.power_low_pct, seg.power_high_pct)
     const y = topMargin + graphHeight - barHeight
     const avgPct = (seg.power_low_pct + seg.power_high_pct) / 2
@@ -386,12 +390,59 @@ function buildPowerProfileSVG(segments: ComplianceReportEntry['fixture']['segmen
     const color = getZoneColor(zone)
 
     const bar = `
-      <rect x="${xOffset}" y="${y}" width="${segWidth}" height="${barHeight}" fill="${color}" stroke="#fff" stroke-width="1"/>
+      <rect x="${xOffset}" y="${y}" width="${segWidth}" height="${barHeight}" fill="${color}" stroke="#fff" stroke-width="1" opacity="0.7"/>
       ${barHeight > 25 && segWidth > 30 ? `<text x="${xOffset + segWidth / 2}" y="${y + barHeight / 2 + 5}" font-size="14" font-weight="bold" fill="#fff" text-anchor="middle">Z${zone}</text>` : ''}
     `
     xOffset += segWidth
     return bar
   }).join('')
+
+  // Build actual power overlay line
+  let powerOverlay = ''
+  if (powerStream && powerStream.length > 0) {
+    const totalDurationSec = totalDurationMin * 60
+    // Downsample power stream to ~300 points for smooth rendering
+    const sampleRate = Math.max(1, Math.floor(powerStream.length / 300))
+    const sampledPower: number[] = []
+    for (let i = 0; i < powerStream.length; i += sampleRate) {
+      // Use rolling average for smoother line
+      const windowSize = Math.min(5, powerStream.length - i)
+      let sum = 0
+      for (let j = 0; j < windowSize; j++) {
+        sum += powerStream[i + j]
+      }
+      sampledPower.push(sum / windowSize)
+    }
+
+    // Calculate the time scale factor (actual duration vs planned duration)
+    const actualDurationSec = powerStream.length
+    const timeScale = Math.min(1, totalDurationSec / actualDurationSec)
+
+    // Generate SVG path points
+    const points = sampledPower.map((power, i) => {
+      const timeSec = i * sampleRate
+      const x = (timeSec / actualDurationSec) * timeScale * width
+      // Convert power to % of FTP and map to y coordinate
+      const powerPct = (power / ftp) * 100
+      const clampedPct = Math.min(200, Math.max(0, powerPct))
+      const y = topMargin + graphHeight - (clampedPct / 200) * graphHeight
+      return `${x.toFixed(1)},${y.toFixed(1)}`
+    })
+
+    if (points.length > 1) {
+      powerOverlay = `
+        <polyline
+          points="${points.join(' ')}"
+          fill="none"
+          stroke="#1e293b"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          opacity="0.85"
+        />
+      `
+    }
+  }
 
   const ftpY = topMargin + graphHeight * 0.5
   const gridY1 = topMargin + graphHeight * 0.25
@@ -406,6 +457,7 @@ function buildPowerProfileSVG(segments: ComplianceReportEntry['fixture']['segmen
       <line x1="0" y1="${ftpY}" x2="${width}" y2="${ftpY}" stroke="#3b82f6" stroke-width="2" stroke-dasharray="6 4"/>
       <text x="5" y="${ftpY - 5}" font-size="12" font-weight="bold" fill="#3b82f6">FTP (${ftp}W)</text>
       ${bars}
+      ${powerOverlay}
     </svg>
   `
 }
@@ -508,6 +560,7 @@ function buildPowerProfile(entry: ComplianceReportEntry): string {
   const { fixture } = entry
   const segments = fixture.segments
   const ftp = fixture.athleteFtp
+  const powerStream = fixture.powerStream
 
   // Build workout JSON for display
   const workoutJson = {
@@ -529,14 +582,24 @@ function buildPowerProfile(entry: ComplianceReportEntry): string {
     <div class="power-profile" data-activity="${fixture.activityId}">
       <div class="profile-header">
         <h3>Power Profile</h3>
+        <div class="profile-legend">
+          <span class="legend-planned">■ Planned</span>
+          <span class="legend-actual">— Actual</span>
+        </div>
         <button class="json-toggle-btn" data-target="json-${fixture.activityId}">View JSON</button>
       </div>
       <div class="profile-chart">
-        ${buildPowerProfileSVG(segments, ftp)}
+        ${buildPowerProfileSVG(segments, ftp, powerStream)}
       </div>
-      <div class="workout-structure">
-        <h4>Workout Structure</h4>
-        ${buildWorkoutStructure(segments, ftp)}
+      <div class="workout-structure collapsible collapsed">
+        <button class="collapsible-header" type="button">
+          <span class="collapse-icon"></span>
+          <span class="collapse-title">Workout Structure</span>
+          <span class="collapse-hint">Click to expand</span>
+        </button>
+        <div class="collapsible-content">
+          ${buildWorkoutStructure(segments, ftp)}
+        </div>
       </div>
       <div class="json-viewer" id="json-${fixture.activityId}">
         <pre>${syntaxHighlightJson(JSON.stringify(workoutJson, null, 2))}</pre>
@@ -685,9 +748,14 @@ function buildSegmentTable(result: WorkoutComplianceAnalysis): string {
 
 function buildSegmentDetails(result: WorkoutComplianceAnalysis): string {
   return `
-    <div class="segment-details">
-      <h3>Segment Details</h3>
-      <div class="details-grid">
+    <div class="segment-details collapsible collapsed">
+      <button class="collapsible-header" type="button">
+        <span class="collapse-icon"></span>
+        <span class="collapse-title">Segment Details</span>
+        <span class="collapse-hint">Click to expand</span>
+      </button>
+      <div class="collapsible-content">
+        <div class="details-grid">
         ${result.segments
           .map(
             (seg, i) => `
@@ -749,6 +817,7 @@ function buildSegmentDetails(result: WorkoutComplianceAnalysis): string {
         `
           )
           .join('')}
+        </div>
       </div>
     </div>`
 }
@@ -1091,6 +1160,22 @@ function getStyles(): string {
       margin: 0;
     }
 
+    .profile-legend {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+
+    .legend-planned {
+      color: #94a3b8;
+    }
+
+    .legend-actual {
+      color: #1e293b;
+      font-weight: 600;
+    }
+
     .json-toggle-btn {
       background: #e2e8f0;
       border: none;
@@ -1122,11 +1207,77 @@ function getStyles(): string {
       margin-top: 1rem;
     }
 
-    .workout-structure h4 {
+    .collapsible .collapsible-header {
+      width: 100%;
       font-size: 0.875rem;
       font-weight: 600;
       color: #475569;
-      margin: 0 0 0.75rem 0;
+      margin: 0;
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      user-select: none;
+      background: #e2e8f0;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      text-align: left;
+    }
+
+    .collapsible .collapsible-header:hover {
+      background: #cbd5e1;
+      border-color: #94a3b8;
+    }
+
+    .collapse-icon {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #94a3b8;
+      border-radius: 4px;
+      color: white;
+      font-size: 0.75rem;
+      font-weight: bold;
+      transition: all 0.2s ease;
+    }
+
+    .collapse-icon::before {
+      content: '+';
+    }
+
+    .collapsible:not(.collapsed) .collapse-icon::before {
+      content: '−';
+    }
+
+    .collapsible:not(.collapsed) .collapse-icon {
+      background: #3b82f6;
+    }
+
+    .collapse-title {
+      flex: 1;
+    }
+
+    .collapse-hint {
+      font-size: 0.75rem;
+      font-weight: 400;
+      color: #94a3b8;
+      transition: opacity 0.2s ease;
+    }
+
+    .collapsible:not(.collapsed) .collapse-hint {
+      opacity: 0;
+    }
+
+    .collapsible.collapsed .collapsible-content {
+      display: none;
+    }
+
+    .collapsible-content {
+      padding-top: 0.75rem;
     }
 
     .structure-row {
@@ -1536,6 +1687,16 @@ function getInteractiveScript(): string {
         if (jsonViewer) {
           jsonViewer.classList.toggle('visible');
           btn.textContent = jsonViewer.classList.contains('visible') ? 'Hide JSON' : 'View JSON';
+        }
+      });
+    });
+
+    // Toggle collapsible sections
+    document.querySelectorAll('.collapsible-header').forEach(header => {
+      header.addEventListener('click', () => {
+        const parent = header.closest('.collapsible');
+        if (parent) {
+          parent.classList.toggle('collapsed');
         }
       });
     });
