@@ -22,6 +22,7 @@ import { StravaService } from '@/lib/services/strava-service'
 import { analyzeWorkoutCompliance } from '@/lib/services/compliance-analysis-service'
 import { errorLogger } from '@/lib/monitoring/error-logger'
 import type { WorkoutSegment, TrainingPlanData, Workout } from '@/lib/types/training-plan'
+import type { Json } from '@/lib/types/database'
 
 interface AnalyzeRequest {
   // Option 1: Direct specification
@@ -46,6 +47,12 @@ interface PlanInstanceRow {
 
 interface ProfileRow {
   ftp: number | null
+  lthr: number | null
+}
+
+interface AnalyzeRequestWithSave extends AnalyzeRequest {
+  // Whether to save the analysis to the database (default: true)
+  save?: boolean
 }
 
 /**
@@ -92,7 +99,8 @@ function getWorkoutFromPlan(
 
 export async function POST(request: NextRequest) {
   try {
-    const body: AnalyzeRequest = await request.json()
+    const body: AnalyzeRequestWithSave = await request.json()
+    const shouldSave = body.save !== false // Default to true
 
     // Get current user
     const supabase = await createClient()
@@ -109,15 +117,14 @@ export async function POST(request: NextRequest) {
     let workoutDate: string
     let workoutIndex: number
     let stravaActivityId: string
+    let matchId: string | null = body.match_id || null
 
     // Resolve inputs - either from match_id or direct parameters
     if (body.match_id) {
       // Fetch from match record
-      // Note: workout_activity_matches table types not yet generated, using type assertion
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: match, error: matchError } = await (supabase as any)
+      const { data: match, error: matchError } = await supabase
         .from('workout_activity_matches')
-        .select('plan_instance_id, workout_date, workout_index, strava_activity_id')
+        .select('id, plan_instance_id, workout_date, workout_index, strava_activity_id')
         .eq('id', body.match_id)
         .single()
 
@@ -125,6 +132,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Match not found' }, { status: 404 })
       }
 
+      matchId = match.id
       planInstanceId = match.plan_instance_id
       workoutDate = match.workout_date
       workoutIndex = match.workout_index
@@ -145,6 +153,23 @@ export async function POST(request: NextRequest) {
       workoutDate = body.workout_date
       workoutIndex = body.workout_index ?? 0
       stravaActivityId = body.strava_activity_id
+
+      // Try to find existing match or create one if saving
+      if (shouldSave) {
+        const { data: existingMatch } = await supabase
+          .from('workout_activity_matches')
+          .select('id')
+          .eq('plan_instance_id', planInstanceId)
+          .eq('workout_date', workoutDate)
+          .eq('workout_index', workoutIndex)
+          .single()
+
+        if (existingMatch) {
+          matchId = existingMatch.id
+        }
+        // Note: We don't create a new match here - that should be done separately
+        // The match record links a specific workout slot to an activity
+      }
     }
 
     // Fetch plan instance
@@ -188,16 +213,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get athlete FTP
+    // Get athlete FTP and LTHR
     let ftp = body.ftp_override
+    let lthr: number | null = null
+
+    const { data: profile } = await supabase
+      .from('athlete_profiles')
+      .select('ftp, lthr')
+      .eq('user_id', user.id)
+      .single<ProfileRow>()
 
     if (!ftp) {
-      const { data: profile } = await supabase
-        .from('athlete_profiles')
-        .select('ftp')
-        .eq('user_id', user.id)
-        .single<ProfileRow>()
-
       ftp = profile?.ftp ?? undefined
 
       if (!ftp) {
@@ -207,6 +233,8 @@ export async function POST(request: NextRequest) {
         )
       }
     }
+
+    lthr = profile?.lthr ?? null
 
     // Fetch power stream from Strava
     const stravaService = await StravaService.create()
@@ -230,6 +258,69 @@ export async function POST(request: NextRequest) {
     // Run compliance analysis
     const analysis = analyzeWorkoutCompliance(segments, powerStream, ftp)
 
+    // Store analysis to database if we have a match_id and save is enabled
+    let savedAnalysisId: string | null = null
+    if (shouldSave && matchId) {
+      // Check if analysis already exists for this match
+      const { data: existingAnalysis } = await supabase
+        .from('workout_compliance_analyses')
+        .select('id')
+        .eq('match_id', matchId)
+        .single()
+
+      if (existingAnalysis) {
+        // Update existing analysis
+        const { data: updated, error: updateError } = await supabase
+          .from('workout_compliance_analyses')
+          .update({
+            overall_score: analysis.overall.score,
+            overall_grade: analysis.overall.grade,
+            overall_summary: analysis.overall.summary,
+            segments_completed: analysis.overall.segments_completed,
+            segments_skipped: analysis.overall.segments_skipped,
+            segments_total: analysis.overall.segments_total,
+            analysis_data: analysis as unknown as Json,
+            athlete_ftp: ftp,
+            athlete_lthr: lthr,
+            algorithm_version: analysis.metadata.algorithm_version,
+            power_data_quality: analysis.metadata.power_data_quality,
+            analyzed_at: new Date().toISOString(),
+          })
+          .eq('id', existingAnalysis.id)
+          .select('id')
+          .single()
+
+        if (!updateError && updated) {
+          savedAnalysisId = updated.id
+        }
+      } else {
+        // Insert new analysis
+        const { data: inserted, error: insertError } = await supabase
+          .from('workout_compliance_analyses')
+          .insert({
+            match_id: matchId,
+            user_id: user.id,
+            overall_score: analysis.overall.score,
+            overall_grade: analysis.overall.grade,
+            overall_summary: analysis.overall.summary,
+            segments_completed: analysis.overall.segments_completed,
+            segments_skipped: analysis.overall.segments_skipped,
+            segments_total: analysis.overall.segments_total,
+            analysis_data: analysis as unknown as Json,
+            athlete_ftp: ftp,
+            athlete_lthr: lthr,
+            algorithm_version: analysis.metadata.algorithm_version,
+            power_data_quality: analysis.metadata.power_data_quality,
+          })
+          .select('id')
+          .single()
+
+        if (!insertError && inserted) {
+          savedAnalysisId = inserted.id
+        }
+      }
+    }
+
     errorLogger.logInfo('Compliance analysis completed', {
       userId: user.id,
       metadata: {
@@ -240,6 +331,7 @@ export async function POST(request: NextRequest) {
         workoutName: workout.name,
         overallScore: analysis.overall.score,
         overallGrade: analysis.overall.grade,
+        savedAnalysisId,
       },
     })
 
@@ -253,8 +345,10 @@ export async function POST(request: NextRequest) {
         workout_tss: workout.tss,
         activity_id: stravaActivityId,
         athlete_ftp: ftp,
+        athlete_lthr: lthr,
         power_stream_length: powerStream.length,
         planned_segments: segments.length,
+        saved_analysis_id: savedAnalysisId,
       },
     })
   } catch (error) {

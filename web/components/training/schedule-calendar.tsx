@@ -9,7 +9,7 @@ import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
 import { WorkoutCard } from './workout-card'
 import { WorkoutDetailModal, type MatchedActivityData } from './workout-detail-modal'
 import type { PlanInstance, Workout } from '@/lib/types/training-plan'
-import { parseLocalDate } from '@/lib/utils/date-utils'
+import { parseLocalDate, formatDateString } from '@/lib/utils/date-utils'
 import { formatWithGoalLabels } from '@/lib/utils/format-utils'
 
 interface ScheduleCalendarProps {
@@ -85,7 +85,7 @@ export function ScheduleCalendar({ instances, isAdmin = false }: ScheduleCalenda
           )
 
           const workoutEntry: { date: string; index: number; tss?: number; type?: string } = {
-            date: workoutDate.toISOString().split('T')[0]!,
+            date: formatDateString(workoutDate),
             index: workoutIdx,
           }
           if (workout.tss !== undefined) workoutEntry.tss = workout.tss
@@ -210,7 +210,7 @@ export function ScheduleCalendar({ instances, isAdmin = false }: ScheduleCalenda
             weekOneMonday.getDate() + (week.week_number - 1) * 7 + adjustedDayIndex
           )
 
-          const dateKey = workoutDate.toISOString().split('T')[0]!
+          const dateKey = formatDateString(workoutDate)
           const existing = map.get(dateKey) || []
           existing.push({
             workout,
@@ -278,7 +278,7 @@ export function ScheduleCalendar({ instances, isAdmin = false }: ScheduleCalenda
   }
 
   const today = new Date()
-  const todayKey = today.toISOString().split('T')[0]
+  const todayKey = formatDateString(today)
 
   const monthName = currentDate.toLocaleDateString(locale, { month: 'long', year: 'numeric' })
 
@@ -322,7 +322,7 @@ export function ScheduleCalendar({ instances, isAdmin = false }: ScheduleCalenda
               return <div key={`empty-${index}`} className="bg-muted/30 min-h-[120px]" />
             }
 
-            const dateKey = date.toISOString().split('T')[0]!
+            const dateKey = formatDateString(date)
             const workouts = workoutsByDate.get(dateKey) || []
             const isToday = dateKey === todayKey
             const isCurrentMonth = date.getMonth() === currentDate.getMonth()
@@ -401,12 +401,12 @@ export function ScheduleCalendar({ instances, isAdmin = false }: ScheduleCalenda
         onOpenChange={setModalOpen}
         isAdmin={isAdmin}
         planInstanceId={selectedWorkout?.instance.id}
-        workoutDate={selectedWorkout?.date.toISOString().split('T')[0]}
+        workoutDate={selectedWorkout ? formatDateString(selectedWorkout.date) : undefined}
         workoutIndex={selectedWorkout?.index}
         matchedActivity={
           selectedWorkout
             ? matchesMap.get(
-                `${selectedWorkout.instance.id}:${selectedWorkout.date.toISOString().split('T')[0]}:${selectedWorkout.index}`
+                `${selectedWorkout.instance.id}:${formatDateString(selectedWorkout.date)}:${selectedWorkout.index}`
               )
             : undefined
         }

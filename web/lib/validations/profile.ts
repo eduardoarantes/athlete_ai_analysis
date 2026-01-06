@@ -52,6 +52,12 @@ export const profileStepTwoSchema = z.object({
     .min(30, 'Resting HR must be at least 30')
     .max(100, 'Resting HR must be at most 100')
     .nullable(),
+  lthr: z
+    .number()
+    .int()
+    .min(40, 'LTHR must be at least 40')
+    .max(220, 'LTHR must be at most 220')
+    .nullable(),
   weightKg: z.number().positive('Weight must be positive').nullable(),
   unitsSystem: z.enum(['metric', 'imperial']),
 })
@@ -107,6 +113,7 @@ export const athleteProfileSchema = z.object({
   ftp: z.number().int().nullable(),
   maxHr: z.number().int().nullable(),
   restingHr: z.number().int().nullable(),
+  lthr: z.number().int().nullable(),
   weightKg: z.number().nullable(),
   goals: z.array(z.string()),
   preferredLanguage: z.enum(['en', 'pt', 'es', 'fr']),

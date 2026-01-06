@@ -25,6 +25,11 @@
       "file": "report_generation.txt",
       "user_file": "report_generation_user.txt",
       "description": "Report generation specialist"
+    },
+    "compliance_coach": {
+      "file": "compliance_coach.txt",
+      "user_file": "compliance_coach_user.txt",
+      "description": "Workout compliance analysis and coaching feedback specialist"
     }
   }
 }

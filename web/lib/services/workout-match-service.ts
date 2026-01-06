@@ -6,6 +6,7 @@
 import { createClient } from '@/lib/supabase/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/types/database'
+import { getLocalDateFromTimestamp, parseLocalDate, formatDateString } from '@/lib/utils/date-utils'
 
 export interface WorkoutMatch {
   id: string
@@ -21,7 +22,8 @@ export interface WorkoutMatch {
 }
 
 export interface MatchedActivity {
-  id: string
+  id: string // strava_activities.id
+  match_id: string // workout_activity_matches.id (for compliance analysis)
   strava_activity_id: number
   name: string
   type: string
@@ -60,18 +62,25 @@ export interface AutoMatchResult {
 /**
  * Calculate match score between a workout and an activity
  * Higher score = better match
+ * Returns 0 for incompatible activity types (e.g., WeightTraining for a cycling workout)
  */
 function calculateMatchScore(
   workout: { tss?: number; type?: string },
   activity: { tss: number | null; type: string; moving_time: number | null }
 ): number {
-  let score = 50 // Base score for same-day match
-
-  // Type matching (cycling workout + cycling activity)
-  const cyclingTypes = ['Ride', 'VirtualRide', 'EBikeRide', 'MountainBikeRide', 'GravelRide']
-  const isCyclingActivity = cyclingTypes.includes(activity.type)
+  // Type matching - only cycling activities can match cycling workouts
+  const cyclingActivityTypes = ['Ride', 'VirtualRide', 'EBikeRide', 'MountainBikeRide', 'GravelRide']
+  const isCyclingActivity = cyclingActivityTypes.includes(activity.type)
   const isCyclingWorkout = !workout.type || workout.type !== 'rest'
 
+  // CRITICAL: Non-cycling activities cannot match cycling workouts
+  if (isCyclingWorkout && !isCyclingActivity) {
+    return 0
+  }
+
+  let score = 50 // Base score for same-day match with compatible type
+
+  // Bonus for cycling match
   if (isCyclingActivity && isCyclingWorkout) {
     score += 20
   }
@@ -130,6 +139,7 @@ export class WorkoutMatchService {
       .from('workout_activity_matches')
       .select(
         `
+        id,
         workout_date,
         workout_index,
         match_type,
@@ -159,6 +169,7 @@ export class WorkoutMatchService {
     const matchMap = new Map<string, MatchedActivity>()
 
     for (const match of (data || []) as Array<{
+      id: string
       workout_date: string
       workout_index: number
       match_type: string
@@ -182,6 +193,7 @@ export class WorkoutMatchService {
         const key = `${match.workout_date}:${match.workout_index}`
         matchMap.set(key, {
           ...activity,
+          match_id: match.id,
           match_type: match.match_type as 'auto' | 'manual',
           match_score: match.match_score,
         })
@@ -205,6 +217,7 @@ export class WorkoutMatchService {
       .from('workout_activity_matches')
       .select(
         `
+        id,
         plan_instance_id,
         workout_date,
         workout_index,
@@ -235,6 +248,7 @@ export class WorkoutMatchService {
     const matchMap = new Map<string, MatchedActivity>()
 
     for (const match of (data || []) as Array<{
+      id: string
       plan_instance_id: string
       workout_date: string
       workout_index: number
@@ -259,6 +273,7 @@ export class WorkoutMatchService {
         const key = `${match.plan_instance_id}:${match.workout_date}:${match.workout_index}`
         matchMap.set(key, {
           ...activity,
+          match_id: match.id,
           match_type: match.match_type as 'auto' | 'manual',
           match_score: match.match_score,
         })
@@ -326,6 +341,11 @@ export class WorkoutMatchService {
   /**
    * Get unmatched activities for a date range
    * Note: Uses type assertion because workout_activity_matches table types are not yet generated
+   *
+   * The date range is expanded by 1 day on each end to account for timezone differences.
+   * Activities are stored with UTC timestamps, but workout dates are local dates.
+   * For example, an activity done at 7am local on 2025-12-29 in UTC+11 has UTC timestamp
+   * 2025-12-28T20:00:00Z. Without expansion, a query for 2025-12-29 would miss it.
    */
   async getUnmatchedActivities(
     startDate: string,
@@ -341,13 +361,19 @@ export class WorkoutMatchService {
       moving_time: number | null
     }>
   > {
-    // Get all activities in date range
+    // Expand date range by 1 day on each end to account for timezone differences
+    const expandedStart = parseLocalDate(startDate)
+    expandedStart.setDate(expandedStart.getDate() - 1)
+    const expandedEnd = parseLocalDate(endDate)
+    expandedEnd.setDate(expandedEnd.getDate() + 1)
+
+    // Get all activities in expanded date range
     const { data: activities, error: activitiesError } = await this.supabase
       .from('strava_activities')
       .select('id, strava_activity_id, name, type, start_date, tss, moving_time')
       .eq('user_id', this.userId)
-      .gte('start_date', startDate)
-      .lte('start_date', endDate)
+      .gte('start_date', formatDateString(expandedStart))
+      .lte('start_date', formatDateString(expandedEnd) + 'T23:59:59Z')
       .order('start_date', { ascending: true })
 
     if (activitiesError) {
@@ -417,8 +443,8 @@ export class WorkoutMatchService {
         continue // Already matched
       }
 
-      // Find activities on the same date
-      const sameDay = activities.filter((a) => a.start_date.split('T')[0] === workout.date)
+      // Find activities on the same date (comparing local dates)
+      const sameDay = activities.filter((a) => getLocalDateFromTimestamp(a.start_date) === workout.date)
 
       if (sameDay.length === 0) {
         continue

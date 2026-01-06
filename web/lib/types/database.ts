@@ -24,6 +24,7 @@ export type Database = {
           goals: Json | null
           id: string
           last_name: string
+          lthr: number | null
           max_hr: number | null
           preferred_language: string | null
           resting_hr: number | null
@@ -42,6 +43,7 @@ export type Database = {
           goals?: Json | null
           id?: string
           last_name: string
+          lthr?: number | null
           max_hr?: number | null
           preferred_language?: string | null
           resting_hr?: number | null
@@ -60,6 +62,7 @@ export type Database = {
           goals?: Json | null
           id?: string
           last_name?: string
+          lthr?: number | null
           max_hr?: number | null
           preferred_language?: string | null
           resting_hr?: number | null
@@ -776,6 +779,154 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "wizard_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "admin_user_view"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      workout_activity_matches: {
+        Row: {
+          id: string
+          user_id: string
+          plan_instance_id: string
+          workout_date: string
+          workout_index: number
+          strava_activity_id: string
+          match_type: string
+          match_score: number | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          plan_instance_id: string
+          workout_date: string
+          workout_index?: number
+          strava_activity_id: string
+          match_type: string
+          match_score?: number | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          plan_instance_id?: string
+          workout_date?: string
+          workout_index?: number
+          strava_activity_id?: string
+          match_type?: string
+          match_score?: number | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_activity_matches_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "admin_user_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "workout_activity_matches_plan_instance_id_fkey"
+            columns: ["plan_instance_id"]
+            isOneToOne: false
+            referencedRelation: "plan_instances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workout_activity_matches_strava_activity_id_fkey"
+            columns: ["strava_activity_id"]
+            isOneToOne: true
+            referencedRelation: "strava_activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workout_compliance_analyses: {
+        Row: {
+          id: string
+          match_id: string
+          user_id: string
+          overall_score: number
+          overall_grade: string
+          overall_summary: string
+          segments_completed: number
+          segments_skipped: number
+          segments_total: number
+          analysis_data: Json
+          athlete_ftp: number
+          athlete_lthr: number | null
+          algorithm_version: string
+          power_data_quality: string
+          coach_feedback: Json | null
+          coach_model: string | null
+          coach_prompt_version: string | null
+          coach_generated_at: string | null
+          analyzed_at: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          match_id: string
+          user_id: string
+          overall_score: number
+          overall_grade: string
+          overall_summary: string
+          segments_completed: number
+          segments_skipped: number
+          segments_total: number
+          analysis_data: Json
+          athlete_ftp: number
+          athlete_lthr?: number | null
+          algorithm_version: string
+          power_data_quality: string
+          coach_feedback?: Json | null
+          coach_model?: string | null
+          coach_prompt_version?: string | null
+          coach_generated_at?: string | null
+          analyzed_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          match_id?: string
+          user_id?: string
+          overall_score?: number
+          overall_grade?: string
+          overall_summary?: string
+          segments_completed?: number
+          segments_skipped?: number
+          segments_total?: number
+          analysis_data?: Json
+          athlete_ftp?: number
+          athlete_lthr?: number | null
+          algorithm_version?: string
+          power_data_quality?: string
+          coach_feedback?: Json | null
+          coach_model?: string | null
+          coach_prompt_version?: string | null
+          coach_generated_at?: string | null
+          analyzed_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_compliance_analyses_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: true
+            referencedRelation: "workout_activity_matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workout_compliance_analyses_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "admin_user_view"

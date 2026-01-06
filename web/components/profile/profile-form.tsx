@@ -336,6 +336,32 @@ export function ProfileForm({ initialData, onSave }: ProfileFormProps) {
                   )}
                 />
               </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="lthr"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{tStep2('lthr')}</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder={tStep2('lthrPlaceholder')}
+                          {...field}
+                          value={field.value || ''}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            field.onChange(value === '' ? null : parseInt(value, 10))
+                          }}
+                        />
+                      </FormControl>
+                      <FormDescription>{tStep2('lthrDescription')}</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </CardContent>
           </Card>
 

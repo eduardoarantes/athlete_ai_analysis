@@ -1,0 +1,39 @@
+Analyze this workout compliance data and provide coaching feedback.
+
+## Workout Context
+
+**Workout Name:** {workout_name}
+**Workout Type:** {workout_type}
+**Workout Date:** {workout_date}
+**Workout Description:** {workout_description}
+
+**Athlete FTP:** {athlete_ftp}W
+**Athlete LTHR:** {athlete_lthr}
+
+## Overall Compliance Results
+
+**Score:** {overall_score}/100
+**Grade:** {overall_grade}
+**Summary:** {overall_summary}
+
+**Segments:** {segments_completed} completed, {segments_skipped} skipped, {segments_total} total
+
+## Power Data Quality
+
+**Quality:** {power_data_quality}
+**Power Stream Length:** {power_stream_length} seconds
+
+## Segment-by-Segment Analysis
+
+{segment_details}
+
+---
+
+Based on this compliance analysis, provide your coaching feedback as a JSON object with:
+- summary (2-3 sentences)
+- strengths (2-4 specific items with data references)
+- improvements (1-3 specific items)
+- action_items (2-3 actionable recommendations)
+- segment_notes (0-3 items for segments needing attention)
+
+Return ONLY the JSON object, no additional text.

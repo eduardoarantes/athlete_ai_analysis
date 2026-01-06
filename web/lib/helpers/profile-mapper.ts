@@ -19,6 +19,7 @@ export function mapProfileUpdates(updates: {
   ftp?: number
   maxHr?: number
   restingHr?: number
+  lthr?: number | null
   weightKg?: number
   goals?: string[]
   preferredLanguage?: string
@@ -34,6 +35,7 @@ export function mapProfileUpdates(updates: {
   if (updates.ftp !== undefined) updateData.ftp = updates.ftp
   if (updates.maxHr !== undefined) updateData.max_hr = updates.maxHr
   if (updates.restingHr !== undefined) updateData.resting_hr = updates.restingHr
+  if (updates.lthr !== undefined) updateData.lthr = updates.lthr
   if (updates.weightKg !== undefined) updateData.weight_kg = updates.weightKg
   if (updates.goals !== undefined) updateData.goals = updates.goals
   if (updates.preferredLanguage !== undefined)
