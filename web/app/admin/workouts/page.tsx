@@ -272,7 +272,6 @@ export default function AdminWorkoutsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>ID</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Intensity</TableHead>
@@ -284,7 +283,7 @@ export default function AdminWorkoutsPage() {
               <TableBody>
                 {paginatedWorkouts.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                       No workouts found
                     </TableCell>
                   </TableRow>
@@ -295,7 +294,6 @@ export default function AdminWorkoutsPage() {
                       className="cursor-pointer hover:bg-muted/50"
                       onClick={() => setSelectedWorkout(workout)}
                     >
-                      <TableCell className="font-mono text-xs">{workout.id}</TableCell>
                       <TableCell className="font-medium">{workout.name}</TableCell>
                       <TableCell>
                         <Badge className={WORKOUT_TYPE_COLORS[workout.type]} variant="outline">
