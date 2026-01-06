@@ -9,7 +9,7 @@
   ],
   "workouts": [
     {
-      "id": "RVrReapuzt",
+      "id": "cardio_drift_test",
       "name": "Cardio Drift Test",
       "detailed_description": "You need a power meter for this test.\n\nRide for one hour at ~70% of your threshold.\n\nMinimise irregular caffeine consumption (if you usually have a coffee before your ride, keep that the same) and keep everything else in your daily routine as normal as possible (time of day for ride, food etc). Stay hydrated and cool with a fan if needed during the test to ensure no external factors influence your heart rate.\n\nEnsure that you maintain the same cadence throughout (whatever is most comfortable for you) the test so we can directly measure what your heart rate is doing without influence from changing cadence.\n\nCan you please let us know what the environmental conditions are at the time of the test? Eg- Summer, 30 degrees Celsius, 90% humidity.",
       "type": "threshold",
@@ -57,7 +57,7 @@
       "source_format": "json"
     },
     {
-      "id": "R8KYR4Whpn",
+      "id": "base_fitness_60_65_threshold",
       "name": "Base Fitness @ 60-65% Threshold",
       "detailed_description": "Riding on the trainer or outside\u00a0in low to mid Zone 2 at a comfortable cadence.\n\nThis is slightly easier than a typical zone 2 ride at 60-65% threshold. The aim here to reduce the pressure on the legs and bring the heart rate into the desired zone to see what response your body has.\n\nRide at a comfortable cadence in the 80-100rpm range where possible.",
       "type": "threshold",
@@ -105,7 +105,7 @@
       "source_format": "json"
     },
     {
-      "id": "_mGszlLEZM",
+      "id": "1hr_base_fitness_60_65_threshold",
       "name": "1hr Base Fitness @ 60-65% Threshold",
       "detailed_description": "Riding on the trainer or outside\u00a0in low to mid Zone 2 at a comfortable cadence.\n\nThis is slightly easier than a typical zone 2 ride at 60-65% threshold. The aim here to reduce the pressure on the legs and bring the heart rate into the desired zone to see what response your body has.\n\nRide at a comfortable cadence in the 80-100rpm range where possible.",
       "type": "threshold",
@@ -153,7 +153,7 @@
       "source_format": "json"
     },
     {
-      "id": "84_BwfWWG3",
+      "id": "3x12_tempo",
       "name": "3x12' Tempo",
       "detailed_description": "Aim here is to target time in zone 3 and increase your muscular endurance with sustained pressure on the pedals at a moderate intensity.\n\nThese shouldn't be too hard but should start to hurt towards the end of the last efforts.\n\nChange position from hoods to drops throughout these efforts to engage different muscle groups.\n\nStick to prescribed power targets as we are targeting a specific HR and power zone for aerobic capacity.",
       "type": "tempo",
@@ -211,7 +211,7 @@
       "source_format": "json"
     },
     {
-      "id": "mCWHihFeHJ",
+      "id": "3x15_tempo",
       "name": "3x15' Tempo",
       "detailed_description": "Aim here is to target time in zone 3 and increase your muscular endurance with sustained pressure on the pedals at a moderate intensity.\n\nThese shouldn't be too hard but should start to hurt towards the end of the last efforts.\n\nChange position from hoods to drops throughout these efforts to engage different muscle groups.\n\nStick to prescribed power targets as we are targeting a specific HR and power zone for aerobic capacity.",
       "type": "tempo",
@@ -269,7 +269,7 @@
       "source_format": "json"
     },
     {
-      "id": "g9hgxpDgQA",
+      "id": "active_recovery",
       "name": "Active Recovery",
       "detailed_description": "Zone 1 power\nCadence 85+rpm\nThis goal of this session is to aid your recovery on the bike by getting blood flow to your working muscles.",
       "type": "recovery",
@@ -306,7 +306,7 @@
       "source_format": "json"
     },
     {
-      "id": "2b5XhWqy5E",
+      "id": "base_fitness_60_65_threshold_2",
       "name": "Base Fitness @ 60-65% Threshold",
       "detailed_description": "Riding on the trainer or outside\u00a0in low to mid Zone 2 at a comfortable cadence.\n\nThis is slightly easier than a typical zone 2 ride at 60-65% threshold. The aim here to reduce the pressure on the legs and bring the heart rate into the desired zone to see what response your body has.\n\nRide at a comfortable cadence in the 80-100rpm range where possible.",
       "type": "threshold",
@@ -354,7 +354,7 @@
       "source_format": "json"
     },
     {
-      "id": "l-4yEPG2_3",
+      "id": "35hr_base_fitness",
       "name": "3.5hr Base Fitness",
       "detailed_description": "Riding on the trainer or outside\u00a0in Zone 2 at a comfortable cadence.\n\nThe aim of this ride is to improve your efficiency at a low aerobic power, build mitochondria and increase your ability to utilise fat as a fuel source. Listen to your body and watch your HR to remain in zone 2.\n\nAvoid going above zone 2 at all times and ride with constant pressure on the pedals on both up and down hills.\n\nIf you want to improve your efficiency in a more aerodynamic position spend some time in the drops/ aero position so your muscles can develop strength in that position.\n\nRide at a comfortable cadence in the 80-100rpm range where possible.",
       "type": "endurance",
@@ -402,7 +402,7 @@
       "source_format": "json"
     },
     {
-      "id": "EolswA2guC",
+      "id": "zwift_new_workout_in_watopia",
       "name": "Zwift - New Workout in Watopia",
       "detailed_description": "",
       "type": "mixed",
@@ -455,7 +455,7 @@
       "source_format": "json"
     },
     {
-      "id": "0DWLI0Q_yd",
+      "id": "15hr_base_fitness",
       "name": "1.5hr Base Fitness",
       "detailed_description": "Riding on the trainer or outside\u00a0in Zone 2 at a comfortable cadence.\n\nThe aim of this ride is to improve your efficiency at a low aerobic power, build mitochondria and increase your ability to utilise fat as a fuel source. Listen to your body and watch your HR to remain in zone 2.\n\nAvoid going above zone 2 at all times and ride with constant pressure on the pedals on both up and down hills.\n\nIf you want to improve your efficiency in a more aerodynamic position spend some time in the drops/ aero position so your muscles can develop strength in that position.\n\nRide at a comfortable cadence in the 80-100rpm range where possible.",
       "type": "endurance",
@@ -503,7 +503,7 @@
       "source_format": "json"
     },
     {
-      "id": "k7BoAmaWBS",
+      "id": "ftp_progression_2_5x7",
       "name": "FTP Progression 2 5x7",
       "detailed_description": "FTP progression #2.\nGet stuck in and enjoy!!",
       "type": "mixed",
@@ -583,7 +583,7 @@
       "source_format": "json"
     },
     {
-      "id": "WQWmiYxbRa",
+      "id": "ftp_over_unders_3_sets_8x1",
       "name": "FTP Over Unders: 3 sets 8x1",
       "detailed_description": "FTP OVER-UNDERS: 3 SETS 8 X 1\n\nIf you want to complete this session on the road, please find a quite road either on the flat or a consistent hill approximately 8 minutes in length and follow the workout description below.",
       "type": "mixed",
@@ -748,7 +748,7 @@
       "source_format": "json"
     },
     {
-      "id": "0CkcUoLbfm",
+      "id": "general_endurance",
       "name": "General Endurance",
       "detailed_description": "The aim of this ride is to work on your aerobic endurance so please try to stay in zone 2 as much as possible and zone 3 when you're climbing if you're feeling good.\n\nYou can do this ride solo, in a group or a combination of both. Just focus on enjoying the ride and not emptying the tank.\n\nYou should be aiming to consume 40-60grams carbs for rides up to 2hrs OR 60-80g carbs for >2.5hrs.",
       "type": "endurance",
@@ -782,7 +782,7 @@
       "source_format": "json"
     },
     {
-      "id": "l9LwRr931J",
+      "id": "zone_2_with_cadence_variation",
       "name": "Zone 2 with Cadence Variation",
       "detailed_description": "Base training session aiming for zone 2 power range but adding in some cadence variations and power changes to keep things engaging and neurally challenging as well.",
       "type": "endurance",
@@ -841,7 +841,7 @@
       "source_format": "json"
     },
     {
-      "id": "GoneJ-oasb",
+      "id": "4hr_base_fitness",
       "name": "4hr Base Fitness",
       "detailed_description": "Riding on the trainer or outside\u00a0in Zone 2 at a comfortable cadence.\n\nThe aim of this ride is to improve your efficiency at a low aerobic power, build mitochondria and increase your ability to utilise fat as a fuel source. Listen to your body and watch your HR to remain in zone 2.\n\nAvoid going above zone 2 at all times and ride with constant pressure on the pedals on both up and down hills.\n\nIf you want to improve your efficiency in a more aerodynamic position spend some time in the drops/ aero position so your muscles can develop strength in that position.\n\nRide at a comfortable cadence in the 80-100rpm range where possible.",
       "type": "endurance",
@@ -889,7 +889,7 @@
       "source_format": "json"
     },
     {
-      "id": "bSHgQLUvBB",
+      "id": "tempo_repeats",
       "name": "Tempo Repeats",
       "detailed_description": "Aim here is to target time in zone 3 and increase your muscular endurance with sustained pressure on the pedals at a moderate intensity.\n\nThese shouldn't be too hard but should start to hurt towards the end of the last efforts.\n\nChange position from hoods to drops throughout these efforts to engage different muscle groups.\n\nStick to prescribed power targets as we are targeting a specific HR and power zone for aerobic capacity.",
       "type": "tempo",
@@ -947,7 +947,7 @@
       "source_format": "json"
     },
     {
-      "id": "Hi_eprkbQG",
+      "id": "tempo_repeats_2",
       "name": "Tempo Repeats",
       "detailed_description": "Aim here is to target time in zone 3 and increase your muscular endurance with sustained pressure on the pedals at a moderate intensity.\n\nThese shouldn't be too hard but should start to hurt towards the end of the last efforts.\n\nChange position from hoods to drops throughout these efforts to engage different muscle groups.\n\nStick to prescribed power targets as we are targeting a specific HR and power zone for aerobic capacity.",
       "type": "tempo",
@@ -1005,7 +1005,7 @@
       "source_format": "json"
     },
     {
-      "id": "aIu67pB0ch",
+      "id": "the_benchmark_test",
       "name": "The Benchmark Test!",
       "detailed_description": "Find your favourite 3-12\u00a0minute effort/climb in your local area. We're going for a personal best today! If you can't think of anything in your local area, you have 2 other options:\n\n1- Find a segment on zwift that you want to substitute for outside. I.e. the Volcano KOM or Epic KOM.\n\n2- You can choose a certain time frame. I.e. 5min or 10min and just go as hard as you can for that period of time to get your best power for that time frame.\n\nYou're going to rip it as hard as you can go.\n\nBe careful not to go too hard out of the blocks!\n\nAlso, you may want to ride the climb at a lower intensity first, You can do your 'priming' efforts up the climb, roll down, and then off you go.\n\nPriming efforts will open the doors to your upper-end systems before you go all out. They include:\n\n3 X 1 min efforts between Zone 4 - Zone 5 with 1 min rest in-between. This is to be done before you rip it up the hill.\n\nGood luck.",
       "type": "mixed",
@@ -1077,7 +1077,7 @@
       "source_format": "json"
     },
     {
-      "id": "C2kCY0ykdB",
+      "id": "5min_strength_efforts_zone_3",
       "name": "5min Strength Efforts (Zone 3)",
       "detailed_description": "These sessions are to build muscular strength on the bike by increasing the amount of time your muscles are contracting each pedal stroke with a lower cadence (increased torque). By doing this, we aim to increase your force production throughout the pedal stroke.\n\nIt is okay to do these sessions as hill repeats where you coast/ free wheel a bit down the hill during your recovery period to start your next effort.\n\nIt is important if you are doing this session on the trainer or on flat road\u00a0to pedal at a high cadence (85-95rpm)\u00a0to flush your legs out during the recovery periods.\n\nIdeally this session is done on the ergo or on a hill with a steady gradient.\n\nIf completing on the ergo, you can make the warm up and cool down 10min.",
       "type": "recovery",
@@ -1139,7 +1139,7 @@
       "source_format": "json"
     },
     {
-      "id": "SLArVTlccR",
+      "id": "base_fitness_training_zone_two",
       "name": "Base Fitness Training (Zone Two)",
       "detailed_description": "Riding on the trainer or outside\u00a0in Zone 2 at a comfortable cadence for 1.5 hours with 5mins warm up\u00a0and a 10mins cooldown in Zone 1 at the end.\n\nIf you want to improve your efficiency in a more aerodynamic position spend some time in the drops. For example:\u00a05 mins on drops every 30mins.",
       "type": "endurance",
@@ -1187,7 +1187,7 @@
       "source_format": "json"
     },
     {
-      "id": "P8Q6UWW3PP",
+      "id": "sweet_spot_repeats",
       "name": "Sweet Spot Repeats",
       "detailed_description": "Efforts just below threshold.\n\nAt this percentage of FTP, you are at a physiological point where the lactate\u00a0clearance and utilisation is at a steady state. This type of training will improve your ability\u00a0to\u00a0clear accumulated lactate when necessary and improve your muscular endurance.\n\nIf you are aiming to improve your climbing, do these as repeats on a climb. If you want to improve your speed on the flat, do these on a flat road without interruptions.\n\nYou can also complete these workouts on the trainer as prescribed below.",
       "type": "sweet_spot",
@@ -1246,7 +1246,7 @@
       "source_format": "json"
     },
     {
-      "id": "I7CZ-hAlYs",
+      "id": "base_fitness_training_zone_two_2",
       "name": "Base Fitness Training (Zone Two)",
       "detailed_description": "Riding in Zone 2 for two hours at a comfortable cadence with 5mins warm-up and a 5min cooldown in Zone 1\n\nIf you want to improve your efficiency in a more aerodynamic position spend some time in the drops. For example:\u00a05 mins on drops every 30mins.",
       "type": "endurance",
@@ -1294,7 +1294,7 @@
       "source_format": "json"
     },
     {
-      "id": "uaL8NdRe3t",
+      "id": "4020s_5min",
       "name": "40/20s (5min)",
       "detailed_description": "Aim is to accumulate a decent amount of time in and above zone 5. You will get a short 20sec rest that allows your legs to recover but your heart rate won't drop too much and then you have to go again.\n\nThe first couple of sets should be done to target power. If you feel good, you can treat the 40sec effort as a max effort to really push your body to the limit.\n\nIf you do this session on the ergo, please don't use ERG mode as the lag in resistance can be difficult and you will also limit yourself in the power range given sometimes. You are better off doing this as a free ride in level mode and producing the power yourself.\n\nEnsure your cadence doesn't drop too much in your recovery period. Recovery cadence should be >85rpm when possible.",
       "type": "vo2max",
@@ -1438,7 +1438,7 @@
       "source_format": "json"
     },
     {
-      "id": "-KBNGa6SKK",
+      "id": "vo2_repeats_5x3",
       "name": "VO2 Repeats 5x3'",
       "detailed_description": "These sessions work on your top end power.\nVO2/ Zone 5 work can be really difficult but it is all about getting the most out of your efforts and recovery well before each effort!\nAim for the bottom-mid range in the first couple of efforts and if you are feeling good you can push the power a bit higher and try to finish the last effort by emptying the tank. It is okay to go above power zone prescribed in these sessions as this is about getting everything out of yourself to prepare you for those testing sessions and hard races!",
       "type": "vo2max",
@@ -1513,7 +1513,7 @@
       "source_format": "json"
     },
     {
-      "id": "mEZYwd_0bD",
+      "id": "5min_strength_efforts_zone_3_2",
       "name": "5min Strength Efforts (Zone 3)",
       "detailed_description": "These sessions are to build muscular strength on the bike by increasing the amount of time your muscles are contracting each pedal stroke with a lower cadence (increased torque). By doing this, we aim to increase your force production throughout the pedal stroke.\n\nIt is okay to do these sessions as hill repeats where you coast/ free wheel a bit down the hill during your recovery period to start your next effort.\n\nIt is important if you are doing this session on the trainer or on flat road\u00a0to pedal at a high cadence (85-95rpm)\u00a0to flush your legs out during the recovery periods.\n\nIdeally this session is done on the ergo or on a hill with a steady gradient.\n\nIf completing on the ergo, you can make the warm up and cool down 10min.",
       "type": "recovery",
@@ -1575,7 +1575,7 @@
       "source_format": "json"
     },
     {
-      "id": "XRfjAlFvYa",
+      "id": "5min_strength_efforts",
       "name": "5min Strength Efforts",
       "detailed_description": "These sessions are to build muscular strength on the bike by increasing the amount of time your muscles are contracting each pedal stroke with a lower cadence (increased torque). By doing this, we aim to increase your force production throughout the pedal stroke.\n\nIt is okay to do these sessions as hill repeats where you coast/ free wheel a bit down the hill during your recovery period to start your next effort.\n\nIt is important if you are doing this session on the trainer or on flat road\u00a0to pedal at a high cadence (85-95rpm)\u00a0to flush your legs out during the recovery periods.\n\nIdeally this session is done on the ergo or on a hill with a steady gradient.\n\nIf completing on the ergo, you can make the warm up and cool down 10min.",
       "type": "recovery",
@@ -1637,7 +1637,7 @@
       "source_format": "json"
     },
     {
-      "id": "hSfFEj6U4Y",
+      "id": "15hr_base_fitness_60_65_threshold",
       "name": "1.5hr Base Fitness @ 60-65% Threshold",
       "detailed_description": "Riding on the trainer or outside\u00a0in low to mid Zone 2 at a comfortable cadence.\n\nThis is slightly easier than a typical zone 2 ride at 60-65% threshold. The aim here to reduce the pressure on the legs and bring the heart rate into the desired zone to see what response your body has.\n\nThe aim of this ride is to improve your efficiency at a low aerobic power, build mitochondria and increase your ability to utilise fat as a fuel source. Listen to your body and watch your HR to remain in zone 2.\n\nAvoid going above zone 2 at all times and ride with constant pressure on the pedals on both up and down hills.\n\nIf you want to improve your efficiency in a more aerodynamic position spend some time in the drops/ aero position so your muscles can develop strength in that position.\n\nRide at a comfortable cadence in the 80-100rpm range where possible.",
       "type": "threshold",
@@ -1685,7 +1685,7 @@
       "source_format": "json"
     },
     {
-      "id": "PmhHH8qONT",
+      "id": "threshold",
       "name": "Threshold",
       "detailed_description": "This is a series of threshold efforts.\n\nThe focus is on building the time spent in that threshold zone, so you'll see they initially start quite short to get you used to training in this zone, but the time extends as the weeks go on. We are focusing on increasing the time at this stage, not the intensity. This will force your body to work aerobically and build the metabolic machinery that results in a higher threshold, while also increasing your Time to Exhaustion (TTE) which is a key determinant of endurance performance.\n\nFocus on keeping a comfortable cadence. You can do these efforts on hills or flats if you're riding outside, but just make sure the recovery intervals are as set out below. It may be easier to get these done indoors, on Zwift etc.",
       "type": "threshold",
@@ -1744,7 +1744,7 @@
       "source_format": "json"
     },
     {
-      "id": "YP4oEdSUi7",
+      "id": "10min_strength_efforts",
       "name": "10min Strength Efforts",
       "detailed_description": "These sessions are to build muscular strength on the bike by increasing the amount of time your muscles are contracting each pedal stroke with a lower cadence. My doing this, we aim to increase your ability to push higher power and should translate to racing when you operate at a higher cadence.\n\nIt is okay to do these sessions as hill repeats where you coast/ free wheel a bit down the hill during your recovery period to start your next effort.\n\nIt is important if you are doing this session on the trainer or on flat road\u00a0to pedal at a high cadence (85-95rpm)\u00a0to flush your legs out during the recovery periods.\n\nIdeally this session is done on the ergo or on a hill with a steady gradient.\n\nIf completing on the ergo, you can make the warm up and cool down 10min.",
       "type": "recovery",
@@ -1822,7 +1822,7 @@
       "source_format": "json"
     },
     {
-      "id": "Q-RX85KwbZ",
+      "id": "threshold_2",
       "name": "Threshold",
       "detailed_description": "This is a series of threshold efforts.\n\nThe focus is on building the time spent in that threshold zone, so you'll see they initially start quite short to get you used to training in this zone, but the time extends as the weeks go on. We are focusing on increasing the time at this stage, not the intensity. This will force your body to work aerobically and build the metabolic machinery that results in a higher threshold, while also increasing your Time to Exhaustion (TTE) which is a key determinant of endurance performance.\n\nFocus on keeping a comfortable cadence. You can do these efforts on hills or flats if you're riding outside, but just make sure the recovery intervals are as set out below. It may be easier to get these done indoors, on Zwift etc.",
       "type": "threshold",
@@ -1881,7 +1881,7 @@
       "source_format": "json"
     },
     {
-      "id": "jbr1FrF0Oq",
+      "id": "base_fitness_training_zone_two_3",
       "name": "Base Fitness Training (Zone Two)",
       "detailed_description": "Riding on the trainer or outside\u00a0in Zone 2 at a comfortable cadence\n\nIf you want to improve your efficiency in a more aerodynamic position spend some time in the drops. For example:\u00a05 mins on drops every 30mins.",
       "type": "endurance",
@@ -1929,7 +1929,7 @@
       "source_format": "json"
     },
     {
-      "id": "viofn6PdMi",
+      "id": "2x20_tempo",
       "name": "2x20' Tempo",
       "detailed_description": "Aim here is to target time in zone 3 and increase your muscular endurance with sustained pressure on the pedals at a moderate intensity.\n\nThese shouldn't be too hard but should start to hurt towards the end of the last efforts.\n\nChange position from hoods to drops throughout these efforts to engage different muscle groups.\n\nStick to prescribed power targets as we are targeting a specific HR and power zone for aerobic capacity.",
       "type": "tempo",
@@ -1987,7 +1987,7 @@
       "source_format": "json"
     },
     {
-      "id": "IIr3dQHEVi",
+      "id": "tempo_with_spikes",
       "name": "Tempo with spikes",
       "detailed_description": "Steady state efforts with a spikes in power to challenge your steady state system.",
       "type": "tempo",
@@ -2090,7 +2090,7 @@
       "source_format": "json"
     },
     {
-      "id": "hNgEwVnI6e",
+      "id": "3030s_3x10",
       "name": "30/30s (3x10')",
       "detailed_description": "These short hard efforts with short recovery are focused on your ability to repeat an effort and recover in a short period of time.\n\nThese should not be too difficult to begin with but will become harder towards the end and the longer the complete effort is.\n\nAim is to do these seated as much as possible. Once comfortable with power and you understand the demands of this session, you can push above the limits\u00a0of the power suggestion IF you are feeling good.",
       "type": "vo2max",
@@ -2195,7 +2195,7 @@
       "source_format": "json"
     },
     {
-      "id": "78wtp8KIIS",
+      "id": "tempo_with_spikes_2",
       "name": "Tempo with spikes",
       "detailed_description": "Steady state efforts with a spikes in power to challenge your steady state system.",
       "type": "tempo",
@@ -2298,7 +2298,7 @@
       "source_format": "json"
     },
     {
-      "id": "76m8P3pLYf",
+      "id": "4020s_5min_2",
       "name": "40/20s (5min)",
       "detailed_description": "Aim is to accumulate a decent amount of time in and above zone 5. You will get a short 20sec rest that allows your legs to recover but your heart rate won't drop too much and then you have to go again.\n\nThe first couple of sets should be done to target power. If you feel good, you can treat the 40sec effort as a max effort to really push your body to the limit.\n\nIf you do this session on the ergo, please don't use ERG mode as the lag in resistance can be difficult and you will also limit yourself in the power range given sometimes. You are better off doing this as a free ride in level mode and producing the power yourself.\n\nEnsure your cadence doesn't drop too much in your recovery period. Recovery cadence should be >85rpm when possible.",
       "type": "vo2max",
@@ -2442,7 +2442,7 @@
       "source_format": "json"
     },
     {
-      "id": "rzTJX48jZ-",
+      "id": "12060s",
       "name": "120/60s",
       "detailed_description": "Aim is to accumulate a decent amount of time just above your Threshold.\n\nStick to the target power for these efforts. You can lift 10-20w but try to stay close as they will creep up on you in the last couple of repeats.\n\nIf you do this session on the ergo, please don't use ERG mode as the lag in resistance can be difficult and you will also limit yourself in the power range given sometimes. You are better off doing this as a free ride in level mode and producing the power yourself.\n\nEnsure your cadence doesn't drop too much in your recovery period. Recovery cadence should be >85rpm when possible.",
       "type": "threshold",
@@ -2524,7 +2524,7 @@
       "source_format": "json"
     },
     {
-      "id": "_o9B8OJGfz",
+      "id": "activations",
       "name": "Activations",
       "detailed_description": "This is a session used to prepare your body for the next days activity. We use this to prime your muscles so that they are ready to perform and this is a proven way to maximise your performance.\n\nThe warm up section can be longer than prescribed below to find a safe road or if you feel your legs need more time.",
       "type": "mixed",
@@ -2616,7 +2616,7 @@
       "source_format": "json"
     },
     {
-      "id": "5U9N-nwo0A",
+      "id": "threshold_test_5_20",
       "name": "Threshold Test (5' + 20')",
       "detailed_description": "This is your typical 20min test with the all out\u00a05min effort all out effort prior to your 20min FTP test. The reason you do the 5min all out effort is to remove the anaerobic contribution to your 'aerobic threshold'. You will have plenty of time to recover after the 5min effort before doing your 20min effort. We will take 95% of your average power across the 20minutes as your FTP.\n\nDo this test either on a hill, a flat consistent road with no interruptions\u00a0or on a flat criterium track.\n\nThe best way to approach this test is to have a target in mind so that you don't go out too hard. You want to manage your effort well at the start so you can maintain the right power. You should aim for similar to your previous best to begin with or even slightly higher and then once you know you are capable of more and feel strong, lift 10-20w and hold on for as long as you can. Don't worry if you power drops off, just keep pushing as hard as you can. If you feel like you have energy left in the final few minutes, empty the tank.\n\nYou should finish this test completely empty, so don't leave anything on the road!!\n\nGood luck and give it your all!",
       "type": "threshold",
@@ -2696,7 +2696,7 @@
       "source_format": "json"
     },
     {
-      "id": "BNL1DITb1-",
+      "id": "the_benchmark_test_2",
       "name": "The Benchmark Test!",
       "detailed_description": "Find your favourite 3-12\u00a0minute effort/climb in your local area. We're going for a personal best today! If you can't think of anything in your local area, you have 2 other options:\n\n1- Find a segment on zwift that you want to substitute for outside. I.e. the Volcano KOM or Epic KOM.\n\n2- You can choose a certain time frame. I.e. 5min or 10min and just go as hard as you can for that period of time to get your best power for that time frame.\n\nYou're going to rip it as hard as you can go.\n\nBe careful not to go too hard out of the blocks!\n\nAlso, you may want to ride the climb at a lower intensity first, You can do your 'priming' efforts up the climb, roll down, and then off you go.\n\nPriming efforts will open the doors to your upper-end systems before you go all out. They include:\n\n3 X 1 min efforts between Zone 4 - Zone 5 with 1 min rest in-between. This is to be done before you rip it up the hill.\n\nGood luck.",
       "type": "mixed",
@@ -2782,7 +2782,7 @@
       "source_format": "json"
     },
     {
-      "id": "1mBgIPQOb4",
+      "id": "tempo_with_spikes_3",
       "name": "Tempo with spikes",
       "detailed_description": "Steady state efforts with a spikes in power to challenge your steady state system.",
       "type": "tempo",
@@ -2885,7 +2885,7 @@
       "source_format": "json"
     },
     {
-      "id": "_gat8S0JsS",
+      "id": "sub_threshold_efforts",
       "name": "Sub Threshold Efforts",
       "detailed_description": "These longer bike sessions are mostly done at an easy/steady Z2 effort, but there is a main set of long efforts at just below your threshold pace. These will help increase your threshold power without leaving you feeling excessively tired afterwards.\n\nWarm Up:\n20 mins in Z2.\n\nMain Set:\n4 x (10 mins in upper Z3 + 5 min recoveries in Z2).\n\nWarm Down:\n10 mins in low Z2.",
       "type": "threshold",
@@ -2944,7 +2944,7 @@
       "source_format": "json"
     },
     {
-      "id": "mye7_ROPtk",
+      "id": "sub_threshold_low_cadence_efforts",
       "name": "Sub Threshold, Low Cadence Efforts.",
       "detailed_description": "Think of this like a bike-specific gym strength workout. It will increase cycling related leg-strength which will help you get more power out of each pedal stroke.\n\nWarm Up:\n10 mins in Z2,\n5 x (15 secs in upper Z3 + 45 secs in low Z2).\n\nMain Set:\n3 x (10 mins in upper Z3 at 60-70 RPM + 2 min recoveries in low Z2 at 80-100 RPM).\n\nWarm Down:\n5 mins in low Z2.",
       "type": "threshold",
@@ -3019,7 +3019,7 @@
       "source_format": "json"
     },
     {
-      "id": "lifTwRGUFJ",
+      "id": "optional_aerobic_endurance_bike",
       "name": "Aerobic Endurance Bike",
       "detailed_description": "Warm Up:\n5 mins in Z2,\n5 x (20 secs in Z3 + 40 secs in low Z2).\n\nMain Set:\n5 x (5 mins at upper Z2 + 30 sec recoveries in low Z2).\n\nWarm Down:\n5 mins in low Z2.",
       "type": "endurance",
@@ -3094,7 +3094,7 @@
       "source_format": "json"
     },
     {
-      "id": "xXNTddsxnh",
+      "id": "fitness_test_ftp_and_threshold_hr_50_mins",
       "name": "Fitness Test: FTP and Threshold HR (50 mins)",
       "detailed_description": "Use the results from this test to calculate your thresholds and personalise your training.\nhttps://bit.ly/EnterBikeZones (article)\n\nWarm Up:\n15 mins in Z2,\n5 mins as (15 secs in Z4 + 45 secs easy in Z2).\n\nMain Set:\n20 mins maximal steady state time trial. Go as hard as you can sustain for 20 minutes.\n\nWarm Down:\n10 mins in Z2.\n\nYour Functional Threshold Power (FTP) is your average power for the 20-minute test multiplied by 95%.\n\nYour Bike Threshold Heart Rate is your average for the 20-minute test less 6 beats.",
       "type": "threshold",
@@ -3160,7 +3160,7 @@
       "source_format": "json"
     },
     {
-      "id": "1qNVeYOPMI",
+      "id": "map_efforts",
       "name": "M.A.P Efforts",
       "detailed_description": "M.A.P stands for Maximal Aerobic Power. It refers to the power output you can ride while at your maximal rate of oxygen consumption. These workouts include efforts that are at or just below your M.A.P.\n\nWarm Up:\n12 mins in Z2,\n5 x (10 secs in Z5 + 50 secs in low Z2),\n3 mins in Z2.\n\nMain Set:\n3 x (5 mins in Z5 + 4 min recoveries in low Z2).\n\nWarm Down:\n10 mins in low Z2.",
       "type": "endurance",
@@ -3242,7 +3242,7 @@
       "source_format": "json"
     },
     {
-      "id": "v2jkfJi2Qe",
+      "id": "sub_threshold_efforts_2",
       "name": "Sub Threshold Efforts",
       "detailed_description": "Warm Up:\n15 mins in Z2.\n\nMain Set:\n3 x (20 mins in upper Z3 + 5 min recoveries in Z2).\n\nWarm Down:\n10 mins in low Z2.",
       "type": "threshold",
@@ -3301,7 +3301,7 @@
       "source_format": "json"
     },
     {
-      "id": "OW0xbY-fUU",
+      "id": "sub_threshold_efforts_3",
       "name": "Sub Threshold Efforts",
       "detailed_description": "Warm Up:\n22\u00a0mins in Z2.\n\nMain Set:\n6 x (10 mins in upper Z3 + 3 min recoveries in Z2).\n\nWarm Down:\n10 mins in low Z2.",
       "type": "threshold",
@@ -3360,7 +3360,7 @@
       "source_format": "json"
     },
     {
-      "id": "t1gigdPFaw",
+      "id": "sub_threshold_efforts_4",
       "name": "Sub Threshold Efforts",
       "detailed_description": "Warm Up:\n20 mins in Z2.\n\nMain Set:\n2 x (30 mins in upper Z3 + 10 min recoveries in Z2).\n\nWarm Down:\n5 mins in low Z2.",
       "type": "threshold",
@@ -3419,7 +3419,7 @@
       "source_format": "json"
     },
     {
-      "id": "zFHWyi1Twc",
+      "id": "map_efforts_2",
       "name": "M.A.P Efforts",
       "detailed_description": "Warm Up:\n12 mins in Z2,\n5 x (10 secs in Z5 + 50 secs in low Z2),\n3 mins in Z2.\n\nMain Set:\n7 x (2 mins in Z5 + 2 min recoveries in low Z2).\n\nWarm Down:\n10 mins in low Z2.",
       "type": "endurance",
@@ -3501,7 +3501,7 @@
       "source_format": "json"
     },
     {
-      "id": "zBksgZZktK",
+      "id": "above_and_below_threshold",
       "name": "Above and Below Threshold",
       "detailed_description": "Warm Up:\n15 mins in low Z2,\n5 x (10 secs in Z4 + 50 secs in low Z2).\n\nMain Set:\n10 x (1 min 30 secs in Z3 + 30 secs in Z5 + 1 min in low Z2).\n\nWarm Down:\n10 mins in low Z2.",
       "type": "threshold",
@@ -3576,7 +3576,7 @@
       "source_format": "json"
     },
     {
-      "id": "c5_zHP0mAb",
+      "id": "sub_threshold_efforts_5",
       "name": "Sub Threshold Efforts",
       "detailed_description": "Warm Up:\n20 mins in Z2.\n\nMain Set:\n4 x (20 mins in upper Z3 + 5 min recoveries in Z2).\n\nWarm Down:\n10 mins in low Z2.",
       "type": "threshold",
@@ -3635,7 +3635,7 @@
       "source_format": "json"
     },
     {
-      "id": "DE_f93Hhlw",
+      "id": "sub_threshold_efforts_6",
       "name": "Sub Threshold Efforts",
       "detailed_description": "Warm Up:\n20 mins in Z2.\n\nMain Set:\n3 x (25 mins in upper Z3 + 10 min recoveries in Z2).\n\nWarm Down:\n25 mins in low Z2.",
       "type": "threshold",
@@ -3694,7 +3694,7 @@
       "source_format": "json"
     },
     {
-      "id": "3QT_71jZer",
+      "id": "optional_aerobic_endurance_ride",
       "name": "Aerobic Endurance Ride",
       "detailed_description": "Warm Up:\n10 mins in Z2,\n5 x (30 secs in upper Z2 + 30 secs in low Z2).\n\nMain Set:\n10 mins in upper Z2 + 60 secs recovery in low Z2,\n12 mins in upper Z2 + 60 secs recovery in low Z2,\n14 mins in upper Z2.\n\nWarm Down:\n7 mins in low Z2.",
       "type": "endurance",
@@ -3788,7 +3788,7 @@
       "source_format": "json"
     },
     {
-      "id": "ZCcjOIQww7",
+      "id": "optional_aerobic_endurance_bike_2",
       "name": "Aerobic Endurance Bike",
       "detailed_description": "Warm Up:\n10 mins in Z2,\n5 x (20 secs in Z3 + 40 secs in low Z2).\n\nMain Set:\n3 x (8 mins in upper Z2 + 30 sec recoveries in low Z2),\n3 x (5 mins in upper Z2 + 30 sec recoveries in low Z2).\n\nWarm Down:\n5 mins in low Z2.",
       "type": "endurance",
@@ -3879,7 +3879,7 @@
       "source_format": "json"
     },
     {
-      "id": "5vOlRUA6OW",
+      "id": "optional_aerobic_endurance_ride_2",
       "name": "Aerobic Endurance Ride",
       "detailed_description": "Warm Up:\n10 mins in Z2,\n5 x (30 secs in upper Z2 + 30 secs in low Z2).\n\nMain Set:\n10 mins in upper Z2 + 60 secs recovery in low Z2,\n8 mins in upper Z2 + 60 secs recovery in low Z2,\n6 mins in upper Z2 + 60 secs recovery in low Z2,\n4 mins in upper Z2 + 60 secs recovery in low Z2,\n2 mins in upper Z2.\n\nWarm Down:\n10 mins in low Z2.",
       "type": "endurance",
@@ -4001,7 +4001,7 @@
       "source_format": "json"
     },
     {
-      "id": "4UkPEDucCO",
+      "id": "optional_aerobic_endurance_bike_3",
       "name": "Aerobic Endurance Bike",
       "detailed_description": "Warm Up:\n7 mins in Z2,\n5 x (30 secs in upper Z2 + 30 secs in low Z2).\n\nMain Set:\n16 mins in upper Z2 + 90 secs recovery in low Z2,\n14 mins in upper Z2 + 90 secs recovery in low Z2,\n12 mins in upper Z2.\n\nWarm Down:\n5 mins in low Z2.",
       "type": "endurance",
@@ -4099,7 +4099,7 @@
       "source_format": "json"
     },
     {
-      "id": "v-XP9Jl4SE",
+      "id": "optional_aerobic_endurance_bike_4",
       "name": "Aerobic Endurance Bike",
       "detailed_description": "Warm Up:\n10 mins in Z2,\n5 x (20 secs in Z3 + 40 secs in low Z2).\n\nMain Set:\n12 mins in upper Z2 + 60 secs recovery in low Z2,\n4 x (6 mins in upper Z2 + 30 sec recoveries in low Z2).\n\nWarm Down:\n5 mins in low Z2.",
       "type": "endurance",
@@ -4190,7 +4190,7 @@
       "source_format": "json"
     },
     {
-      "id": "VcYa899-u-",
+      "id": "above_and_below_threshold_2",
       "name": "Above and Below Threshold",
       "detailed_description": "Warm Up:\n15 mins in low Z2,\n5 x (10 secs in Z4 + 50 secs in low Z2).\n\nMain Set:\n10 x (2 mins in Z3 + 30 secs in Z5 + 1 min in low Z2).\n\nWarm Down:\n5 mins in low Z2.",
       "type": "threshold",
@@ -4265,7 +4265,7 @@
       "source_format": "json"
     },
     {
-      "id": "LSsyY0WzV4",
+      "id": "above_and_below_threshold_3",
       "name": "Above and Below Threshold",
       "detailed_description": "Warm Up:\n15 mins in low Z2,\n5 x (10 secs in Z4 + 50 secs in low Z2).\n\nMain Set:\n10 x (1 min in Z3 + 1 min in Z5 + 1 min in low Z2).\n\nWarm Down:\n10 mins in low Z2.",
       "type": "threshold",
@@ -4340,7 +4340,7 @@
       "source_format": "json"
     },
     {
-      "id": "4a1oWEjTnN",
+      "id": "threshold_efforts",
       "name": "Threshold Efforts",
       "detailed_description": "Warm Up:\n10 mins in low Z2,\n5 x (15 secs in Z4 + 45 secs in low Z2).\n\nMain Set:\n4 x (5 mins in upper Z4 + 3 min 30 sec recoveries in low Z2).\n\nWarm Down:\n5 mins in upper Z2,\n5 mins in low Z2.",
       "type": "threshold",
@@ -4422,7 +4422,7 @@
       "source_format": "json"
     },
     {
-      "id": "Z0609zekdg",
+      "id": "optional_aerobic_endurance_bike_5",
       "name": "Aerobic Endurance Bike",
       "detailed_description": "Warm Up:\n5 mins in Z2,\n5 x (20 secs in Z3 + 40 secs in low Z2).\n\nMain Set:\n12 x (3 mins at upper Z2 + 30 sec recoveries in low Z2).\n\nWarm Down:\n5 mins in low Z2.",
       "type": "endurance",
@@ -4497,7 +4497,7 @@
       "source_format": "json"
     },
     {
-      "id": "TnzTTWprtj",
+      "id": "threshold_efforts_2",
       "name": "Threshold Efforts",
       "detailed_description": "Warm Up:\n10 mins in low Z2,\n5 x (15 secs in Z4 + 45 secs in low Z2).\n\nMain Set:\n6 x (3 mins in upper Z4 + 2 min recoveries in low Z2).\n\nWarm Down:\n5 mins in upper Z2,\n5 mins in low Z2.",
       "type": "threshold",
@@ -4579,7 +4579,7 @@
       "source_format": "json"
     },
     {
-      "id": "iTRBzYIbes",
+      "id": "threshold_efforts_3",
       "name": "Threshold Efforts",
       "detailed_description": "Warm Up:\n10 mins in low Z2,\n5 x(15 secs in Z4 + 45 secs in low Z2).\n\nMain Set:\n5 x (2 mins in upper Z4 + 60 sec recoveries in low Z2),\n2 mins extra recovery in low Z2,\n5 x (2 mins in upper Z4 + 60 sec recoveries in low Z2).\n\nWarm Down:\n5 mins in upper Z2,\n10 mins in low Z2.",
       "type": "threshold",
@@ -4684,7 +4684,7 @@
       "source_format": "json"
     },
     {
-      "id": "kC2kEfzvxG",
+      "id": "threshold_efforts_4",
       "name": "Threshold Efforts",
       "detailed_description": "Warm Up:\n10 mins in low Z2,\n5 x (15 secs in Z4 + 45 secs in low Z2).\n\nMain Set:\n6 mins in upper Z4 + 3 mins recovery in low Z2,\n7 mins in upper Z4 + 3 mins recovery in low Z2,\n8 mins in upper Z4 + 3 mins recovery in low Z2.\n\nWarm Down:\n5 mins in upper Z2,\n10 mins in low Z2.",
       "type": "threshold",
@@ -4798,7 +4798,7 @@
       "source_format": "json"
     },
     {
-      "id": "eb9kpzzCHM",
+      "id": "map_efforts_3",
       "name": "M.A.P Efforts",
       "detailed_description": "Warm Up:\n10 mins in Z2,\n5 x (10 secs in Z5 + 50 secs in low Z2),\n3 mins in Z2.\n\nMain Set:\n6 x (3 mins in Z5 + 3 min recoveries in low Z2).\n\nWarm Down:\n7 mins in low Z2.",
       "type": "endurance",
@@ -4880,7 +4880,7 @@
       "source_format": "json"
     },
     {
-      "id": "oysT-GpiZp",
+      "id": "map_efforts_4",
       "name": "M.A.P Efforts",
       "detailed_description": "Warm Up:\n10 mins in Z2,\n5 x (10 secs in Z5 + 50 secs in low Z2),\n3 mins in Z2.\n\nMain Set:\n4 x (5 mins in Z5 + 4 min recoveries in low Z2).\n\nWarm Down:\n6 mins in low Z2.",
       "type": "endurance",
@@ -4962,7 +4962,7 @@
       "source_format": "json"
     },
     {
-      "id": "ZFPpGsxdDs",
+      "id": "map_efforts_5",
       "name": "M.A.P Efforts",
       "detailed_description": "Warm Up:\n10 mins in Z2,\n5 x (10 secs in Z5 + 50 secs in low Z2),\n3 mins in Z2.\n\nMain Set:\n9 x (2 mins in Z5 + 2 min recoveries in low Z2).\n\nWarm Down:\n8 mins in low Z2.",
       "type": "endurance",
@@ -5044,7 +5044,7 @@
       "source_format": "json"
     },
     {
-      "id": "xE9N92jekF",
+      "id": "map_efforts_6",
       "name": "M.A.P Efforts",
       "detailed_description": "Warm Up:\n10 mins in Z2,\n5 x (10 secs in Z5 + 50 secs in low Z2),\n3 mins in Z2.\n\nMain Set:\n2 x (3 mins in Z5 + 4 min recoveries in low Z2).\n\nWarm Down:\n8 mins in low Z2.",
       "type": "endurance",
@@ -5126,7 +5126,7 @@
       "source_format": "json"
     },
     {
-      "id": "8Y43CqM4RI",
+      "id": "threshold_efforts_5",
       "name": "Threshold Efforts",
       "detailed_description": "Warm Up:\n10 mins in low Z2,\n5 x (15 secs in Z4 + 45 secs in low Z2).\n\nMain Set:\n4 x (3 mins in upper Z4 + 90 sec recoveries in low Z2).\n2 mins 30 secs of extra recovery in low Z2,\n3 x (3 mins in upper Z4 + 90 sec recoveries in low Z2).\n\nWarm Down:\n5 mins in upper Z2,\n10 mins in low Z2.",
       "type": "threshold",
@@ -5231,7 +5231,7 @@
       "source_format": "json"
     },
     {
-      "id": "8SMU9vpjQi",
+      "id": "sub_threshold_effort",
       "name": "Sub Threshold Effort",
       "detailed_description": "Warm Up:\n20 mins in Z2.\n\nMain Set:\n20 mins in upper Z3,\n20 mins in Z2.\n\nWarm Down:\n20 mins in low Z2.",
       "type": "threshold",
@@ -5282,7 +5282,7 @@
       "source_format": "json"
     },
     {
-      "id": "D-BRjWrU8c",
+      "id": "map_efforts_7",
       "name": "M.A.P Efforts",
       "detailed_description": "Warm Up:\n10 mins in Z2,\n5 x (10 secs in Z5 + 50 secs in low Z2),\n3 mins in Z2.\n\nMain Set:\n3 x (2 mins in Z5 + 3 min recoveries in low Z2).\n\nWarm Down:\n6 mins in low Z2.",
       "type": "endurance",
@@ -5364,7 +5364,7 @@
       "source_format": "json"
     },
     {
-      "id": "AEWEYPM2sx",
+      "id": "threshold_efforts_6",
       "name": "Threshold Efforts",
       "detailed_description": "Warm Up:\n10 mins in low Z2,\n5 x (15 secs in Z4 + 45 secs in low Z2).\n\nMain Set:\n2 x (10 mins in upper Z4 + 5 min recoveries in low Z2).\n\nWarm Down:\n5 mins in upper Z2,\n10 mins in low Z2.",
       "type": "threshold",
@@ -5446,7 +5446,7 @@
       "source_format": "json"
     },
     {
-      "id": "h6XLqTB7j2",
+      "id": "sub_threshold_efforts_7",
       "name": "Sub Threshold Efforts",
       "detailed_description": "Warm Up:\n20 mins in Z2.\n\nMain Set:\n2 x (30 mins in upper Z3 + 10 min recoveries in Z2).\n20 mins in upper Z3.\n\nWarm Down:\n10 mins in low Z2.",
       "type": "threshold",
@@ -5512,7 +5512,7 @@
       "source_format": "json"
     },
     {
-      "id": "xpWuIJOjF9",
+      "id": "sub_threshold_efforts_8",
       "name": "Sub Threshold Efforts",
       "detailed_description": "Warm Up:\n20 mins in Z2.\n\nMain Set:\n2 x (40 mins in upper Z3 + 10 min recoveries in Z2).\n\nWarm Down:\n10 mins in low Z2.",
       "type": "threshold",
@@ -5571,7 +5571,7 @@
       "source_format": "json"
     },
     {
-      "id": "q5TkovQ-VS",
+      "id": "sub_threshold_efforts_9",
       "name": "Sub Threshold Efforts",
       "detailed_description": "Warm Up:\n15 mins in Z2.\n\nMain Set:\n3 x (30 mins in upper Z3 + 10 min recoveries in Z2).\n\nWarm Down:\n10 mins in low Z2.",
       "type": "threshold",
@@ -5630,7 +5630,7 @@
       "source_format": "json"
     },
     {
-      "id": "T6_QU7ORNP",
+      "id": "sub_threshold_efforts_10",
       "name": "Sub Threshold Efforts",
       "detailed_description": "Warm Up:\n15 mins in Z2.\n\nMain Set:\n4 x (20 mins in upper Z3 + 10 min recoveries in Z2).\n\nWarm Down:\n5 mins in low Z2.",
       "type": "threshold",
@@ -5689,7 +5689,7 @@
       "source_format": "json"
     },
     {
-      "id": "JSvG1H-zPu",
+      "id": "sub_threshold_efforts_11",
       "name": "Sub Threshold Efforts",
       "detailed_description": "Warm Up:\n20 mins in Z2.\n\nMain Set:\n2 x (40 mins in upper Z3 + 15 min recoveries in Z2).\n\nWarm Down:\n15 mins in low Z2.",
       "type": "threshold",
@@ -5748,7 +5748,7 @@
       "source_format": "json"
     },
     {
-      "id": "4N0mlarajz",
+      "id": "sub_threshold_efforts_12",
       "name": "Sub Threshold Efforts",
       "detailed_description": "Warm Up:\n20 mins in Z2.\n\nMain Set:\n5 x (20 mins in upper Z3 + 5 min recoveries in Z2).\n\nWarm Down:\n10 mins in low Z2.",
       "type": "threshold",
@@ -5807,7 +5807,7 @@
       "source_format": "json"
     },
     {
-      "id": "ljppiG3HDE",
+      "id": "sub_threshold_efforts_13",
       "name": "Sub Threshold Efforts",
       "detailed_description": "Warm Up:\n20 mins in Z2.\n\nMain Set:\n3 x (30 mins in upper Z3 + 10 min recoveries in Z2).\n\nWarm Down:\n10 mins in low Z2.",
       "type": "threshold",
@@ -5866,7 +5866,7 @@
       "source_format": "json"
     },
     {
-      "id": "v-RKuuTqsU",
+      "id": "optional_aerobic_endurance_ride_3",
       "name": "Aerobic Endurance Ride",
       "detailed_description": "Ride mainly in Z2 today. You should be able to maintain conversation at this intensity. Don't be tempted to ride harder.\n\nWarm Up:\n20 mins in low Z2.\n\nMain Set:\n30 mins in upper Z2.\n\nWarm Down:\n10 mins in low Z2.",
       "type": "endurance",
@@ -5910,7 +5910,7 @@
       "source_format": "json"
     },
     {
-      "id": "JVq3m2pUpS",
+      "id": "above_and_below_threshold_4",
       "name": "Above and Below Threshold",
       "detailed_description": "Warm Up:\n15 mins in low Z2,\n5 x (10 secs in Z4 + 50 secs in low Z2).\n\nMain Set:\n5 x (4 mins in Z3 + 2 mins in Z5 + 2 mins in low Z2).\n\nWarm Down:\n5 mins in low Z2.",
       "type": "threshold",
@@ -5985,7 +5985,7 @@
       "source_format": "json"
     },
     {
-      "id": "p_xKMTk5Me",
+      "id": "above_and_below_threshold_5",
       "name": "Above and Below Threshold",
       "detailed_description": "Warm Up:\n10 mins in low Z2,\n5 x (10 secs in Z4 + 50 secs in low Z2).\n\nMain Set:\n4 x (5 mins in Z3 + 3 mins in Z5 + 3 mins in low Z2).\n\nWarm Down:\n5 mins in low Z2.",
       "type": "threshold",
@@ -6060,7 +6060,7 @@
       "source_format": "json"
     },
     {
-      "id": "qFccQLPCge",
+      "id": "threshold_efforts_7",
       "name": "Threshold Efforts",
       "detailed_description": "Warm Up:\n10 mins in low Z2,\n5 x (15 secs in Z4 + 45 secs in low Z2).\n\nMain Set:\n3 x (7 mins in upper Z4 + 4 min recoveries in low Z2).\n\nWarm Down:\n5 mins in upper Z2,\n10 mins in low Z2.",
       "type": "threshold",
@@ -6142,7 +6142,7 @@
       "source_format": "json"
     },
     {
-      "id": "rxniUsbsBD",
+      "id": "threshold_efforts_8",
       "name": "Threshold Efforts",
       "detailed_description": "Warm Up:\n10 mins in low Z2,\n5 x (15 secs in Z4 + 45 secs in low Z2).\n\nMain Set:\n7 mins in upper Z4 + 3 mins recovery in low Z2,\n6 mins in upper Z4 + 3 mins recovery in low Z2,\n5 mins in upper Z4 + 3 mins recovery in low Z2,\n4 mins in upper Z4 + 3 mins recovery in low Z2.\n\nWarm Down:\n5 mins in upper Z2,\n5 mins in low Z2.",
       "type": "threshold",
@@ -6272,7 +6272,7 @@
       "source_format": "json"
     },
     {
-      "id": "151FCujAQP",
+      "id": "threshold_efforts_9",
       "name": "Threshold Efforts",
       "detailed_description": "Warm Up:\n10 mins in low Z2,\n5 x (15 secs in Z4 + 45 secs in low Z2).\n\nMain Set:\n5 mins in upper Z4 + 2 mins recovery in low Z2,\n6 mins in upper Z4 + 2 mins recovery in low Z2,\n7 mins in upper Z4 + 2 mins recovery in low Z2,\n6 mins in upper Z4 + 2 mins recovery in low Z2,\n5 mins in upper Z4 + 2 mins recovery in low Z2.\n\nWarm Down:\n5 mins in upper Z2,\n5 mins in low Z2.",
       "type": "threshold",
@@ -6418,7 +6418,7 @@
       "source_format": "json"
     },
     {
-      "id": "c_-JsDwWVD",
+      "id": "map_efforts_8",
       "name": "M.A.P Efforts",
       "detailed_description": "Warm Up:\n10 mins in Z2,\n5 x (10 secs in Z5 + 50 secs in low Z2),\n3 mins in Z2.\n\nMain Set:\n3 x (2 mins in Z5 + 3 min recoveries in low Z2).\n\nWarm Down:\n7 mins in low Z2.",
       "type": "endurance",
@@ -6500,7 +6500,7 @@
       "source_format": "json"
     },
     {
-      "id": "h9lRssHIpv",
+      "id": "sub_threshold_efforts_14",
       "name": "Sub Threshold Efforts",
       "detailed_description": "Warm Up:\n20 mins in Z2.\n\nMain Set:\n2 x (10 mins in upper Z3 + 5 min recoveries in Z2),\n20 mins in Z2.\n\nWarm Down:\n10 mins in low Z2.",
       "type": "threshold",
@@ -6566,7 +6566,7 @@
       "source_format": "json"
     },
     {
-      "id": "k7kNYEp-OB",
+      "id": "sub_threshold_effort_2",
       "name": "Sub Threshold Effort",
       "detailed_description": "Warm Up:\n20 mins in Z2.\n\nMain Set:\n20 mins in upper Z3,\n20 mins in Z2.\n\nWarm Down:\n10 mins in low Z2.",
       "type": "threshold",
@@ -6617,7 +6617,7 @@
       "source_format": "json"
     },
     {
-      "id": "XPmytXufAH",
+      "id": "optional_aerobic_endurance_ride_4",
       "name": "Aerobic Endurance Ride",
       "detailed_description": "Ride mainly in Z2 today. You should be able to maintain conversation at this intensity. Don't be tempted to ride harder.\n\nWarm Up:\n15 mins in low Z2.\n\nMain Set:\n3 x (10 mins in upper Z2 + 3 min recoveries in low Z2).\n\nWarm Down:\n7 mins in low Z2.",
       "type": "endurance",
@@ -6676,7 +6676,7 @@
       "source_format": "json"
     },
     {
-      "id": "bMxaHDZVPr",
+      "id": "optional_aerobic_endurance_ride_5",
       "name": "Aerobic Endurance Ride",
       "detailed_description": "Ride mainly in Z2 today. You should be able to maintain conversation at this intensity. Don't be tempted to ride harder.\n\nWarm Up:\n15 mins in low Z2.\n\nMain Set:\n2 x (15 mins in upper Z2 + 3 min recoveries in low Z2).\n\nWarm Down:\n10 mins in low Z2.",
       "type": "endurance",
@@ -6735,7 +6735,7 @@
       "source_format": "json"
     },
     {
-      "id": "o_bQnr021Z",
+      "id": "optional_aerobic_endurance_ride_6",
       "name": "Aerobic Endurance Ride",
       "detailed_description": "Ride mainly in Z2 today. You should be able to maintain conversation at this intensity. Don't be tempted to ride harder.\n\nWarm Up:\n20 mins in low Z2.\n\nMain Set:\n20 mins in upper Z2.\n\nWarm Down:\n10 mins in low Z2.",
       "type": "endurance",
@@ -6779,7 +6779,7 @@
       "source_format": "json"
     },
     {
-      "id": "-31nppg9xi",
+      "id": "threshold_efforts_10",
       "name": "Threshold Efforts",
       "detailed_description": "Warm Up:\n10 mins in low Z2,\n5 x (15 secs in Z4 + 45 secs in low Z2).\n\nMain Set:\n3 x (3 mins in upper Z4 + 2 min recoveries in low Z2).\n\nWarm Down:\n5 mins in upper Z2,\n5 mins in low Z2.",
       "type": "threshold",
@@ -6861,7 +6861,7 @@
       "source_format": "json"
     },
     {
-      "id": "dwJlJsPTi8",
+      "id": "30_s_x_4m_interval_repeats",
       "name": "30 s x 4m interval repeats",
       "detailed_description": "",
       "type": "mixed",
@@ -7031,7 +7031,7 @@
       ],
       "tss": 70.2,
       "name": "3x15min Sweet Spot",
-      "id": "JwuRQfdjQH",
+      "id": "3x15min_sweet_spot",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 1,
@@ -7069,7 +7069,7 @@
       ],
       "tss": 46.3,
       "name": "70min Base Ride",
-      "id": "G1Hcl_Hmes",
+      "id": "70min_base_ride",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 1,
@@ -7107,7 +7107,7 @@
       ],
       "tss": 109.8,
       "name": "2.7hr Endurance Ride",
-      "id": "MauBD8KIAt",
+      "id": "27hr_endurance_ride",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 1,
@@ -7159,7 +7159,7 @@
       ],
       "tss": 64.7,
       "name": "2x20min Sweet Spot",
-      "id": "TKjNnGfqja",
+      "id": "2x20min_sweet_spot",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 1,
@@ -7253,7 +7253,7 @@
       ],
       "tss": 65.4,
       "name": "5x4min VO2 Max Intervals",
-      "id": "ttJMHzuALe",
+      "id": "5x4min_vo2_max_intervals",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 2,
@@ -7291,7 +7291,7 @@
       ],
       "tss": 117.0,
       "name": "2.8hr Endurance Ride",
-      "id": "fCKMQ4IGQv",
+      "id": "28hr_endurance_ride",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 2,
@@ -7343,7 +7343,7 @@
       ],
       "tss": 70.4,
       "name": "2x20min Sweet Spot",
-      "id": "ZtTJAIr5fh",
+      "id": "2x20min_sweet_spot_2",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 2,
@@ -7409,7 +7409,7 @@
       ],
       "tss": 73.3,
       "name": "3x12min VO2 Max Intervals",
-      "id": "51Cf-s4oHk",
+      "id": "3x12min_vo2_max_intervals",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 3,
@@ -7447,7 +7447,7 @@
       ],
       "tss": 124.1,
       "name": "3.0hr Endurance Ride",
-      "id": "_lwXLy2CIO",
+      "id": "30hr_endurance_ride",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 3,
@@ -7485,7 +7485,7 @@
       ],
       "tss": 70.7,
       "name": "50min Sweet Spot",
-      "id": "12v--VJYcj",
+      "id": "50min_sweet_spot",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 3,
@@ -7523,7 +7523,7 @@
       ],
       "tss": 37.0,
       "name": "60min Base Ride",
-      "id": "JzC7WRg6YR",
+      "id": "60min_base_ride",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 4,
@@ -7561,7 +7561,7 @@
       ],
       "tss": 43.0,
       "name": "30min Tempo",
-      "id": "9TqktQUP34",
+      "id": "30min_tempo",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 4,
@@ -7599,7 +7599,7 @@
       ],
       "tss": 88.4,
       "name": "2.2hr Endurance Ride",
-      "id": "Q8oMlf6Ov2",
+      "id": "22hr_endurance_ride",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 4,
@@ -7637,7 +7637,7 @@
       ],
       "tss": 43.6,
       "name": "70min Base Ride",
-      "id": "Fw14oioPjY",
+      "id": "70min_base_ride_2",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 4,
@@ -7675,7 +7675,7 @@
       ],
       "tss": 43.2,
       "name": "70min Base Ride",
-      "id": "JdxtqVB58t",
+      "id": "70min_base_ride_3",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 1,
@@ -7727,7 +7727,7 @@
       ],
       "tss": 40.6,
       "name": "2x10min Sweet Spot",
-      "id": "QWGhP_a4PM",
+      "id": "2x10min_sweet_spot",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 1,
@@ -7765,7 +7765,7 @@
       ],
       "tss": 45.8,
       "name": "70min Base Ride",
-      "id": "RbCExvBKcm",
+      "id": "70min_base_ride_4",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 1,
@@ -7803,7 +7803,7 @@
       ],
       "tss": 85.3,
       "name": "2.2hr Endurance Ride",
-      "id": "ppZH8Q1OWi",
+      "id": "22hr_endurance_ride_2",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 1,
@@ -7841,7 +7841,7 @@
       ],
       "tss": 32.4,
       "name": "60min Base Ride",
-      "id": "1ANYcdRzo3",
+      "id": "60min_base_ride_2",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 1,
@@ -7879,7 +7879,7 @@
       ],
       "tss": 46.5,
       "name": "75min Base Ride",
-      "id": "AdFcUOlQIn",
+      "id": "75min_base_ride",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 2,
@@ -7931,7 +7931,7 @@
       ],
       "tss": 46.1,
       "name": "2x12min Sweet Spot",
-      "id": "FahmCCGARN",
+      "id": "2x12min_sweet_spot",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 2,
@@ -7969,7 +7969,7 @@
       ],
       "tss": 49.4,
       "name": "75min Base Ride",
-      "id": "49w0Pqw3e9",
+      "id": "75min_base_ride_2",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 2,
@@ -8007,7 +8007,7 @@
       ],
       "tss": 91.9,
       "name": "2.4hr Endurance Ride",
-      "id": "1TRkExfH-p",
+      "id": "24hr_endurance_ride",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 2,
@@ -8045,7 +8045,7 @@
       ],
       "tss": 35.1,
       "name": "65min Base Ride",
-      "id": "-hxlD8iVrl",
+      "id": "65min_base_ride",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 2,
@@ -8083,7 +8083,7 @@
       ],
       "tss": 49.8,
       "name": "80min Base Ride",
-      "id": "rEn9g0XGZN",
+      "id": "80min_base_ride",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 3,
@@ -8135,7 +8135,7 @@
       ],
       "tss": 51.5,
       "name": "2x14min Sweet Spot",
-      "id": "IyoVnU0dTF",
+      "id": "2x14min_sweet_spot",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 3,
@@ -8173,7 +8173,7 @@
       ],
       "tss": 53.0,
       "name": "80min Base Ride",
-      "id": "0c7gKPxUez",
+      "id": "80min_base_ride_2",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 3,
@@ -8211,7 +8211,7 @@
       ],
       "tss": 98.5,
       "name": "2.6hr Endurance Ride",
-      "id": "zcYTeQzhW0",
+      "id": "26hr_endurance_ride",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 3,
@@ -8249,7 +8249,7 @@
       ],
       "tss": 37.9,
       "name": "70min Base Ride",
-      "id": "dOb8twpaQ1",
+      "id": "70min_base_ride_5",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 3,
@@ -8287,7 +8287,7 @@
       ],
       "tss": 88.6,
       "name": "2.3hr Endurance Ride",
-      "id": "lC-cwFzoT9",
+      "id": "23hr_endurance_ride",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 4,
@@ -8325,7 +8325,7 @@
       ],
       "tss": 33.2,
       "name": "55min Base Ride",
-      "id": "Afv1YZSGng",
+      "id": "55min_base_ride",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 1,
@@ -8363,7 +8363,7 @@
       ],
       "tss": 99.1,
       "name": "2.4hr Endurance Ride",
-      "id": "wP0SXhiv7j",
+      "id": "24hr_endurance_ride_2",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 1,
@@ -8401,7 +8401,7 @@
       ],
       "tss": 60.6,
       "name": "1.5hr Endurance Ride",
-      "id": "B3vBYe4DQ4",
+      "id": "15hr_endurance_ride",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 1,
@@ -8453,7 +8453,7 @@
       ],
       "tss": 53.9,
       "name": "15min Sweet Spot",
-      "id": "NA0U-R9u6G",
+      "id": "15min_sweet_spot",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 2,
@@ -8491,7 +8491,7 @@
       ],
       "tss": 36.5,
       "name": "60min Base Ride",
-      "id": "axicdQmx31",
+      "id": "60min_base_ride_3",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 2,
@@ -8529,7 +8529,7 @@
       ],
       "tss": 106.3,
       "name": "2.6hr Endurance Ride",
-      "id": "YGtVUpy-Sp",
+      "id": "26hr_endurance_ride_2",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 2,
@@ -8581,7 +8581,7 @@
       ],
       "tss": 75.6,
       "name": "20min Sweet Spot",
-      "id": "cDxPYMDUXC",
+      "id": "20min_sweet_spot",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 2,
@@ -8647,7 +8647,7 @@
       ],
       "tss": 67.5,
       "name": "3x12min Sweet Spot",
-      "id": "Scaq2jrAV_",
+      "id": "3x12min_sweet_spot",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 3,
@@ -8685,7 +8685,7 @@
       ],
       "tss": 39.9,
       "name": "65min Base Ride",
-      "id": "3xoINn_BmC",
+      "id": "65min_base_ride_2",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 3,
@@ -8723,7 +8723,7 @@
       ],
       "tss": 113.4,
       "name": "2.8hr Endurance Ride",
-      "id": "OV3dF7TB3H",
+      "id": "28hr_endurance_ride_2",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 3,
@@ -8775,7 +8775,7 @@
       ],
       "tss": 77.8,
       "name": "25min Sweet Spot",
-      "id": "brWPDQ24ph",
+      "id": "25min_sweet_spot",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 3,
@@ -8813,7 +8813,7 @@
       ],
       "tss": 77.7,
       "name": "1.9hr Endurance Ride",
-      "id": "I4emNgqFpL",
+      "id": "19hr_endurance_ride",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 4,
@@ -8851,7 +8851,7 @@
       ],
       "tss": 53.5,
       "name": "80min Base Ride",
-      "id": "w18uZW53Ud",
+      "id": "80min_base_ride_3",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 4,
@@ -8917,7 +8917,7 @@
       ],
       "tss": 70.9,
       "name": "3x15min Sweet Spot",
-      "id": "xXzRipOpOG",
+      "id": "3x15min_sweet_spot_2",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 5,
@@ -8983,7 +8983,7 @@
       ],
       "tss": 76.1,
       "name": "30min Sweet Spot",
-      "id": "5ygi79mY8Z",
+      "id": "30min_sweet_spot",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 5,
@@ -9049,7 +9049,7 @@
       ],
       "tss": 66.8,
       "name": "3x10min VO2 Max Intervals",
-      "id": "Aj90EQ0EpV",
+      "id": "3x10min_vo2_max_intervals",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 6,
@@ -9115,7 +9115,7 @@
       ],
       "tss": 84.0,
       "name": "40min Sweet Spot",
-      "id": "q9TcvH9JTw",
+      "id": "40min_sweet_spot",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 6,
@@ -9209,7 +9209,7 @@
       ],
       "tss": 66.2,
       "name": "5x4min VO2 Max Intervals",
-      "id": "TBtNuC1MN4",
+      "id": "5x4min_vo2_max_intervals_2",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 7,
@@ -9247,7 +9247,7 @@
       ],
       "tss": 127.7,
       "name": "3.1hr Endurance Ride",
-      "id": "x64BuWn6dW",
+      "id": "31hr_endurance_ride",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 7,
@@ -9313,7 +9313,7 @@
       ],
       "tss": 82.6,
       "name": "2x15min Sweet Spot",
-      "id": "yJ3V_Dd0Db",
+      "id": "2x15min_sweet_spot",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 7,
@@ -9351,7 +9351,7 @@
       ],
       "tss": 84.8,
       "name": "2.1hr Endurance Ride",
-      "id": "SbU-RClSxQ",
+      "id": "21hr_endurance_ride",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 8,
@@ -9389,7 +9389,7 @@
       ],
       "tss": 57.0,
       "name": "85min Base Ride",
-      "id": "N2ljjSL-iX",
+      "id": "85min_base_ride",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 8,
@@ -9469,7 +9469,7 @@
       ],
       "tss": 64.1,
       "name": "4x5min VO2 Max Intervals",
-      "id": "NlXtlfqBqZ",
+      "id": "4x5min_vo2_max_intervals",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 9,
@@ -9507,7 +9507,7 @@
       ],
       "tss": 131.3,
       "name": "3.2hr Endurance Ride",
-      "id": "6MXSuUkilV",
+      "id": "32hr_endurance_ride",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 9,
@@ -9587,7 +9587,7 @@
       ],
       "tss": 94.9,
       "name": "3x12min VO2 Max Intervals",
-      "id": "AV7Aa9Zhma",
+      "id": "3x12min_vo2_max_intervals_2",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 9,
@@ -9653,7 +9653,7 @@
       ],
       "tss": 75.9,
       "name": "3x12min VO2 Max Intervals",
-      "id": "7LaE3WQWO2",
+      "id": "3x12min_vo2_max_intervals_3",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 10,
@@ -9691,7 +9691,7 @@
       ],
       "tss": 134.9,
       "name": "3.2hr Endurance Ride",
-      "id": "GH8jpWT8o9",
+      "id": "32hr_endurance_ride_2",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 10,
@@ -9757,7 +9757,7 @@
       ],
       "tss": 86.7,
       "name": "2x18min Sweet Spot",
-      "id": "iVmxBrk7vc",
+      "id": "2x18min_sweet_spot",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 10,
@@ -9851,7 +9851,7 @@
       ],
       "tss": 77.5,
       "name": "5x5min VO2 Max Intervals",
-      "id": "F2HBwuGzgC",
+      "id": "5x5min_vo2_max_intervals",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 11,
@@ -9889,7 +9889,7 @@
       ],
       "tss": 138.4,
       "name": "3.3hr Endurance Ride",
-      "id": "eC3hvOvUJV",
+      "id": "33hr_endurance_ride",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 11,
@@ -9969,7 +9969,7 @@
       ],
       "tss": 109.8,
       "name": "3x15min VO2 Max Intervals",
-      "id": "5VGVMXXQbi",
+      "id": "3x15min_vo2_max_intervals",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 11,
@@ -10028,7 +10028,7 @@
       ],
       "tss": 39.2,
       "name": "2x3min VO2 Max Intervals",
-      "id": "o4GdfPEvs9",
+      "id": "2x3min_vo2_max_intervals",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 12,
@@ -10066,7 +10066,7 @@
       ],
       "tss": 29.9,
       "name": "50min Base Ride",
-      "id": "OAZnpRKfb_",
+      "id": "50min_base_ride",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 12,
@@ -10139,7 +10139,7 @@
       ],
       "tss": 66.8,
       "name": "3x3min VO2 Max Intervals",
-      "id": "Hg9uzVFVFP",
+      "id": "3x3min_vo2_max_intervals",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 12,
@@ -10177,7 +10177,7 @@
       ],
       "tss": 26.6,
       "name": "45min Base Ride",
-      "id": "_hElRLTndu",
+      "id": "45min_base_ride",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 12,
@@ -10200,7 +10200,7 @@
         }
       ],
       "name": "2.5hr Endurance Ride",
-      "id": "mJJoWHpcL-",
+      "id": "25hr_endurance_ride",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 1,
@@ -10223,7 +10223,7 @@
         }
       ],
       "name": "1.7hr Endurance Ride",
-      "id": "a65rm3QG6-",
+      "id": "17hr_endurance_ride",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 1,
@@ -10274,7 +10274,7 @@
         }
       ],
       "name": "2x10min Sweet Spot",
-      "id": "YKjfFOH6UM",
+      "id": "2x10min_sweet_spot_2",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 1,
@@ -10325,7 +10325,7 @@
         }
       ],
       "name": "2x12min Sweet Spot",
-      "id": "G_3ifex6d_",
+      "id": "2x12min_sweet_spot_2",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 1,
@@ -10355,7 +10355,7 @@
         }
       ],
       "name": "30min Sweet Spot",
-      "id": "Ko4lpG3Oth",
+      "id": "30min_sweet_spot_2",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 2,
@@ -10406,7 +10406,7 @@
         }
       ],
       "name": "2x4min VO2 Max Intervals",
-      "id": "7s7PmKD-c2",
+      "id": "2x4min_vo2_max_intervals",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 2,
@@ -10450,7 +10450,7 @@
         }
       ],
       "name": "55min Base Ride",
-      "id": "YJsHkDCcyo",
+      "id": "55min_base_ride_2",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 2,
@@ -10480,7 +10480,7 @@
         }
       ],
       "name": "30min Sweet Spot",
-      "id": "cxebNWVuzS",
+      "id": "30min_sweet_spot_3",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 3,
@@ -10524,7 +10524,7 @@
         }
       ],
       "name": "10min Sweet Spot",
-      "id": "FNILGQnzeb",
+      "id": "10min_sweet_spot",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 3,
@@ -10575,7 +10575,7 @@
         }
       ],
       "name": "2x15min Sweet Spot",
-      "id": "3dk8Sosttz",
+      "id": "2x15min_sweet_spot_2",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 3,
@@ -10626,7 +10626,7 @@
         }
       ],
       "name": "2x3min VO2 Max Intervals",
-      "id": "yFC4ceqiFs",
+      "id": "2x3min_vo2_max_intervals_2",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 3,
@@ -10649,7 +10649,7 @@
         }
       ],
       "name": "90min Mixed Workout",
-      "id": "vV7d7WNO7G",
+      "id": "90min_mixed_workout",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 4,
@@ -10679,7 +10679,7 @@
         }
       ],
       "name": "20min Sweet Spot",
-      "id": "XJdrfJNcxJ",
+      "id": "20min_sweet_spot_2",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 4,
@@ -10702,7 +10702,7 @@
         }
       ],
       "name": "60min Mixed Workout",
-      "id": "2IdsUqrXvn",
+      "id": "60min_mixed_workout",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 4,
@@ -10725,7 +10725,7 @@
         }
       ],
       "name": "60min Mixed Workout",
-      "id": "VeNjnYWgC8",
+      "id": "60min_mixed_workout_2",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 4,
@@ -10749,7 +10749,7 @@
       ],
       "tss": 128.7,
       "name": "3.0hr Endurance Ride",
-      "id": "yJRlCacYBe",
+      "id": "30hr_endurance_ride_2",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 1,
@@ -10801,7 +10801,7 @@
       ],
       "tss": 46.7,
       "name": "2x12min Sweet Spot",
-      "id": "Eujm5sHvjX",
+      "id": "2x12min_sweet_spot_3",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 1,
@@ -10825,7 +10825,7 @@
       ],
       "tss": 27.6,
       "name": "60min Mixed Workout",
-      "id": "jtbjkwIqMy",
+      "id": "60min_mixed_workout_3",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 1,
@@ -10849,7 +10849,7 @@
       ],
       "tss": 143.0,
       "name": "3.3hr Endurance Ride",
-      "id": "Yt79xavlDf",
+      "id": "33hr_endurance_ride_2",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 2,
@@ -10901,7 +10901,7 @@
       ],
       "tss": 75.9,
       "name": "2x20min Sweet Spot",
-      "id": "2EIJqVqLfQ",
+      "id": "2x20min_sweet_spot_3",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 2,
@@ -10925,7 +10925,7 @@
       ],
       "tss": 157.3,
       "name": "3.7hr Endurance Ride",
-      "id": "vHxcCrMQmP",
+      "id": "37hr_endurance_ride",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 3,
@@ -10977,7 +10977,7 @@
       ],
       "tss": 39.9,
       "name": "2x5min VO2 Max Intervals",
-      "id": "mHtmTjI_oD",
+      "id": "2x5min_vo2_max_intervals",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 3,
@@ -11001,7 +11001,7 @@
       ],
       "tss": 85.8,
       "name": "2.0hr Endurance Ride",
-      "id": "sQRev-Jq05",
+      "id": "20hr_endurance_ride",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 4,
@@ -11025,7 +11025,7 @@
       ],
       "tss": 27.6,
       "name": "60min Mixed Workout",
-      "id": "vRqiBaIJzA",
+      "id": "60min_mixed_workout_4",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 4,
@@ -11049,7 +11049,7 @@
       ],
       "tss": 128.7,
       "name": "3.0hr Endurance Ride",
-      "id": "iSO7DdQzhV",
+      "id": "30hr_endurance_ride_3",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 5,
@@ -11101,7 +11101,7 @@
       ],
       "tss": 69.4,
       "name": "2x15min VO2 Max Intervals",
-      "id": "rM2dmuInx6",
+      "id": "2x15min_vo2_max_intervals",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 5,
@@ -11125,7 +11125,7 @@
       ],
       "tss": 150.2,
       "name": "3.5hr Endurance Ride",
-      "id": "WgaRMvxe5E",
+      "id": "35hr_endurance_ride",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 6,
@@ -11177,7 +11177,7 @@
       ],
       "tss": 63.9,
       "name": "2x10min VO2 Max Intervals",
-      "id": "Qy10luOAeX",
+      "id": "2x10min_vo2_max_intervals",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 6,
@@ -11201,7 +11201,7 @@
       ],
       "tss": 171.6,
       "name": "4.0hr Endurance Ride",
-      "id": "P01a0jICv4",
+      "id": "40hr_endurance_ride",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 7,
@@ -11253,7 +11253,7 @@
       ],
       "tss": 35.1,
       "name": "2x4min VO2 Max Intervals",
-      "id": "7y4eAHEkVn",
+      "id": "2x4min_vo2_max_intervals_2",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 7,
@@ -11277,7 +11277,7 @@
       ],
       "tss": 107.3,
       "name": "2.5hr Endurance Ride",
-      "id": "TAj8_3cLLW",
+      "id": "25hr_endurance_ride_2",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 8,
@@ -11301,7 +11301,7 @@
       ],
       "tss": 128.7,
       "name": "3.0hr Endurance Ride",
-      "id": "GW0hX4mAiD",
+      "id": "30hr_endurance_ride_4",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 9,
@@ -11339,7 +11339,7 @@
       ],
       "tss": 63.8,
       "name": "60min Base Ride",
-      "id": "JRyco9f50v",
+      "id": "60min_base_ride_4",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 9,
@@ -11363,7 +11363,7 @@
       ],
       "tss": 150.2,
       "name": "3.5hr Endurance Ride",
-      "id": "VFJEbQUCVl",
+      "id": "35hr_endurance_ride_2",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 10,
@@ -11401,7 +11401,7 @@
       ],
       "tss": 55.8,
       "name": "55min Base Ride",
-      "id": "0WqrSa0TDn",
+      "id": "55min_base_ride_3",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 10,
@@ -11425,7 +11425,7 @@
       ],
       "tss": 85.8,
       "name": "2.0hr Endurance Ride",
-      "id": "vpXiLcofYH",
+      "id": "20hr_endurance_ride_2",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 11,
@@ -11463,7 +11463,7 @@
       ],
       "tss": 47.8,
       "name": "50min Base Ride",
-      "id": "b76pWjK68c",
+      "id": "50min_base_ride_2",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 11,
@@ -11487,7 +11487,7 @@
       ],
       "tss": 107.3,
       "name": "2.5hr Endurance Ride",
-      "id": "8qFh5IlL0i",
+      "id": "25hr_endurance_ride_3",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 12,
@@ -11525,7 +11525,7 @@
       ],
       "tss": 48.0,
       "name": "75min Base Ride",
-      "id": "pp9wyINlTN",
+      "id": "75min_base_ride_3",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 12,
@@ -11549,7 +11549,7 @@
       ],
       "tss": 27.6,
       "name": "60min Mixed Workout",
-      "id": "KD_xwHo-j3",
+      "id": "60min_mixed_workout_5",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 12,
@@ -11601,7 +11601,7 @@
       ],
       "tss": 67.3,
       "name": "40min Sweet Spot",
-      "id": "dZ0O24pU07",
+      "id": "40min_sweet_spot_2",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 1,
@@ -11625,7 +11625,7 @@
       ],
       "tss": 20.2,
       "name": "40min Base Ride",
-      "id": "2Sahgzcl2-",
+      "id": "40min_base_ride",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 1,
@@ -11677,7 +11677,7 @@
       ],
       "tss": 48.7,
       "name": "65min Base Ride",
-      "id": "Gzg4q8FH3F",
+      "id": "65min_base_ride_3",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 1,
@@ -11736,7 +11736,7 @@
       ],
       "tss": 72.1,
       "name": "1.6hr Endurance Ride",
-      "id": "HNAk3ctpJ_",
+      "id": "16hr_endurance_ride",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 1,
@@ -11774,7 +11774,7 @@
       ],
       "tss": 89.3,
       "name": "2.0hr Endurance Ride",
-      "id": "7-bKEV4awA",
+      "id": "20hr_endurance_ride_3",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 1,
@@ -11840,7 +11840,7 @@
       ],
       "tss": 43.5,
       "name": "3x6min Threshold Intervals",
-      "id": "8JZasWcCs2",
+      "id": "3x6min_threshold_intervals",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 2,
@@ -11878,7 +11878,7 @@
       ],
       "tss": 25.2,
       "name": "50min Base Ride",
-      "id": "PUYdHskJ3h",
+      "id": "50min_base_ride_3",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 2,
@@ -11930,7 +11930,7 @@
       ],
       "tss": 34.3,
       "name": "2x8min Sweet Spot",
-      "id": "-5u3hfeznQ",
+      "id": "2x8min_sweet_spot",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 2,
@@ -11975,7 +11975,7 @@
       ],
       "tss": 91.2,
       "name": "20min Tempo",
-      "id": "SsVvir4nPm",
+      "id": "20min_tempo",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 2,
@@ -12013,7 +12013,7 @@
       ],
       "tss": 97.8,
       "name": "2.4hr Endurance Ride",
-      "id": "qJP6zkNhpx",
+      "id": "24hr_endurance_ride_3",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 2,
@@ -12079,7 +12079,7 @@
       ],
       "tss": 45.8,
       "name": "3x6min VO2 Max Intervals",
-      "id": "V9WansU36e",
+      "id": "3x6min_vo2_max_intervals",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 3,
@@ -12117,7 +12117,7 @@
       ],
       "tss": 27.5,
       "name": "50min Base Ride",
-      "id": "DJCyJ5Ap0-",
+      "id": "50min_base_ride_4",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 3,
@@ -12190,7 +12190,7 @@
       ],
       "tss": 28.6,
       "name": "3x2min VO2 Max Intervals",
-      "id": "3dKbRzxFuT",
+      "id": "3x2min_vo2_max_intervals",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 3,
@@ -12235,7 +12235,7 @@
       ],
       "tss": 100.9,
       "name": "15min Tempo",
-      "id": "1seWiwilUL",
+      "id": "15min_tempo",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 3,
@@ -12273,7 +12273,7 @@
       ],
       "tss": 94.9,
       "name": "2.4hr Endurance Ride",
-      "id": "ItjH6SSdfq",
+      "id": "24hr_endurance_ride_4",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 3,
@@ -12318,7 +12318,7 @@
       ],
       "tss": 41.7,
       "name": "25min Tempo",
-      "id": "E9i7Dh_TUT",
+      "id": "25min_tempo",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 4,
@@ -12377,7 +12377,7 @@
       ],
       "tss": 27.3,
       "name": "2x3min VO2 Max Intervals",
-      "id": "WKGmf1vM6A",
+      "id": "2x3min_vo2_max_intervals_3",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 4,
@@ -12443,7 +12443,7 @@
       ],
       "tss": 42.2,
       "name": "2x1min Sweet Spot",
-      "id": "vz76Ultxl0",
+      "id": "2x1min_sweet_spot",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 4,
@@ -12495,7 +12495,7 @@
       ],
       "tss": 83.8,
       "name": "20min Tempo",
-      "id": "33S4ZEFILK",
+      "id": "20min_tempo_2",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 4,
@@ -12547,7 +12547,7 @@
       ],
       "tss": 36.5,
       "name": "60min Base Ride",
-      "id": "yIjk49Le0V",
+      "id": "60min_base_ride_5",
       "source_file": "report_data.json",
       "extracted_from_report": true,
       "source_week": 4,
@@ -12584,7 +12584,7 @@
         }
       ],
       "name": "90min Tempo",
-      "id": "t6mEjoBwFN",
+      "id": "90min_tempo",
       "source_file": "session_20251101_212202.jsonl",
       "extracted_from_logs": true,
       "base_duration_min": 110,
@@ -12633,7 +12633,7 @@
         }
       ],
       "name": "2x15min VO2 Max Intervals",
-      "id": "6p-vXr8v1f",
+      "id": "2x15min_vo2_max_intervals_2",
       "source_file": "session_20251103_172047.jsonl",
       "extracted_from_logs": true,
       "base_duration_min": 55,
@@ -12668,7 +12668,7 @@
         }
       ],
       "name": "120min Tempo",
-      "id": "FgARwj_fr7",
+      "id": "120min_tempo",
       "source_file": "session_20251103_172047.jsonl",
       "extracted_from_logs": true,
       "base_duration_min": 150,

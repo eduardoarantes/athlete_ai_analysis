@@ -93,7 +93,7 @@ export interface VariableComponents {
  * This is the structure returned by the /api/workouts endpoint
  */
 export interface WorkoutLibraryItem {
-  /** Unique workout identifier (e.g., 'zone2_endurance_90') */
+  /** Unique workout identifier (NanoID format, e.g., 'RVrReapuzt') */
   id: string
 
   /** Display name (e.g., 'Zone 2 Endurance - 90 min') */

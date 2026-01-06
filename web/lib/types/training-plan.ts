@@ -41,7 +41,7 @@ export interface Workout {
   segments?: WorkoutSegment[]
   /** Source of the workout: 'library' for pre-defined workouts, 'llm' for AI-generated */
   source?: 'library' | 'llm'
-  /** ID of the workout in the library (only present when source='library') */
+  /** ID of the workout in the library - NanoID format (only present when source='library') */
   library_workout_id?: string
 }
 
