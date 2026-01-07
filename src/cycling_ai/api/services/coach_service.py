@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from cycling_ai.api.config import settings
@@ -266,7 +266,7 @@ class ComplianceCoachService:
 
         return ComplianceCoachResponse(
             feedback=feedback,
-            generated_at=datetime.now(timezone.utc).isoformat(),
+            generated_at=datetime.now(UTC).isoformat(),
             model=self._model_name,
             prompt_version=prompt_loader.version,
             cached=False,

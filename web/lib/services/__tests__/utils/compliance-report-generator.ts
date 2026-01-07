@@ -309,7 +309,7 @@ function getZoneFromPowerPct(powerPct: number): number {
 }
 
 function getZoneColor(zone: number): string {
-  return ZONE_COLORS[zone] || ZONE_COLORS[1]
+  return ZONE_COLORS[zone] ?? ZONE_COLORS[1] ?? '#94A3B8'
 }
 
 function formatSegmentDuration(durationMin: number): string {
@@ -339,7 +339,7 @@ function buildPowerProfileSVG(
     duration_min: number
     power_low_pct: number
     power_high_pct: number
-    description?: string
+    description?: string | undefined
   }
 
   const expanded: ExpandedSegment[] = []
@@ -409,7 +409,7 @@ function buildPowerProfileSVG(
       const windowSize = Math.min(5, powerStream.length - i)
       let sum = 0
       for (let j = 0; j < windowSize; j++) {
-        sum += powerStream[i + j]
+        sum += powerStream[i + j] ?? 0
       }
       sampledPower.push(sum / windowSize)
     }
@@ -471,14 +471,14 @@ function buildWorkoutStructure(segments: ComplianceReportEntry['fixture']['segme
       duration_min: number
       power_low_pct: number
       power_high_pct: number
-      description?: string
+      description?: string | undefined
     }>
     segment?: {
       type: string
       duration_min: number
       power_low_pct: number
       power_high_pct: number
-      description?: string
+      description?: string | undefined
     }
   }
 
@@ -525,7 +525,7 @@ function buildWorkoutStructure(segments: ComplianceReportEntry['fixture']['segme
     return `${lowW}-${highW}W (${lowPct}-${highPct}%)`
   }
 
-  const renderSegmentRow = (seg: { type: string; duration_min: number; power_low_pct: number; power_high_pct: number; description?: string }) => {
+  const renderSegmentRow = (seg: { type: string; duration_min: number; power_low_pct: number; power_high_pct: number; description?: string | undefined }) => {
     const avgPct = (seg.power_low_pct + seg.power_high_pct) / 2
     const zone = getZoneFromPowerPct(avgPct)
     const color = getZoneColor(zone)
