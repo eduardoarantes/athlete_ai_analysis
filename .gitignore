@@ -78,3 +78,7 @@ supabase_errors.json
 # Root level npm (for husky only)
 /node_modules/
 /package-lock.json
+
+# Server logs
+.api.log
+web/.dev.log
