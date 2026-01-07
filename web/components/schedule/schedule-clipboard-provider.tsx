@@ -67,8 +67,7 @@ export function ScheduleClipboardProvider({
       if (!copiedWorkout) return
 
       onPaste(instanceId, copiedWorkout.date, copiedWorkout.index, targetDate, targetIndex)
-      // Clear clipboard after paste
-      setCopiedWorkout(null)
+      // Keep clipboard for multi-paste - user can paste same workout multiple times
     },
     [copiedWorkout, instanceId, onPaste]
   )

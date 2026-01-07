@@ -102,7 +102,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams): Promis
       return NextResponse.json({ error: accessResult.error }, { status: 403 })
     }
 
-    // Save the overrides directly (cast to WorkoutOverrides as Zod infers a compatible but different type)
+    // Save the overrides directly
+    // Cast required: Zod infers a structurally compatible but distinct type (z.infer creates
+    // a new type identity). The runtime values are identical, so the cast is safe.
     const saveResult = await scheduleEditService.saveOverrides(
       instanceId,
       overrides as WorkoutOverrides

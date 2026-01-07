@@ -5,7 +5,8 @@ import { useTranslations, useLocale } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { ChevronLeft, ChevronRight, Calendar, Undo2 } from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { ChevronLeft, ChevronRight, Calendar, Undo2, AlertCircle, Loader2 } from 'lucide-react'
 import { WorkoutCard } from './workout-card'
 import { WorkoutDetailModal, type MatchedActivityData } from './workout-detail-modal'
 import type { PlanInstance, Workout, WorkoutOverrides } from '@/lib/types/training-plan'
@@ -65,8 +66,10 @@ export function ScheduleCalendar({
   const [selectedWorkout, setSelectedWorkout] = useState<ScheduledWorkout | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
 
-  // Edit state - editing is always enabled for single instances
-  const [isUpdating] = useState(false)
+  // Edit state
+  const [isUndoing, setIsUndoing] = useState(false)
+  // Error message for user feedback
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   // Undo stack for reverting changes
   const [undoStack, setUndoStack] = useState<WorkoutOverrides[]>([])
 
@@ -206,6 +209,13 @@ export function ScheduleCalendar({
     setMatchesRefreshKey((prev) => prev + 1)
   }
 
+  // Error handler for DnD and other operations
+  const handleError = useCallback((message: string) => {
+    setErrorMessage(message)
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => setErrorMessage(null), 5000)
+  }, [])
+
   // Helper to apply optimistic override update (also pushes to undo stack)
   const applyOptimisticOverride = useCallback(
     (instanceId: string, updateFn: (current: WorkoutOverrides) => WorkoutOverrides) => {
@@ -226,7 +236,7 @@ export function ScheduleCalendar({
 
   // Undo the last change
   const handleUndo = useCallback(async () => {
-    if (undoStack.length === 0 || !primaryInstanceId) return
+    if (undoStack.length === 0 || !primaryInstanceId || isUndoing) return
 
     const previousState = undoStack[undoStack.length - 1]
     if (!previousState) return
@@ -235,6 +245,8 @@ export function ScheduleCalendar({
     const currentState = localOverrides.get(primaryInstanceId)
 
     // Optimistically update UI
+    setIsUndoing(true)
+    setErrorMessage(null)
     setUndoStack((stack) => stack.slice(0, -1))
     setLocalOverrides((prev) => {
       const newMap = new Map(prev)
@@ -260,6 +272,7 @@ export function ScheduleCalendar({
             return newMap
           })
         }
+        setErrorMessage('Failed to undo. Please try again.')
       }
     } catch {
       // Rollback on error
@@ -271,8 +284,11 @@ export function ScheduleCalendar({
           return newMap
         })
       }
+      setErrorMessage('Failed to undo. Please try again.')
+    } finally {
+      setIsUndoing(false)
     }
-  }, [undoStack, primaryInstanceId, localOverrides])
+  }, [undoStack, primaryInstanceId, localOverrides, isUndoing])
 
   // Schedule editing handlers with optimistic updates
   const handleMoveWorkout = async (
@@ -350,10 +366,9 @@ export function ScheduleCalendar({
           }
           return newMap
         })
-        const data = await response.json()
-        console.error('Move failed:', data.error)
+        setErrorMessage('Failed to move workout. Please try again.')
       }
-    } catch (error) {
+    } catch {
       // Rollback on error
       setLocalOverrides((prev) => {
         const newMap = new Map(prev)
@@ -364,7 +379,7 @@ export function ScheduleCalendar({
         }
         return newMap
       })
-      console.error('Failed to move workout:', error)
+      setErrorMessage('Failed to move workout. Please try again.')
     }
   }
 
@@ -413,10 +428,9 @@ export function ScheduleCalendar({
           }
           return newMap
         })
-        const data = await response.json()
-        console.error('Copy failed:', data.error)
+        setErrorMessage('Failed to copy workout. Please try again.')
       }
-    } catch (error) {
+    } catch {
       // Rollback on error
       setLocalOverrides((prev) => {
         const newMap = new Map(prev)
@@ -427,7 +441,7 @@ export function ScheduleCalendar({
         }
         return newMap
       })
-      console.error('Failed to copy workout:', error)
+      setErrorMessage('Failed to copy workout. Please try again.')
     }
   }
 
@@ -461,10 +475,9 @@ export function ScheduleCalendar({
           }
           return newMap
         })
-        const data = await response.json()
-        console.error('Delete failed:', data.error)
+        setErrorMessage('Failed to delete workout. Please try again.')
       }
-    } catch (error) {
+    } catch {
       // Rollback on error
       setLocalOverrides((prev) => {
         const newMap = new Map(prev)
@@ -475,7 +488,7 @@ export function ScheduleCalendar({
         }
         return newMap
       })
-      console.error('Failed to delete workout:', error)
+      setErrorMessage('Failed to delete workout. Please try again.')
     }
   }
 
@@ -610,8 +623,12 @@ export function ScheduleCalendar({
         <div className="flex gap-2">
           {/* Undo button - only show when there are changes to undo */}
           {canEdit && undoStack.length > 0 && (
-            <Button onClick={handleUndo} variant="outline" size="sm" disabled={isUpdating}>
-              <Undo2 className="h-4 w-4 mr-2" />
+            <Button onClick={handleUndo} variant="outline" size="sm" disabled={isUndoing}>
+              {isUndoing ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Undo2 className="h-4 w-4 mr-2" />
+              )}
               {t('undo')}
             </Button>
           )}
@@ -632,6 +649,14 @@ export function ScheduleCalendar({
           </Button>
         </div>
       </div>
+
+      {/* Error Message */}
+      {errorMessage && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{errorMessage}</AlertDescription>
+        </Alert>
+      )}
 
       {/* Calendar Grid */}
       <Card className="overflow-hidden">
@@ -816,7 +841,7 @@ export function ScheduleCalendar({
   if (canEdit) {
     return (
       <ScheduleClipboardProvider instanceId={primaryInstanceId} onPaste={handlePasteWorkout}>
-        <ScheduleDndContext onMoveWorkout={handleMoveWorkout} isEditMode={canEdit}>
+        <ScheduleDndContext onMoveWorkout={handleMoveWorkout} onError={handleError} isEditMode={canEdit}>
           {calendarContent}
         </ScheduleDndContext>
       </ScheduleClipboardProvider>

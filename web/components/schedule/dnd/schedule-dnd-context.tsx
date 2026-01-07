@@ -23,6 +23,7 @@ import {
 import { startOfDay, parseISO } from 'date-fns'
 import { ScheduledWorkoutDragData, parseCalendarDayDroppableId } from './types'
 import { WorkoutCard } from '@/components/training/workout-card'
+import { errorLogger } from '@/lib/monitoring/error-logger'
 
 interface ScheduleDndContextProps {
   children: ReactNode
@@ -31,12 +32,14 @@ interface ScheduleDndContextProps {
     source: { date: string; index: number },
     target: { date: string; index: number }
   ) => Promise<void>
+  onError?: (message: string) => void
   isEditMode: boolean
 }
 
 export function ScheduleDndContext({
   children,
   onMoveWorkout,
+  onError,
   isEditMode,
 }: ScheduleDndContextProps) {
   const [activeWorkout, setActiveWorkout] = useState<ScheduledWorkoutDragData | null>(null)
@@ -105,7 +108,7 @@ export function ScheduleDndContext({
       return
     }
 
-    // Calculate target index (append to end of day)
+    // Target index is a placeholder - server appends to end of day's workouts
     const targetIndex = 0
 
     try {
@@ -115,7 +118,15 @@ export function ScheduleDndContext({
         { date: dropTarget.date, index: targetIndex }
       )
     } catch (error) {
-      console.error('Failed to move workout:', error)
+      errorLogger.logError(error as Error, {
+        path: 'schedule-dnd-context',
+        metadata: {
+          action: 'move',
+          source: { date: sourceData.date, index: sourceData.index },
+          target: { date: dropTarget.date, index: targetIndex },
+        },
+      })
+      onError?.('Failed to move workout. Please try again.')
     }
   }
 
