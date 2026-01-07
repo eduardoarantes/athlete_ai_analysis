@@ -132,6 +132,19 @@ export interface TrainingPlan {
 }
 
 /**
+ * Workout overrides for schedule modifications
+ * Stored in plan_instances.workout_overrides JSONB column
+ */
+export interface WorkoutOverrides {
+  /** Moved workouts: target key -> source location */
+  moves: Record<string, { original_date: string; original_index: number; moved_at: string }>
+  /** Copied workouts: target key -> source location */
+  copies: Record<string, { source_date: string; source_index: number; copied_at: string }>
+  /** Deleted workout keys (date:index format) */
+  deleted: string[]
+}
+
+/**
  * Plan Instance (scheduled on calendar with specific dates)
  * An instance is created when a user schedules a template.
  * Contains a snapshot of the template's plan_data at creation time.
@@ -151,6 +164,8 @@ export interface PlanInstance {
   weeks_total: number
   /** Full plan data (SNAPSHOT: copied from template at instance creation) */
   plan_data: TrainingPlanData
+  /** Workout modifications (moves, copies, deletes) */
+  workout_overrides: WorkoutOverrides | null
   /** Instance status */
   status: 'scheduled' | 'active' | 'completed' | 'cancelled'
   created_at: string
