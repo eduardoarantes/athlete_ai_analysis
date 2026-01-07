@@ -34,30 +34,6 @@ export function createScheduledWorkoutDraggableId(
   return `scheduled-workout-${instanceId}-${date}-${index}`
 }
 
-export function parseScheduledWorkoutDraggableId(
-  id: string
-): { instanceId: string; date: string; index: number } | null {
-  const prefix = 'scheduled-workout-'
-  if (!id.startsWith(prefix)) return null
-
-  const rest = id.slice(prefix.length)
-  const parts = rest.split('-')
-
-  // UUID is 5 parts (36 chars with dashes), date is 3 parts, index is 1
-  // Format: uuid-uuid-uuid-uuid-uuid-YYYY-MM-DD-index
-  if (parts.length < 9) return null
-
-  const instanceId = parts.slice(0, 5).join('-')
-  const date = parts.slice(5, 8).join('-')
-  const indexPart = parts[8]
-  if (indexPart === undefined) return null
-
-  const index = parseInt(indexPart, 10)
-  if (isNaN(index)) return null
-
-  return { instanceId, date, index }
-}
-
 export function createCalendarDayDroppableId(date: string): string {
   return `calendar-day-${date}`
 }

@@ -161,11 +161,3 @@ export function ScheduleDndContext({
     </DndContext>
   )
 }
-
-// Hook to check if currently over a valid drop target
-export function useScheduleDragState() {
-  // This could be extended to provide more drag state info
-  return {
-    isDragging: false,
-  }
-}

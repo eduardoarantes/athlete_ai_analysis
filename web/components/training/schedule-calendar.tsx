@@ -91,7 +91,11 @@ export function ScheduleCalendar({
   // Helper to get effective overrides (local state takes precedence)
   const getEffectiveOverrides = useCallback(
     (instanceId: string): WorkoutOverrides | null => {
-      return localOverrides.get(instanceId) || instances.find((i) => i.id === instanceId)?.workout_overrides || null
+      return (
+        localOverrides.get(instanceId) ||
+        instances.find((i) => i.id === instanceId)?.workout_overrides ||
+        null
+      )
     },
     [localOverrides, instances]
   )
@@ -731,8 +735,12 @@ export function ScheduleCalendar({
                                 workout={sw.workout}
                                 hasMatch={hasMatch}
                                 isEditMode={canEdit}
-                                onViewDetails={() => handleWorkoutClick({ ...sw, index: workoutIndex })}
-                                onDelete={() => handleDeleteWorkout(sw.instance.id, dateKey, workoutIndex)}
+                                onViewDetails={() =>
+                                  handleWorkoutClick({ ...sw, index: workoutIndex })
+                                }
+                                onDelete={() =>
+                                  handleDeleteWorkout(sw.instance.id, dateKey, workoutIndex)
+                                }
                               >
                                 {workoutCard}
                               </WorkoutContextMenu>
@@ -841,7 +849,11 @@ export function ScheduleCalendar({
   if (canEdit) {
     return (
       <ScheduleClipboardProvider instanceId={primaryInstanceId} onPaste={handlePasteWorkout}>
-        <ScheduleDndContext onMoveWorkout={handleMoveWorkout} onError={handleError} isEditMode={canEdit}>
+        <ScheduleDndContext
+          onMoveWorkout={handleMoveWorkout}
+          onError={handleError}
+          isEditMode={canEdit}
+        >
           {calendarContent}
         </ScheduleDndContext>
       </ScheduleClipboardProvider>
