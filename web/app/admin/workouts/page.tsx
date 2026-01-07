@@ -28,7 +28,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Search, X, Loader2, ChevronLeft, ChevronRight, Code, FileText } from 'lucide-react'
+import {
+  Search,
+  X,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  Code,
+  FileText,
+  LayoutGrid,
+  List,
+} from 'lucide-react'
 import type {
   WorkoutLibraryItem,
   WorkoutType,
@@ -55,6 +65,8 @@ const PHASES: TrainingPhase[] = ['Base', 'Build', 'Peak', 'Recovery', 'Taper', '
 
 const PAGE_SIZE = 20
 
+type ViewMode = 'table' | 'tiles'
+
 export default function AdminWorkoutsPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -73,6 +85,9 @@ export default function AdminWorkoutsPage() {
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1)
+
+  // View mode
+  const [viewMode, setViewMode] = useState<ViewMode>('table')
 
   // Detail modal
   const [selectedWorkout, setSelectedWorkout] = useState<WorkoutLibraryItem | null>(null)
@@ -295,66 +310,136 @@ export default function AdminWorkoutsPage() {
                 Clear
               </Button>
             )}
+
+            {/* View Toggle */}
+            <div className="flex border rounded-md">
+              <Button
+                variant={viewMode === 'table' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('table')}
+                className="rounded-r-none"
+              >
+                <List className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'tiles' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('tiles')}
+                className="rounded-l-none"
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
-          {/* Results Table */}
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Intensity</TableHead>
-                  <TableHead className="text-right">Duration</TableHead>
-                  <TableHead className="text-right">TSS</TableHead>
-                  <TableHead>Phases</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedWorkouts.length === 0 ? (
+          {/* Results - Table or Tiles */}
+          {viewMode === 'table' ? (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      No workouts found
-                    </TableCell>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Intensity</TableHead>
+                    <TableHead className="text-right">Duration</TableHead>
+                    <TableHead className="text-right">TSS</TableHead>
+                    <TableHead>Phases</TableHead>
                   </TableRow>
-                ) : (
-                  paginatedWorkouts.map((workout) => (
-                    <TableRow
-                      key={workout.id}
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => selectWorkout(workout)}
-                    >
-                      <TableCell className="font-medium">{workout.name}</TableCell>
-                      <TableCell>
-                        <Badge className={WORKOUT_TYPE_COLORS[workout.type]} variant="outline">
-                          {formatType(workout.type)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">{INTENSITY_LABELS[workout.intensity]}</Badge>
-                      </TableCell>
-                      <TableCell className="text-right">{workout.base_duration_min} min</TableCell>
-                      <TableCell className="text-right">{workout.base_tss}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {workout.suitable_phases?.slice(0, 3).map((phase) => (
-                            <Badge key={phase} variant="outline" className="text-xs">
-                              {phase}
-                            </Badge>
-                          ))}
-                          {workout.suitable_phases && workout.suitable_phases.length > 3 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{workout.suitable_phases.length - 3}
-                            </Badge>
-                          )}
-                        </div>
+                </TableHeader>
+                <TableBody>
+                  {paginatedWorkouts.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                        No workouts found
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                  ) : (
+                    paginatedWorkouts.map((workout) => (
+                      <TableRow
+                        key={workout.id}
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => selectWorkout(workout)}
+                      >
+                        <TableCell className="font-medium">{workout.name}</TableCell>
+                        <TableCell>
+                          <Badge className={WORKOUT_TYPE_COLORS[workout.type]} variant="outline">
+                            {formatType(workout.type)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">{INTENSITY_LABELS[workout.intensity]}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {workout.base_duration_min} min
+                        </TableCell>
+                        <TableCell className="text-right">{workout.base_tss}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {workout.suitable_phases?.slice(0, 3).map((phase) => (
+                              <Badge key={phase} variant="outline" className="text-xs">
+                                {phase}
+                              </Badge>
+                            ))}
+                            {workout.suitable_phases && workout.suitable_phases.length > 3 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{workout.suitable_phases.length - 3}
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            /* Tiles View */
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {paginatedWorkouts.length === 0 ? (
+                <div className="col-span-full text-center py-8 text-muted-foreground">
+                  No workouts found
+                </div>
+              ) : (
+                paginatedWorkouts.map((workout) => (
+                  <div
+                    key={workout.id}
+                    className="rounded-lg border bg-card hover:bg-muted/50 cursor-pointer transition-colors overflow-hidden"
+                    onClick={() => selectWorkout(workout)}
+                  >
+                    {/* Mini Power Profile */}
+                    <div className="bg-muted/30 p-2 border-b">
+                      {workout.segments && workout.segments.length > 0 ? (
+                        <PowerProfileSVG segments={workout.segments} mini />
+                      ) : (
+                        <div className="h-[44px] flex items-center justify-center text-xs text-muted-foreground">
+                          No segments
+                        </div>
+                      )}
+                    </div>
+                    {/* Workout Info */}
+                    <div className="p-3 space-y-2">
+                      <h3 className="font-medium text-sm line-clamp-2 leading-tight">
+                        {workout.name}
+                      </h3>
+                      <div className="flex flex-wrap gap-1">
+                        <Badge
+                          className={`${WORKOUT_TYPE_COLORS[workout.type]} text-xs`}
+                          variant="outline"
+                        >
+                          {formatType(workout.type)}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>{workout.base_duration_min} min</span>
+                        <span>TSS {workout.base_tss}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
 
           {/* Pagination */}
           {totalPages > 1 && (

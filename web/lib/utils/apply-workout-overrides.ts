@@ -146,7 +146,12 @@ export function applyWorkoutOverrides(
     if (!target) return
 
     // Find the original workout
-    const originalWorkout = findOriginalWorkout(planData, startDate, move.original_date, move.original_index)
+    const originalWorkout = findOriginalWorkout(
+      planData,
+      startDate,
+      move.original_date,
+      move.original_index
+    )
 
     if (originalWorkout) {
       const effectiveWorkout: EffectiveWorkoutInfo = {
@@ -170,7 +175,12 @@ export function applyWorkoutOverrides(
     if (!target) return
 
     // Find the source workout
-    const sourceWorkout = findOriginalWorkout(planData, startDate, copy.source_date, copy.source_index)
+    const sourceWorkout = findOriginalWorkout(
+      planData,
+      startDate,
+      copy.source_date,
+      copy.source_index
+    )
 
     if (sourceWorkout) {
       const effectiveWorkout: EffectiveWorkoutInfo = {

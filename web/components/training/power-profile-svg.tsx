@@ -90,20 +90,22 @@ interface PowerProfileSVGProps {
   segments: WorkoutSegmentInput[]
   /** FTP value to display on chart. Pass 0 or undefined to hide FTP label */
   ftp?: number
+  /** Mini mode: just bars, no labels, grid lines, or FTP reference */
+  mini?: boolean
 }
 
 /**
  * SVG visualization of workout power profile
  */
-export function PowerProfileSVG({ segments, ftp }: PowerProfileSVGProps) {
+export function PowerProfileSVG({ segments, ftp, mini = false }: PowerProfileSVGProps) {
   const expanded = useMemo(() => expandSegments(segments), [segments])
 
   if (expanded.length === 0) return null
 
-  const width = 600
-  const chartHeight = 170
-  const graphHeight = 140
-  const topMargin = 20
+  const width = mini ? 200 : 600
+  const graphHeight = mini ? 40 : 140
+  const topMargin = mini ? 2 : 20
+  const chartHeight = mini ? 44 : 170
 
   const totalDuration = expanded.reduce((sum, seg) => sum + seg.duration_min, 0)
 
@@ -145,10 +147,10 @@ export function PowerProfileSVG({ segments, ftp }: PowerProfileSVGProps) {
           width={segmentWidth}
           height={barHeight}
           fill={color}
-          stroke="#fff"
-          strokeWidth="1"
+          stroke={mini ? 'transparent' : '#fff'}
+          strokeWidth={mini ? 0 : 1}
         />
-        {barHeight > 25 && segmentWidth > 30 && (
+        {!mini && barHeight > 25 && segmentWidth > 30 && (
           <text
             x={xOffset + segmentWidth / 2}
             y={y + barHeight / 2 + 5}
@@ -163,6 +165,19 @@ export function PowerProfileSVG({ segments, ftp }: PowerProfileSVGProps) {
       </g>
     )
   })
+
+  // Mini mode: just the bars
+  if (mini) {
+    return (
+      <svg
+        viewBox={`0 0 ${width} ${chartHeight}`}
+        className="w-full h-auto"
+        preserveAspectRatio="xMidYMid meet"
+      >
+        {bars}
+      </svg>
+    )
+  }
 
   const ftpY = topMargin + graphHeight * 0.5
   const gridY1 = topMargin + graphHeight * 0.25
