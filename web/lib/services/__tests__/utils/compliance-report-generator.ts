@@ -381,21 +381,23 @@ function buildPowerProfileSVG(
   }
 
   let xOffset = 0
-  const bars = expanded.map((seg) => {
-    const segWidth = (seg.duration_min / totalDurationMin) * width
-    const barHeight = getBarHeight(seg.power_low_pct, seg.power_high_pct)
-    const y = topMargin + graphHeight - barHeight
-    const avgPct = (seg.power_low_pct + seg.power_high_pct) / 2
-    const zone = getZoneFromPowerPct(avgPct)
-    const color = getZoneColor(zone)
+  const bars = expanded
+    .map((seg) => {
+      const segWidth = (seg.duration_min / totalDurationMin) * width
+      const barHeight = getBarHeight(seg.power_low_pct, seg.power_high_pct)
+      const y = topMargin + graphHeight - barHeight
+      const avgPct = (seg.power_low_pct + seg.power_high_pct) / 2
+      const zone = getZoneFromPowerPct(avgPct)
+      const color = getZoneColor(zone)
 
-    const bar = `
+      const bar = `
       <rect x="${xOffset}" y="${y}" width="${segWidth}" height="${barHeight}" fill="${color}" stroke="#fff" stroke-width="1" opacity="0.7"/>
       ${barHeight > 25 && segWidth > 30 ? `<text x="${xOffset + segWidth / 2}" y="${y + barHeight / 2 + 5}" font-size="14" font-weight="bold" fill="#fff" text-anchor="middle">Z${zone}</text>` : ''}
     `
-    xOffset += segWidth
-    return bar
-  }).join('')
+      xOffset += segWidth
+      return bar
+    })
+    .join('')
 
   // Build actual power overlay line
   let powerOverlay = ''
@@ -462,7 +464,10 @@ function buildPowerProfileSVG(
   `
 }
 
-function buildWorkoutStructure(segments: ComplianceReportEntry['fixture']['segments'], ftp: number): string {
+function buildWorkoutStructure(
+  segments: ComplianceReportEntry['fixture']['segments'],
+  ftp: number
+): string {
   interface GroupedSegment {
     type: 'repeat' | 'single'
     repeat_count?: number
@@ -525,7 +530,13 @@ function buildWorkoutStructure(segments: ComplianceReportEntry['fixture']['segme
     return `${lowW}-${highW}W (${lowPct}-${highPct}%)`
   }
 
-  const renderSegmentRow = (seg: { type: string; duration_min: number; power_low_pct: number; power_high_pct: number; description?: string | undefined }) => {
+  const renderSegmentRow = (seg: {
+    type: string
+    duration_min: number
+    power_low_pct: number
+    power_high_pct: number
+    description?: string | undefined
+  }) => {
     const avgPct = (seg.power_low_pct + seg.power_high_pct) / 2
     const zone = getZoneFromPowerPct(avgPct)
     const color = getZoneColor(zone)
@@ -538,9 +549,10 @@ function buildWorkoutStructure(segments: ComplianceReportEntry['fixture']['segme
     `
   }
 
-  return grouped.map((group) => {
-    if (group.type === 'repeat' && group.segments) {
-      return `
+  return grouped
+    .map((group) => {
+      if (group.type === 'repeat' && group.segments) {
+        return `
         <div class="structure-repeat">
           <div class="repeat-header">
             <span class="repeat-badge">${group.repeat_count}x</span>
@@ -551,9 +563,10 @@ function buildWorkoutStructure(segments: ComplianceReportEntry['fixture']['segme
           </div>
         </div>
       `
-    }
-    return group.segment ? renderSegmentRow(group.segment) : ''
-  }).join('')
+      }
+      return group.segment ? renderSegmentRow(group.segment) : ''
+    })
+    .join('')
 }
 
 function buildPowerProfile(entry: ComplianceReportEntry): string {
@@ -612,15 +625,12 @@ function syntaxHighlightJson(json: string): string {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(
-      /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?)/g,
-      (match) => {
-        if (/:$/.test(match)) {
-          return '<span class="json-key">' + match.slice(0, -1) + '</span>:'
-        }
-        return '<span class="json-string">' + match + '</span>'
+    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?)/g, (match) => {
+      if (/:$/.test(match)) {
+        return '<span class="json-key">' + match.slice(0, -1) + '</span>:'
       }
-    )
+      return '<span class="json-string">' + match + '</span>'
+    })
     .replace(/\b(true|false)\b/g, '<span class="json-boolean">$1</span>')
     .replace(/\bnull\b/g, '<span class="json-null">null</span>')
     .replace(/\b(-?\d+\.?\d*)\b/g, '<span class="json-number">$1</span>')

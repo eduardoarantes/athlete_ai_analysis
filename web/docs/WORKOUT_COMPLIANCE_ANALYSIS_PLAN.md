@@ -8,7 +8,7 @@
 > **Note:** This is the **engineering/developer version** of this document with full code examples and implementation details.
 >
 > For a **coach/athlete-friendly version** without code, see the web guide at:
-> `/guides/compliance` (requires login) - [`web/app/(dashboard)/guides/compliance/page.tsx`](../app/(dashboard)/guides/compliance/page.tsx)
+> `/guides/compliance` (requires login) - [`web/app/(dashboard)/guides/compliance/page.tsx`](<../app/(dashboard)/guides/compliance/page.tsx>)
 
 ---
 
@@ -43,6 +43,7 @@ When an athlete completes a ride, we compare their actual performance (power dat
 ### Why Pattern-Based Matching?
 
 Athletes rarely execute workouts exactly as written. Common variations include:
+
 - Starting intervals a minute late
 - Taking longer recovery between efforts
 - Cutting a segment short
@@ -114,30 +115,30 @@ Athletes rarely execute workouts exactly as written. Common variations include:
 
 ### Available Data
 
-| Data | Location | Status |
-|------|----------|--------|
-| **FTP** | `athlete_profiles.ftp` | ✅ Available |
-| **Max HR** | `athlete_profiles.max_hr` | ✅ Available |
-| **Resting HR** | `athlete_profiles.resting_hr` | ✅ Available |
-| **LTHR** | - | ❌ **Missing - needs migration** |
-| **Workout Segments** | `plan_data.weekly_plan[].workouts[].segments` | ✅ Available |
-| **Activity Summary** | `strava_activities` table | ✅ Available |
-| **Power Streams** | Strava API | ⚠️ Fetch on-demand |
+| Data                 | Location                                      | Status                           |
+| -------------------- | --------------------------------------------- | -------------------------------- |
+| **FTP**              | `athlete_profiles.ftp`                        | ✅ Available                     |
+| **Max HR**           | `athlete_profiles.max_hr`                     | ✅ Available                     |
+| **Resting HR**       | `athlete_profiles.resting_hr`                 | ✅ Available                     |
+| **LTHR**             | -                                             | ❌ **Missing - needs migration** |
+| **Workout Segments** | `plan_data.weekly_plan[].workouts[].segments` | ✅ Available                     |
+| **Activity Summary** | `strava_activities` table                     | ✅ Available                     |
+| **Power Streams**    | Strava API                                    | ⚠️ Fetch on-demand               |
 
 ### Workout Segment Structure (Current)
 
 ```typescript
 interface WorkoutSegment {
   type: 'warmup' | 'interval' | 'recovery' | 'cooldown' | 'steady' | 'work' | 'tempo'
-  duration_min: number           // Target duration in minutes
-  power_low_pct?: number         // Lower bound as % of FTP (e.g., 88)
-  power_high_pct?: number        // Upper bound as % of FTP (e.g., 93)
-  description?: string           // Human-readable description
+  duration_min: number // Target duration in minutes
+  power_low_pct?: number // Lower bound as % of FTP (e.g., 88)
+  power_high_pct?: number // Upper bound as % of FTP (e.g., 93)
+  description?: string // Human-readable description
 
   // For interval sets
-  sets?: number                  // Number of repetitions
-  work?: { duration_min, power_low_pct, power_high_pct }
-  recovery?: { duration_min, power_low_pct, power_high_pct }
+  sets?: number // Number of repetitions
+  work?: { duration_min; power_low_pct; power_high_pct }
+  recovery?: { duration_min; power_low_pct; power_high_pct }
 }
 ```
 
@@ -146,9 +147,9 @@ interface WorkoutSegment {
 ```typescript
 // Fetched from: GET /activities/{id}/streams?keys=watts,heartrate,time
 interface StravaStreams {
-  time: { data: number[] }        // Seconds from activity start [0, 1, 2, ...]
-  watts: { data: number[] }       // Power at each second [145, 148, 152, ...]
-  heartrate: { data: number[] }   // HR at each second [120, 121, 122, ...]
+  time: { data: number[] } // Seconds from activity start [0, 1, 2, ...]
+  watts: { data: number[] } // Power at each second [145, 148, 152, ...]
+  heartrate: { data: number[] } // HR at each second [120, 121, 122, ...]
 }
 ```
 
@@ -160,15 +161,16 @@ interface StravaStreams {
 
 Power zones are calculated from the athlete's **Functional Threshold Power (FTP)** - the highest power they can sustain for approximately one hour.
 
-| Zone | Name | % of FTP | Description | Feel |
-|------|------|----------|-------------|------|
-| **Z1** | Active Recovery | < 55% | Very easy spinning | Can chat easily |
-| **Z2** | Endurance | 55-75% | Comfortable pace | Can hold conversation |
-| **Z3** | Tempo | 76-90% | Moderate effort | Conversation difficult |
-| **Z4** | Threshold | 91-105% | Hard, sustainable | Few words at a time |
-| **Z5** | VO2max+ | > 105% | Very hard to maximal | Cannot speak |
+| Zone   | Name            | % of FTP | Description          | Feel                   |
+| ------ | --------------- | -------- | -------------------- | ---------------------- |
+| **Z1** | Active Recovery | < 55%    | Very easy spinning   | Can chat easily        |
+| **Z2** | Endurance       | 55-75%   | Comfortable pace     | Can hold conversation  |
+| **Z3** | Tempo           | 76-90%   | Moderate effort      | Conversation difficult |
+| **Z4** | Threshold       | 91-105%  | Hard, sustainable    | Few words at a time    |
+| **Z5** | VO2max+         | > 105%   | Very hard to maximal | Cannot speak           |
 
 **Example for FTP = 250W:**
+
 - Z1: 0-137W
 - Z2: 138-187W
 - Z3: 188-225W
@@ -179,15 +181,16 @@ Power zones are calculated from the athlete's **Functional Threshold Power (FTP)
 
 Heart rate zones are calculated from **Lactate Threshold Heart Rate (LTHR)** - the heart rate at which lactate begins to accumulate in the blood faster than it can be cleared.
 
-| Zone | Name | % of LTHR | Description |
-|------|------|-----------|-------------|
-| **Z1** | Active Recovery | < 81% | Very easy |
-| **Z2** | Endurance | 81-89% | Aerobic base building |
-| **Z3** | Tempo | 90-93% | Muscular endurance |
-| **Z4** | Threshold | 94-99% | Lactate threshold |
-| **Z5** | VO2max+ | 100%+ | Anaerobic capacity |
+| Zone   | Name            | % of LTHR | Description           |
+| ------ | --------------- | --------- | --------------------- |
+| **Z1** | Active Recovery | < 81%     | Very easy             |
+| **Z2** | Endurance       | 81-89%    | Aerobic base building |
+| **Z3** | Tempo           | 90-93%    | Muscular endurance    |
+| **Z4** | Threshold       | 94-99%    | Lactate threshold     |
+| **Z5** | VO2max+         | 100%+     | Anaerobic capacity    |
 
 **Example for LTHR = 165bpm:**
+
 - Z1: 0-133bpm
 - Z2: 134-146bpm
 - Z3: 147-153bpm
@@ -201,16 +204,19 @@ Heart rate zones are calculated from **Lactate Threshold Heart Rate (LTHR)** - t
 ### The Challenge
 
 A planned workout has structured segments:
+
 ```
 Planned: [Warmup 10min] → [Interval 5min] → [Recovery 3min] → [Interval 5min] → [Cooldown 5min]
 ```
 
 But an actual activity is a continuous stream of power data:
+
 ```
 Actual: 142,145,148,151,...,265,268,271,...,145,142,138,...,262,265,270,...,148,145,140,...
 ```
 
 We need to intelligently match these together, accounting for:
+
 - The athlete starting intervals early or late
 - Taking longer or shorter recovery
 - Skipping segments entirely
@@ -257,6 +263,7 @@ We need to intelligently match these together, accounting for:
 Expand interval sets into individual segments:
 
 **Input (Planned Workout):**
+
 ```
 Warmup: 10 min @ 50-60%
 Sets: 3x (5 min work @ 105-115%, 3 min recovery @ 50-55%)
@@ -264,6 +271,7 @@ Cooldown: 5 min @ 50-60%
 ```
 
 **Output (Flattened Segments):**
+
 ```
 Index  Type      Duration  Power Range    Target Zone
 ─────────────────────────────────────────────────────
@@ -298,54 +306,50 @@ Using athlete's FTP (e.g., 250W):
 
 ```typescript
 interface AdaptiveParameters {
-  smoothingWindowSec: number    // Rolling average window
+  smoothingWindowSec: number // Rolling average window
   minSegmentDurationSec: number // Minimum time to consider a segment
-  boundaryStabilitySec: number  // Time zone must be stable to mark boundary
+  boundaryStabilitySec: number // Time zone must be stable to mark boundary
 }
 
-function calculateAdaptiveParameters(
-  plannedSegments: PlannedSegment[]
-): AdaptiveParameters {
+function calculateAdaptiveParameters(plannedSegments: PlannedSegment[]): AdaptiveParameters {
   // Find the shortest planned segment
-  const shortestSegmentSec = Math.min(
-    ...plannedSegments.map(s => s.duration_sec)
-  )
+  const shortestSegmentSec = Math.min(...plannedSegments.map((s) => s.duration_sec))
 
   // Adaptive rules based on shortest segment
   if (shortestSegmentSec <= 15) {
     // Sprint/Neuromuscular workouts (≤15 sec efforts)
     return {
-      smoothingWindowSec: 3,        // Minimal smoothing
-      minSegmentDurationSec: 5,     // Detect very short efforts
-      boundaryStabilitySec: 3       // Quick transitions
+      smoothingWindowSec: 3, // Minimal smoothing
+      minSegmentDurationSec: 5, // Detect very short efforts
+      boundaryStabilitySec: 3, // Quick transitions
     }
   } else if (shortestSegmentSec <= 30) {
     // Short intervals (15-30 sec)
     return {
       smoothingWindowSec: 5,
       minSegmentDurationSec: 10,
-      boundaryStabilitySec: 5
+      boundaryStabilitySec: 5,
     }
   } else if (shortestSegmentSec <= 60) {
     // Micro intervals (30-60 sec)
     return {
       smoothingWindowSec: 10,
       minSegmentDurationSec: 15,
-      boundaryStabilitySec: 10
+      boundaryStabilitySec: 10,
     }
   } else if (shortestSegmentSec <= 180) {
     // Standard intervals (1-3 min)
     return {
       smoothingWindowSec: 15,
       minSegmentDurationSec: 20,
-      boundaryStabilitySec: 15
+      boundaryStabilitySec: 15,
     }
   } else {
     // Long intervals / steady state (>3 min)
     return {
       smoothingWindowSec: 30,
       minSegmentDurationSec: 30,
-      boundaryStabilitySec: 20
+      boundaryStabilitySec: 20,
     }
   }
 }
@@ -353,14 +357,14 @@ function calculateAdaptiveParameters(
 
 **Parameter Guidelines by Workout Type:**
 
-| Workout Type | Shortest Effort | Smoothing | Min Segment | Example |
-|--------------|-----------------|-----------|-------------|---------|
-| Sprints | 5-15 sec | 3 sec | 5 sec | 6x10sec sprints |
-| Tabata | 20 sec | 5 sec | 10 sec | 8x20sec on/10sec off |
-| VO2max | 30-60 sec | 10 sec | 15 sec | 30/30s, 40/20s |
-| Threshold | 1-5 min | 15 sec | 20 sec | 5x3min @ FTP |
-| Sweet Spot | 5-20 min | 30 sec | 30 sec | 2x20min @ 90% |
-| Endurance | 30+ min | 30 sec | 30 sec | 2hr Z2 |
+| Workout Type | Shortest Effort | Smoothing | Min Segment | Example              |
+| ------------ | --------------- | --------- | ----------- | -------------------- |
+| Sprints      | 5-15 sec        | 3 sec     | 5 sec       | 6x10sec sprints      |
+| Tabata       | 20 sec          | 5 sec     | 10 sec      | 8x20sec on/10sec off |
+| VO2max       | 30-60 sec       | 10 sec    | 15 sec      | 30/30s, 40/20s       |
+| Threshold    | 1-5 min         | 15 sec    | 20 sec      | 5x3min @ FTP         |
+| Sweet Spot   | 5-20 min        | 30 sec    | 30 sec      | 2x20min @ 90%        |
+| Endurance    | 30+ min         | 30 sec    | 30 sec      | 2hr Z2               |
 
 #### 1.4 Smooth Power Stream
 
@@ -369,7 +373,7 @@ Apply rolling average to reduce noise, using the **adaptive smoothing window**:
 ```typescript
 function smoothPowerStream(
   power: number[],
-  windowSec: number  // From adaptive parameters
+  windowSec: number // From adaptive parameters
 ): number[] {
   const smoothed: number[] = []
 
@@ -390,6 +394,7 @@ Smoothed: [148, 152, 158, 185, 210, 242, ...]  ← Cleaner signal
 ```
 
 **Why adaptive smoothing?**
+
 - Sprint workouts: 3-5 sec window captures short explosive efforts
 - Standard intervals: 15-30 sec window filters noise while detecting changes
 - Too much smoothing on sprints = missed efforts
@@ -414,6 +419,7 @@ function classifyZone(power: number, zones: PowerZones): number {
 ```
 
 **Example (FTP = 250W):**
+
 ```
 Time(s)  Power  Zone
 ──────────────────────
@@ -445,6 +451,7 @@ Zone Timeline: [2,2,2,2,2,2,2,2,2,2,...,5,5,5,5,5,5,...,1,1,1,1,...]
 A **segment boundary** occurs when the zone changes significantly and stays changed.
 
 **Algorithm (using adaptive parameters):**
+
 ```
 1. Scan the zone timeline
 2. Mark a boundary when:
@@ -454,6 +461,7 @@ A **segment boundary** occurs when the zone changes significantly and stays chan
 ```
 
 **Example:**
+
 ```
 Zone:  [2,2,2,2,2,2,5,5,5,5,5,5,5,5,1,1,1,1,1,1,5,5,5,5,5,5,...]
        └─────────┘ └─────────────┘ └─────────┘ └─────────────┘
@@ -469,12 +477,13 @@ Group continuous zone periods into blocks:
 
 ```typescript
 interface DetectedBlock {
-  start_sec: number      // Start time in activity
-  end_sec: number        // End time in activity
-  duration_sec: number   // How long the block lasted
-  dominant_zone: number  // Most common zone (1-5)
-  avg_power: number      // Average power during block
-  zone_distribution: {   // % time in each zone
+  start_sec: number // Start time in activity
+  end_sec: number // End time in activity
+  duration_sec: number // How long the block lasted
+  dominant_zone: number // Most common zone (1-5)
+  avg_power: number // Average power during block
+  zone_distribution: {
+    // % time in each zone
     z1: number
     z2: number
     z3: number
@@ -485,6 +494,7 @@ interface DetectedBlock {
 ```
 
 **Example Detected Blocks:**
+
 ```
 Block  Start    End      Duration  Zone  Avg Power
 ──────────────────────────────────────────────────
@@ -506,10 +516,12 @@ This is the core intelligence of the algorithm.
 #### 4.1 The Matching Problem
 
 We have:
+
 - **Planned Segments:** What the athlete was supposed to do
 - **Detected Blocks:** What the athlete actually did
 
 We need to match them, handling:
+
 - **Time shifts:** Athlete started intervals late
 - **Duration variations:** Segments longer/shorter than planned
 - **Skipped segments:** Athlete missed a segment entirely
@@ -520,10 +532,7 @@ We need to match them, handling:
 For each potential match between a planned segment and detected block:
 
 ```typescript
-function calculateMatchSimilarity(
-  planned: PlannedSegment,
-  detected: DetectedBlock
-): number {
+function calculateMatchSimilarity(planned: PlannedSegment, detected: DetectedBlock): number {
   // Score components (0-100 each)
 
   // 1. Zone Match (40% weight)
@@ -544,11 +553,12 @@ function calculateMatchSimilarity(
   )
 
   // Weighted total
-  return (zoneScore * 0.4) + (durationScore * 0.3) + (powerScore * 0.3)
+  return zoneScore * 0.4 + durationScore * 0.3 + powerScore * 0.3
 }
 ```
 
 **Zone Match Scoring:**
+
 ```
 Target Zone vs Detected Zone → Score
 Same zone                    → 100
@@ -558,6 +568,7 @@ Off by 3+ zones             → 10
 ```
 
 **Duration Match Scoring:**
+
 ```
 Duration Ratio → Score
 0.9 - 1.1      → 100  (within 10%)
@@ -568,6 +579,7 @@ Duration Ratio → Score
 ```
 
 **Power Match Scoring:**
+
 ```
 If avg power within target range → 100
 If below target: deduct 2 points per watt below
@@ -729,18 +741,18 @@ For each matched pair (Planned P, Detected D):
 interface SegmentAnalysis {
   // Identification
   segment_index: number
-  segment_name: string           // "Interval 1", "Recovery 2", etc.
-  segment_type: string           // warmup, interval, recovery, cooldown
+  segment_name: string // "Interval 1", "Recovery 2", etc.
+  segment_type: string // warmup, interval, recovery, cooldown
   match_quality: 'excellent' | 'good' | 'fair' | 'poor' | 'skipped'
 
   // Planned targets
   planned_duration_sec: number
-  planned_power_low: number      // Watts
-  planned_power_high: number     // Watts
-  planned_zone: number           // 1-5
+  planned_power_low: number // Watts
+  planned_power_high: number // Watts
+  planned_zone: number // 1-5
 
   // Actual performance
-  actual_start_time: string      // "6:30" into activity
+  actual_start_time: string // "6:30" into activity
   actual_duration_sec: number
   actual_avg_power: number
   actual_normalized_power: number
@@ -759,14 +771,14 @@ interface SegmentAnalysis {
 
   // Compliance scores (0-100)
   scores: {
-    power_compliance: number      // Was avg power correct?
-    zone_compliance: number       // % time in target zone
-    duration_compliance: number   // Was duration correct?
+    power_compliance: number // Was avg power correct?
+    zone_compliance: number // % time in target zone
+    duration_compliance: number // Was duration correct?
     overall_segment_score: number // Weighted combination
   }
 
   // Human-readable assessment
-  assessment: string             // "Power was 15W below target"
+  assessment: string // "Power was 15W below target"
 }
 ```
 
@@ -784,12 +796,11 @@ function calculatePowerCompliance(
   targetLow: number,
   targetHigh: number
 ): { score: number; assessment: string } {
-
   // Perfect: within target range
   if (actualAvgPower >= targetLow && actualAvgPower <= targetHigh) {
     return {
       score: 100,
-      assessment: "Power was within target range"
+      assessment: 'Power was within target range',
     }
   }
 
@@ -801,11 +812,11 @@ function calculatePowerCompliance(
     const percentBelow = (wattsBelow / targetMid) * 100
 
     // Deduct 2 points per percent below (more penalty for going easy)
-    const score = Math.max(0, 100 - (percentBelow * 2))
+    const score = Math.max(0, 100 - percentBelow * 2)
 
     return {
       score: Math.round(score),
-      assessment: `Power was ${Math.round(wattsBelow)}W below target`
+      assessment: `Power was ${Math.round(wattsBelow)}W below target`,
     }
   }
 
@@ -814,11 +825,11 @@ function calculatePowerCompliance(
   const percentAbove = (wattsAbove / targetMid) * 100
 
   // Deduct 1 point per percent above (less penalty for going harder)
-  const score = Math.max(0, 100 - (percentAbove * 1))
+  const score = Math.max(0, 100 - percentAbove * 1)
 
   return {
     score: Math.round(score),
-    assessment: `Power was ${Math.round(wattsAbove)}W above target (good effort!)`
+    assessment: `Power was ${Math.round(wattsAbove)}W above target (good effort!)`,
   }
 }
 ```
@@ -840,7 +851,6 @@ function calculateZoneCompliance(
   timeInZone: ZoneDistribution,
   targetZone: number
 ): { score: number; assessment: string } {
-
   const totalTime = Object.values(timeInZone).reduce((a, b) => a + b, 0)
   const timeInTarget = timeInZone[`z${targetZone}`]
 
@@ -881,7 +891,6 @@ function calculateDurationCompliance(
   actualDurationSec: number,
   targetDurationSec: number
 ): { score: number; assessment: string } {
-
   const ratio = actualDurationSec / targetDurationSec
 
   let score: number
@@ -890,29 +899,30 @@ function calculateDurationCompliance(
   if (ratio >= 0.95 && ratio <= 1.05) {
     // Within 5%: Perfect
     score = 100
-    assessment = "Duration matched plan"
-  } else if (ratio >= 0.90 && ratio <= 1.10) {
+    assessment = 'Duration matched plan'
+  } else if (ratio >= 0.9 && ratio <= 1.1) {
     // Within 10%: Excellent
     score = 95
-    assessment = "Duration very close to plan"
-  } else if (ratio >= 0.80 && ratio <= 1.20) {
+    assessment = 'Duration very close to plan'
+  } else if (ratio >= 0.8 && ratio <= 1.2) {
     // Within 20%: Good
     score = 85
-    assessment = ratio < 1
-      ? `Segment was ${Math.round((1-ratio)*100)}% shorter than planned`
-      : `Segment was ${Math.round((ratio-1)*100)}% longer than planned`
-  } else if (ratio >= 0.60 && ratio <= 1.40) {
+    assessment =
+      ratio < 1
+        ? `Segment was ${Math.round((1 - ratio) * 100)}% shorter than planned`
+        : `Segment was ${Math.round((ratio - 1) * 100)}% longer than planned`
+  } else if (ratio >= 0.6 && ratio <= 1.4) {
     // Within 40%: Fair
     score = 70
-    assessment = ratio < 1
-      ? `Segment was significantly shorter than planned`
-      : `Segment was significantly longer than planned`
+    assessment =
+      ratio < 1
+        ? `Segment was significantly shorter than planned`
+        : `Segment was significantly longer than planned`
   } else {
     // More than 40% off: Poor
     score = Math.max(0, 100 - Math.abs(1 - ratio) * 100)
-    assessment = ratio < 1
-      ? `Segment was much shorter than planned`
-      : `Segment was much longer than planned`
+    assessment =
+      ratio < 1 ? `Segment was much shorter than planned` : `Segment was much longer than planned`
   }
 
   return { score: Math.round(score), assessment }
@@ -925,13 +935,13 @@ Weight the three components based on segment type:
 
 ```typescript
 const SEGMENT_WEIGHTS: Record<string, { power: number; zone: number; duration: number }> = {
-  warmup:   { power: 0.25, zone: 0.35, duration: 0.40 },  // Duration matters for warmup
-  work:     { power: 0.45, zone: 0.40, duration: 0.15 },  // Power & zone matter most
-  interval: { power: 0.45, zone: 0.40, duration: 0.15 },  // Power & zone matter most
-  recovery: { power: 0.20, zone: 0.30, duration: 0.50 },  // Duration matters for recovery
-  cooldown: { power: 0.25, zone: 0.35, duration: 0.40 },  // Duration matters for cooldown
-  steady:   { power: 0.40, zone: 0.40, duration: 0.20 },  // Balanced
-  tempo:    { power: 0.40, zone: 0.40, duration: 0.20 },  // Balanced
+  warmup: { power: 0.25, zone: 0.35, duration: 0.4 }, // Duration matters for warmup
+  work: { power: 0.45, zone: 0.4, duration: 0.15 }, // Power & zone matter most
+  interval: { power: 0.45, zone: 0.4, duration: 0.15 }, // Power & zone matter most
+  recovery: { power: 0.2, zone: 0.3, duration: 0.5 }, // Duration matters for recovery
+  cooldown: { power: 0.25, zone: 0.35, duration: 0.4 }, // Duration matters for cooldown
+  steady: { power: 0.4, zone: 0.4, duration: 0.2 }, // Balanced
+  tempo: { power: 0.4, zone: 0.4, duration: 0.2 }, // Balanced
 }
 
 function calculateSegmentScore(
@@ -940,12 +950,10 @@ function calculateSegmentScore(
   durationScore: number,
   segmentType: string
 ): number {
-  const weights = SEGMENT_WEIGHTS[segmentType] || { power: 0.35, zone: 0.35, duration: 0.30 }
+  const weights = SEGMENT_WEIGHTS[segmentType] || { power: 0.35, zone: 0.35, duration: 0.3 }
 
   return Math.round(
-    powerScore * weights.power +
-    zoneScore * weights.zone +
-    durationScore * weights.duration
+    powerScore * weights.power + zoneScore * weights.zone + durationScore * weights.duration
   )
 }
 ```
@@ -961,16 +969,14 @@ function calculateOverallCompliance(segments: SegmentAnalysis[]): {
   summary: string
 } {
   // Filter out skipped segments for weighted average
-  const completedSegments = segments.filter(s => s.match_quality !== 'skipped')
+  const completedSegments = segments.filter((s) => s.match_quality !== 'skipped')
 
   if (completedSegments.length === 0) {
     return { score: 0, grade: 'F', summary: 'Workout not completed' }
   }
 
   // Calculate duration-weighted average
-  const totalPlannedDuration = completedSegments.reduce(
-    (sum, s) => sum + s.planned_duration_sec, 0
-  )
+  const totalPlannedDuration = completedSegments.reduce((sum, s) => sum + s.planned_duration_sec, 0)
 
   let weightedScore = 0
   for (const segment of completedSegments) {
@@ -979,17 +985,22 @@ function calculateOverallCompliance(segments: SegmentAnalysis[]): {
   }
 
   // Penalize for skipped segments
-  const skippedCount = segments.filter(s => s.match_quality === 'skipped').length
-  const skippedPenalty = skippedCount * 5  // -5 points per skipped segment
+  const skippedCount = segments.filter((s) => s.match_quality === 'skipped').length
+  const skippedPenalty = skippedCount * 5 // -5 points per skipped segment
 
   const finalScore = Math.max(0, Math.round(weightedScore) - skippedPenalty)
 
   // Determine grade
   const grade =
-    finalScore >= 90 ? 'A' :
-    finalScore >= 80 ? 'B' :
-    finalScore >= 70 ? 'C' :
-    finalScore >= 60 ? 'D' : 'F'
+    finalScore >= 90
+      ? 'A'
+      : finalScore >= 80
+        ? 'B'
+        : finalScore >= 70
+          ? 'C'
+          : finalScore >= 60
+            ? 'D'
+            : 'F'
 
   // Generate summary
   const summary = generateSummary(finalScore, skippedCount, completedSegments)
@@ -1000,13 +1011,13 @@ function calculateOverallCompliance(segments: SegmentAnalysis[]): {
 
 ### 5.6 Grade Scale
 
-| Score | Grade | Meaning | Typical Feedback |
-|-------|-------|---------|------------------|
-| 90-100 | A | Excellent | "Outstanding execution! You nailed this workout." |
-| 80-89 | B | Good | "Good job! Minor deviations from the plan." |
-| 70-79 | C | Acceptable | "Decent effort with some room for improvement." |
-| 60-69 | D | Below Target | "Workout completed but with significant deviations." |
-| 0-59 | F | Poor | "Workout was not completed as prescribed." |
+| Score  | Grade | Meaning      | Typical Feedback                                     |
+| ------ | ----- | ------------ | ---------------------------------------------------- |
+| 90-100 | A     | Excellent    | "Outstanding execution! You nailed this workout."    |
+| 80-89  | B     | Good         | "Good job! Minor deviations from the plan."          |
+| 70-79  | C     | Acceptable   | "Decent effort with some room for improvement."      |
+| 60-69  | D     | Below Target | "Workout completed but with significant deviations." |
+| 0-59   | F     | Poor         | "Workout was not completed as prescribed."           |
 
 ---
 
@@ -1017,6 +1028,7 @@ function calculateOverallCompliance(segments: SegmentAnalysis[]): {
 **Scenario:** Planned 60 min workout, activity was 35 min
 
 **Handling:**
+
 - Match whatever segments were completed
 - Mark remaining planned segments as "skipped"
 - Flag as "Incomplete Workout"
@@ -1027,6 +1039,7 @@ function calculateOverallCompliance(segments: SegmentAnalysis[]): {
 **Scenario:** Planned 45 min workout, activity was 70 min
 
 **Handling:**
+
 - Extra time at the end becomes "unmatched detected blocks"
 - Does not negatively impact compliance score
 - Coach feedback notes: "You did extra work beyond the plan"
@@ -1036,6 +1049,7 @@ function calculateOverallCompliance(segments: SegmentAnalysis[]): {
 **Scenario:** Strava activity has no power data (no power meter)
 
 **Handling:**
+
 - Cannot perform compliance analysis
 - Return special status: "Power data required for compliance analysis"
 - Optionally: Fall back to HR-based analysis (less accurate)
@@ -1045,6 +1059,7 @@ function calculateOverallCompliance(segments: SegmentAnalysis[]): {
 **Scenario:** Indoor trainer workouts have more consistent power
 
 **Handling:**
+
 - No special handling needed
 - Algorithm works the same
 - Indoor workouts typically score higher due to better power control
@@ -1054,6 +1069,7 @@ function calculateOverallCompliance(segments: SegmentAnalysis[]): {
 **Scenario:** Workouts with segments under 30 seconds (sprints, Tabata, 30/30s, etc.)
 
 **Examples:**
+
 - 6x10 second sprints with 50 sec recovery
 - Tabata: 8x (20 sec on / 10 sec off)
 - 30/30s: 10x (30 sec hard / 30 sec easy)
@@ -1061,19 +1077,21 @@ function calculateOverallCompliance(segments: SegmentAnalysis[]): {
 
 **Handling (via Adaptive Parameters):**
 
-| Effort Duration | Smoothing | Min Segment | Boundary Stability |
-|-----------------|-----------|-------------|-------------------|
-| ≤15 sec (sprints) | 3 sec | 5 sec | 3 sec |
-| 15-30 sec (Tabata) | 5 sec | 10 sec | 5 sec |
-| 30-60 sec (micro) | 10 sec | 15 sec | 10 sec |
+| Effort Duration    | Smoothing | Min Segment | Boundary Stability |
+| ------------------ | --------- | ----------- | ------------------ |
+| ≤15 sec (sprints)  | 3 sec     | 5 sec       | 3 sec              |
+| 15-30 sec (Tabata) | 5 sec     | 10 sec      | 5 sec              |
+| 30-60 sec (micro)  | 10 sec    | 15 sec      | 10 sec             |
 
 **Special Considerations for Short Efforts:**
+
 - Peak power matters more than average for sprints
 - Use max power within window rather than average for efforts <15 sec
 - Recovery segments may not reach Z1 before next effort starts
 - Consider "on/off" pattern matching rather than zone-based for Tabata-style workouts
 
 **Alternative Scoring for Sprint Workouts:**
+
 ```typescript
 // For sprints ≤15 sec, use peak power instead of average
 if (segment.duration_sec <= 15) {
@@ -1092,49 +1110,49 @@ if (segment.duration_sec <= 15) {
 ```typescript
 interface WorkoutComplianceAnalysis {
   // === IDENTIFICATION ===
-  analysis_id: string              // Unique ID for this analysis
-  match_id: string                 // Links to workout_activity_matches
-  analyzed_at: string              // ISO timestamp
+  analysis_id: string // Unique ID for this analysis
+  match_id: string // Links to workout_activity_matches
+  analyzed_at: string // ISO timestamp
 
   // === WORKOUT INFO ===
   workout: {
-    date: string                   // "2026-01-06"
-    name: string                   // "VO2max Intervals"
-    type: string                   // "vo2max"
-    planned_duration_min: number   // 45
-    planned_tss: number            // 85
+    date: string // "2026-01-06"
+    name: string // "VO2max Intervals"
+    type: string // "vo2max"
+    planned_duration_min: number // 45
+    planned_tss: number // 85
   }
 
   // === ACTIVITY INFO ===
   activity: {
     strava_id: number
-    name: string                   // "Tuesday Morning Ride"
-    actual_duration_min: number    // 48
-    actual_tss: number             // 82
+    name: string // "Tuesday Morning Ride"
+    actual_duration_min: number // 48
+    actual_tss: number // 82
   }
 
   // === ATHLETE CONTEXT ===
   athlete: {
-    ftp: number                    // 250
-    lthr: number | null            // 165
+    ftp: number // 250
+    lthr: number | null // 165
     power_zones: PowerZones
     hr_zones: HRZones | null
   }
 
   // === OVERALL RESULTS ===
   overall: {
-    score: number                  // 0-100
+    score: number // 0-100
     grade: 'A' | 'B' | 'C' | 'D' | 'F'
-    summary: string                // "Good workout execution with..."
+    summary: string // "Good workout execution with..."
 
     // High-level stats
-    segments_completed: number     // 5
-    segments_skipped: number       // 1
-    segments_total: number         // 6
+    segments_completed: number // 5
+    segments_skipped: number // 1
+    segments_total: number // 6
 
     // Time analysis
-    total_time_in_target_zone_pct: number  // 78%
-    avg_power_vs_target_pct: number        // 102% (slightly above)
+    total_time_in_target_zone_pct: number // 78%
+    avg_power_vs_target_pct: number // 102% (slightly above)
   }
 
   // === PER-SEGMENT BREAKDOWN ===
@@ -1142,15 +1160,15 @@ interface WorkoutComplianceAnalysis {
 
   // === AI COACH FEEDBACK ===
   coach_feedback: {
-    summary: string                // 2-3 sentence overview
-    positives: string[]            // What went well
-    improvements: string[]         // What to work on
-    next_workout_tip: string       // Advice for next session
-  } | null                         // Null if not yet generated
+    summary: string // 2-3 sentence overview
+    positives: string[] // What went well
+    improvements: string[] // What to work on
+    next_workout_tip: string // Advice for next session
+  } | null // Null if not yet generated
 
   // === METADATA ===
   metadata: {
-    algorithm_version: string      // "1.0.0"
+    algorithm_version: string // "1.0.0"
     power_data_quality: 'good' | 'partial' | 'missing'
     hr_data_quality: 'good' | 'partial' | 'missing'
     confidence: 'high' | 'medium' | 'low'
@@ -1163,24 +1181,28 @@ interface WorkoutComplianceAnalysis {
 ## 8. Implementation Phases
 
 ### Phase 1: Database & Types ✏️
+
 - [ ] Add `lthr` field to `athlete_profiles` table (migration)
 - [ ] Update TypeScript database types
 - [ ] Add UI for LTHR input in profile settings
 - [ ] Create `workout_compliance_analyses` table for storing results
 
 ### Phase 2: Zone Calculator Service
+
 - [ ] Create `lib/services/zone-calculator.ts`
 - [ ] `calculatePowerZones(ftp: number): PowerZones`
 - [ ] `calculateHRZones(lthr: number): HRZones`
 - [ ] Unit tests with various FTP/LTHR values
 
 ### Phase 3: Strava Stream Fetcher
+
 - [ ] Add `getActivityStreams(activityId, keys)` to Strava service
 - [ ] Fetch power, HR, time, distance streams
 - [ ] Handle API rate limiting
 - [ ] Cache streams in database (optional)
 
 ### Phase 4: Compliance Analysis Engine
+
 - [ ] Create `lib/services/compliance-analysis-service.ts`
 - [ ] Implement segment flattening
 - [ ] Implement power smoothing
@@ -1192,17 +1214,20 @@ interface WorkoutComplianceAnalysis {
 - [ ] Comprehensive unit tests
 
 ### Phase 5: API Endpoints
+
 - [ ] `POST /api/compliance/analyze` - Trigger analysis for a match
 - [ ] `GET /api/compliance/{matchId}` - Get analysis results
 - [ ] `GET /api/compliance/history` - Get analysis history for user
 
 ### Phase 6: UI Integration
+
 - [ ] Add compliance score badge to matched workouts
 - [ ] Create compliance detail view in workout modal
 - [ ] Per-segment breakdown visualization
 - [ ] Zone time distribution chart
 
 ### Phase 7: AI Coach Integration
+
 - [ ] Create coach prompt template with compliance data
 - [ ] Integrate with existing LLM provider system
 - [ ] Generate and store coach feedback
@@ -1212,17 +1237,17 @@ interface WorkoutComplianceAnalysis {
 
 ## 9. Glossary
 
-| Term | Definition |
-|------|------------|
-| **FTP** | Functional Threshold Power - highest power sustainable for ~1 hour |
-| **LTHR** | Lactate Threshold Heart Rate - HR at lactate threshold |
-| **Power Zone** | Training intensity range based on % of FTP |
-| **Segment** | A distinct portion of a workout (warmup, interval, recovery, etc.) |
-| **Detected Block** | A period of consistent effort identified in the power stream |
-| **Compliance Score** | 0-100 measure of how well actual matched planned |
-| **Normalized Power** | Weighted average accounting for variability |
-| **TSS** | Training Stress Score - overall workout load metric |
-| **Sliding Window** | Algorithm technique that searches within a moving range |
+| Term                 | Definition                                                         |
+| -------------------- | ------------------------------------------------------------------ |
+| **FTP**              | Functional Threshold Power - highest power sustainable for ~1 hour |
+| **LTHR**             | Lactate Threshold Heart Rate - HR at lactate threshold             |
+| **Power Zone**       | Training intensity range based on % of FTP                         |
+| **Segment**          | A distinct portion of a workout (warmup, interval, recovery, etc.) |
+| **Detected Block**   | A period of consistent effort identified in the power stream       |
+| **Compliance Score** | 0-100 measure of how well actual matched planned                   |
+| **Normalized Power** | Weighted average accounting for variability                        |
+| **TSS**              | Training Stress Score - overall workout load metric                |
+| **Sliding Window**   | Algorithm technique that searches within a moving range            |
 
 ---
 
@@ -1233,10 +1258,12 @@ This section walks through a complete analysis from start to finish with real nu
 ### Example Workout: Sweet Spot Intervals
 
 **Athlete Profile:**
+
 - FTP: 250W
 - LTHR: 165bpm
 
 **Planned Workout:**
+
 ```
 Name: Sweet Spot Intervals
 Type: sweet_spot
@@ -1261,11 +1288,11 @@ Segments:
 const ftp = 250
 
 const powerZones = {
-  z1: { min: 0,   max: Math.round(ftp * 0.55) - 1 },  // 0-137W
-  z2: { min: Math.round(ftp * 0.55), max: Math.round(ftp * 0.75) },  // 138-188W
-  z3: { min: Math.round(ftp * 0.76), max: Math.round(ftp * 0.90) },  // 189-225W
-  z4: { min: Math.round(ftp * 0.91), max: Math.round(ftp * 1.05) },  // 226-263W
-  z5: { min: Math.round(ftp * 1.06), max: 9999 }  // 264W+
+  z1: { min: 0, max: Math.round(ftp * 0.55) - 1 }, // 0-137W
+  z2: { min: Math.round(ftp * 0.55), max: Math.round(ftp * 0.75) }, // 138-188W
+  z3: { min: Math.round(ftp * 0.76), max: Math.round(ftp * 0.9) }, // 189-225W
+  z4: { min: Math.round(ftp * 0.91), max: Math.round(ftp * 1.05) }, // 226-263W
+  z5: { min: Math.round(ftp * 1.06), max: 9999 }, // 264W+
 }
 
 // Result:
@@ -1282,58 +1309,58 @@ const powerZones = {
 const plannedSegments = [
   {
     index: 0,
-    name: "Warmup",
-    type: "warmup",
-    duration_sec: 600,  // 10 min
-    power_low: Math.round(250 * 0.50),   // 125W
-    power_high: Math.round(250 * 0.60),  // 150W
-    target_zone: 1  // Z1-Z2
+    name: 'Warmup',
+    type: 'warmup',
+    duration_sec: 600, // 10 min
+    power_low: Math.round(250 * 0.5), // 125W
+    power_high: Math.round(250 * 0.6), // 150W
+    target_zone: 1, // Z1-Z2
   },
   {
     index: 1,
-    name: "Interval 1",
-    type: "work",
-    duration_sec: 600,  // 10 min
-    power_low: Math.round(250 * 0.88),   // 220W
-    power_high: Math.round(250 * 0.93),  // 233W
-    target_zone: 3  // Z3 (Sweet Spot)
+    name: 'Interval 1',
+    type: 'work',
+    duration_sec: 600, // 10 min
+    power_low: Math.round(250 * 0.88), // 220W
+    power_high: Math.round(250 * 0.93), // 233W
+    target_zone: 3, // Z3 (Sweet Spot)
   },
   {
     index: 2,
-    name: "Recovery 1",
-    type: "recovery",
-    duration_sec: 300,  // 5 min
-    power_low: Math.round(250 * 0.50),   // 125W
-    power_high: Math.round(250 * 0.55),  // 138W
-    target_zone: 1  // Z1
+    name: 'Recovery 1',
+    type: 'recovery',
+    duration_sec: 300, // 5 min
+    power_low: Math.round(250 * 0.5), // 125W
+    power_high: Math.round(250 * 0.55), // 138W
+    target_zone: 1, // Z1
   },
   {
     index: 3,
-    name: "Interval 2",
-    type: "work",
-    duration_sec: 600,  // 10 min
-    power_low: Math.round(250 * 0.88),   // 220W
-    power_high: Math.round(250 * 0.93),  // 233W
-    target_zone: 3  // Z3
+    name: 'Interval 2',
+    type: 'work',
+    duration_sec: 600, // 10 min
+    power_low: Math.round(250 * 0.88), // 220W
+    power_high: Math.round(250 * 0.93), // 233W
+    target_zone: 3, // Z3
   },
   {
     index: 4,
-    name: "Recovery 2",
-    type: "recovery",
-    duration_sec: 300,  // 5 min
-    power_low: Math.round(250 * 0.50),   // 125W
-    power_high: Math.round(250 * 0.55),  // 138W
-    target_zone: 1  // Z1
+    name: 'Recovery 2',
+    type: 'recovery',
+    duration_sec: 300, // 5 min
+    power_low: Math.round(250 * 0.5), // 125W
+    power_high: Math.round(250 * 0.55), // 138W
+    target_zone: 1, // Z1
   },
   {
     index: 5,
-    name: "Cooldown",
-    type: "cooldown",
-    duration_sec: 600,  // 10 min
-    power_low: Math.round(250 * 0.50),   // 125W
-    power_high: Math.round(250 * 0.60),  // 150W
-    target_zone: 1  // Z1-Z2
-  }
+    name: 'Cooldown',
+    type: 'cooldown',
+    duration_sec: 600, // 10 min
+    power_low: Math.round(250 * 0.5), // 125W
+    power_high: Math.round(250 * 0.6), // 150W
+    target_zone: 1, // Z1-Z2
+  },
 ]
 
 // Total planned duration: 3000 sec (50 min)
@@ -1342,25 +1369,68 @@ const plannedSegments = [
 #### Step C: Process Actual Power Stream
 
 **Raw Strava Power Data (sampled every second, showing every 60th value):**
+
 ```typescript
 const rawPowerStream = [
   // Minute 0-9: Warmup (athlete warmed up for 8 min instead of 10)
-  142, 145, 148, 140, 152, 138, 145, 150,  // ~145W avg
+  142,
+  145,
+  148,
+  140,
+  152,
+  138,
+  145,
+  150, // ~145W avg
 
   // Minute 8-18: First interval (started early!)
-  185, 210, 225, 228, 230, 225, 228, 232, 230, 225,  // ~222W avg
+  185,
+  210,
+  225,
+  228,
+  230,
+  225,
+  228,
+  232,
+  230,
+  225, // ~222W avg
 
   // Minute 18-22: Recovery (took 4 min instead of 5)
-  140, 135, 130, 142,  // ~137W avg
+  140,
+  135,
+  130,
+  142, // ~137W avg
 
   // Minute 22-33: Second interval (went longer - 11 min)
-  220, 228, 232, 235, 230, 225, 228, 230, 232, 228, 225,  // ~228W avg
+  220,
+  228,
+  232,
+  235,
+  230,
+  225,
+  228,
+  230,
+  232,
+  228,
+  225, // ~228W avg
 
   // Minute 33-38: Recovery
-  138, 140, 135, 132, 138,  // ~137W avg
+  138,
+  140,
+  135,
+  132,
+  138, // ~137W avg
 
   // Minute 38-48: Cooldown
-  145, 142, 140, 138, 135, 132, 130, 128, 125, 120  // ~134W avg
+  145,
+  142,
+  140,
+  138,
+  135,
+  132,
+  130,
+  128,
+  125,
+  120, // ~134W avg
 ]
 // Total actual duration: 2880 sec (48 min)
 ```
@@ -1404,22 +1474,64 @@ function classifyPowerToZone(power: number, zones: PowerZones): number {
 // Create zone timeline (simplified):
 const zoneTimeline = [
   // Warmup: mostly Z2
-  2, 2, 2, 2, 2, 2, 2, 2,  // 8 minutes
+  2,
+  2,
+  2,
+  2,
+  2,
+  2,
+  2,
+  2, // 8 minutes
 
   // Interval 1: mostly Z3, some Z4
-  3, 3, 3, 3, 4, 3, 3, 4, 3, 3,  // 10 minutes
+  3,
+  3,
+  3,
+  3,
+  4,
+  3,
+  3,
+  4,
+  3,
+  3, // 10 minutes
 
   // Recovery 1: Z1
-  1, 1, 1, 1,  // 4 minutes
+  1,
+  1,
+  1,
+  1, // 4 minutes
 
   // Interval 2: Z3 with some Z4
-  3, 3, 4, 4, 3, 3, 3, 4, 3, 3, 3,  // 11 minutes
+  3,
+  3,
+  4,
+  4,
+  3,
+  3,
+  3,
+  4,
+  3,
+  3,
+  3, // 11 minutes
 
   // Recovery 2: Z1
-  1, 1, 1, 1, 1,  // 5 minutes
+  1,
+  1,
+  1,
+  1,
+  1, // 5 minutes
 
   // Cooldown: Z1-Z2
-  2, 2, 2, 1, 1, 1, 1, 1, 1, 1  // 10 minutes
+  2,
+  2,
+  2,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1, // 10 minutes
 ]
 ```
 
@@ -1437,7 +1549,7 @@ interface DetectedBlock {
 
 function detectSegmentBoundaries(
   zoneTimeline: number[],
-  params: AdaptiveParameters  // Use adaptive parameters!
+  params: AdaptiveParameters // Use adaptive parameters!
 ): DetectedBlock[] {
   const { minSegmentDurationSec, boundaryStabilitySec } = params
   const blocks: DetectedBlock[] = []
@@ -1452,7 +1564,7 @@ function detectSegmentBoundaries(
     if (zone !== currentZone) {
       // Check if this is a sustained change (look ahead)
       const lookAhead = zoneTimeline.slice(i, i + boundaryStabilitySec)
-      const newZoneCount = lookAhead.filter(z => z === zone).length
+      const newZoneCount = lookAhead.filter((z) => z === zone).length
 
       // If new zone is dominant for the stability window, it's a real transition
       if (newZoneCount >= boundaryStabilitySec * 0.7) {
@@ -1463,7 +1575,7 @@ function detectSegmentBoundaries(
           duration_sec: i - blockStart,
           dominant_zone: getDominantZone(zoneCount),
           avg_power: 0, // Calculate separately
-          zone_distribution: normalizeZoneCount(zoneCount)
+          zone_distribution: normalizeZoneCount(zoneCount),
         })
 
         // Start new block
@@ -1483,7 +1595,7 @@ function detectSegmentBoundaries(
     duration_sec: zoneTimeline.length - blockStart,
     dominant_zone: getDominantZone(zoneCount),
     avg_power: 0,
-    zone_distribution: normalizeZoneCount(zoneCount)
+    zone_distribution: normalizeZoneCount(zoneCount),
   })
 
   return blocks
@@ -1493,62 +1605,59 @@ function detectSegmentBoundaries(
 const detectedBlocks: DetectedBlock[] = [
   {
     start_sec: 0,
-    end_sec: 480,      // 8 minutes
+    end_sec: 480, // 8 minutes
     duration_sec: 480,
     dominant_zone: 2,
     avg_power: 145,
-    zone_distribution: { z1: 0.1, z2: 0.9, z3: 0, z4: 0, z5: 0 }
+    zone_distribution: { z1: 0.1, z2: 0.9, z3: 0, z4: 0, z5: 0 },
   },
   {
     start_sec: 480,
-    end_sec: 1080,     // 10 minutes
+    end_sec: 1080, // 10 minutes
     duration_sec: 600,
     dominant_zone: 3,
     avg_power: 222,
-    zone_distribution: { z1: 0, z2: 0.05, z3: 0.75, z4: 0.20, z5: 0 }
+    zone_distribution: { z1: 0, z2: 0.05, z3: 0.75, z4: 0.2, z5: 0 },
   },
   {
     start_sec: 1080,
-    end_sec: 1320,     // 4 minutes
+    end_sec: 1320, // 4 minutes
     duration_sec: 240,
     dominant_zone: 1,
     avg_power: 137,
-    zone_distribution: { z1: 0.95, z2: 0.05, z3: 0, z4: 0, z5: 0 }
+    zone_distribution: { z1: 0.95, z2: 0.05, z3: 0, z4: 0, z5: 0 },
   },
   {
     start_sec: 1320,
-    end_sec: 1980,     // 11 minutes
+    end_sec: 1980, // 11 minutes
     duration_sec: 660,
     dominant_zone: 3,
     avg_power: 228,
-    zone_distribution: { z1: 0, z2: 0, z3: 0.70, z4: 0.30, z5: 0 }
+    zone_distribution: { z1: 0, z2: 0, z3: 0.7, z4: 0.3, z5: 0 },
   },
   {
     start_sec: 1980,
-    end_sec: 2280,     // 5 minutes
+    end_sec: 2280, // 5 minutes
     duration_sec: 300,
     dominant_zone: 1,
     avg_power: 137,
-    zone_distribution: { z1: 1.0, z2: 0, z3: 0, z4: 0, z5: 0 }
+    zone_distribution: { z1: 1.0, z2: 0, z3: 0, z4: 0, z5: 0 },
   },
   {
     start_sec: 2280,
-    end_sec: 2880,     // 10 minutes
+    end_sec: 2880, // 10 minutes
     duration_sec: 600,
     dominant_zone: 1,
     avg_power: 134,
-    zone_distribution: { z1: 0.6, z2: 0.4, z3: 0, z4: 0, z5: 0 }
-  }
+    zone_distribution: { z1: 0.6, z2: 0.4, z3: 0, z4: 0, z5: 0 },
+  },
 ]
 ```
 
 #### Step G: Match Planned Segments to Detected Blocks
 
 ```typescript
-function matchSegments(
-  planned: PlannedSegment[],
-  detected: DetectedBlock[]
-): SegmentMatch[] {
+function matchSegments(planned: PlannedSegment[], detected: DetectedBlock[]): SegmentMatch[] {
   const matches: SegmentMatch[] = []
   const usedDetected = new Set<number>()
   let searchStart = 0
@@ -1575,7 +1684,7 @@ function matchSegments(
       matches.push({
         planned_index: p.index,
         detected_index: bestMatch,
-        similarity_score: bestScore
+        similarity_score: bestScore,
       })
       usedDetected.add(bestMatch)
       searchStart = bestMatch + 1
@@ -1585,7 +1694,7 @@ function matchSegments(
         planned_index: p.index,
         detected_index: null,
         similarity_score: 0,
-        skipped: true
+        skipped: true,
       })
     }
   }
@@ -1595,12 +1704,12 @@ function matchSegments(
 
 // Matching results for our example:
 const matchResults = [
-  { planned: "Warmup",     detected: 0, score: 78, note: "Shorter warmup (8 min vs 10 min)" },
-  { planned: "Interval 1", detected: 1, score: 92, note: "Good match" },
-  { planned: "Recovery 1", detected: 2, score: 75, note: "Shorter recovery (4 min vs 5 min)" },
-  { planned: "Interval 2", detected: 3, score: 88, note: "Longer interval (11 min vs 10 min)" },
-  { planned: "Recovery 2", detected: 4, score: 95, note: "Perfect recovery" },
-  { planned: "Cooldown",   detected: 5, score: 90, note: "Good cooldown" }
+  { planned: 'Warmup', detected: 0, score: 78, note: 'Shorter warmup (8 min vs 10 min)' },
+  { planned: 'Interval 1', detected: 1, score: 92, note: 'Good match' },
+  { planned: 'Recovery 1', detected: 2, score: 75, note: 'Shorter recovery (4 min vs 5 min)' },
+  { planned: 'Interval 2', detected: 3, score: 88, note: 'Longer interval (11 min vs 10 min)' },
+  { planned: 'Recovery 2', detected: 4, score: 95, note: 'Perfect recovery' },
+  { planned: 'Cooldown', detected: 5, score: 90, note: 'Good cooldown' },
 ]
 ```
 
@@ -1613,68 +1722,67 @@ const interval1Planned = {
   duration_sec: 600,
   power_low: 220,
   power_high: 233,
-  target_zone: 3
+  target_zone: 3,
 }
 
 const interval1Detected = {
   duration_sec: 600,
   avg_power: 222,
   dominant_zone: 3,
-  zone_distribution: { z1: 0, z2: 0.05, z3: 0.75, z4: 0.20, z5: 0 }
+  zone_distribution: { z1: 0, z2: 0.05, z3: 0.75, z4: 0.2, z5: 0 },
 }
 
 // Power Compliance
 // Target: 220-233W, Actual: 222W
 // 222 is within range → Score: 100
 const powerScore = 100
-const powerAssessment = "Power was within target range"
+const powerAssessment = 'Power was within target range'
 
 // Zone Compliance
 // Target: Z3, Time in Z3: 75%
 // Score = 75 (percentage in target zone)
 const zoneScore = 75
-const zoneAssessment = "Good zone discipline (75% in Z3)"
+const zoneAssessment = 'Good zone discipline (75% in Z3)'
 
 // Duration Compliance
 // Target: 600s, Actual: 600s
 // Ratio = 1.0 (perfect)
 const durationScore = 100
-const durationAssessment = "Duration matched plan"
+const durationAssessment = 'Duration matched plan'
 
 // Overall Segment Score (weighted by segment type "work")
 // Weights: power=0.45, zone=0.40, duration=0.15
-const segmentScore = Math.round(
-  (100 * 0.45) + (75 * 0.40) + (100 * 0.15)
-)
+const segmentScore = Math.round(100 * 0.45 + 75 * 0.4 + 100 * 0.15)
 // = 45 + 30 + 15 = 90
 
 // Final result for Interval 1:
 const interval1Analysis = {
-  segment_name: "Interval 1",
-  segment_type: "work",
-  match_quality: "excellent",
+  segment_name: 'Interval 1',
+  segment_type: 'work',
+  match_quality: 'excellent',
 
   planned: {
     duration_sec: 600,
-    power_range: "220-233W",
-    target_zone: 3
+    power_range: '220-233W',
+    target_zone: 3,
   },
 
   actual: {
-    start_time: "8:00",
+    start_time: '8:00',
     duration_sec: 600,
     avg_power: 222,
-    zone_distribution: "75% Z3, 20% Z4, 5% Z2"
+    zone_distribution: '75% Z3, 20% Z4, 5% Z2',
   },
 
   scores: {
     power_compliance: 100,
     zone_compliance: 75,
     duration_compliance: 100,
-    overall_segment_score: 90
+    overall_segment_score: 90,
   },
 
-  assessment: "Excellent interval execution. Power was on target. Consider staying more consistently in Z3 - you drifted into Z4 occasionally."
+  assessment:
+    'Excellent interval execution. Power was on target. Consider staying more consistently in Z3 - you drifted into Z4 occasionally.',
 }
 ```
 
@@ -1682,12 +1790,12 @@ const interval1Analysis = {
 
 ```typescript
 const segmentScores = [
-  { name: "Warmup",     score: 78, duration: 600, type: "warmup" },
-  { name: "Interval 1", score: 90, duration: 600, type: "work" },
-  { name: "Recovery 1", score: 75, duration: 300, type: "recovery" },
-  { name: "Interval 2", score: 88, duration: 600, type: "work" },
-  { name: "Recovery 2", score: 95, duration: 300, type: "recovery" },
-  { name: "Cooldown",   score: 90, duration: 600, type: "cooldown" }
+  { name: 'Warmup', score: 78, duration: 600, type: 'warmup' },
+  { name: 'Interval 1', score: 90, duration: 600, type: 'work' },
+  { name: 'Recovery 1', score: 75, duration: 300, type: 'recovery' },
+  { name: 'Interval 2', score: 88, duration: 600, type: 'work' },
+  { name: 'Recovery 2', score: 95, duration: 300, type: 'recovery' },
+  { name: 'Cooldown', score: 90, duration: 600, type: 'cooldown' },
 ]
 
 // Calculate duration-weighted average
@@ -1709,18 +1817,24 @@ for (const segment of segmentScores) {
 // Cooldown:   90 * (600/3000) = 90 * 0.20 = 18.0
 // Total: 15.6 + 18.0 + 7.5 + 17.6 + 9.5 + 18.0 = 86.2
 
-const overallScore = Math.round(weightedSum)  // 86
+const overallScore = Math.round(weightedSum) // 86
 
 // No skipped segments, so no penalty
 const skippedPenalty = 0
 
-const finalScore = overallScore - skippedPenalty  // 86
+const finalScore = overallScore - skippedPenalty // 86
 
 // Determine grade
-const grade = finalScore >= 90 ? 'A' :
-              finalScore >= 80 ? 'B' :
-              finalScore >= 70 ? 'C' :
-              finalScore >= 60 ? 'D' : 'F'
+const grade =
+  finalScore >= 90
+    ? 'A'
+    : finalScore >= 80
+      ? 'B'
+      : finalScore >= 70
+        ? 'C'
+        : finalScore >= 60
+          ? 'D'
+          : 'F'
 // Grade: B
 ```
 
@@ -1728,108 +1842,111 @@ const grade = finalScore >= 90 ? 'A' :
 
 ```typescript
 const workoutComplianceAnalysis: WorkoutComplianceAnalysis = {
-  analysis_id: "ca_abc123",
-  match_id: "match_xyz789",
-  analyzed_at: "2026-01-06T15:30:00Z",
+  analysis_id: 'ca_abc123',
+  match_id: 'match_xyz789',
+  analyzed_at: '2026-01-06T15:30:00Z',
 
   workout: {
-    date: "2026-01-06",
-    name: "Sweet Spot Intervals",
-    type: "sweet_spot",
+    date: '2026-01-06',
+    name: 'Sweet Spot Intervals',
+    type: 'sweet_spot',
     planned_duration_min: 50,
-    planned_tss: 65
+    planned_tss: 65,
   },
 
   activity: {
     strava_id: 12345678,
-    name: "Tuesday Sweet Spot Session",
+    name: 'Tuesday Sweet Spot Session',
     actual_duration_min: 48,
-    actual_tss: 62
+    actual_tss: 62,
   },
 
   athlete: {
     ftp: 250,
     lthr: 165,
-    power_zones: { z1: "0-137", z2: "138-188", z3: "189-225", z4: "226-263", z5: "264+" },
-    hr_zones: { z1: "0-133", z2: "134-146", z3: "147-153", z4: "154-163", z5: "164+" }
+    power_zones: { z1: '0-137', z2: '138-188', z3: '189-225', z4: '226-263', z5: '264+' },
+    hr_zones: { z1: '0-133', z2: '134-146', z3: '147-153', z4: '154-163', z5: '164+' },
   },
 
   overall: {
     score: 86,
-    grade: "B",
-    summary: "Good workout execution with minor timing variations.",
+    grade: 'B',
+    summary: 'Good workout execution with minor timing variations.',
 
     segments_completed: 6,
     segments_skipped: 0,
     segments_total: 6,
 
     total_time_in_target_zone_pct: 78,
-    avg_power_vs_target_pct: 101
+    avg_power_vs_target_pct: 101,
   },
 
   segments: [
     {
-      segment_name: "Warmup",
-      match_quality: "good",
+      segment_name: 'Warmup',
+      match_quality: 'good',
       scores: { power: 95, zone: 85, duration: 60, overall: 78 },
-      assessment: "Warmup was 2 minutes shorter than planned. Consider a longer warmup for intervals."
+      assessment:
+        'Warmup was 2 minutes shorter than planned. Consider a longer warmup for intervals.',
     },
     {
-      segment_name: "Interval 1",
-      match_quality: "excellent",
+      segment_name: 'Interval 1',
+      match_quality: 'excellent',
       scores: { power: 100, zone: 75, duration: 100, overall: 90 },
-      assessment: "Excellent interval. Power on target. Some drift into Z4."
+      assessment: 'Excellent interval. Power on target. Some drift into Z4.',
     },
     {
-      segment_name: "Recovery 1",
-      match_quality: "good",
+      segment_name: 'Recovery 1',
+      match_quality: 'good',
       scores: { power: 95, zone: 95, duration: 50, overall: 75 },
-      assessment: "Recovery was 1 minute short. Allow full recovery between intervals."
+      assessment: 'Recovery was 1 minute short. Allow full recovery between intervals.',
     },
     {
-      segment_name: "Interval 2",
-      match_quality: "excellent",
+      segment_name: 'Interval 2',
+      match_quality: 'excellent',
       scores: { power: 98, zone: 70, duration: 92, overall: 88 },
-      assessment: "Good interval but went 1 minute long and pushed into Z4 more."
+      assessment: 'Good interval but went 1 minute long and pushed into Z4 more.',
     },
     {
-      segment_name: "Recovery 2",
-      match_quality: "excellent",
+      segment_name: 'Recovery 2',
+      match_quality: 'excellent',
       scores: { power: 95, zone: 100, duration: 100, overall: 95 },
-      assessment: "Perfect recovery execution."
+      assessment: 'Perfect recovery execution.',
     },
     {
-      segment_name: "Cooldown",
-      match_quality: "excellent",
+      segment_name: 'Cooldown',
+      match_quality: 'excellent',
       scores: { power: 90, zone: 85, duration: 100, overall: 90 },
-      assessment: "Good cooldown. Properly brought intensity down."
-    }
+      assessment: 'Good cooldown. Properly brought intensity down.',
+    },
   ],
 
   coach_feedback: {
-    summary: "Good Sweet Spot session! You executed the main intervals well, staying in the target power range. Your warmup was a bit short and you cut some recovery periods - this could lead to accumulated fatigue.",
+    summary:
+      'Good Sweet Spot session! You executed the main intervals well, staying in the target power range. Your warmup was a bit short and you cut some recovery periods - this could lead to accumulated fatigue.',
 
     positives: [
-      "Hit target power for both Sweet Spot intervals",
-      "Good pacing throughout the workout",
-      "Proper cooldown to finish"
+      'Hit target power for both Sweet Spot intervals',
+      'Good pacing throughout the workout',
+      'Proper cooldown to finish',
     ],
 
     improvements: [
-      "Extend warmup to full 10 minutes - your body needs time to prepare for intensity",
+      'Extend warmup to full 10 minutes - your body needs time to prepare for intensity',
       "Take full recovery periods - they're essential for quality in subsequent intervals",
-      "Try to stay more consistently in Z3 during Sweet Spot - occasional Z4 drift means you're pushing too hard"
+      "Try to stay more consistently in Z3 during Sweet Spot - occasional Z4 drift means you're pushing too hard",
     ],
 
-    next_workout_tip: "For your next Sweet Spot session, set a timer for warmup and recoveries. Focus on staying at the top of Z3 without crossing into Z4."
+    next_workout_tip:
+      'For your next Sweet Spot session, set a timer for warmup and recoveries. Focus on staying at the top of Z3 without crossing into Z4.',
   },
 
   metadata: {
-    algorithm_version: "1.0.0",
-    power_data_quality: "good",
-    hr_data_quality: "good",
-    confidence: "high"
-  }
+    algorithm_version: '1.0.0',
+    power_data_quality: 'good',
+    hr_data_quality: 'good',
+    confidence: 'high',
+  },
 }
 ```
 
@@ -1860,7 +1977,7 @@ interface HRZones {
 
 // Zone distribution (percentage in each zone)
 interface ZoneDistribution {
-  z1: number  // 0-1 (percentage)
+  z1: number // 0-1 (percentage)
   z2: number
   z3: number
   z4: number
@@ -1873,9 +1990,9 @@ interface PlannedSegment {
   name: string
   type: 'warmup' | 'work' | 'interval' | 'recovery' | 'cooldown' | 'steady' | 'tempo'
   duration_sec: number
-  power_low: number      // Absolute watts
-  power_high: number     // Absolute watts
-  target_zone: number    // 1-5
+  power_low: number // Absolute watts
+  power_high: number // Absolute watts
+  target_zone: number // 1-5
 }
 
 // Detected effort block from power stream
@@ -2030,10 +2147,7 @@ interface ComplianceAnalysisService {
   /**
    * Flatten workout segments (expand interval sets)
    */
-  flattenWorkoutSegments(
-    segments: WorkoutSegment[],
-    ftp: number
-  ): PlannedSegment[]
+  flattenWorkoutSegments(segments: WorkoutSegment[], ftp: number): PlannedSegment[]
 
   /**
    * Detect effort blocks from power stream
@@ -2047,17 +2161,12 @@ interface ComplianceAnalysisService {
   /**
    * Match planned segments to detected blocks
    */
-  matchSegments(
-    planned: PlannedSegment[],
-    detected: DetectedBlock[]
-  ): SegmentMatch[]
+  matchSegments(planned: PlannedSegment[], detected: DetectedBlock[]): SegmentMatch[]
 
   /**
    * Generate AI coach feedback
    */
-  generateCoachFeedback(
-    analysis: WorkoutComplianceAnalysis
-  ): Promise<CoachFeedback>
+  generateCoachFeedback(analysis: WorkoutComplianceAnalysis): Promise<CoachFeedback>
 }
 ```
 

@@ -235,7 +235,9 @@ export async function POST(
     // Check for existing analysis with coach feedback
     const { data: existingAnalysis } = await supabase
       .from('workout_compliance_analyses')
-      .select('id, analysis_data, athlete_ftp, athlete_lthr, coach_feedback, coach_model, coach_prompt_version, coach_generated_at, updated_at')
+      .select(
+        'id, analysis_data, athlete_ftp, athlete_lthr, coach_feedback, coach_model, coach_prompt_version, coach_generated_at, updated_at'
+      )
       .eq('match_id', matchId)
       .single<StoredAnalysisRow>()
 

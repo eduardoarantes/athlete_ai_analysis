@@ -314,7 +314,10 @@ export function flattenWorkoutSegments(segments: WorkoutSegment[], ftp: number):
             duration_sec: segment.recovery.duration_min * 60,
             power_low: Math.round((segment.recovery.power_low_pct / 100) * ftp),
             power_high: Math.round((segment.recovery.power_high_pct / 100) * ftp),
-            target_zone: getTargetZone(segment.recovery.power_low_pct, segment.recovery.power_high_pct),
+            target_zone: getTargetZone(
+              segment.recovery.power_low_pct,
+              segment.recovery.power_high_pct
+            ),
           })
         }
       }
@@ -470,7 +473,8 @@ function createBlock(
   zoneCounts: Record<number, number>
 ): DetectedBlock {
   const duration = end - start
-  const avgPower = powerData.length > 0 ? powerData.reduce((a, b) => a + b, 0) / powerData.length : 0
+  const avgPower =
+    powerData.length > 0 ? powerData.reduce((a, b) => a + b, 0) / powerData.length : 0
   const maxPower = powerData.length > 0 ? Math.max(...powerData) : 0
   const minPower = powerData.length > 0 ? Math.min(...powerData) : 0
 
@@ -701,10 +705,13 @@ export function calculateDurationCompliance(
   } else if (ratio >= 0.6 && ratio <= 1.4) {
     score = 70
     assessment =
-      ratio < 1 ? 'Segment was significantly shorter than planned' : 'Segment was significantly longer than planned'
+      ratio < 1
+        ? 'Segment was significantly shorter than planned'
+        : 'Segment was significantly longer than planned'
   } else {
     score = Math.max(0, 100 - Math.abs(1 - ratio) * 100)
-    assessment = ratio < 1 ? 'Segment was much shorter than planned' : 'Segment was much longer than planned'
+    assessment =
+      ratio < 1 ? 'Segment was much shorter than planned' : 'Segment was much longer than planned'
   }
 
   return { score: Math.round(score), assessment }
@@ -721,7 +728,9 @@ export function calculateSegmentScore(
 ): number {
   const weights = SEGMENT_WEIGHTS[segmentType] || { power: 0.35, zone: 0.35, duration: 0.3 }
 
-  return Math.round(powerScore * weights.power + zoneScore * weights.zone + durationScore * weights.duration)
+  return Math.round(
+    powerScore * weights.power + zoneScore * weights.zone + durationScore * weights.duration
+  )
 }
 
 /**
@@ -767,7 +776,15 @@ export function calculateOverallCompliance(segments: SegmentAnalysis[]): Overall
 
   // Determine grade
   const grade: 'A' | 'B' | 'C' | 'D' | 'F' =
-    finalScore >= 90 ? 'A' : finalScore >= 80 ? 'B' : finalScore >= 70 ? 'C' : finalScore >= 60 ? 'D' : 'F'
+    finalScore >= 90
+      ? 'A'
+      : finalScore >= 80
+        ? 'B'
+        : finalScore >= 70
+          ? 'C'
+          : finalScore >= 60
+            ? 'D'
+            : 'F'
 
   // Generate summary
   let summary: string
@@ -863,11 +880,18 @@ export function analyzeWorkoutCompliance(
     const detected = detectedBlocks[match.detected_index]!
 
     // Calculate compliance scores
-    const powerCompliance = calculatePowerCompliance(detected.avg_power, planned.power_low, planned.power_high)
+    const powerCompliance = calculatePowerCompliance(
+      detected.avg_power,
+      planned.power_low,
+      planned.power_high
+    )
 
     const zoneCompliance = calculateZoneCompliance(detected.zone_distribution, planned.target_zone)
 
-    const durationCompliance = calculateDurationCompliance(detected.duration_sec, planned.duration_sec)
+    const durationCompliance = calculateDurationCompliance(
+      detected.duration_sec,
+      planned.duration_sec
+    )
 
     const overallScore = calculateSegmentScore(
       powerCompliance.score,
@@ -877,12 +901,18 @@ export function analyzeWorkoutCompliance(
     )
 
     // Generate assessment
-    const assessments = [powerCompliance.assessment, zoneCompliance.assessment, durationCompliance.assessment].filter(
+    const assessments = [
+      powerCompliance.assessment,
+      zoneCompliance.assessment,
+      durationCompliance.assessment,
+    ].filter(
       (a) => !a.includes('within target') && !a.includes('matched plan') && !a.includes('Excellent')
     )
 
     const assessment =
-      assessments.length > 0 ? assessments.join('. ') + '.' : 'Segment executed as planned. Great work!'
+      assessments.length > 0
+        ? assessments.join('. ') + '.'
+        : 'Segment executed as planned. Great work!'
 
     return {
       segment_index: planned.index,

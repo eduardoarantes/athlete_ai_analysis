@@ -1,11 +1,7 @@
 'use client'
 
 import { ReactNode } from 'react'
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from '@/components/ui/hover-card'
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
 import { PowerZonesTable } from './power-zones-table'
 import { Zap } from 'lucide-react'
 

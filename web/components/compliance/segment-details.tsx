@@ -91,10 +91,7 @@ function ZoneDistributionBar({ distribution, targetZone }: ZoneDistributionBarPr
       </div>
       <div className="flex justify-between text-xs text-muted-foreground">
         {zones.map((zone, idx) => (
-          <span
-            key={zone.key}
-            className={cn(idx + 1 === targetZone && 'font-bold text-primary')}
-          >
+          <span key={zone.key} className={cn(idx + 1 === targetZone && 'font-bold text-primary')}>
             {zone.label}: {(zone.value * 100).toFixed(0)}%
           </span>
         ))}
@@ -152,7 +149,9 @@ function SegmentRow({ segment, isOpen, onToggle }: SegmentRowProps) {
           <Badge className={matchQualityColors[segment.match_quality]}>
             {segment.match_quality}
           </Badge>
-          <span className={cn('font-bold text-lg', getScoreColor(segment.scores.overall_segment_score))}>
+          <span
+            className={cn('font-bold text-lg', getScoreColor(segment.scores.overall_segment_score))}
+          >
             {segment.scores.overall_segment_score.toFixed(0)}
           </span>
           <div className="p-1">
@@ -241,7 +240,9 @@ function SegmentRow({ segment, isOpen, onToggle }: SegmentRowProps) {
                 <div className="grid grid-cols-3 gap-3">
                   <div className="text-center p-2 bg-muted/50 rounded-lg">
                     <Zap className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
-                    <div className={cn('font-bold', getScoreColor(segment.scores.power_compliance))}>
+                    <div
+                      className={cn('font-bold', getScoreColor(segment.scores.power_compliance))}
+                    >
                       {segment.scores.power_compliance.toFixed(0)}
                     </div>
                     <div className="text-xs text-muted-foreground">Power</div>
@@ -255,7 +256,9 @@ function SegmentRow({ segment, isOpen, onToggle }: SegmentRowProps) {
                   </div>
                   <div className="text-center p-2 bg-muted/50 rounded-lg">
                     <Clock className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
-                    <div className={cn('font-bold', getScoreColor(segment.scores.duration_compliance))}>
+                    <div
+                      className={cn('font-bold', getScoreColor(segment.scores.duration_compliance))}
+                    >
                       {segment.scores.duration_compliance.toFixed(0)}
                     </div>
                     <div className="text-xs text-muted-foreground">Duration</div>
@@ -264,9 +267,7 @@ function SegmentRow({ segment, isOpen, onToggle }: SegmentRowProps) {
               </div>
 
               {/* Assessment */}
-              <div className="p-3 bg-primary/5 rounded-lg text-sm">
-                {segment.assessment}
-              </div>
+              <div className="p-3 bg-primary/5 rounded-lg text-sm">{segment.assessment}</div>
             </>
           )}
         </div>

@@ -147,8 +147,8 @@ export function CoachFeedbackCard({
           <Sparkles className="h-10 w-10 text-muted-foreground mb-4" />
           <h3 className="font-semibold mb-2">AI Coach Feedback</h3>
           <p className="text-sm text-muted-foreground mb-4 max-w-sm">
-            Get personalized coaching insights on your workout execution, including strengths,
-            areas for improvement, and actionable tips.
+            Get personalized coaching insights on your workout execution, including strengths, areas
+            for improvement, and actionable tips.
           </p>
           {error && (
             <Alert variant="destructive" className="mb-4 max-w-sm">
@@ -286,7 +286,8 @@ export function CoachFeedbackCard({
             </div>
             <div className="space-y-2">
               {fb.segment_notes.map((note, idx) => {
-                const segmentName = segmentNames[note.segment_index] || `Segment ${note.segment_index + 1}`
+                const segmentName =
+                  segmentNames[note.segment_index] || `Segment ${note.segment_index + 1}`
                 return (
                   <div
                     key={idx}
@@ -360,19 +361,13 @@ interface CoachFeedbackBadgeProps {
   className?: string
 }
 
-export function CoachFeedbackBadge({
-  hasFeedback,
-  onClick,
-  className,
-}: CoachFeedbackBadgeProps) {
+export function CoachFeedbackBadge({ hasFeedback, onClick, className }: CoachFeedbackBadgeProps) {
   return (
     <Badge
       variant={hasFeedback ? 'default' : 'outline'}
       className={cn(
         'cursor-pointer transition-colors',
-        hasFeedback
-          ? 'bg-primary/10 text-primary hover:bg-primary/20'
-          : 'hover:bg-muted',
+        hasFeedback ? 'bg-primary/10 text-primary hover:bg-primary/20' : 'hover:bg-muted',
         className
       )}
       onClick={onClick}

@@ -502,12 +502,7 @@ export function WorkoutDetailModal({
                     </div>
                     {/* Action Buttons */}
                     <div className="flex gap-2">
-                      <Button
-                        variant="default"
-                        size="sm"
-                        asChild
-                        className="flex-1"
-                      >
+                      <Button variant="default" size="sm" asChild className="flex-1">
                         <Link href={`/compliance/${matchedActivity.match_id}`}>
                           <BarChart3 className="h-4 w-4 mr-2" />
                           View Compliance

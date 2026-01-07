@@ -163,10 +163,7 @@ export function calculateZonesForMaxHr(maxHr: number): HeartZoneWithBpm[] {
  * Calculate heart rate zones using Karvonen formula (Heart Rate Reserve)
  * More accurate when resting HR is known
  */
-export function calculateZonesWithHrReserve(
-  maxHr: number,
-  restingHr: number
-): HeartZoneWithBpm[] {
+export function calculateZonesWithHrReserve(maxHr: number, restingHr: number): HeartZoneWithBpm[] {
   const hrReserve = maxHr - restingHr
 
   return HEART_ZONES.map((zone) => ({

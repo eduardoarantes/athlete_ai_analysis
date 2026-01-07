@@ -53,9 +53,7 @@ export function PowerZonesTable({ ftp, compact = false, className }: PowerZonesT
                 </span>
               </td>
               <td className="px-3 py-2 text-muted-foreground">{zone.name}</td>
-              <td className="px-3 py-2 text-right font-mono">
-                {formatWattageRange(zone)}
-              </td>
+              <td className="px-3 py-2 text-right font-mono">{formatWattageRange(zone)}</td>
               <td className="px-3 py-2 text-right text-muted-foreground font-mono">
                 {formatPercentRange(zone)}
               </td>
@@ -74,12 +72,7 @@ interface PowerZoneRowProps {
 
 function PowerZoneRow({ zone, compact }: PowerZoneRowProps) {
   return (
-    <div
-      className={cn(
-        'flex items-center gap-2',
-        compact ? 'text-xs' : 'text-sm'
-      )}
-    >
+    <div className={cn('flex items-center gap-2', compact ? 'text-xs' : 'text-sm')}>
       <span
         className={cn(
           'inline-flex items-center justify-center rounded font-bold',

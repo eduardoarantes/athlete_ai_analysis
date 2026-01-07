@@ -369,10 +369,7 @@ export function ProfileForm({ initialData, onSave }: ProfileFormProps) {
           <PowerZonesCard ftp={formData.ftp ?? null} />
 
           {/* Heart Rate Zones - Auto-calculated from Max HR */}
-          <HeartZonesCard
-            maxHr={formData.maxHr ?? null}
-            restingHr={formData.restingHr ?? null}
-          />
+          <HeartZonesCard maxHr={formData.maxHr ?? null} restingHr={formData.restingHr ?? null} />
 
           {/* Goals */}
           <Card>

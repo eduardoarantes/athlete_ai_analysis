@@ -161,7 +161,15 @@ describe('Adaptive Parameters', () => {
 
     it('uses sprint parameters for very short segments (≤15 sec)', () => {
       const segments: PlannedSegment[] = [
-        { index: 0, name: 'Sprint', type: 'work', duration_sec: 10, power_low: 300, power_high: 400, target_zone: 5 },
+        {
+          index: 0,
+          name: 'Sprint',
+          type: 'work',
+          duration_sec: 10,
+          power_low: 300,
+          power_high: 400,
+          target_zone: 5,
+        },
       ]
 
       const params = calculateAdaptiveParameters(segments)
@@ -173,7 +181,15 @@ describe('Adaptive Parameters', () => {
 
     it('uses short interval parameters for 15-30 sec segments', () => {
       const segments: PlannedSegment[] = [
-        { index: 0, name: 'Tabata', type: 'work', duration_sec: 20, power_low: 300, power_high: 350, target_zone: 5 },
+        {
+          index: 0,
+          name: 'Tabata',
+          type: 'work',
+          duration_sec: 20,
+          power_low: 300,
+          power_high: 350,
+          target_zone: 5,
+        },
       ]
 
       const params = calculateAdaptiveParameters(segments)
@@ -185,7 +201,15 @@ describe('Adaptive Parameters', () => {
     it('uses micro interval parameters for 30-60 sec segments', () => {
       const segments: PlannedSegment[] = [
         // Use 45 sec which is clearly in the 30-60 range
-        { index: 0, name: '45/45', type: 'work', duration_sec: 45, power_low: 280, power_high: 320, target_zone: 5 },
+        {
+          index: 0,
+          name: '45/45',
+          type: 'work',
+          duration_sec: 45,
+          power_low: 280,
+          power_high: 320,
+          target_zone: 5,
+        },
       ]
 
       const params = calculateAdaptiveParameters(segments)
@@ -197,7 +221,15 @@ describe('Adaptive Parameters', () => {
     it('uses short interval parameters for exactly 30 sec segments', () => {
       const segments: PlannedSegment[] = [
         // 30 sec is at the boundary - falls into 15-30 range (≤30)
-        { index: 0, name: '30/30', type: 'work', duration_sec: 30, power_low: 280, power_high: 320, target_zone: 5 },
+        {
+          index: 0,
+          name: '30/30',
+          type: 'work',
+          duration_sec: 30,
+          power_low: 280,
+          power_high: 320,
+          target_zone: 5,
+        },
       ]
 
       const params = calculateAdaptiveParameters(segments)
@@ -208,7 +240,15 @@ describe('Adaptive Parameters', () => {
 
     it('uses standard interval parameters for 1-3 min segments', () => {
       const segments: PlannedSegment[] = [
-        { index: 0, name: 'VO2max', type: 'work', duration_sec: 180, power_low: 270, power_high: 300, target_zone: 5 },
+        {
+          index: 0,
+          name: 'VO2max',
+          type: 'work',
+          duration_sec: 180,
+          power_low: 270,
+          power_high: 300,
+          target_zone: 5,
+        },
       ]
 
       const params = calculateAdaptiveParameters(segments)
@@ -219,7 +259,15 @@ describe('Adaptive Parameters', () => {
 
     it('uses long interval parameters for segments > 3 min', () => {
       const segments: PlannedSegment[] = [
-        { index: 0, name: 'Sweet Spot', type: 'steady', duration_sec: 1200, power_low: 220, power_high: 233, target_zone: 3 },
+        {
+          index: 0,
+          name: 'Sweet Spot',
+          type: 'steady',
+          duration_sec: 1200,
+          power_low: 220,
+          power_high: 233,
+          target_zone: 3,
+        },
       ]
 
       const params = calculateAdaptiveParameters(segments)
@@ -231,9 +279,33 @@ describe('Adaptive Parameters', () => {
 
     it('uses parameters based on shortest segment when mixed', () => {
       const segments: PlannedSegment[] = [
-        { index: 0, name: 'Warmup', type: 'warmup', duration_sec: 600, power_low: 125, power_high: 150, target_zone: 2 },
-        { index: 1, name: 'Sprint', type: 'work', duration_sec: 10, power_low: 300, power_high: 400, target_zone: 5 },
-        { index: 2, name: 'Recovery', type: 'recovery', duration_sec: 240, power_low: 125, power_high: 138, target_zone: 1 },
+        {
+          index: 0,
+          name: 'Warmup',
+          type: 'warmup',
+          duration_sec: 600,
+          power_low: 125,
+          power_high: 150,
+          target_zone: 2,
+        },
+        {
+          index: 1,
+          name: 'Sprint',
+          type: 'work',
+          duration_sec: 10,
+          power_low: 300,
+          power_high: 400,
+          target_zone: 5,
+        },
+        {
+          index: 2,
+          name: 'Recovery',
+          type: 'recovery',
+          duration_sec: 240,
+          power_low: 125,
+          power_high: 138,
+          target_zone: 1,
+        },
       ]
 
       const params = calculateAdaptiveParameters(segments)
@@ -276,7 +348,9 @@ describe('Segment Flattening', () => {
       const flattened = flattenWorkoutSegments(segments, FTP)
 
       // Count work segments from the 5x15sec intervals
-      const shortWorkSegments = flattened.filter((s) => s.name.includes('Interval') || s.name.includes('Work'))
+      const shortWorkSegments = flattened.filter(
+        (s) => s.name.includes('Interval') || s.name.includes('Work')
+      )
       expect(shortWorkSegments.length).toBeGreaterThan(0)
 
       // Verify interval structure
@@ -601,13 +675,47 @@ describe('Segment Matching', () => {
   describe('matchSegments', () => {
     it('matches segments in order', () => {
       const planned: PlannedSegment[] = [
-        { index: 0, name: 'Warmup', type: 'warmup', duration_sec: 300, power_low: 125, power_high: 150, target_zone: 2 },
-        { index: 1, name: 'Interval', type: 'work', duration_sec: 300, power_low: 260, power_high: 280, target_zone: 5 },
+        {
+          index: 0,
+          name: 'Warmup',
+          type: 'warmup',
+          duration_sec: 300,
+          power_low: 125,
+          power_high: 150,
+          target_zone: 2,
+        },
+        {
+          index: 1,
+          name: 'Interval',
+          type: 'work',
+          duration_sec: 300,
+          power_low: 260,
+          power_high: 280,
+          target_zone: 5,
+        },
       ]
 
       const detected: DetectedBlock[] = [
-        { start_sec: 0, end_sec: 300, duration_sec: 300, dominant_zone: 2, avg_power: 140, max_power: 160, min_power: 120, zone_distribution: { z1: 0.1, z2: 0.9, z3: 0, z4: 0, z5: 0 } },
-        { start_sec: 300, end_sec: 600, duration_sec: 300, dominant_zone: 5, avg_power: 270, max_power: 290, min_power: 250, zone_distribution: { z1: 0, z2: 0, z3: 0, z4: 0.1, z5: 0.9 } },
+        {
+          start_sec: 0,
+          end_sec: 300,
+          duration_sec: 300,
+          dominant_zone: 2,
+          avg_power: 140,
+          max_power: 160,
+          min_power: 120,
+          zone_distribution: { z1: 0.1, z2: 0.9, z3: 0, z4: 0, z5: 0 },
+        },
+        {
+          start_sec: 300,
+          end_sec: 600,
+          duration_sec: 300,
+          dominant_zone: 5,
+          avg_power: 270,
+          max_power: 290,
+          min_power: 250,
+          zone_distribution: { z1: 0, z2: 0, z3: 0, z4: 0.1, z5: 0.9 },
+        },
       ]
 
       const matches = matchSegments(planned, detected)
@@ -619,14 +727,47 @@ describe('Segment Matching', () => {
 
     it('marks unmatched segments as skipped', () => {
       const planned: PlannedSegment[] = [
-        { index: 0, name: 'Warmup', type: 'warmup', duration_sec: 300, power_low: 125, power_high: 150, target_zone: 2 },
-        { index: 1, name: 'Interval', type: 'work', duration_sec: 300, power_low: 260, power_high: 280, target_zone: 5 },
-        { index: 2, name: 'Recovery', type: 'recovery', duration_sec: 180, power_low: 125, power_high: 138, target_zone: 1 },
+        {
+          index: 0,
+          name: 'Warmup',
+          type: 'warmup',
+          duration_sec: 300,
+          power_low: 125,
+          power_high: 150,
+          target_zone: 2,
+        },
+        {
+          index: 1,
+          name: 'Interval',
+          type: 'work',
+          duration_sec: 300,
+          power_low: 260,
+          power_high: 280,
+          target_zone: 5,
+        },
+        {
+          index: 2,
+          name: 'Recovery',
+          type: 'recovery',
+          duration_sec: 180,
+          power_low: 125,
+          power_high: 138,
+          target_zone: 1,
+        },
       ]
 
       // Only detected Z2 (no interval or recovery)
       const detected: DetectedBlock[] = [
-        { start_sec: 0, end_sec: 300, duration_sec: 300, dominant_zone: 2, avg_power: 140, max_power: 160, min_power: 120, zone_distribution: { z1: 0.1, z2: 0.9, z3: 0, z4: 0, z5: 0 } },
+        {
+          start_sec: 0,
+          end_sec: 300,
+          duration_sec: 300,
+          dominant_zone: 2,
+          avg_power: 140,
+          max_power: 160,
+          min_power: 120,
+          zone_distribution: { z1: 0.1, z2: 0.9, z3: 0, z4: 0, z5: 0 },
+        },
       ]
 
       const matches = matchSegments(planned, detected)
@@ -639,12 +780,29 @@ describe('Segment Matching', () => {
 
     it('respects minimum match threshold', () => {
       const planned: PlannedSegment[] = [
-        { index: 0, name: 'Interval', type: 'work', duration_sec: 300, power_low: 260, power_high: 280, target_zone: 5 },
+        {
+          index: 0,
+          name: 'Interval',
+          type: 'work',
+          duration_sec: 300,
+          power_low: 260,
+          power_high: 280,
+          target_zone: 5,
+        },
       ]
 
       // Detected block is very different (Z2 instead of Z5)
       const detected: DetectedBlock[] = [
-        { start_sec: 0, end_sec: 100, duration_sec: 100, dominant_zone: 2, avg_power: 150, max_power: 160, min_power: 140, zone_distribution: { z1: 0, z2: 1, z3: 0, z4: 0, z5: 0 } },
+        {
+          start_sec: 0,
+          end_sec: 100,
+          duration_sec: 100,
+          dominant_zone: 2,
+          avg_power: 150,
+          max_power: 160,
+          min_power: 140,
+          zone_distribution: { z1: 0, z2: 1, z3: 0, z4: 0, z5: 0 },
+        },
       ]
 
       const matches = matchSegments(planned, detected, 50)
@@ -814,8 +972,26 @@ describe('Compliance Scoring', () => {
 
     it('calculates duration-weighted average', () => {
       const segments: SegmentAnalysis[] = [
-        createMockSegmentAnalysis({ match_quality: 'excellent', planned_duration_sec: 600, scores: { power_compliance: 100, zone_compliance: 100, duration_compliance: 100, overall_segment_score: 100 } }),
-        createMockSegmentAnalysis({ match_quality: 'poor', planned_duration_sec: 300, scores: { power_compliance: 50, zone_compliance: 50, duration_compliance: 50, overall_segment_score: 50 } }),
+        createMockSegmentAnalysis({
+          match_quality: 'excellent',
+          planned_duration_sec: 600,
+          scores: {
+            power_compliance: 100,
+            zone_compliance: 100,
+            duration_compliance: 100,
+            overall_segment_score: 100,
+          },
+        }),
+        createMockSegmentAnalysis({
+          match_quality: 'poor',
+          planned_duration_sec: 300,
+          scores: {
+            power_compliance: 50,
+            zone_compliance: 50,
+            duration_compliance: 50,
+            overall_segment_score: 50,
+          },
+        }),
       ]
 
       const result = calculateOverallCompliance(segments)
@@ -826,7 +1002,16 @@ describe('Compliance Scoring', () => {
 
     it('penalizes skipped segments', () => {
       const segments: SegmentAnalysis[] = [
-        createMockSegmentAnalysis({ match_quality: 'excellent', planned_duration_sec: 300, scores: { power_compliance: 100, zone_compliance: 100, duration_compliance: 100, overall_segment_score: 100 } }),
+        createMockSegmentAnalysis({
+          match_quality: 'excellent',
+          planned_duration_sec: 300,
+          scores: {
+            power_compliance: 100,
+            zone_compliance: 100,
+            duration_compliance: 100,
+            overall_segment_score: 100,
+          },
+        }),
         createMockSegmentAnalysis({ match_quality: 'skipped', planned_duration_sec: 300 }),
       ]
 
@@ -840,31 +1025,76 @@ describe('Compliance Scoring', () => {
     it('assigns correct grades', () => {
       // A grade (90+)
       const segmentsA: SegmentAnalysis[] = [
-        createMockSegmentAnalysis({ match_quality: 'excellent', planned_duration_sec: 300, scores: { power_compliance: 95, zone_compliance: 95, duration_compliance: 95, overall_segment_score: 95 } }),
+        createMockSegmentAnalysis({
+          match_quality: 'excellent',
+          planned_duration_sec: 300,
+          scores: {
+            power_compliance: 95,
+            zone_compliance: 95,
+            duration_compliance: 95,
+            overall_segment_score: 95,
+          },
+        }),
       ]
       expect(calculateOverallCompliance(segmentsA).grade).toBe('A')
 
       // B grade (80-89)
       const segmentsB: SegmentAnalysis[] = [
-        createMockSegmentAnalysis({ match_quality: 'good', planned_duration_sec: 300, scores: { power_compliance: 85, zone_compliance: 85, duration_compliance: 85, overall_segment_score: 85 } }),
+        createMockSegmentAnalysis({
+          match_quality: 'good',
+          planned_duration_sec: 300,
+          scores: {
+            power_compliance: 85,
+            zone_compliance: 85,
+            duration_compliance: 85,
+            overall_segment_score: 85,
+          },
+        }),
       ]
       expect(calculateOverallCompliance(segmentsB).grade).toBe('B')
 
       // C grade (70-79)
       const segmentsC: SegmentAnalysis[] = [
-        createMockSegmentAnalysis({ match_quality: 'fair', planned_duration_sec: 300, scores: { power_compliance: 75, zone_compliance: 75, duration_compliance: 75, overall_segment_score: 75 } }),
+        createMockSegmentAnalysis({
+          match_quality: 'fair',
+          planned_duration_sec: 300,
+          scores: {
+            power_compliance: 75,
+            zone_compliance: 75,
+            duration_compliance: 75,
+            overall_segment_score: 75,
+          },
+        }),
       ]
       expect(calculateOverallCompliance(segmentsC).grade).toBe('C')
 
       // D grade (60-69)
       const segmentsD: SegmentAnalysis[] = [
-        createMockSegmentAnalysis({ match_quality: 'fair', planned_duration_sec: 300, scores: { power_compliance: 65, zone_compliance: 65, duration_compliance: 65, overall_segment_score: 65 } }),
+        createMockSegmentAnalysis({
+          match_quality: 'fair',
+          planned_duration_sec: 300,
+          scores: {
+            power_compliance: 65,
+            zone_compliance: 65,
+            duration_compliance: 65,
+            overall_segment_score: 65,
+          },
+        }),
       ]
       expect(calculateOverallCompliance(segmentsD).grade).toBe('D')
 
       // F grade (<60)
       const segmentsF: SegmentAnalysis[] = [
-        createMockSegmentAnalysis({ match_quality: 'poor', planned_duration_sec: 300, scores: { power_compliance: 50, zone_compliance: 50, duration_compliance: 50, overall_segment_score: 50 } }),
+        createMockSegmentAnalysis({
+          match_quality: 'poor',
+          planned_duration_sec: 300,
+          scores: {
+            power_compliance: 50,
+            zone_compliance: 50,
+            duration_compliance: 50,
+            overall_segment_score: 50,
+          },
+        }),
       ]
       expect(calculateOverallCompliance(segmentsF).grade).toBe('F')
     })
@@ -951,7 +1181,11 @@ describe('Integration Tests with Real Workout Definitions', () => {
     const fixtures = getTestFixtures()
 
     for (const fixture of fixtures) {
-      const result = analyzeWorkoutCompliance(fixture.segments, fixture.powerStream, fixture.athleteFtp)
+      const result = analyzeWorkoutCompliance(
+        fixture.segments,
+        fixture.powerStream,
+        fixture.athleteFtp
+      )
 
       // Basic sanity checks
       expect(result.overall.score).toBeGreaterThanOrEqual(0)
@@ -971,8 +1205,16 @@ describe('Integration Tests with Real Workout Definitions', () => {
     const fixture = fixtures[0]!
 
     // Run analysis twice
-    const result1 = analyzeWorkoutCompliance(fixture.segments, fixture.powerStream, fixture.athleteFtp)
-    const result2 = analyzeWorkoutCompliance(fixture.segments, fixture.powerStream, fixture.athleteFtp)
+    const result1 = analyzeWorkoutCompliance(
+      fixture.segments,
+      fixture.powerStream,
+      fixture.athleteFtp
+    )
+    const result2 = analyzeWorkoutCompliance(
+      fixture.segments,
+      fixture.powerStream,
+      fixture.athleteFtp
+    )
 
     // Deterministic parts should be identical
     expect(result1.overall.segments_total).toBe(result2.overall.segments_total)
@@ -1035,7 +1277,11 @@ describe('Real Strava Data Integration Tests', () => {
     expect(fixture).toBeDefined()
     expect(fixture.powerStream.length).toBe(3701) // ~62 minutes
 
-    const result = analyzeWorkoutCompliance(fixture.segments, fixture.powerStream, fixture.athleteFtp)
+    const result = analyzeWorkoutCompliance(
+      fixture.segments,
+      fixture.powerStream,
+      fixture.athleteFtp
+    )
 
     // Collect for report
     reportEntries.push({ fixture, result, timestamp: new Date() })
@@ -1058,7 +1304,11 @@ describe('Real Strava Data Integration Tests', () => {
     expect(fixture).toBeDefined()
     expect(fixture.powerStream.length).toBe(3603) // ~60 minutes
 
-    const result = analyzeWorkoutCompliance(fixture.segments, fixture.powerStream, fixture.athleteFtp)
+    const result = analyzeWorkoutCompliance(
+      fixture.segments,
+      fixture.powerStream,
+      fixture.athleteFtp
+    )
 
     // Collect for report
     reportEntries.push({ fixture, result, timestamp: new Date() })
@@ -1075,7 +1325,11 @@ describe('Real Strava Data Integration Tests', () => {
     expect(fixture).toBeDefined()
     expect(fixture.powerStream.length).toBe(1915) // ~32 minutes
 
-    const result = analyzeWorkoutCompliance(fixture.segments, fixture.powerStream, fixture.athleteFtp)
+    const result = analyzeWorkoutCompliance(
+      fixture.segments,
+      fixture.powerStream,
+      fixture.athleteFtp
+    )
 
     // Collect for report
     reportEntries.push({ fixture, result, timestamp: new Date() })
@@ -1092,7 +1346,11 @@ describe('Real Strava Data Integration Tests', () => {
     expect(fixture).toBeDefined()
     expect(fixture.powerStream.length).toBe(7168) // ~119 minutes
 
-    const result = analyzeWorkoutCompliance(fixture.segments, fixture.powerStream, fixture.athleteFtp)
+    const result = analyzeWorkoutCompliance(
+      fixture.segments,
+      fixture.powerStream,
+      fixture.athleteFtp
+    )
 
     // Collect for report
     reportEntries.push({ fixture, result, timestamp: new Date() })
@@ -1109,7 +1367,11 @@ describe('Real Strava Data Integration Tests', () => {
     expect(fixture).toBeDefined()
     expect(fixture.powerStream.length).toBe(3961) // ~66 minutes
 
-    const result = analyzeWorkoutCompliance(fixture.segments, fixture.powerStream, fixture.athleteFtp)
+    const result = analyzeWorkoutCompliance(
+      fixture.segments,
+      fixture.powerStream,
+      fixture.athleteFtp
+    )
 
     // Collect for report
     reportEntries.push({ fixture, result, timestamp: new Date() })
@@ -1126,7 +1388,11 @@ describe('Real Strava Data Integration Tests', () => {
     expect(fixture).toBeDefined()
     expect(fixture.powerStream.length).toBe(3428) // ~57 minutes
 
-    const result = analyzeWorkoutCompliance(fixture.segments, fixture.powerStream, fixture.athleteFtp)
+    const result = analyzeWorkoutCompliance(
+      fixture.segments,
+      fixture.powerStream,
+      fixture.athleteFtp
+    )
 
     // Collect for report
     reportEntries.push({ fixture, result, timestamp: new Date() })
@@ -1143,7 +1409,11 @@ describe('Real Strava Data Integration Tests', () => {
     expect(fixture).toBeDefined()
     expect(fixture.powerStream.length).toBe(5949) // ~99 minutes
 
-    const result = analyzeWorkoutCompliance(fixture.segments, fixture.powerStream, fixture.athleteFtp)
+    const result = analyzeWorkoutCompliance(
+      fixture.segments,
+      fixture.powerStream,
+      fixture.athleteFtp
+    )
 
     // Collect for report
     reportEntries.push({ fixture, result, timestamp: new Date() })
@@ -1160,7 +1430,11 @@ describe('Real Strava Data Integration Tests', () => {
     expect(fixture).toBeDefined()
     expect(fixture.powerStream.length).toBe(14172) // ~240 minutes
 
-    const result = analyzeWorkoutCompliance(fixture.segments, fixture.powerStream, fixture.athleteFtp)
+    const result = analyzeWorkoutCompliance(
+      fixture.segments,
+      fixture.powerStream,
+      fixture.athleteFtp
+    )
 
     // Collect for report
     reportEntries.push({ fixture, result, timestamp: new Date() })
@@ -1177,7 +1451,11 @@ describe('Real Strava Data Integration Tests', () => {
     expect(fixture).toBeDefined()
     expect(fixture.powerStream.length).toBe(636) // ~10 minutes (incomplete ride)
 
-    const result = analyzeWorkoutCompliance(fixture.segments, fixture.powerStream, fixture.athleteFtp)
+    const result = analyzeWorkoutCompliance(
+      fixture.segments,
+      fixture.powerStream,
+      fixture.athleteFtp
+    )
 
     // Collect for report
     reportEntries.push({ fixture, result, timestamp: new Date() })
@@ -1196,7 +1474,11 @@ describe('Real Strava Data Integration Tests', () => {
     const zeroCount = fixture.powerStream.filter((p) => p === 0).length
     expect(zeroCount).toBeGreaterThan(0) // Real data has dropouts
 
-    const result = analyzeWorkoutCompliance(fixture.segments, fixture.powerStream, fixture.athleteFtp)
+    const result = analyzeWorkoutCompliance(
+      fixture.segments,
+      fixture.powerStream,
+      fixture.athleteFtp
+    )
 
     // Power quality should reflect the dropout situation
     // With significant dropouts, quality should be 'partial' or at least defined
@@ -1216,7 +1498,11 @@ describe('Real Strava Data Integration Tests', () => {
     // Real data has high variability (intervals + recovery)
     expect(maxPower).toBeGreaterThan(avgPower * 2)
 
-    const result = analyzeWorkoutCompliance(fixture.segments, fixture.powerStream, fixture.athleteFtp)
+    const result = analyzeWorkoutCompliance(
+      fixture.segments,
+      fixture.powerStream,
+      fixture.athleteFtp
+    )
 
     // Should still produce valid results
     expect(result.overall).toBeDefined()
@@ -1226,7 +1512,11 @@ describe('Real Strava Data Integration Tests', () => {
   it('processes all real fixtures without errors', () => {
     for (const fixture of realFixtures) {
       expect(() => {
-        const result = analyzeWorkoutCompliance(fixture.segments, fixture.powerStream, fixture.athleteFtp)
+        const result = analyzeWorkoutCompliance(
+          fixture.segments,
+          fixture.powerStream,
+          fixture.athleteFtp
+        )
 
         // Verify complete structure
         expect(result.overall).toHaveProperty('score')

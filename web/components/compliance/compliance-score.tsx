@@ -2,13 +2,7 @@
 
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
-import {
-  CheckCircle2,
-  XCircle,
-  AlertTriangle,
-  Trophy,
-  Target,
-} from 'lucide-react'
+import { CheckCircle2, XCircle, AlertTriangle, Trophy, Target } from 'lucide-react'
 
 // ============================================================================
 // Types
@@ -62,12 +56,7 @@ export function GradeBadge({ grade, size = 'md', className }: GradeBadgeProps) {
   return (
     <Badge
       variant="outline"
-      className={cn(
-        'font-semibold border',
-        gradeColors[grade],
-        sizeClasses[size],
-        className
-      )}
+      className={cn('font-semibold border', gradeColors[grade], sizeClasses[size], className)}
     >
       <Icon className={cn('mr-1', size === 'lg' ? 'h-5 w-5' : 'h-3.5 w-3.5')} />
       Grade {grade}
@@ -102,7 +91,12 @@ function getProgressColor(score: number): string {
   return 'bg-red-500'
 }
 
-export function ScoreDisplay({ score, size = 'md', showProgress = true, className }: ScoreDisplayProps) {
+export function ScoreDisplay({
+  score,
+  size = 'md',
+  showProgress = true,
+  className,
+}: ScoreDisplayProps) {
   const sizeClasses = {
     sm: 'text-lg',
     md: 'text-2xl',

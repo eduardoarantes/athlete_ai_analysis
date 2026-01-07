@@ -56,48 +56,43 @@ export function ScheduleCalendar({ instances, isAdmin = false }: ScheduleCalenda
   const autoMatchedRef = useRef<Set<string>>(new Set())
 
   // Build workouts list for auto-matching
-  const buildWorkoutsList = useCallback(
-    (instance: PlanInstance) => {
-      const workouts: Array<{ date: string; index: number; tss?: number; type?: string }> = []
+  const buildWorkoutsList = useCallback((instance: PlanInstance) => {
+    const workouts: Array<{ date: string; index: number; tss?: number; type?: string }> = []
 
-      if (!instance.plan_data?.weekly_plan) return workouts
+    if (!instance.plan_data?.weekly_plan) return workouts
 
-      const startDate = parseLocalDate(instance.start_date)
+    const startDate = parseLocalDate(instance.start_date)
 
-      instance.plan_data.weekly_plan.forEach((week) => {
-        if (!week.workouts) return
+    instance.plan_data.weekly_plan.forEach((week) => {
+      if (!week.workouts) return
 
-        week.workouts.forEach((workout, workoutIdx) => {
-          const dayIndex = DAYS_OF_WEEK.findIndex(
-            (d) => d.toLowerCase() === workout.weekday.toLowerCase()
-          )
-          if (dayIndex === -1) return
+      week.workouts.forEach((workout, workoutIdx) => {
+        const dayIndex = DAYS_OF_WEEK.findIndex(
+          (d) => d.toLowerCase() === workout.weekday.toLowerCase()
+        )
+        if (dayIndex === -1) return
 
-          const startDayOfWeek = startDate.getDay()
-          const daysToMonday = startDayOfWeek === 0 ? -6 : 1 - startDayOfWeek
-          const weekOneMonday = new Date(startDate)
-          weekOneMonday.setDate(startDate.getDate() + daysToMonday)
+        const startDayOfWeek = startDate.getDay()
+        const daysToMonday = startDayOfWeek === 0 ? -6 : 1 - startDayOfWeek
+        const weekOneMonday = new Date(startDate)
+        weekOneMonday.setDate(startDate.getDate() + daysToMonday)
 
-          const adjustedDayIndex = dayIndex === 0 ? 6 : dayIndex - 1
-          const workoutDate = new Date(weekOneMonday)
-          workoutDate.setDate(
-            weekOneMonday.getDate() + (week.week_number - 1) * 7 + adjustedDayIndex
-          )
+        const adjustedDayIndex = dayIndex === 0 ? 6 : dayIndex - 1
+        const workoutDate = new Date(weekOneMonday)
+        workoutDate.setDate(weekOneMonday.getDate() + (week.week_number - 1) * 7 + adjustedDayIndex)
 
-          const workoutEntry: { date: string; index: number; tss?: number; type?: string } = {
-            date: formatDateString(workoutDate),
-            index: workoutIdx,
-          }
-          if (workout.tss !== undefined) workoutEntry.tss = workout.tss
-          if (workout.type !== undefined) workoutEntry.type = workout.type
-          workouts.push(workoutEntry)
-        })
+        const workoutEntry: { date: string; index: number; tss?: number; type?: string } = {
+          date: formatDateString(workoutDate),
+          index: workoutIdx,
+        }
+        if (workout.tss !== undefined) workoutEntry.tss = workout.tss
+        if (workout.type !== undefined) workoutEntry.type = workout.type
+        workouts.push(workoutEntry)
       })
+    })
 
-      return workouts
-    },
-    []
-  )
+    return workouts
+  }, [])
 
   // Fetch matches and run auto-matching
   useEffect(() => {

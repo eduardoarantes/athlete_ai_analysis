@@ -158,7 +158,9 @@ export async function GET(
     if (!forceRefresh && !ftpOverride) {
       const { data: cachedAnalysis } = await supabase
         .from('workout_compliance_analyses')
-        .select('id, analysis_data, athlete_ftp, athlete_lthr, analyzed_at, algorithm_version, power_data_quality')
+        .select(
+          'id, analysis_data, athlete_ftp, athlete_lthr, analyzed_at, algorithm_version, power_data_quality'
+        )
         .eq('match_id', matchId)
         .single<StoredAnalysisRow>()
 
@@ -191,7 +193,9 @@ export async function GET(
             workoutContext = {
               workout_name: workout.name,
               workout_type: workout.type || 'Unknown',
-              ...(workout.description !== undefined && { workout_description: workout.description }),
+              ...(workout.description !== undefined && {
+                workout_description: workout.description,
+              }),
               ...(workout.tss !== undefined && { workout_tss: workout.tss }),
             }
           }

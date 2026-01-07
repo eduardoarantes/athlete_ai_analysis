@@ -251,9 +251,7 @@ export function PowerZonesCard({
                         : `${zone.minWatts}-${zone.maxWatts}W`}
                     </td>
                     <td className="px-3 py-2 text-right text-muted-foreground font-mono">
-                      {zone.maxPct === null
-                        ? `${zone.minPct}%+`
-                        : `${zone.minPct}-${zone.maxPct}%`}
+                      {zone.maxPct === null ? `${zone.minPct}%+` : `${zone.minPct}-${zone.maxPct}%`}
                     </td>
                   </tr>
                 ))}

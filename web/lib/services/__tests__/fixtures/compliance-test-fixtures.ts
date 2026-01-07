@@ -564,7 +564,8 @@ export function generateSimulatedPowerStream(
       for (let set = 0; set < segment.sets; set++) {
         // Work portion
         const workDurationSec = Math.round(segment.work.duration_min * 60)
-        const workPowerTarget = ((segment.work.power_low_pct + segment.work.power_high_pct) / 2 / 100) * ftp
+        const workPowerTarget =
+          ((segment.work.power_low_pct + segment.work.power_high_pct) / 2 / 100) * ftp
         for (let i = 0; i < workDurationSec; i++) {
           const variation = (Math.random() - 0.5) * 2 * variability * workPowerTarget
           stream.push(Math.round(workPowerTarget + variation))

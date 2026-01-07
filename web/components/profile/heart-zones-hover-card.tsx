@@ -1,11 +1,7 @@
 'use client'
 
 import { ReactNode } from 'react'
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from '@/components/ui/hover-card'
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
 import { HeartZonesTable } from './heart-zones-table'
 import { Heart } from 'lucide-react'
 
@@ -19,11 +15,7 @@ interface HeartZonesHoverCardProps {
  * Wraps any element with a hover card that displays heart rate zones.
  * Used on the dashboard to show zones when hovering over Max HR.
  */
-export function HeartZonesHoverCard({
-  maxHr,
-  restingHr,
-  children,
-}: HeartZonesHoverCardProps) {
+export function HeartZonesHoverCard({ maxHr, restingHr, children }: HeartZonesHoverCardProps) {
   return (
     <HoverCard openDelay={200} closeDelay={100}>
       <HoverCardTrigger asChild>

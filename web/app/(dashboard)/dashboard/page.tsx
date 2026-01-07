@@ -279,7 +279,9 @@ export default async function DashboardPage() {
                           <Zap className="h-3.5 w-3.5 text-orange-600 dark:text-orange-400" />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-[10px] text-muted-foreground leading-tight">{t('ftp')}</p>
+                          <p className="text-[10px] text-muted-foreground leading-tight">
+                            {t('ftp')}
+                          </p>
                           <p className="text-xs font-semibold">{profile.ftp}W</p>
                         </div>
                       </div>
@@ -290,7 +292,9 @@ export default async function DashboardPage() {
                         <Zap className="h-3.5 w-3.5 text-orange-600 dark:text-orange-400" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-[10px] text-muted-foreground leading-tight">{t('ftp')}</p>
+                        <p className="text-[10px] text-muted-foreground leading-tight">
+                          {t('ftp')}
+                        </p>
                         <p className="text-xs font-semibold">—</p>
                       </div>
                     </div>

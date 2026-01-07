@@ -255,9 +255,7 @@ export default function ComplianceResultsPage() {
       <div className="text-xs text-muted-foreground text-center space-y-1">
         <p>Algorithm version: {analysis.metadata.algorithm_version}</p>
         <p>Power data quality: {analysis.metadata.power_data_quality}</p>
-        {context.analyzed_at && (
-          <p>Analyzed: {new Date(context.analyzed_at).toLocaleString()}</p>
-        )}
+        {context.analyzed_at && <p>Analyzed: {new Date(context.analyzed_at).toLocaleString()}</p>}
       </div>
     </div>
   )

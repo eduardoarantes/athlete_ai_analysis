@@ -50,16 +50,18 @@ export function StravaConnectionToast() {
   useEffect(() => {
     if (stravaConnected && !syncTriggeredRef.current) {
       syncTriggeredRef.current = true
-      setSyncStarted(true)
 
       // Trigger initial sync in background
+      // Set syncStarted after fetch starts to show loading UI
       fetch('/api/strava/sync', { method: 'POST' })
         .then((res) => {
+          setSyncStarted(true)
           if (!res.ok) {
             console.error('Failed to start initial sync')
           }
         })
         .catch((err) => {
+          setSyncStarted(true)
           console.error('Error starting initial sync:', err)
         })
     }

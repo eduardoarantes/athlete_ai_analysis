@@ -69,7 +69,13 @@ function calculateMatchScore(
   activity: { tss: number | null; type: string; moving_time: number | null }
 ): number {
   // Type matching - only cycling activities can match cycling workouts
-  const cyclingActivityTypes = ['Ride', 'VirtualRide', 'EBikeRide', 'MountainBikeRide', 'GravelRide']
+  const cyclingActivityTypes = [
+    'Ride',
+    'VirtualRide',
+    'EBikeRide',
+    'MountainBikeRide',
+    'GravelRide',
+  ]
   const isCyclingActivity = cyclingActivityTypes.includes(activity.type)
   const isCyclingWorkout = !workout.type || workout.type !== 'rest'
 
@@ -444,7 +450,9 @@ export class WorkoutMatchService {
       }
 
       // Find activities on the same date (comparing local dates)
-      const sameDay = activities.filter((a) => getLocalDateFromTimestamp(a.start_date) === workout.date)
+      const sameDay = activities.filter(
+        (a) => getLocalDateFromTimestamp(a.start_date) === workout.date
+      )
 
       if (sameDay.length === 0) {
         continue
