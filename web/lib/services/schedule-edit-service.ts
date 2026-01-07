@@ -11,6 +11,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { startOfDay, parseISO, format, addDays } from 'date-fns'
 import type { TrainingPlanData, Workout, WeeklyPlan } from '@/lib/types/training-plan'
+import { errorLogger } from '@/lib/monitoring/error-logger'
 
 // Types for workout overrides
 export interface WorkoutMove {
@@ -156,7 +157,9 @@ export class ScheduleEditService {
       .maybeSingle()
 
     if (error) {
-      console.error('Error checking workout match:', error)
+      errorLogger.logWarning('Error checking workout match', {
+        metadata: { instanceId, date, index, error: error.message },
+      })
       return false
     }
 

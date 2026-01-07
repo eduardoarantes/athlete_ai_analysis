@@ -2,6 +2,7 @@
  * Schedule Workouts API
  *
  * Handles modifications to scheduled workouts:
+ * - PUT: Set overrides directly (used for undo)
  * - PATCH: Move or copy a workout to a different date
  * - DELETE: Remove a workout from the schedule
  */
@@ -9,7 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { errorLogger } from '@/lib/monitoring/error-logger'
-import { scheduleEditService } from '@/lib/services/schedule-edit-service'
+import { scheduleEditService, type WorkoutOverrides } from '@/lib/services/schedule-edit-service'
 import { z } from 'zod'
 
 // Validation schemas
@@ -29,8 +30,113 @@ const deleteRequestSchema = z.object({
   index: z.number().int().min(0),
 })
 
+const workoutOverridesSchema = z.object({
+  moves: z.record(
+    z.string(),
+    z.object({
+      original_date: z.string(),
+      original_index: z.number(),
+      moved_at: z.string(),
+    })
+  ),
+  copies: z.record(
+    z.string(),
+    z.object({
+      source_date: z.string(),
+      source_index: z.number(),
+      copied_at: z.string(),
+    })
+  ),
+  deleted: z.array(z.string()),
+})
+
+const putRequestSchema = z.object({
+  overrides: workoutOverridesSchema,
+})
+
 interface RouteParams {
   params: Promise<{ instanceId: string }>
+}
+
+/**
+ * PUT /api/schedule/[instanceId]/workouts
+ *
+ * Set workout overrides directly (used for undo functionality)
+ *
+ * Request body:
+ * {
+ *   overrides: { moves: {}, copies: {}, deleted: [] }
+ * }
+ */
+export async function PUT(request: NextRequest, { params }: RouteParams): Promise<NextResponse> {
+  try {
+    const { instanceId } = await params
+
+    // Get authenticated user
+    const supabase = await createClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Parse and validate request body
+    const body = await request.json()
+    const validation = putRequestSchema.safeParse(body)
+
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: 'Invalid request', details: validation.error.flatten() },
+        { status: 400 }
+      )
+    }
+
+    const { overrides } = validation.data
+
+    // Validate user has access to this instance
+    const accessResult = await scheduleEditService.validateAccess(instanceId, user.id)
+    if (!accessResult.valid) {
+      return NextResponse.json({ error: accessResult.error }, { status: 403 })
+    }
+
+    // Save the overrides directly (cast to WorkoutOverrides as Zod infers a compatible but different type)
+    const saveResult = await scheduleEditService.saveOverrides(
+      instanceId,
+      overrides as WorkoutOverrides
+    )
+
+    if (!saveResult.success) {
+      errorLogger.logWarning('Schedule overrides update failed', {
+        userId: user.id,
+        path: `/api/schedule/${instanceId}/workouts`,
+        metadata: {
+          error: saveResult.error,
+        },
+      })
+
+      return NextResponse.json({ error: saveResult.error }, { status: 400 })
+    }
+
+    errorLogger.logInfo('Schedule overrides updated (undo)', {
+      userId: user.id,
+      path: `/api/schedule/${instanceId}/workouts`,
+    })
+
+    return NextResponse.json({
+      success: true,
+      updatedOverrides: overrides,
+    })
+  } catch (error) {
+    errorLogger.logError(error as Error, {
+      path: '/api/schedule/[instanceId]/workouts',
+      method: 'PUT',
+    })
+
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
 }
 
 /**

@@ -225,15 +225,17 @@ export function ScheduleCalendar({
   )
 
   // Undo the last change
-  const handleUndo = useCallback(() => {
+  const handleUndo = useCallback(async () => {
     if (undoStack.length === 0 || !primaryInstanceId) return
 
     const previousState = undoStack[undoStack.length - 1]
     if (!previousState) return
 
-    setUndoStack((stack) => stack.slice(0, -1))
+    // Save current state for potential rollback
+    const currentState = localOverrides.get(primaryInstanceId)
 
-    // Restore previous state
+    // Optimistically update UI
+    setUndoStack((stack) => stack.slice(0, -1))
     setLocalOverrides((prev) => {
       const newMap = new Map(prev)
       newMap.set(primaryInstanceId, previousState)
@@ -241,12 +243,36 @@ export function ScheduleCalendar({
     })
 
     // Sync with server
-    fetch(`/api/schedule/${primaryInstanceId}/workouts`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ overrides: previousState }),
-    }).catch((error) => console.error('Failed to sync undo:', error))
-  }, [undoStack, primaryInstanceId])
+    try {
+      const response = await fetch(`/api/schedule/${primaryInstanceId}/workouts`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ overrides: previousState }),
+      })
+
+      if (!response.ok) {
+        // Rollback on failure
+        setUndoStack((stack) => [...stack, previousState])
+        if (currentState) {
+          setLocalOverrides((prev) => {
+            const newMap = new Map(prev)
+            newMap.set(primaryInstanceId, currentState)
+            return newMap
+          })
+        }
+      }
+    } catch {
+      // Rollback on error
+      setUndoStack((stack) => [...stack, previousState])
+      if (currentState) {
+        setLocalOverrides((prev) => {
+          const newMap = new Map(prev)
+          newMap.set(primaryInstanceId, currentState)
+          return newMap
+        })
+      }
+    }
+  }, [undoStack, primaryInstanceId, localOverrides])
 
   // Schedule editing handlers with optimistic updates
   const handleMoveWorkout = async (
