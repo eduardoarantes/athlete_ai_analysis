@@ -672,7 +672,8 @@
     },
     "today": "Today",
     "calendarView": "Calendar",
-    "listView": "List"
+    "listView": "List",
+    "undo": "Undo"
   },
   "reports": {
     "title": "Performance Reports",

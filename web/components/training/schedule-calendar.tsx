@@ -5,19 +5,31 @@ import { useTranslations, useLocale } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { ChevronLeft, ChevronRight, Calendar, Undo2, AlertCircle, Loader2 } from 'lucide-react'
 import { WorkoutCard } from './workout-card'
 import { WorkoutDetailModal, type MatchedActivityData } from './workout-detail-modal'
-import type { PlanInstance, Workout } from '@/lib/types/training-plan'
+import type { PlanInstance, Workout, WorkoutOverrides } from '@/lib/types/training-plan'
 import { parseLocalDate, formatDateString } from '@/lib/utils/date-utils'
+import { applyWorkoutOverrides } from '@/lib/utils/apply-workout-overrides'
 import { formatWithGoalLabels } from '@/lib/utils/format-utils'
+import {
+  ScheduleDndContext,
+  DraggableScheduledWorkout,
+  DroppableCalendarDay,
+} from '@/components/schedule/dnd'
+import {
+  ScheduleClipboardProvider,
+  WorkoutContextMenu,
+  CalendarDayContextMenu,
+} from '@/components/schedule'
 
 interface ScheduleCalendarProps {
   instances: PlanInstance[]
   isAdmin?: boolean
+  allowEditing?: boolean
 }
 
-const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 const DAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 interface ScheduledWorkout {
@@ -28,7 +40,11 @@ interface ScheduledWorkout {
   index?: number
 }
 
-export function ScheduleCalendar({ instances, isAdmin = false }: ScheduleCalendarProps) {
+export function ScheduleCalendar({
+  instances,
+  isAdmin = false,
+  allowEditing = true,
+}: ScheduleCalendarProps) {
   const t = useTranslations('schedule')
   const tPlan = useTranslations('trainingPlan')
   const tGoals = useTranslations('goals')
@@ -50,49 +66,77 @@ export function ScheduleCalendar({ instances, isAdmin = false }: ScheduleCalenda
   const [selectedWorkout, setSelectedWorkout] = useState<ScheduledWorkout | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
 
+  // Edit state
+  const [isUndoing, setIsUndoing] = useState(false)
+  // Error message for user feedback
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  // Undo stack for reverting changes
+  const [undoStack, setUndoStack] = useState<WorkoutOverrides[]>([])
+
+  // Editing is enabled by default for single instances
+  const primaryInstanceId = instances.length === 1 ? instances[0]?.id : null
+  const canEdit = allowEditing && instances.length === 1 && !!primaryInstanceId
+
+  // Local overrides state for optimistic updates (instanceId -> overrides)
+  const [localOverrides, setLocalOverrides] = useState<Map<string, WorkoutOverrides>>(() => {
+    const map = new Map<string, WorkoutOverrides>()
+    instances.forEach((instance) => {
+      if (instance.workout_overrides) {
+        map.set(instance.id, instance.workout_overrides)
+      }
+    })
+    return map
+  })
+
+  // Helper to get effective overrides (local state takes precedence)
+  const getEffectiveOverrides = useCallback(
+    (instanceId: string): WorkoutOverrides | null => {
+      return (
+        localOverrides.get(instanceId) ||
+        instances.find((i) => i.id === instanceId)?.workout_overrides ||
+        null
+      )
+    },
+    [localOverrides, instances]
+  )
+
   // Matches state: Map of "instanceId:date:index" -> MatchedActivityData
   const [matchesMap, setMatchesMap] = useState<Map<string, MatchedActivityData>>(new Map())
   const [matchesRefreshKey, setMatchesRefreshKey] = useState(0)
   const autoMatchedRef = useRef<Set<string>>(new Set())
 
-  // Build workouts list for auto-matching
-  const buildWorkoutsList = useCallback((instance: PlanInstance) => {
-    const workouts: Array<{ date: string; index: number; tss?: number; type?: string }> = []
+  // Build workouts list for auto-matching (with overrides applied)
+  const buildWorkoutsList = useCallback(
+    (instance: PlanInstance) => {
+      const workouts: Array<{ date: string; index: number; tss?: number; type?: string }> = []
 
-    if (!instance.plan_data?.weekly_plan) return workouts
+      if (!instance.plan_data?.weekly_plan) return workouts
 
-    const startDate = parseLocalDate(instance.start_date)
+      // Apply workout overrides to get effective workouts by date (use local overrides for optimistic updates)
+      const effectiveWorkouts = applyWorkoutOverrides(
+        instance.plan_data,
+        getEffectiveOverrides(instance.id),
+        instance.start_date
+      )
 
-    instance.plan_data.weekly_plan.forEach((week) => {
-      if (!week.workouts) return
-
-      week.workouts.forEach((workout, workoutIdx) => {
-        const dayIndex = DAYS_OF_WEEK.findIndex(
-          (d) => d.toLowerCase() === workout.weekday.toLowerCase()
-        )
-        if (dayIndex === -1) return
-
-        const startDayOfWeek = startDate.getDay()
-        const daysToMonday = startDayOfWeek === 0 ? -6 : 1 - startDayOfWeek
-        const weekOneMonday = new Date(startDate)
-        weekOneMonday.setDate(startDate.getDate() + daysToMonday)
-
-        const adjustedDayIndex = dayIndex === 0 ? 6 : dayIndex - 1
-        const workoutDate = new Date(weekOneMonday)
-        workoutDate.setDate(weekOneMonday.getDate() + (week.week_number - 1) * 7 + adjustedDayIndex)
-
-        const workoutEntry: { date: string; index: number; tss?: number; type?: string } = {
-          date: formatDateString(workoutDate),
-          index: workoutIdx,
-        }
-        if (workout.tss !== undefined) workoutEntry.tss = workout.tss
-        if (workout.type !== undefined) workoutEntry.type = workout.type
-        workouts.push(workoutEntry)
+      effectiveWorkouts.forEach((dateWorkouts, dateKey) => {
+        dateWorkouts.forEach((effectiveWorkout) => {
+          const workoutEntry: { date: string; index: number; tss?: number; type?: string } = {
+            date: dateKey,
+            index: effectiveWorkout.originalIndex,
+          }
+          if (effectiveWorkout.workout.tss !== undefined)
+            workoutEntry.tss = effectiveWorkout.workout.tss
+          if (effectiveWorkout.workout.type !== undefined)
+            workoutEntry.type = effectiveWorkout.workout.type
+          workouts.push(workoutEntry)
+        })
       })
-    })
 
-    return workouts
-  }, [])
+      return workouts
+    },
+    [getEffectiveOverrides]
+  )
 
   // Fetch matches and run auto-matching
   useEffect(() => {
@@ -169,10 +213,307 @@ export function ScheduleCalendar({ instances, isAdmin = false }: ScheduleCalenda
     setMatchesRefreshKey((prev) => prev + 1)
   }
 
+  // Error handler for DnD and other operations
+  const handleError = useCallback((message: string) => {
+    setErrorMessage(message)
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => setErrorMessage(null), 5000)
+  }, [])
+
+  // Helper to apply optimistic override update (also pushes to undo stack)
+  const applyOptimisticOverride = useCallback(
+    (instanceId: string, updateFn: (current: WorkoutOverrides) => WorkoutOverrides) => {
+      setLocalOverrides((prev) => {
+        const newMap = new Map(prev)
+        const current = prev.get(instanceId) || { moves: {}, copies: {}, deleted: [] }
+
+        // Push current state to undo stack before applying change
+        setUndoStack((stack) => [...stack, { ...current }])
+
+        const updated = updateFn(current)
+        newMap.set(instanceId, updated)
+        return newMap
+      })
+    },
+    []
+  )
+
+  // Undo the last change
+  const handleUndo = useCallback(async () => {
+    if (undoStack.length === 0 || !primaryInstanceId || isUndoing) return
+
+    const previousState = undoStack[undoStack.length - 1]
+    if (!previousState) return
+
+    // Save current state for potential rollback
+    const currentState = localOverrides.get(primaryInstanceId)
+
+    // Optimistically update UI
+    setIsUndoing(true)
+    setErrorMessage(null)
+    setUndoStack((stack) => stack.slice(0, -1))
+    setLocalOverrides((prev) => {
+      const newMap = new Map(prev)
+      newMap.set(primaryInstanceId, previousState)
+      return newMap
+    })
+
+    // Sync with server
+    try {
+      const response = await fetch(`/api/schedule/${primaryInstanceId}/workouts`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ overrides: previousState }),
+      })
+
+      if (!response.ok) {
+        // Rollback on failure
+        setUndoStack((stack) => [...stack, previousState])
+        if (currentState) {
+          setLocalOverrides((prev) => {
+            const newMap = new Map(prev)
+            newMap.set(primaryInstanceId, currentState)
+            return newMap
+          })
+        }
+        setErrorMessage('Failed to undo. Please try again.')
+      }
+    } catch {
+      // Rollback on error
+      setUndoStack((stack) => [...stack, previousState])
+      if (currentState) {
+        setLocalOverrides((prev) => {
+          const newMap = new Map(prev)
+          newMap.set(primaryInstanceId, currentState)
+          return newMap
+        })
+      }
+      setErrorMessage('Failed to undo. Please try again.')
+    } finally {
+      setIsUndoing(false)
+    }
+  }, [undoStack, primaryInstanceId, localOverrides, isUndoing])
+
+  // Schedule editing handlers with optimistic updates
+  const handleMoveWorkout = async (
+    instanceId: string,
+    source: { date: string; index: number },
+    target: { date: string; index: number }
+  ) => {
+    // Save previous state for rollback
+    const previousOverrides = localOverrides.get(instanceId)
+    const currentOverrides = previousOverrides || { moves: {}, copies: {}, deleted: [] }
+
+    // Check if source is itself a moved workout (need to trace back to original)
+    const sourceKey = `${source.date}:${source.index}`
+    const existingMove = currentOverrides.moves[sourceKey]
+
+    // Determine the TRUE original location
+    const originalSource = existingMove
+      ? { date: existingMove.original_date, index: existingMove.original_index }
+      : source
+
+    const targetKey = `${target.date}:${target.index}`
+
+    applyOptimisticOverride(instanceId, (current) => {
+      if (existingMove) {
+        // This workout was already moved here from somewhere else
+        // Update to point to the ORIGINAL source, and remove the intermediate move
+        const { [sourceKey]: _removed, ...remainingMoves } = current.moves
+        return {
+          ...current,
+          moves: {
+            ...remainingMoves,
+            [targetKey]: {
+              original_date: existingMove.original_date,
+              original_index: existingMove.original_index,
+              moved_at: new Date().toISOString(),
+            },
+          },
+        }
+      }
+
+      // Normal move - source is from original plan
+      return {
+        ...current,
+        moves: {
+          ...current.moves,
+          [targetKey]: {
+            original_date: source.date,
+            original_index: source.index,
+            moved_at: new Date().toISOString(),
+          },
+        },
+      }
+    })
+
+    // Make API call in background - send the TRUE original source
+    try {
+      const response = await fetch(`/api/schedule/${instanceId}/workouts`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'move',
+          source: { date: originalSource.date, index: originalSource.index },
+          target: { date: target.date, index: target.index },
+        }),
+      })
+
+      if (!response.ok) {
+        // Rollback on error
+        setLocalOverrides((prev) => {
+          const newMap = new Map(prev)
+          if (previousOverrides) {
+            newMap.set(instanceId, previousOverrides)
+          } else {
+            newMap.delete(instanceId)
+          }
+          return newMap
+        })
+        setErrorMessage('Failed to move workout. Please try again.')
+      }
+    } catch {
+      // Rollback on error
+      setLocalOverrides((prev) => {
+        const newMap = new Map(prev)
+        if (previousOverrides) {
+          newMap.set(instanceId, previousOverrides)
+        } else {
+          newMap.delete(instanceId)
+        }
+        return newMap
+      })
+      setErrorMessage('Failed to move workout. Please try again.')
+    }
+  }
+
+  const handleCopyWorkout = async (
+    instanceId: string,
+    source: { date: string; index: number },
+    target: { date: string; index: number }
+  ) => {
+    // Save previous state for rollback
+    const previousOverrides = localOverrides.get(instanceId)
+
+    // Apply optimistic update
+    const targetKey = `${target.date}:${target.index}`
+    applyOptimisticOverride(instanceId, (current) => ({
+      ...current,
+      copies: {
+        ...current.copies,
+        [targetKey]: {
+          source_date: source.date,
+          source_index: source.index,
+          copied_at: new Date().toISOString(),
+        },
+      },
+    }))
+
+    // Make API call in background
+    try {
+      const response = await fetch(`/api/schedule/${instanceId}/workouts`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'copy',
+          source: { date: source.date, index: source.index },
+          target: { date: target.date, index: target.index },
+        }),
+      })
+
+      if (!response.ok) {
+        // Rollback on error
+        setLocalOverrides((prev) => {
+          const newMap = new Map(prev)
+          if (previousOverrides) {
+            newMap.set(instanceId, previousOverrides)
+          } else {
+            newMap.delete(instanceId)
+          }
+          return newMap
+        })
+        setErrorMessage('Failed to copy workout. Please try again.')
+      }
+    } catch {
+      // Rollback on error
+      setLocalOverrides((prev) => {
+        const newMap = new Map(prev)
+        if (previousOverrides) {
+          newMap.set(instanceId, previousOverrides)
+        } else {
+          newMap.delete(instanceId)
+        }
+        return newMap
+      })
+      setErrorMessage('Failed to copy workout. Please try again.')
+    }
+  }
+
+  const handleDeleteWorkout = async (instanceId: string, date: string, index: number) => {
+    // Save previous state for rollback
+    const previousOverrides = localOverrides.get(instanceId)
+
+    // Apply optimistic update
+    const deleteKey = `${date}:${index}`
+    applyOptimisticOverride(instanceId, (current) => ({
+      ...current,
+      deleted: [...current.deleted, deleteKey],
+    }))
+
+    // Make API call in background
+    try {
+      const response = await fetch(`/api/schedule/${instanceId}/workouts`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date, index }),
+      })
+
+      if (!response.ok) {
+        // Rollback on error
+        setLocalOverrides((prev) => {
+          const newMap = new Map(prev)
+          if (previousOverrides) {
+            newMap.set(instanceId, previousOverrides)
+          } else {
+            newMap.delete(instanceId)
+          }
+          return newMap
+        })
+        setErrorMessage('Failed to delete workout. Please try again.')
+      }
+    } catch {
+      // Rollback on error
+      setLocalOverrides((prev) => {
+        const newMap = new Map(prev)
+        if (previousOverrides) {
+          newMap.set(instanceId, previousOverrides)
+        } else {
+          newMap.delete(instanceId)
+        }
+        return newMap
+      })
+      setErrorMessage('Failed to delete workout. Please try again.')
+    }
+  }
+
+  const handlePasteWorkout = (
+    instanceId: string,
+    sourceDate: string,
+    sourceIndex: number,
+    targetDate: string,
+    targetIndex: number
+  ) => {
+    handleCopyWorkout(
+      instanceId,
+      { date: sourceDate, index: sourceIndex },
+      { date: targetDate, index: targetIndex }
+    )
+  }
+
   // Get FTP from first instance's athlete profile
   const ftp = instances[0]?.plan_data?.athlete_profile?.ftp || 200
 
-  // Build a map of date -> workouts from all instances
+  // Build a map of date -> workouts from all instances (with overrides applied)
   const workoutsByDate = useMemo(() => {
     const map = new Map<string, ScheduledWorkout[]>()
 
@@ -181,45 +522,44 @@ export function ScheduleCalendar({ instances, isAdmin = false }: ScheduleCalenda
 
       const startDate = parseLocalDate(instance.start_date)
 
-      instance.plan_data.weekly_plan.forEach((week) => {
-        if (!week.workouts) return
+      // Apply workout overrides to get effective workouts by date (use local overrides for optimistic updates)
+      const overrides = localOverrides.get(instance.id) || instance.workout_overrides
+      const effectiveWorkouts = applyWorkoutOverrides(
+        instance.plan_data,
+        overrides,
+        instance.start_date
+      )
 
-        week.workouts.forEach((workout) => {
-          // Calculate the actual date for this workout
-          const dayIndex = DAYS_OF_WEEK.findIndex(
-            (d) => d.toLowerCase() === workout.weekday.toLowerCase()
-          )
-          if (dayIndex === -1) return
+      // Convert effective workouts to ScheduledWorkout format
+      effectiveWorkouts.forEach((workouts, dateKey) => {
+        const workoutDate = parseLocalDate(dateKey)
 
-          // Week 1 starts on start_date, find the Monday of that week
-          const startDayOfWeek = startDate.getDay()
-          const daysToMonday = startDayOfWeek === 0 ? -6 : 1 - startDayOfWeek
-          const weekOneMonday = new Date(startDate)
-          weekOneMonday.setDate(startDate.getDate() + daysToMonday)
+        // Calculate week number from date and instance start
+        const startDayOfWeek = startDate.getDay()
+        const daysToMonday = startDayOfWeek === 0 ? -6 : 1 - startDayOfWeek
+        const weekOneMonday = new Date(startDate)
+        weekOneMonday.setDate(startDate.getDate() + daysToMonday)
+        const daysSinceWeekOne = Math.floor(
+          (workoutDate.getTime() - weekOneMonday.getTime()) / (1000 * 60 * 60 * 24)
+        )
+        const weekNumber = Math.floor(daysSinceWeekOne / 7) + 1
 
-          // Calculate the actual date: weekOneMonday + (week_number - 1) * 7 + dayIndex
-          // Adjust dayIndex: our array is Sunday=0, but we want Monday=0 for calculation
-          const adjustedDayIndex = dayIndex === 0 ? 6 : dayIndex - 1
-          const workoutDate = new Date(weekOneMonday)
-          workoutDate.setDate(
-            weekOneMonday.getDate() + (week.week_number - 1) * 7 + adjustedDayIndex
-          )
-
-          const dateKey = formatDateString(workoutDate)
-          const existing = map.get(dateKey) || []
+        const existing = map.get(dateKey) || []
+        workouts.forEach((effectiveWorkout) => {
           existing.push({
-            workout,
+            workout: effectiveWorkout.workout,
             instance,
-            weekNumber: week.week_number,
+            weekNumber,
             date: workoutDate,
+            index: effectiveWorkout.originalIndex,
           })
-          map.set(dateKey, existing)
         })
+        map.set(dateKey, existing)
       })
     })
 
     return map
-  }, [instances])
+  }, [instances, localOverrides])
 
   // Get calendar grid for current month
   const calendarDays = useMemo(() => {
@@ -277,12 +617,25 @@ export function ScheduleCalendar({ instances, isAdmin = false }: ScheduleCalenda
 
   const monthName = currentDate.toLocaleDateString(locale, { month: 'long', year: 'numeric' })
 
-  return (
+  const calendarContent = (
     <div className="space-y-4">
       {/* Calendar Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold">{monthName}</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-xl font-bold">{monthName}</h2>
+        </div>
         <div className="flex gap-2">
+          {/* Undo button - only show when there are changes to undo */}
+          {canEdit && undoStack.length > 0 && (
+            <Button onClick={handleUndo} variant="outline" size="sm" disabled={isUndoing}>
+              {isUndoing ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Undo2 className="h-4 w-4 mr-2" />
+              )}
+              {t('undo')}
+            </Button>
+          )}
           <Button onClick={goToToday} variant="outline" size="sm">
             <Calendar className="h-4 w-4 mr-2" />
             {t('today')}
@@ -300,6 +653,14 @@ export function ScheduleCalendar({ instances, isAdmin = false }: ScheduleCalenda
           </Button>
         </div>
       </div>
+
+      {/* Error Message */}
+      {errorMessage && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{errorMessage}</AlertDescription>
+        </Alert>
+      )}
 
       {/* Calendar Grid */}
       <Card className="overflow-hidden">
@@ -322,9 +683,8 @@ export function ScheduleCalendar({ instances, isAdmin = false }: ScheduleCalenda
             const isToday = dateKey === todayKey
             const isCurrentMonth = date.getMonth() === currentDate.getMonth()
 
-            return (
+            const dayCellContent = (
               <div
-                key={dateKey}
                 className={`bg-background p-1.5 min-h-[120px] ${
                   isToday ? 'ring-2 ring-primary ring-inset' : ''
                 } ${!isCurrentMonth ? 'opacity-50' : ''}`}
@@ -339,30 +699,105 @@ export function ScheduleCalendar({ instances, isAdmin = false }: ScheduleCalenda
 
                 {workouts.length > 0 ? (
                   <div className="space-y-1">
-                    {workouts.map((sw, idx) => (
-                      <div key={`${sw.instance.id}-${idx}`} className="relative">
-                        {instances.length > 1 && (
-                          <Badge
-                            variant="outline"
-                            className="absolute -top-1 -right-1 text-[8px] px-1 py-0 z-10"
-                          >
-                            {formatWithGoalLabels(sw.instance.name, tGoals).substring(0, 3)}
-                          </Badge>
-                        )}
+                    {workouts.map((sw, idx) => {
+                      // Use stored index (week.workouts index) for consistency with overrides
+                      const workoutIndex = sw.index ?? idx
+                      const matchKey = `${sw.instance.id}:${dateKey}:${workoutIndex}`
+                      const matchData = matchesMap.get(matchKey)
+                      const hasMatch = !!matchData
+
+                      const workoutCard = (
                         <WorkoutCard
                           workout={sw.workout}
-                          matchedActivity={matchesMap.get(`${sw.instance.id}:${dateKey}:${idx}`)}
+                          matchedActivity={matchData}
                           className="text-[9px]"
-                          onClick={() => handleWorkoutClick({ ...sw, index: idx })}
+                          onClick={() => handleWorkoutClick({ ...sw, index: workoutIndex })}
                         />
-                      </div>
-                    ))}
+                      )
+
+                      // In edit mode with single instance, wrap with DnD and context menu
+                      // DraggableScheduledWorkout must be outside so drag listeners capture events first
+                      if (canEdit) {
+                        return (
+                          <div key={`${sw.instance.id}-${workoutIndex}`} className="relative">
+                            <DraggableScheduledWorkout
+                              instanceId={sw.instance.id}
+                              date={dateKey}
+                              index={workoutIndex}
+                              workout={sw.workout}
+                              hasMatch={hasMatch}
+                              isEditMode={canEdit}
+                            >
+                              <WorkoutContextMenu
+                                instanceId={sw.instance.id}
+                                date={dateKey}
+                                index={workoutIndex}
+                                workout={sw.workout}
+                                hasMatch={hasMatch}
+                                isEditMode={canEdit}
+                                onViewDetails={() =>
+                                  handleWorkoutClick({ ...sw, index: workoutIndex })
+                                }
+                                onDelete={() =>
+                                  handleDeleteWorkout(sw.instance.id, dateKey, workoutIndex)
+                                }
+                              >
+                                {workoutCard}
+                              </WorkoutContextMenu>
+                            </DraggableScheduledWorkout>
+                          </div>
+                        )
+                      }
+
+                      // Normal mode - workout card with context menu (view only) and optional badge
+                      return (
+                        <div key={`${sw.instance.id}-${workoutIndex}`} className="relative">
+                          {instances.length > 1 && (
+                            <Badge
+                              variant="outline"
+                              className="absolute -top-1 -right-1 text-[8px] px-1 py-0 z-10"
+                            >
+                              {formatWithGoalLabels(sw.instance.name, tGoals).substring(0, 3)}
+                            </Badge>
+                          )}
+                          <WorkoutContextMenu
+                            instanceId={sw.instance.id}
+                            date={dateKey}
+                            index={workoutIndex}
+                            workout={sw.workout}
+                            hasMatch={hasMatch}
+                            isEditMode={false}
+                            onViewDetails={() => handleWorkoutClick({ ...sw, index: workoutIndex })}
+                          >
+                            {workoutCard}
+                          </WorkoutContextMenu>
+                        </div>
+                      )
+                    })}
                   </div>
                 ) : (
                   <div className="h-full" />
                 )}
               </div>
             )
+
+            // In edit mode with single instance, wrap day with droppable and context menu
+            if (canEdit) {
+              return (
+                <CalendarDayContextMenu
+                  key={dateKey}
+                  date={dateKey}
+                  isEditMode={canEdit}
+                  existingWorkoutsCount={workouts.length}
+                >
+                  <DroppableCalendarDay date={dateKey} isEditMode={canEdit}>
+                    {dayCellContent}
+                  </DroppableCalendarDay>
+                </CalendarDayContextMenu>
+              )
+            }
+
+            return <div key={dateKey}>{dayCellContent}</div>
           })}
         </div>
       </Card>
@@ -409,4 +844,21 @@ export function ScheduleCalendar({ instances, isAdmin = false }: ScheduleCalenda
       />
     </div>
   )
+
+  // Wrap with DnD and clipboard providers when in edit mode
+  if (canEdit) {
+    return (
+      <ScheduleClipboardProvider instanceId={primaryInstanceId} onPaste={handlePasteWorkout}>
+        <ScheduleDndContext
+          onMoveWorkout={handleMoveWorkout}
+          onError={handleError}
+          isEditMode={canEdit}
+        >
+          {calendarContent}
+        </ScheduleDndContext>
+      </ScheduleClipboardProvider>
+    )
+  }
+
+  return calendarContent
 }
