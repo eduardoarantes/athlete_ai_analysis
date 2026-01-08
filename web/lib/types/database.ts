@@ -269,6 +269,66 @@ export type Database = {
           },
         ]
       }
+      plan_instance_notes: {
+        Row: {
+          attachment_content_type: string | null
+          attachment_filename: string | null
+          attachment_s3_key: string | null
+          attachment_size_bytes: number | null
+          created_at: string
+          description: string | null
+          id: string
+          note_date: string
+          plan_instance_id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attachment_content_type?: string | null
+          attachment_filename?: string | null
+          attachment_s3_key?: string | null
+          attachment_size_bytes?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          note_date: string
+          plan_instance_id: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attachment_content_type?: string | null
+          attachment_filename?: string | null
+          attachment_s3_key?: string | null
+          attachment_size_bytes?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          note_date?: string
+          plan_instance_id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'plan_instance_notes_plan_instance_id_fkey'
+            columns: ['plan_instance_id']
+            isOneToOne: false
+            referencedRelation: 'plan_instances'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'plan_instance_notes_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'admin_user_view'
+            referencedColumns: ['user_id']
+          },
+        ]
+      }
       reports: {
         Row: {
           completed_at: string | null
