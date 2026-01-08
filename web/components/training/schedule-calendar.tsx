@@ -8,8 +8,11 @@ import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { ChevronLeft, ChevronRight, Calendar, Undo2, AlertCircle, Loader2 } from 'lucide-react'
 import { WorkoutCard } from './workout-card'
+import { NoteCard } from './note-card'
+import { NoteDialog } from './note-dialog'
 import { WorkoutDetailModal, type MatchedActivityData } from './workout-detail-modal'
-import type { PlanInstance, Workout, WorkoutOverrides } from '@/lib/types/training-plan'
+import { NoteContextMenu } from '@/components/schedule/note-context-menu'
+import type { PlanInstance, Workout, WorkoutOverrides, PlanInstanceNote } from '@/lib/types/training-plan'
 import { parseLocalDate, formatDateString } from '@/lib/utils/date-utils'
 import { applyWorkoutOverrides } from '@/lib/utils/apply-workout-overrides'
 import { formatWithGoalLabels } from '@/lib/utils/format-utils'
@@ -65,6 +68,13 @@ export function ScheduleCalendar({
 
   const [selectedWorkout, setSelectedWorkout] = useState<ScheduledWorkout | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
+
+  // Notes state
+  const [notesByDate, setNotesByDate] = useState<Map<string, PlanInstanceNote[]>>(new Map())
+  const [noteDialogOpen, setNoteDialogOpen] = useState(false)
+  const [noteDialogMode, setNoteDialogMode] = useState<'create' | 'edit' | 'view'>('create')
+  const [selectedNoteDate, setSelectedNoteDate] = useState<string>('')
+  const [selectedNote, setSelectedNote] = useState<PlanInstanceNote | undefined>(undefined)
 
   // Edit state
   const [isUndoing, setIsUndoing] = useState(false)
@@ -212,6 +222,76 @@ export function ScheduleCalendar({
   const handleMatchChange = () => {
     setMatchesRefreshKey((prev) => prev + 1)
   }
+
+  // Fetch notes for the primary instance
+  const [notesRefreshKey, setNotesRefreshKey] = useState(0)
+
+  useEffect(() => {
+    if (!primaryInstanceId) return
+
+    const fetchNotes = async () => {
+      try {
+        const response = await fetch(`/api/schedule/${primaryInstanceId}/notes`)
+        if (response.ok) {
+          const data = await response.json()
+          const map = new Map<string, PlanInstanceNote[]>()
+          for (const note of data.notes || []) {
+            const existing = map.get(note.note_date) || []
+            existing.push(note)
+            map.set(note.note_date, existing)
+          }
+          setNotesByDate(map)
+        }
+      } catch (error) {
+        console.error('Failed to fetch notes:', error)
+      }
+    }
+
+    fetchNotes()
+  }, [primaryInstanceId, notesRefreshKey])
+
+  // Note handlers
+  const handleAddNote = useCallback((date: string) => {
+    setSelectedNoteDate(date)
+    setSelectedNote(undefined)
+    setNoteDialogMode('create')
+    setNoteDialogOpen(true)
+  }, [])
+
+  const handleViewNote = useCallback((note: PlanInstanceNote) => {
+    setSelectedNoteDate(note.note_date)
+    setSelectedNote(note)
+    setNoteDialogMode('view')
+    setNoteDialogOpen(true)
+  }, [])
+
+  const handleEditNote = useCallback((note: PlanInstanceNote) => {
+    setSelectedNoteDate(note.note_date)
+    setSelectedNote(note)
+    setNoteDialogMode('edit')
+    setNoteDialogOpen(true)
+  }, [])
+
+  const handleNoteSuccess = useCallback(() => {
+    setNotesRefreshKey((prev) => prev + 1)
+  }, [])
+
+  const handleNoteDelete = useCallback(() => {
+    setNotesRefreshKey((prev) => prev + 1)
+  }, [])
+
+  const handleDownloadAttachment = useCallback(async (note: PlanInstanceNote) => {
+    if (!note.attachment_s3_key) return
+    try {
+      const response = await fetch(`/api/schedule/notes/${note.id}/attachment`)
+      if (response.ok) {
+        const data = await response.json()
+        window.open(data.downloadUrl, '_blank')
+      }
+    } catch (error) {
+      console.error('Failed to download attachment:', error)
+    }
+  }, [])
 
   // Error handler for DnD and other operations
   const handleError = useCallback((message: string) => {
@@ -680,6 +760,7 @@ export function ScheduleCalendar({
 
             const dateKey = formatDateString(date)
             const workouts = workoutsByDate.get(dateKey) || []
+            const notes = notesByDate.get(dateKey) || []
             const isToday = dateKey === todayKey
             const isCurrentMonth = date.getMonth() === currentDate.getMonth()
 
@@ -697,8 +778,9 @@ export function ScheduleCalendar({
                   {date.getDate()}
                 </div>
 
-                {workouts.length > 0 ? (
+                {(workouts.length > 0 || notes.length > 0) ? (
                   <div className="space-y-1">
+                    {/* Render workouts */}
                     {workouts.map((sw, idx) => {
                       // Use stored index (week.workouts index) for consistency with overrides
                       const workoutIndex = sw.index ?? idx
@@ -774,6 +856,31 @@ export function ScheduleCalendar({
                         </div>
                       )
                     })}
+
+                    {/* Render notes */}
+                    {notes.map((note) => (
+                      <NoteContextMenu
+                        key={note.id}
+                        note={note}
+                        onView={() => handleViewNote(note)}
+                        onEdit={() => handleEditNote(note)}
+                        onDelete={() => {
+                          // Confirm and delete
+                          if (confirm('Are you sure you want to delete this note?')) {
+                            fetch(`/api/schedule/${primaryInstanceId}/notes/${note.id}`, {
+                              method: 'DELETE',
+                            }).then(() => handleNoteDelete())
+                          }
+                        }}
+                        onDownload={() => handleDownloadAttachment(note)}
+                      >
+                        <NoteCard
+                          note={note}
+                          className="text-[9px]"
+                          onClick={() => handleViewNote(note)}
+                        />
+                      </NoteContextMenu>
+                    ))}
                   </div>
                 ) : (
                   <div className="h-full" />
@@ -789,6 +896,7 @@ export function ScheduleCalendar({
                   date={dateKey}
                   isEditMode={canEdit}
                   existingWorkoutsCount={workouts.length}
+                  onAddNote={() => handleAddNote(dateKey)}
                 >
                   <DroppableCalendarDay date={dateKey} isEditMode={canEdit}>
                     {dayCellContent}
@@ -842,6 +950,20 @@ export function ScheduleCalendar({
         }
         onMatchChange={handleMatchChange}
       />
+
+      {/* Note Dialog */}
+      {primaryInstanceId && (
+        <NoteDialog
+          open={noteDialogOpen}
+          onOpenChange={setNoteDialogOpen}
+          mode={noteDialogMode}
+          instanceId={primaryInstanceId}
+          noteDate={selectedNoteDate}
+          {...(selectedNote ? { existingNote: selectedNote } : {})}
+          onSuccess={handleNoteSuccess}
+          onDelete={handleNoteDelete}
+        />
+      )}
     </div>
   )
 
