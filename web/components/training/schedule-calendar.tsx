@@ -240,7 +240,7 @@ export function ScheduleCalendar({
 
     const fetchNotes = async () => {
       try {
-        const response = await fetch(`/api/schedule/${primaryInstanceId}/notes`)
+        const response = await fetch(`/api/schedule/${primaryInstanceId}/notes/`)
         if (response.ok) {
           const data = await response.json()
           const map = new Map<string, PlanInstanceNote[]>()
@@ -295,7 +295,7 @@ export function ScheduleCalendar({
   const handleDownloadAttachment = useCallback(async (note: PlanInstanceNote) => {
     if (!note.attachment_s3_key) return
     try {
-      const response = await fetch(`/api/schedule/notes/${note.id}/attachment`)
+      const response = await fetch(`/api/schedule/notes/${note.id}/attachment/`)
       if (response.ok) {
         const data = await response.json()
         window.open(data.downloadUrl, '_blank')
@@ -884,7 +884,7 @@ export function ScheduleCalendar({
                           if (confirm('Are you sure you want to delete this note?')) {
                             try {
                               const response = await fetch(
-                                `/api/schedule/${primaryInstanceId}/notes/${note.id}`,
+                                `/api/schedule/${primaryInstanceId}/notes/${note.id}/`,
                                 { method: 'DELETE' }
                               )
                               if (!response.ok) {

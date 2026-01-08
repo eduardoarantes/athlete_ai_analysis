@@ -176,8 +176,8 @@ export function NoteDialog({
 
       const url =
         mode === 'create'
-          ? `/api/schedule/${instanceId}/notes`
-          : `/api/schedule/${instanceId}/notes/${existingNote?.id}`
+          ? `/api/schedule/${instanceId}/notes/`
+          : `/api/schedule/${instanceId}/notes/${existingNote?.id}/`
 
       const response = await fetch(url, {
         method: mode === 'create' ? 'POST' : 'PATCH',
@@ -186,7 +186,17 @@ export function NoteDialog({
 
       if (!response.ok) {
         const data = await response.json()
-        throw new Error(data.error || 'Failed to save note')
+        // Include validation details if available
+        let errorMessage = data.error || 'Failed to save note'
+        if (data.details?.fieldErrors) {
+          const fieldErrors = Object.entries(data.details.fieldErrors)
+            .map(([field, errors]) => `${field}: ${(errors as string[]).join(', ')}`)
+            .join('; ')
+          if (fieldErrors) {
+            errorMessage += ` - ${fieldErrors}`
+          }
+        }
+        throw new Error(errorMessage)
       }
 
       const data = await response.json()
@@ -207,7 +217,7 @@ export function NoteDialog({
     setError(null)
 
     try {
-      const response = await fetch(`/api/schedule/${instanceId}/notes/${existingNote.id}`, {
+      const response = await fetch(`/api/schedule/${instanceId}/notes/${existingNote.id}/`, {
         method: 'DELETE',
       })
 
@@ -233,7 +243,7 @@ export function NoteDialog({
     setError(null)
 
     try {
-      const response = await fetch(`/api/schedule/notes/${existingNote.id}/attachment`)
+      const response = await fetch(`/api/schedule/notes/${existingNote.id}/attachment/`)
 
       if (!response.ok) {
         const data = await response.json()

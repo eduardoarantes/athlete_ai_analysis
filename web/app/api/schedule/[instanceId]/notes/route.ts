@@ -85,9 +85,10 @@ export async function POST(request: NextRequest, { params }: RouteParams): Promi
     const file = formData.get('file') as File | null
 
     // Validate required fields
+    // Note: formData.get() returns null for missing fields, but Zod expects undefined
     const validation = createNoteSchema.safeParse({
       title,
-      description,
+      description: description || undefined,
       note_date: noteDate,
     })
 
