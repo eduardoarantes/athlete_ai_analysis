@@ -979,8 +979,8 @@ export function ScheduleCalendar({
         onMatchChange={handleMatchChange}
       />
 
-      {/* Note Dialog */}
-      {primaryInstanceId && (
+      {/* Note Dialog - only render when open to avoid invalid date errors */}
+      {primaryInstanceId && noteDialogOpen && selectedNoteDate && (
         <NoteDialog
           open={noteDialogOpen}
           onOpenChange={setNoteDialogOpen}
