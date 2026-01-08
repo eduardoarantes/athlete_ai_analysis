@@ -36,8 +36,13 @@ interface NoteDialogProps {
   instanceId: string
   noteDate: string // YYYY-MM-DD
   existingNote?: PlanInstanceNote
-  onSuccess?: (note: PlanInstanceNote) => void
-  onDelete?: (noteId: string) => void
+  // Optimistic callbacks for creation
+  onOptimisticCreate?: (tempNote: PlanInstanceNote) => void
+  onSuccess?: (note: PlanInstanceNote, tempId?: string) => void
+  onCreateError?: (tempId: string, noteDate: string) => void
+  // Optimistic callbacks for deletion
+  onOptimisticDelete?: (noteId: string) => PlanInstanceNote | undefined
+  onDeleteError?: (note: PlanInstanceNote) => void
 }
 
 // =============================================================================
@@ -60,8 +65,11 @@ export function NoteDialog({
   instanceId,
   noteDate,
   existingNote,
+  onOptimisticCreate,
   onSuccess,
-  onDelete,
+  onCreateError,
+  onOptimisticDelete,
+  onDeleteError,
 }: NoteDialogProps) {
   // Form state
   const [title, setTitle] = useState('')
@@ -146,7 +154,7 @@ export function NoteDialog({
     }
   }
 
-  // Handle form submission
+  // Handle form submission with optimistic updates
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -157,6 +165,28 @@ export function NoteDialog({
 
     setIsSubmitting(true)
     setError(null)
+
+    // For create mode, use optimistic UI
+    let tempId: string | undefined
+    if (mode === 'create' && onOptimisticCreate) {
+      tempId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      const tempNote: PlanInstanceNote = {
+        id: tempId,
+        plan_instance_id: instanceId,
+        user_id: '', // Will be set by server
+        title: title.trim(),
+        description: description.trim() || null,
+        note_date: noteDate,
+        attachment_s3_key: selectedFile ? 'pending' : null,
+        attachment_filename: selectedFile?.name || null,
+        attachment_size_bytes: selectedFile?.size || null,
+        attachment_content_type: selectedFile?.type || null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+      onOptimisticCreate(tempNote)
+      onOpenChange(false) // Close dialog immediately for better UX
+    }
 
     try {
       const formData = new FormData()
@@ -200,21 +230,40 @@ export function NoteDialog({
       }
 
       const data = await response.json()
-      onSuccess?.(data.note)
-      onOpenChange(false)
+      onSuccess?.(data.note, tempId)
+
+      // For edit mode, close dialog after success
+      if (mode === 'edit') {
+        onOpenChange(false)
+      }
     } catch (err) {
+      // Rollback optimistic create on error
+      if (tempId && onCreateError) {
+        onCreateError(tempId, noteDate)
+      }
       setError(err instanceof Error ? err.message : 'An error occurred')
+      // Re-open dialog if it was closed optimistically
+      if (mode === 'create' && tempId) {
+        onOpenChange(true)
+      }
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  // Handle delete
+  // Handle delete with optimistic UI
   const handleDelete = async () => {
-    if (!existingNote || !onDelete) return
+    if (!existingNote) return
 
     setIsDeleting(true)
     setError(null)
+
+    // Optimistic: remove from UI immediately
+    let deletedNote: PlanInstanceNote | undefined
+    if (onOptimisticDelete) {
+      deletedNote = onOptimisticDelete(existingNote.id)
+      onOpenChange(false) // Close dialog immediately
+    }
 
     try {
       const response = await fetch(`/api/schedule/${instanceId}/notes/${existingNote.id}/`, {
@@ -226,9 +275,16 @@ export function NoteDialog({
         throw new Error(data.error || 'Failed to delete note')
       }
 
-      onDelete(existingNote.id)
-      onOpenChange(false)
+      // Success - note already removed from UI
+      if (!onOptimisticDelete) {
+        onOpenChange(false)
+      }
     } catch (err) {
+      // Rollback: restore the note on error
+      if (deletedNote && onDeleteError) {
+        onDeleteError(deletedNote)
+        onOpenChange(true) // Re-open dialog
+      }
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
       setIsDeleting(false)
@@ -404,7 +460,7 @@ export function NoteDialog({
           <div className="flex gap-2 pt-2">
             {isViewMode ? (
               <>
-                {onDelete && existingNote && (
+                {onOptimisticDelete && existingNote && (
                   <Button
                     type="button"
                     variant="destructive"

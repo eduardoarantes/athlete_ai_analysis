@@ -232,9 +232,7 @@ export function ScheduleCalendar({
     setMatchesRefreshKey((prev) => prev + 1)
   }
 
-  // Fetch notes for the primary instance
-  const [notesRefreshKey, setNotesRefreshKey] = useState(0)
-
+  // Fetch notes for the primary instance on mount
   useEffect(() => {
     if (!primaryInstanceId) return
 
@@ -260,7 +258,7 @@ export function ScheduleCalendar({
     }
 
     fetchNotes()
-  }, [primaryInstanceId, notesRefreshKey])
+  }, [primaryInstanceId])
 
   // Note handlers
   const handleAddNote = useCallback((date: string) => {
@@ -284,12 +282,85 @@ export function ScheduleCalendar({
     setNoteDialogOpen(true)
   }, [])
 
-  const handleNoteSuccess = useCallback(() => {
-    setNotesRefreshKey((prev) => prev + 1)
+  // Optimistic note creation - add temp note to UI immediately
+  const handleOptimisticNoteCreate = useCallback(
+    (tempNote: PlanInstanceNote) => {
+      setNotesByDate((prev) => {
+        const newMap = new Map(prev)
+        const existing = newMap.get(tempNote.note_date) || []
+        newMap.set(tempNote.note_date, [...existing, tempNote])
+        return newMap
+      })
+    },
+    []
+  )
+
+  // On successful note creation - replace temp note with real one
+  const handleNoteSuccess = useCallback(
+    (note: PlanInstanceNote, tempId?: string) => {
+      setNotesByDate((prev) => {
+        const newMap = new Map(prev)
+        const existing = newMap.get(note.note_date) || []
+
+        if (tempId) {
+          // Replace temp note with real note
+          const updatedNotes = existing.map((n) => (n.id === tempId ? note : n))
+          newMap.set(note.note_date, updatedNotes)
+        } else {
+          // Edit case - replace by real ID
+          const updatedNotes = existing.map((n) => (n.id === note.id ? note : n))
+          newMap.set(note.note_date, updatedNotes)
+        }
+        return newMap
+      })
+    },
+    []
+  )
+
+  // Rollback optimistic create on error
+  const handleNoteCreateError = useCallback((tempId: string, noteDate: string) => {
+    setNotesByDate((prev) => {
+      const newMap = new Map(prev)
+      const existing = newMap.get(noteDate) || []
+      newMap.set(
+        noteDate,
+        existing.filter((n) => n.id !== tempId)
+      )
+      return newMap
+    })
   }, [])
 
-  const handleNoteDelete = useCallback(() => {
-    setNotesRefreshKey((prev) => prev + 1)
+  // Optimistic note deletion - remove from UI immediately, return note for potential rollback
+  const handleOptimisticNoteDelete = useCallback((noteId: string): PlanInstanceNote | undefined => {
+    let deletedNote: PlanInstanceNote | undefined
+
+    setNotesByDate((prev) => {
+      const newMap = new Map(prev)
+      for (const [date, notes] of newMap.entries()) {
+        const noteToDelete = notes.find((n) => n.id === noteId)
+        if (noteToDelete) {
+          deletedNote = noteToDelete
+          newMap.set(
+            date,
+            notes.filter((n) => n.id !== noteId)
+          )
+          break
+        }
+      }
+      return newMap
+    })
+
+    return deletedNote
+  }, [])
+
+  // Rollback optimistic delete on error
+  const handleNoteDeleteError = useCallback((note: PlanInstanceNote) => {
+    setNotesByDate((prev) => {
+      const newMap = new Map(prev)
+      const existing = newMap.get(note.note_date) || []
+      newMap.set(note.note_date, [...existing, note])
+      return newMap
+    })
   }, [])
 
   const handleDownloadAttachment = useCallback(async (note: PlanInstanceNote) => {
@@ -880,8 +951,11 @@ export function ScheduleCalendar({
                         onView={() => handleViewNote(note)}
                         onEdit={() => handleEditNote(note)}
                         onDelete={async () => {
-                          // Confirm and delete
+                          // Confirm and delete with optimistic UI
                           if (confirm('Are you sure you want to delete this note?')) {
+                            // Optimistic: remove from UI immediately
+                            const deletedNote = handleOptimisticNoteDelete(note.id)
+
                             try {
                               const response = await fetch(
                                 `/api/schedule/${primaryInstanceId}/notes/${note.id}/`,
@@ -890,8 +964,12 @@ export function ScheduleCalendar({
                               if (!response.ok) {
                                 throw new Error(`Delete failed: ${response.status}`)
                               }
-                              handleNoteDelete()
+                              // Success - note already removed from UI
                             } catch (error) {
+                              // Rollback: restore the note on error
+                              if (deletedNote) {
+                                handleNoteDeleteError(deletedNote)
+                              }
                               errorLogger.logError(error as Error, {
                                 path: 'schedule-calendar/onDelete',
                                 metadata: { noteId: note.id, primaryInstanceId },
@@ -988,8 +1066,11 @@ export function ScheduleCalendar({
           instanceId={primaryInstanceId}
           noteDate={selectedNoteDate}
           {...(selectedNote ? { existingNote: selectedNote } : {})}
+          onOptimisticCreate={handleOptimisticNoteCreate}
           onSuccess={handleNoteSuccess}
-          onDelete={handleNoteDelete}
+          onCreateError={handleNoteCreateError}
+          onOptimisticDelete={handleOptimisticNoteDelete}
+          onDeleteError={handleNoteDeleteError}
         />
       )}
     </div>
