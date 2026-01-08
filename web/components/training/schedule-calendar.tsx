@@ -8,8 +8,16 @@ import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { ChevronLeft, ChevronRight, Calendar, Undo2, AlertCircle, Loader2 } from 'lucide-react'
 import { WorkoutCard } from './workout-card'
+import { NoteCard } from './note-card'
+import { NoteDialog } from './note-dialog'
 import { WorkoutDetailModal, type MatchedActivityData } from './workout-detail-modal'
-import type { PlanInstance, Workout, WorkoutOverrides } from '@/lib/types/training-plan'
+import { NoteContextMenu } from '@/components/schedule/note-context-menu'
+import type {
+  PlanInstance,
+  Workout,
+  WorkoutOverrides,
+  PlanInstanceNote,
+} from '@/lib/types/training-plan'
 import { parseLocalDate, formatDateString } from '@/lib/utils/date-utils'
 import { applyWorkoutOverrides } from '@/lib/utils/apply-workout-overrides'
 import { formatWithGoalLabels } from '@/lib/utils/format-utils'
@@ -23,6 +31,7 @@ import {
   WorkoutContextMenu,
   CalendarDayContextMenu,
 } from '@/components/schedule'
+import { errorLogger } from '@/lib/monitoring/error-logger'
 
 interface ScheduleCalendarProps {
   instances: PlanInstance[]
@@ -65,6 +74,13 @@ export function ScheduleCalendar({
 
   const [selectedWorkout, setSelectedWorkout] = useState<ScheduledWorkout | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
+
+  // Notes state
+  const [notesByDate, setNotesByDate] = useState<Map<string, PlanInstanceNote[]>>(new Map())
+  const [noteDialogOpen, setNoteDialogOpen] = useState(false)
+  const [noteDialogMode, setNoteDialogMode] = useState<'create' | 'edit' | 'view'>('create')
+  const [selectedNoteDate, setSelectedNoteDate] = useState<string>('')
+  const [selectedNote, setSelectedNote] = useState<PlanInstanceNote | undefined>(undefined)
 
   // Edit state
   const [isUndoing, setIsUndoing] = useState(false)
@@ -202,7 +218,10 @@ export function ScheduleCalendar({
           }
         }
       } catch (error) {
-        console.error('Failed to fetch matches:', error)
+        errorLogger.logError(error as Error, {
+          path: 'schedule-calendar/fetchMatchesAndAutoMatch',
+          metadata: { instanceIds: instances.map((i) => i.id) },
+        })
       }
     }
 
@@ -212,6 +231,166 @@ export function ScheduleCalendar({
   const handleMatchChange = () => {
     setMatchesRefreshKey((prev) => prev + 1)
   }
+
+  // Fetch notes for the primary instance on mount
+  useEffect(() => {
+    if (!primaryInstanceId) return
+
+    const fetchNotes = async () => {
+      try {
+        const response = await fetch(`/api/schedule/${primaryInstanceId}/notes/`)
+        if (response.ok) {
+          const data = await response.json()
+          const map = new Map<string, PlanInstanceNote[]>()
+          for (const note of data.notes || []) {
+            const existing = map.get(note.note_date) || []
+            existing.push(note)
+            map.set(note.note_date, existing)
+          }
+          setNotesByDate(map)
+        }
+      } catch (error) {
+        errorLogger.logError(error as Error, {
+          path: 'schedule-calendar/fetchNotes',
+          metadata: { primaryInstanceId },
+        })
+      }
+    }
+
+    fetchNotes()
+  }, [primaryInstanceId])
+
+  // Note handlers
+  const handleAddNote = useCallback((date: string) => {
+    setSelectedNoteDate(date)
+    setSelectedNote(undefined)
+    setNoteDialogMode('create')
+    setNoteDialogOpen(true)
+  }, [])
+
+  const handleViewNote = useCallback((note: PlanInstanceNote) => {
+    setSelectedNoteDate(note.note_date)
+    setSelectedNote(note)
+    setNoteDialogMode('view')
+    setNoteDialogOpen(true)
+  }, [])
+
+  const handleEditNote = useCallback((note: PlanInstanceNote) => {
+    setSelectedNoteDate(note.note_date)
+    setSelectedNote(note)
+    setNoteDialogMode('edit')
+    setNoteDialogOpen(true)
+  }, [])
+
+  // Optimistic note creation - add temp note to UI immediately
+  const handleOptimisticNoteCreate = useCallback(
+    (tempNote: PlanInstanceNote) => {
+      setNotesByDate((prev) => {
+        const newMap = new Map(prev)
+        const existing = newMap.get(tempNote.note_date) || []
+        newMap.set(tempNote.note_date, [...existing, tempNote])
+        return newMap
+      })
+    },
+    []
+  )
+
+  // On successful note creation - replace temp note with real one
+  const handleNoteSuccess = useCallback(
+    (note: PlanInstanceNote, tempId?: string) => {
+      setNotesByDate((prev) => {
+        const newMap = new Map(prev)
+        const existing = newMap.get(note.note_date) || []
+
+        if (tempId) {
+          // Replace temp note with real note
+          const updatedNotes = existing.map((n) => (n.id === tempId ? note : n))
+          newMap.set(note.note_date, updatedNotes)
+        } else {
+          // Edit case - replace by real ID
+          const updatedNotes = existing.map((n) => (n.id === note.id ? note : n))
+          newMap.set(note.note_date, updatedNotes)
+        }
+        return newMap
+      })
+    },
+    []
+  )
+
+  // Rollback optimistic create on error
+  const handleNoteCreateError = useCallback((tempId: string, noteDate: string) => {
+    setNotesByDate((prev) => {
+      const newMap = new Map(prev)
+      const existing = newMap.get(noteDate) || []
+      newMap.set(
+        noteDate,
+        existing.filter((n) => n.id !== tempId)
+      )
+      return newMap
+    })
+  }, [])
+
+  // Optimistic note deletion - remove from UI immediately, return note for potential rollback
+  // Use ref to track notesByDate for synchronous access in callbacks
+  const notesByDateRef = useRef<Map<string, PlanInstanceNote[]>>(notesByDate)
+  useEffect(() => {
+    notesByDateRef.current = notesByDate
+  }, [notesByDate])
+
+  const handleOptimisticNoteDelete = useCallback((noteId: string): PlanInstanceNote | undefined => {
+    // Find the note synchronously from the ref before updating state
+    // This avoids race conditions where setState callback might not have executed yet
+    let deletedNote: PlanInstanceNote | undefined
+    for (const notes of notesByDateRef.current.values()) {
+      const note = notes.find((n) => n.id === noteId)
+      if (note) {
+        deletedNote = note
+        break
+      }
+    }
+
+    if (deletedNote) {
+      setNotesByDate((prev) => {
+        const newMap = new Map(prev)
+        const notes = newMap.get(deletedNote!.note_date)
+        if (notes) {
+          newMap.set(
+            deletedNote!.note_date,
+            notes.filter((n) => n.id !== noteId)
+          )
+        }
+        return newMap
+      })
+    }
+
+    return deletedNote
+  }, [])
+
+  // Rollback optimistic delete on error
+  const handleNoteDeleteError = useCallback((note: PlanInstanceNote) => {
+    setNotesByDate((prev) => {
+      const newMap = new Map(prev)
+      const existing = newMap.get(note.note_date) || []
+      newMap.set(note.note_date, [...existing, note])
+      return newMap
+    })
+  }, [])
+
+  const handleDownloadAttachment = useCallback(async (note: PlanInstanceNote) => {
+    if (!note.attachment_s3_key) return
+    try {
+      const response = await fetch(`/api/schedule/notes/${note.id}/attachment/`)
+      if (response.ok) {
+        const data = await response.json()
+        window.open(data.downloadUrl, '_blank')
+      }
+    } catch (error) {
+      errorLogger.logError(error as Error, {
+        path: 'schedule-calendar/handleDownloadAttachment',
+        metadata: { noteId: note.id },
+      })
+    }
+  }, [])
 
   // Error handler for DnD and other operations
   const handleError = useCallback((message: string) => {
@@ -680,6 +859,7 @@ export function ScheduleCalendar({
 
             const dateKey = formatDateString(date)
             const workouts = workoutsByDate.get(dateKey) || []
+            const notes = notesByDate.get(dateKey) || []
             const isToday = dateKey === todayKey
             const isCurrentMonth = date.getMonth() === currentDate.getMonth()
 
@@ -697,8 +877,9 @@ export function ScheduleCalendar({
                   {date.getDate()}
                 </div>
 
-                {workouts.length > 0 ? (
+                {workouts.length > 0 || notes.length > 0 ? (
                   <div className="space-y-1">
+                    {/* Render workouts */}
                     {workouts.map((sw, idx) => {
                       // Use stored index (week.workouts index) for consistency with overrides
                       const workoutIndex = sw.index ?? idx
@@ -774,6 +955,51 @@ export function ScheduleCalendar({
                         </div>
                       )
                     })}
+
+                    {/* Render notes */}
+                    {notes.map((note) => (
+                      <NoteContextMenu
+                        key={note.id}
+                        note={note}
+                        onView={() => handleViewNote(note)}
+                        onEdit={() => handleEditNote(note)}
+                        onDelete={async () => {
+                          // Confirm and delete with optimistic UI
+                          if (confirm('Are you sure you want to delete this note?')) {
+                            // Optimistic: remove from UI immediately
+                            const deletedNote = handleOptimisticNoteDelete(note.id)
+
+                            try {
+                              const response = await fetch(
+                                `/api/schedule/${primaryInstanceId}/notes/${note.id}/`,
+                                { method: 'DELETE' }
+                              )
+                              if (!response.ok) {
+                                throw new Error(`Delete failed: ${response.status}`)
+                              }
+                              // Success - note already removed from UI
+                            } catch (error) {
+                              // Rollback: restore the note on error
+                              if (deletedNote) {
+                                handleNoteDeleteError(deletedNote)
+                              }
+                              errorLogger.logError(error as Error, {
+                                path: 'schedule-calendar/onDelete',
+                                metadata: { noteId: note.id, primaryInstanceId },
+                              })
+                              handleError('Failed to delete note. Please try again.')
+                            }
+                          }
+                        }}
+                        onDownload={() => handleDownloadAttachment(note)}
+                      >
+                        <NoteCard
+                          note={note}
+                          className="text-[9px]"
+                          onClick={() => handleViewNote(note)}
+                        />
+                      </NoteContextMenu>
+                    ))}
                   </div>
                 ) : (
                   <div className="h-full" />
@@ -789,6 +1015,7 @@ export function ScheduleCalendar({
                   date={dateKey}
                   isEditMode={canEdit}
                   existingWorkoutsCount={workouts.length}
+                  onAddNote={() => handleAddNote(dateKey)}
                 >
                   <DroppableCalendarDay date={dateKey} isEditMode={canEdit}>
                     {dayCellContent}
@@ -842,6 +1069,23 @@ export function ScheduleCalendar({
         }
         onMatchChange={handleMatchChange}
       />
+
+      {/* Note Dialog - only render when open to avoid invalid date errors */}
+      {primaryInstanceId && noteDialogOpen && selectedNoteDate && (
+        <NoteDialog
+          open={noteDialogOpen}
+          onOpenChange={setNoteDialogOpen}
+          mode={noteDialogMode}
+          instanceId={primaryInstanceId}
+          noteDate={selectedNoteDate}
+          {...(selectedNote ? { existingNote: selectedNote } : {})}
+          onOptimisticCreate={handleOptimisticNoteCreate}
+          onSuccess={handleNoteSuccess}
+          onCreateError={handleNoteCreateError}
+          onOptimisticDelete={handleOptimisticNoteDelete}
+          onDeleteError={handleNoteDeleteError}
+        />
+      )}
     </div>
   )
 

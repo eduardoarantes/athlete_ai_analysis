@@ -15,7 +15,7 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu'
-import { Copy, Trash2, Eye, Lock } from 'lucide-react'
+import { Copy, Trash2, Eye, Lock, StickyNote } from 'lucide-react'
 import { startOfDay, parseISO } from 'date-fns'
 import { useScheduleClipboard } from './schedule-clipboard-provider'
 import type { Workout } from '@/lib/types/training-plan'
@@ -144,6 +144,7 @@ interface CalendarDayContextMenuProps {
   date: string
   isEditMode: boolean
   existingWorkoutsCount: number
+  onAddNote?: () => void
 }
 
 export function CalendarDayContextMenu({
@@ -151,6 +152,7 @@ export function CalendarDayContextMenu({
   date,
   isEditMode,
   existingWorkoutsCount,
+  onAddNote,
 }: CalendarDayContextMenuProps) {
   const { copiedWorkout, hasClipboard, pasteWorkout } = useScheduleClipboard()
 
@@ -168,8 +170,16 @@ export function CalendarDayContextMenu({
     }
   }
 
+  const handleAddNote = () => {
+    onAddNote?.()
+  }
+
+  // Always show context menu when onAddNote is provided (for adding notes)
+  // or when there's something to paste
+  const showMenu = isEditMode && (onAddNote || hasClipboard)
+
   // If nothing to show, just render children
-  if (!isEditMode || (!hasClipboard && !isPast)) {
+  if (!showMenu) {
     return <>{children}</>
   }
 
@@ -177,10 +187,24 @@ export function CalendarDayContextMenu({
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent className="w-48">
-        <ContextMenuItem onClick={handlePaste} disabled={!canPaste}>
-          <Copy className="mr-2 h-4 w-4" />
-          Paste
-        </ContextMenuItem>
+        {/* Add Note - always available when callback provided */}
+        {onAddNote && (
+          <ContextMenuItem onClick={handleAddNote}>
+            <StickyNote className="mr-2 h-4 w-4" />
+            Add Note
+          </ContextMenuItem>
+        )}
+
+        {/* Paste - available when clipboard has content */}
+        {hasClipboard && (
+          <>
+            {onAddNote && <ContextMenuSeparator />}
+            <ContextMenuItem onClick={handlePaste} disabled={!canPaste}>
+              <Copy className="mr-2 h-4 w-4" />
+              Paste Workout
+            </ContextMenuItem>
+          </>
+        )}
 
         {hasClipboard && copiedWorkout && (
           <div className="px-2 py-1.5 text-xs text-muted-foreground border-t">

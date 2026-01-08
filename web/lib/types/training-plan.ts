@@ -188,6 +188,116 @@ export interface OverlapCheckResult {
   conflicts: PlanInstance[]
 }
 
+// =============================================================================
+// Note Types (Issue #49 - Note Card Feature)
+// =============================================================================
+
+/**
+ * Note attached to a specific date in a training plan instance
+ * Stored in the plan_instance_notes table
+ */
+export interface PlanInstanceNote {
+  id: string
+  plan_instance_id: string
+  user_id: string
+  title: string
+  description: string | null
+  /** Date in YYYY-MM-DD format */
+  note_date: string
+  /** S3 object key for the attachment */
+  attachment_s3_key: string | null
+  /** Original filename of the attachment */
+  attachment_filename: string | null
+  /** File size in bytes (max 10MB = 10485760) */
+  attachment_size_bytes: number | null
+  /** MIME type of the attachment */
+  attachment_content_type: string | null
+  created_at: string
+  updated_at: string
+}
+
+/**
+ * Input for creating a new note
+ */
+export interface CreateNoteInput {
+  title: string
+  description?: string
+  /** Date in YYYY-MM-DD format */
+  note_date: string
+}
+
+/**
+ * Input for updating an existing note
+ */
+export interface UpdateNoteInput {
+  title?: string
+  description?: string
+  /** Date in YYYY-MM-DD format */
+  note_date?: string
+  /** Set to true to remove the current attachment */
+  removeAttachment?: boolean
+}
+
+/**
+ * Allowed MIME types for note attachments
+ */
+export const NOTE_ATTACHMENT_ALLOWED_TYPES = [
+  'application/pdf',
+  'image/png',
+  'image/jpeg',
+  'image/jpg',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'text/plain',
+] as const
+
+/**
+ * Type for allowed attachment MIME types
+ */
+export type NoteAttachmentType = (typeof NOTE_ATTACHMENT_ALLOWED_TYPES)[number]
+
+/**
+ * Maximum file size for note attachments (10MB)
+ */
+export const NOTE_ATTACHMENT_MAX_SIZE_BYTES = 10 * 1024 * 1024
+
+/**
+ * Human-readable allowed file extensions for UI display
+ */
+export const NOTE_ATTACHMENT_ALLOWED_EXTENSIONS = [
+  'PDF',
+  'PNG',
+  'JPG',
+  'JPEG',
+  'DOC',
+  'DOCX',
+  'TXT',
+]
+
+/**
+ * Check if a MIME type is allowed for note attachments
+ */
+export function isAllowedAttachmentType(mimeType: string): mimeType is NoteAttachmentType {
+  return NOTE_ATTACHMENT_ALLOWED_TYPES.includes(mimeType as NoteAttachmentType)
+}
+
+/**
+ * Format file size in bytes to human-readable string
+ */
+export function formatFileSize(bytes: number): string {
+  if (bytes < 1024) {
+    return `${bytes} B`
+  }
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(1)} KB`
+  }
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+// =============================================================================
+// Workout Colors
+// =============================================================================
+
 const WORKOUT_COLORS = {
   endurance:
     'bg-green-100/80 hover:bg-green-200/80 border-green-200 dark:bg-green-900/30 dark:border-green-800',
