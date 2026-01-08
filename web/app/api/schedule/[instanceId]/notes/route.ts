@@ -134,7 +134,9 @@ export async function POST(request: NextRequest, { params }: RouteParams): Promi
     const createInput = {
       title: validation.data.title,
       note_date: validation.data.note_date,
-      ...(validation.data.description !== undefined && { description: validation.data.description }),
+      ...(validation.data.description !== undefined && {
+        description: validation.data.description,
+      }),
     }
 
     const result = await noteService.createNote(user.id, instanceId, createInput, fileInput)

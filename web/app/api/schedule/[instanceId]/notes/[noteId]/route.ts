@@ -141,7 +141,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams): Prom
       removeAttachment?: boolean
     } = {}
     if (validation.data.title !== undefined) updateInput.title = validation.data.title
-    if (validation.data.description !== undefined) updateInput.description = validation.data.description
+    if (validation.data.description !== undefined)
+      updateInput.description = validation.data.description
     if (validation.data.note_date !== undefined) updateInput.note_date = validation.data.note_date
     if (validation.data.removeAttachment !== undefined)
       updateInput.removeAttachment = validation.data.removeAttachment

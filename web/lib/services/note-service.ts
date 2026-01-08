@@ -443,7 +443,10 @@ export class NoteService {
   /**
    * Get a presigned download URL for a note's attachment
    */
-  async getAttachmentDownloadUrl(noteId: string, userId: string): Promise<{ url?: string; error?: string }> {
+  async getAttachmentDownloadUrl(
+    noteId: string,
+    userId: string
+  ): Promise<{ url?: string; error?: string }> {
     try {
       // Get note to verify ownership and get S3 key
       const note = await this.getNoteById(noteId)

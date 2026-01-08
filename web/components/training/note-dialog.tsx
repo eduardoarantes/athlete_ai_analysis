@@ -313,9 +313,7 @@ export function NoteDialog({
                     {selectedFile?.name || existingNote?.attachment_filename}
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    {formatFileSize(
-                      selectedFile?.size || existingNote?.attachment_size_bytes || 0
-                    )}
+                    {formatFileSize(selectedFile?.size || existingNote?.attachment_size_bytes || 0)}
                   </div>
                 </div>
                 {!isViewMode && (

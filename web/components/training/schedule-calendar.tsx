@@ -12,7 +12,12 @@ import { NoteCard } from './note-card'
 import { NoteDialog } from './note-dialog'
 import { WorkoutDetailModal, type MatchedActivityData } from './workout-detail-modal'
 import { NoteContextMenu } from '@/components/schedule/note-context-menu'
-import type { PlanInstance, Workout, WorkoutOverrides, PlanInstanceNote } from '@/lib/types/training-plan'
+import type {
+  PlanInstance,
+  Workout,
+  WorkoutOverrides,
+  PlanInstanceNote,
+} from '@/lib/types/training-plan'
 import { parseLocalDate, formatDateString } from '@/lib/utils/date-utils'
 import { applyWorkoutOverrides } from '@/lib/utils/apply-workout-overrides'
 import { formatWithGoalLabels } from '@/lib/utils/format-utils'
@@ -778,7 +783,7 @@ export function ScheduleCalendar({
                   {date.getDate()}
                 </div>
 
-                {(workouts.length > 0 || notes.length > 0) ? (
+                {workouts.length > 0 || notes.length > 0 ? (
                   <div className="space-y-1">
                     {/* Render workouts */}
                     {workouts.map((sw, idx) => {

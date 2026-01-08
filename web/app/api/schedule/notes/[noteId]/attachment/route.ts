@@ -56,7 +56,10 @@ export async function GET(_request: NextRequest, { params }: RouteParams): Promi
     }
 
     if (note.user_id !== user.id) {
-      return NextResponse.json({ error: 'Not authorized to access this attachment' }, { status: 403 })
+      return NextResponse.json(
+        { error: 'Not authorized to access this attachment' },
+        { status: 403 }
+      )
     }
 
     if (!note.attachment_s3_key) {
@@ -73,7 +76,10 @@ export async function GET(_request: NextRequest, { params }: RouteParams): Promi
         metadata: { error: result.error },
       })
 
-      return NextResponse.json({ error: result.error || 'Failed to generate download URL' }, { status: 500 })
+      return NextResponse.json(
+        { error: result.error || 'Failed to generate download URL' },
+        { status: 500 }
+      )
     }
 
     return NextResponse.json({

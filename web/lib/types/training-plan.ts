@@ -264,7 +264,15 @@ export const NOTE_ATTACHMENT_MAX_SIZE_BYTES = 10 * 1024 * 1024
 /**
  * Human-readable allowed file extensions for UI display
  */
-export const NOTE_ATTACHMENT_ALLOWED_EXTENSIONS = ['PDF', 'PNG', 'JPG', 'JPEG', 'DOC', 'DOCX', 'TXT']
+export const NOTE_ATTACHMENT_ALLOWED_EXTENSIONS = [
+  'PDF',
+  'PNG',
+  'JPG',
+  'JPEG',
+  'DOC',
+  'DOCX',
+  'TXT',
+]
 
 /**
  * Check if a MIME type is allowed for note attachments
