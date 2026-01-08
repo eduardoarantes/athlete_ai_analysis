@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { errorLogger } from '@/lib/monitoring/error-logger'
 import { noteService } from '@/lib/services/note-service'
+import { rateLimiters } from '@/lib/rate-limit'
 import { z } from 'zod'
 import {
   NOTE_ATTACHMENT_ALLOWED_TYPES,
@@ -84,6 +85,38 @@ export async function PATCH(request: NextRequest, { params }: RouteParams): Prom
     const noteDate = formData.get('note_date') as string | null
     const removeAttachment = formData.get('removeAttachment') as string | null
     const file = formData.get('file') as File | null
+
+    // Rate limit file uploads (only when a file is being uploaded)
+    if (file) {
+      const rateLimit = rateLimiters.fileUpload.check(user.id)
+      if (!rateLimit.allowed) {
+        errorLogger.logWarning('File upload rate limit exceeded', {
+          userId: user.id,
+          path: `/api/schedule/${instanceId}/notes/${noteId}`,
+          metadata: {
+            limit: rateLimit.limit,
+            remaining: rateLimit.remaining,
+            resetAt: new Date(rateLimit.reset).toISOString(),
+          },
+        })
+
+        return NextResponse.json(
+          {
+            error: 'Rate limit exceeded. Please try again later.',
+            retryAfter: Math.ceil((rateLimit.reset - Date.now()) / 1000),
+          },
+          {
+            status: 429,
+            headers: {
+              'Retry-After': String(Math.ceil((rateLimit.reset - Date.now()) / 1000)),
+              'X-RateLimit-Limit': String(rateLimit.limit),
+              'X-RateLimit-Remaining': String(rateLimit.remaining),
+              'X-RateLimit-Reset': String(rateLimit.reset),
+            },
+          }
+        )
+      }
+    }
 
     // Build raw input object for validation (only include provided fields)
     const rawInput: Record<string, unknown> = {}

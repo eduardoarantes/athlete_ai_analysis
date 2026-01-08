@@ -131,6 +131,13 @@ export const rateLimiters = {
     windowMs: 15 * 60 * 1000, // 15 minutes
     maxRequests: 20,
   }),
+
+  /** File upload rate limit: 20 uploads per hour per user */
+  fileUpload: new RateLimiter({
+    id: 'file-upload',
+    windowMs: 60 * 60 * 1000, // 1 hour
+    maxRequests: 20,
+  }),
 } as const
 
 /**

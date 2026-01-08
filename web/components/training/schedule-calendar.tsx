@@ -331,24 +331,37 @@ export function ScheduleCalendar({
   }, [])
 
   // Optimistic note deletion - remove from UI immediately, return note for potential rollback
-  const handleOptimisticNoteDelete = useCallback((noteId: string): PlanInstanceNote | undefined => {
-    let deletedNote: PlanInstanceNote | undefined
+  // Use ref to track notesByDate for synchronous access in callbacks
+  const notesByDateRef = useRef<Map<string, PlanInstanceNote[]>>(notesByDate)
+  useEffect(() => {
+    notesByDateRef.current = notesByDate
+  }, [notesByDate])
 
-    setNotesByDate((prev) => {
-      const newMap = new Map(prev)
-      for (const [date, notes] of newMap.entries()) {
-        const noteToDelete = notes.find((n) => n.id === noteId)
-        if (noteToDelete) {
-          deletedNote = noteToDelete
+  const handleOptimisticNoteDelete = useCallback((noteId: string): PlanInstanceNote | undefined => {
+    // Find the note synchronously from the ref before updating state
+    // This avoids race conditions where setState callback might not have executed yet
+    let deletedNote: PlanInstanceNote | undefined
+    for (const notes of notesByDateRef.current.values()) {
+      const note = notes.find((n) => n.id === noteId)
+      if (note) {
+        deletedNote = note
+        break
+      }
+    }
+
+    if (deletedNote) {
+      setNotesByDate((prev) => {
+        const newMap = new Map(prev)
+        const notes = newMap.get(deletedNote!.note_date)
+        if (notes) {
           newMap.set(
-            date,
+            deletedNote!.note_date,
             notes.filter((n) => n.id !== noteId)
           )
-          break
         }
-      }
-      return newMap
-    })
+        return newMap
+      })
+    }
 
     return deletedNote
   }, [])
