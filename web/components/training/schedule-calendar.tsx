@@ -31,6 +31,7 @@ import {
   WorkoutContextMenu,
   CalendarDayContextMenu,
 } from '@/components/schedule'
+import { errorLogger } from '@/lib/monitoring/error-logger'
 
 interface ScheduleCalendarProps {
   instances: PlanInstance[]
@@ -217,7 +218,10 @@ export function ScheduleCalendar({
           }
         }
       } catch (error) {
-        console.error('Failed to fetch matches:', error)
+        errorLogger.logError(error as Error, {
+          path: 'schedule-calendar/fetchMatchesAndAutoMatch',
+          metadata: { instanceIds: instances.map((i) => i.id) },
+        })
       }
     }
 
@@ -248,7 +252,10 @@ export function ScheduleCalendar({
           setNotesByDate(map)
         }
       } catch (error) {
-        console.error('Failed to fetch notes:', error)
+        errorLogger.logError(error as Error, {
+          path: 'schedule-calendar/fetchNotes',
+          metadata: { primaryInstanceId },
+        })
       }
     }
 
@@ -294,7 +301,10 @@ export function ScheduleCalendar({
         window.open(data.downloadUrl, '_blank')
       }
     } catch (error) {
-      console.error('Failed to download attachment:', error)
+      errorLogger.logError(error as Error, {
+        path: 'schedule-calendar/handleDownloadAttachment',
+        metadata: { noteId: note.id },
+      })
     }
   }, [])
 
@@ -869,12 +879,25 @@ export function ScheduleCalendar({
                         note={note}
                         onView={() => handleViewNote(note)}
                         onEdit={() => handleEditNote(note)}
-                        onDelete={() => {
+                        onDelete={async () => {
                           // Confirm and delete
                           if (confirm('Are you sure you want to delete this note?')) {
-                            fetch(`/api/schedule/${primaryInstanceId}/notes/${note.id}`, {
-                              method: 'DELETE',
-                            }).then(() => handleNoteDelete())
+                            try {
+                              const response = await fetch(
+                                `/api/schedule/${primaryInstanceId}/notes/${note.id}`,
+                                { method: 'DELETE' }
+                              )
+                              if (!response.ok) {
+                                throw new Error(`Delete failed: ${response.status}`)
+                              }
+                              handleNoteDelete()
+                            } catch (error) {
+                              errorLogger.logError(error as Error, {
+                                path: 'schedule-calendar/onDelete',
+                                metadata: { noteId: note.id, primaryInstanceId },
+                              })
+                              handleError('Failed to delete note. Please try again.')
+                            }
                           }
                         }}
                         onDownload={() => handleDownloadAttachment(note)}
