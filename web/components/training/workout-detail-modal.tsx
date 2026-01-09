@@ -286,7 +286,7 @@ export function WorkoutDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader className="pb-2 text-center">
           <div className="flex items-center justify-center gap-2 flex-wrap">
             <DialogTitle className="text-lg">{workout.name}</DialogTitle>
@@ -478,7 +478,7 @@ export function WorkoutDetailModal({
                     <div className="flex items-start gap-3 p-3 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg">
                       <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium text-green-900 dark:text-green-100 truncate">
+                        <div className="font-medium text-green-900 dark:text-green-100">
                           {matchedActivity.name}
                         </div>
                         <div className="text-sm text-green-700 dark:text-green-300 mt-1">
