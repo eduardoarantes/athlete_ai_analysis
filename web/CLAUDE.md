@@ -319,6 +319,53 @@ function MyComponent() {
 
 ---
 
+## Activity & Workout Styles Library
+
+Use the shared styles library for consistent activity and workout styling across the application.
+
+**Location:** `@/lib/constants/activity-styles`
+
+**Usage:**
+
+```typescript
+import {
+  getActivityIcon,
+  getActivityColors,
+  getWorkoutIntensityColors,
+  getComplianceColors,
+  getComplianceStatus,
+  ACTIVITY_COLORS,
+  WORKOUT_INTENSITY_COLORS,
+  COMPLIANCE_COLORS,
+} from '@/lib/constants/activity-styles'
+
+// Get activity icon with size variant
+const icon = getActivityIcon('Ride', 'sm') // 'xs' | 'sm' | 'md' | 'lg'
+
+// Get activity background/border colors
+const colors = getActivityColors('Ride')
+// Returns: 'bg-blue-100/80 hover:bg-blue-200/80 border-blue-200'
+
+// Get workout intensity colors (with dark mode support)
+const workoutColors = getWorkoutIntensityColors('threshold')
+
+// Get compliance colors based on percentage
+const complianceColors = getComplianceColors(95) // on_target = green
+const missedColors = getComplianceColors(null) // missed = red
+const futureColors = getComplianceColors(null, true) // future = gray
+```
+
+**Icon Sizes:**
+
+- `xs` - 12px (h-3 w-3) - compact views like calendar cells
+- `sm` - 16px (h-4 w-4) - default, for lists
+- `md` - 20px (h-5 w-5) - medium emphasis
+- `lg` - 24px (h-6 w-6) - large emphasis
+
+**Key Principle:** Never define activity/workout colors locally. Always use this shared library.
+
+---
+
 ## Project Structure
 
 ```

@@ -294,39 +294,6 @@ export function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-// =============================================================================
-// Workout Colors
-// =============================================================================
-
-const WORKOUT_COLORS = {
-  endurance:
-    'bg-green-100/80 hover:bg-green-200/80 border-green-200 dark:bg-green-900/30 dark:border-green-800',
-  tempo:
-    'bg-yellow-100/80 hover:bg-yellow-200/80 border-yellow-200 dark:bg-yellow-900/30 dark:border-yellow-800',
-  sweet_spot:
-    'bg-amber-100/80 hover:bg-amber-200/80 border-amber-200 dark:bg-amber-900/30 dark:border-amber-800',
-  threshold:
-    'bg-orange-100/80 hover:bg-orange-200/80 border-orange-200 dark:bg-orange-900/30 dark:border-orange-800',
-  vo2max: 'bg-red-100/80 hover:bg-red-200/80 border-red-200 dark:bg-red-900/30 dark:border-red-800',
-  recovery:
-    'bg-blue-100/80 hover:bg-blue-200/80 border-blue-200 dark:bg-blue-900/30 dark:border-blue-800',
-  rest: 'bg-gray-100/80 border-gray-200 dark:bg-gray-800/30 dark:border-gray-700',
-  mixed:
-    'bg-purple-100/80 hover:bg-purple-200/80 border-purple-200 dark:bg-purple-900/30 dark:border-purple-800',
-} as const
-
-type WorkoutColorType = keyof typeof WORKOUT_COLORS
-
-/**
- * Get workout color classes based on workout type
- */
-export function getWorkoutColors(type: string): string {
-  if (type in WORKOUT_COLORS) {
-    return WORKOUT_COLORS[type as WorkoutColorType]
-  }
-  return WORKOUT_COLORS.mixed
-}
-
 /**
  * Format duration in minutes to human-readable string
  */
