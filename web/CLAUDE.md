@@ -289,6 +289,53 @@ async function processWebhookEvent(event: WebhookEvent): Promise<void> {
 
 ---
 
+## Activity & Workout Styles Library
+
+**Location:** `@/lib/constants/activity-styles`
+
+Use the shared styles library for consistent activity and workout styling across the application. **Never define activity/workout colors locally** - always use this library.
+
+### Quick Usage
+
+```typescript
+import {
+  getActivityIcon,
+  getActivityColors,
+  getWorkoutIntensityColors,
+  getComplianceColors,
+} from '@/lib/constants/activity-styles'
+
+// Get icon for a Strava activity (size: 'xs' | 'sm' | 'md' | 'lg')
+const icon = getActivityIcon('Ride', 'sm')
+
+// Get Tailwind classes for activity background/border
+const colors = getActivityColors('Run')
+// Returns: "bg-orange-100/80 hover:bg-orange-200/80 border-orange-200"
+
+// Get workout intensity colors (with dark mode support)
+const workoutColors = getWorkoutIntensityColors('threshold')
+// Returns: "bg-orange-100/80 hover:bg-orange-200/80 border-orange-200 dark:bg-orange-900/30 dark:border-orange-800"
+
+// Get compliance colors for workout matching
+const complianceColors = getComplianceColors(95, false)
+// Returns colors based on percentage (90-110% = green, 75-89% = yellow, etc.)
+```
+
+### Available Exports
+
+| Export                                      | Description                                                               |
+| ------------------------------------------- | ------------------------------------------------------------------------- |
+| `getActivityIcon(sportType, size)`          | Returns Lucide icon element for Strava sport type                         |
+| `getActivityColors(sportType)`              | Returns Tailwind classes for activity styling                             |
+| `getWorkoutIntensityColors(type)`           | Returns classes for workout intensity (endurance, tempo, threshold, etc.) |
+| `getComplianceStatus(percentage, isFuture)` | Returns compliance category string                                        |
+| `getComplianceColors(percentage, isFuture)` | Returns Tailwind classes for compliance state                             |
+| `ACTIVITY_COLORS`                           | Raw color mapping object                                                  |
+| `WORKOUT_INTENSITY_COLORS`                  | Raw intensity color mapping                                               |
+| `COMPLIANCE_COLORS`                         | Raw compliance color mapping                                              |
+
+---
+
 ## Custom Hooks
 
 ### useIsAdmin
