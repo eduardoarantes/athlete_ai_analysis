@@ -5,6 +5,27 @@
  * Part of Issue #21: Plan Builder Phase 1 - Foundation
  */
 
+// Import shared types from training-plan.ts
+import type {
+  WorkoutStructure,
+  StructuredWorkoutSegment,
+  WorkoutStep,
+  StepLength,
+  StepTarget,
+  SegmentLength,
+} from './training-plan'
+import { calculateStructureDuration } from './training-plan'
+
+// Re-export for convenience
+export type {
+  WorkoutStructure,
+  StructuredWorkoutSegment,
+  WorkoutStep,
+  StepLength,
+  StepTarget,
+  SegmentLength,
+}
+
 /**
  * Workout type categories
  */
@@ -114,7 +135,10 @@ export interface WorkoutLibraryItem {
   /** Days of the week where this workout is typically scheduled */
   suitable_weekdays?: Weekday[]
 
-  /** Workout segments (warmup, intervals, cooldown, etc.) */
+  /** NEW: Full workout structure with multi-step interval support (Issue #96) */
+  structure?: WorkoutStructure
+
+  /** Workout segments (warmup, intervals, cooldown, etc.) - current format */
   segments: LibraryWorkoutSegment[]
 
   /** Base duration in minutes */
@@ -176,9 +200,16 @@ export const INTENSITY_LABELS: Record<WorkoutIntensity, string> = {
 }
 
 /**
- * Calculate total duration of a library workout from its segments
+ * Calculate total duration of a library workout from its structure or segments
+ * NEW: Supports WorkoutStructure with multi-step intervals (Issue #96)
  */
 export function calculateLibraryWorkoutDuration(workout: WorkoutLibraryItem): number {
+  // NEW: Handle WorkoutStructure format
+  if (workout.structure?.structure) {
+    return calculateStructureDuration(workout.structure)
+  }
+
+  // Current format handling
   if (!workout.segments || workout.segments.length === 0) {
     return workout.base_duration_min
   }

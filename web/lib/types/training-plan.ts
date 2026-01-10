@@ -3,6 +3,132 @@
  * Defines the structure of training plan data stored in plan_data JSON
  */
 
+// =========================================================================
+// Multi-Step Interval Types (Issue #96)
+// =========================================================================
+
+/**
+ * Length specification for a workout step (duration or distance)
+ */
+export interface StepLength {
+  unit: 'second' | 'minute' | 'hour' | 'meter' | 'kilometer' | 'mile'
+  value: number
+}
+
+/**
+ * Target for a workout step (power, heart rate, cadence)
+ */
+export interface StepTarget {
+  type: 'power' | 'heartrate' | 'cadence'
+  minValue: number
+  maxValue: number
+  /** Unit: 'percentOfFtp' or 'watts' for power, 'bpm' for HR, 'rpm' for cadence */
+  unit?: 'percentOfFtp' | 'watts' | 'bpm' | 'rpm'
+}
+
+/**
+ * A single step within a workout segment
+ */
+export interface WorkoutStep {
+  name: string
+  intensityClass: 'warmUp' | 'active' | 'rest' | 'coolDown'
+  length: StepLength
+  openDuration?: boolean
+  targets: StepTarget[]
+}
+
+/**
+ * Segment/repetition block length (always in repetitions)
+ */
+export interface SegmentLength {
+  unit: 'repetition'
+  value: number
+}
+
+/**
+ * A segment within a workout - supports multi-step intervals
+ *
+ * Examples:
+ * - Single step (warmup): type='step', length.value=1, steps=[{warmup step}]
+ * - 2-step interval: type='repetition', length.value=5, steps=[{work}, {recovery}]
+ * - 3-step interval: type='repetition', length.value=10, steps=[{Z3}, {Z5}, {Z2}]
+ */
+export interface StructuredWorkoutSegment {
+  type: 'step' | 'repetition'
+  length: SegmentLength
+  steps: WorkoutStep[]
+}
+
+/**
+ * Complete workout structure with multi-step interval support
+ */
+export interface WorkoutStructure {
+  primaryIntensityMetric: 'percentOfFtp' | 'watts' | 'heartrate'
+  primaryLengthMetric: 'duration' | 'distance'
+  structure: StructuredWorkoutSegment[]
+  /** Polyline for simplified visualization [[time, intensity], ...] normalized 0-1 */
+  polyline?: [number, number][]
+}
+
+// =========================================================================
+// Step Length Conversion Functions (Issue #96)
+// =========================================================================
+
+/**
+ * Convert StepLength to seconds
+ */
+export function convertStepLengthToSeconds(length: StepLength): number {
+  switch (length.unit) {
+    case 'second':
+      return length.value
+    case 'minute':
+      return length.value * 60
+    case 'hour':
+      return length.value * 3600
+    default:
+      // For distance-based lengths, return value as-is (caller should handle)
+      return length.value
+  }
+}
+
+/**
+ * Convert StepLength to minutes
+ */
+export function convertStepLengthToMinutes(length: StepLength): number {
+  switch (length.unit) {
+    case 'second':
+      return length.value / 60
+    case 'minute':
+      return length.value
+    case 'hour':
+      return length.value * 60
+    default:
+      // For distance-based lengths, convert value/60 (assumed seconds)
+      return length.value / 60
+  }
+}
+
+/**
+ * Calculate total duration of a WorkoutStructure in minutes
+ */
+export function calculateStructureDuration(structure: WorkoutStructure): number {
+  return structure.structure.reduce((total, segment) => {
+    const repetitions = segment.length.value
+    const stepsTotal = segment.steps.reduce((stepSum, step) => {
+      return stepSum + convertStepLengthToMinutes(step.length)
+    }, 0)
+    return total + stepsTotal * repetitions
+  }, 0)
+}
+
+// =========================================================================
+// Legacy WorkoutSegment Type (current format, will be migrated)
+// =========================================================================
+
+/**
+ * Current workout segment format - will be migrated to StructuredWorkoutSegment
+ * @see StructuredWorkoutSegment for the new multi-step interval format
+ */
 export interface WorkoutSegment {
   type: 'warmup' | 'interval' | 'recovery' | 'cooldown' | 'steady' | 'work' | 'tempo'
   duration_min: number
@@ -10,16 +136,20 @@ export interface WorkoutSegment {
   power_high_pct?: number | undefined
   description?: string | undefined
   sets?: number | undefined
-  work?: {
-    duration_min: number
-    power_low_pct: number
-    power_high_pct: number
-  } | undefined
-  recovery?: {
-    duration_min: number
-    power_low_pct: number
-    power_high_pct: number
-  } | undefined
+  work?:
+    | {
+        duration_min: number
+        power_low_pct: number
+        power_high_pct: number
+      }
+    | undefined
+  recovery?:
+    | {
+        duration_min: number
+        power_low_pct: number
+        power_high_pct: number
+      }
+    | undefined
 }
 
 export interface Workout {
@@ -40,6 +170,9 @@ export interface Workout {
     | 'rest'
     | string
   tss?: number
+  /** NEW: Full workout structure with multi-step interval support (Issue #96) */
+  structure?: WorkoutStructure
+  /** Current segment format - will be migrated to structure */
   segments?: WorkoutSegment[]
   /** Source of the workout: 'library' for pre-defined workouts, 'llm' for AI-generated */
   source?: 'library' | 'llm'
@@ -142,7 +275,9 @@ export interface LibraryWorkoutData {
   tss: number
   duration_min?: number | undefined
   description?: string | undefined
-  /** Full workout segments for proper rendering */
+  /** NEW: Full workout structure with multi-step interval support (Issue #96) */
+  structure?: WorkoutStructure | undefined
+  /** Current segment format - will be migrated to structure */
   segments?: WorkoutSegment[] | undefined
 }
 
@@ -335,9 +470,16 @@ export function formatDuration(totalMinutes: number): string {
 }
 
 /**
- * Calculate total duration of a workout from its segments
+ * Calculate total duration of a workout from its structure or legacy segments
+ * NEW: Supports WorkoutStructure with multi-step intervals (Issue #96)
  */
 export function calculateWorkoutDuration(workout: Workout): number {
+  // NEW: Handle WorkoutStructure format
+  if (workout.structure?.structure) {
+    return calculateStructureDuration(workout.structure)
+  }
+
+  // Legacy format handling
   if (!workout.segments || workout.segments.length === 0) {
     return 0
   }
