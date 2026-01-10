@@ -45,7 +45,8 @@ import type {
   WorkoutIntensity,
   TrainingPhase,
 } from '@/lib/types/workout-library'
-import { WORKOUT_TYPE_COLORS, INTENSITY_LABELS } from '@/lib/types/workout-library'
+import { INTENSITY_LABELS } from '@/lib/types/workout-library'
+import { getWorkoutIntensityColors } from '@/lib/constants/activity-styles'
 import { PowerProfileSVG } from '@/components/training/power-profile-svg'
 import { getPowerRangeColor } from '@/lib/types/power-zones'
 
@@ -362,7 +363,10 @@ export default function AdminWorkoutsPage() {
                       >
                         <TableCell className="font-medium">{workout.name}</TableCell>
                         <TableCell>
-                          <Badge className={WORKOUT_TYPE_COLORS[workout.type]} variant="outline">
+                          <Badge
+                            className={getWorkoutIntensityColors(workout.type)}
+                            variant="outline"
+                          >
                             {formatType(workout.type)}
                           </Badge>
                         </TableCell>
@@ -424,7 +428,7 @@ export default function AdminWorkoutsPage() {
                       </h3>
                       <div className="flex flex-wrap gap-1">
                         <Badge
-                          className={`${WORKOUT_TYPE_COLORS[workout.type]} text-xs`}
+                          className={`${getWorkoutIntensityColors(workout.type)} text-xs`}
                           variant="outline"
                         >
                           {formatType(workout.type)}
@@ -517,7 +521,10 @@ export default function AdminWorkoutsPage() {
                 <div className="space-y-4">
                   {/* Meta badges */}
                   <div className="flex flex-wrap gap-2">
-                    <Badge className={WORKOUT_TYPE_COLORS[selectedWorkout.type]} variant="outline">
+                    <Badge
+                      className={getWorkoutIntensityColors(selectedWorkout.type)}
+                      variant="outline"
+                    >
                       {formatType(selectedWorkout.type)}
                     </Badge>
                     <Badge variant="secondary">{INTENSITY_LABELS[selectedWorkout.intensity]}</Badge>
