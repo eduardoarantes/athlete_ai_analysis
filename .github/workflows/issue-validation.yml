@@ -25,18 +25,37 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Read validation prompt
-        id: prompt
-        run: |
-          # Read the custom prompt file, replacing $ARGUMENTS with the issue number
-          PROMPT=$(cat .claude/commands/product-team/issue_validation.md | sed 's/\$ARGUMENTS/${{ github.event.issue.number }}/g')
-          # Store in output using heredoc for multiline
-          echo "content<<EOF" >> $GITHUB_OUTPUT
-          echo "$PROMPT" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
       - name: Run Claude Code
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          prompt: ${{ steps.prompt.outputs.content }}
+          prompt: |
+            Validate and enhance GitHub issue #${{ github.event.issue.number }}.
+
+            ## Instructions
+
+            1. Fetch the issue:
+               gh issue view ${{ github.event.issue.number }} --json title,body,labels,comments,author
+
+            2. Check labels - if empty, add an appropriate label:
+               - enhancement, bug, documentation, refactor, feature, chore, or performance
+               - Use: gh issue edit ${{ github.event.issue.number }} --add-label "label-name"
+
+            3. Reformat title if needed:
+               - First letter uppercase
+               - Fix acronyms: api→API, url→URL, json→JSON, http→HTTP, ui→UI, cli→CLI
+               - Use: gh issue edit ${{ github.event.issue.number }} --title "New Title"
+
+            4. If description is empty or lacks detail, enhance it with:
+               - Clear problem statement or feature description
+               - Acceptance criteria
+               - Implementation tasks checklist
+               - Use: gh issue edit ${{ github.event.issue.number }} --body "new body content"
+
+            5. Check comments for answered questions - incorporate answers into the description under a "Decisions" section
+
+            6. If questions remain unanswered, comment tagging the author to request clarification
+
+            7. Provide a brief summary comment of what was validated/enhanced
+
+            Be concise. Only enhance what's actually missing.
