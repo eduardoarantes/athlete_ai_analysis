@@ -13,26 +13,7 @@ import { X, GripVertical, Clock, Zap } from 'lucide-react'
 import type { WorkoutPlacement } from '@/lib/types/plan-builder'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-
-/**
- * Color mapping for workout types
- */
-const WORKOUT_TYPE_COLORS: Record<string, string> = {
-  endurance:
-    'bg-blue-100 border-blue-300 text-blue-800 dark:bg-blue-950 dark:border-blue-800 dark:text-blue-200',
-  tempo:
-    'bg-green-100 border-green-300 text-green-800 dark:bg-green-950 dark:border-green-800 dark:text-green-200',
-  sweet_spot:
-    'bg-yellow-100 border-yellow-300 text-yellow-800 dark:bg-yellow-950 dark:border-yellow-800 dark:text-yellow-200',
-  threshold:
-    'bg-orange-100 border-orange-300 text-orange-800 dark:bg-orange-950 dark:border-orange-800 dark:text-orange-200',
-  vo2max:
-    'bg-red-100 border-red-300 text-red-800 dark:bg-red-950 dark:border-red-800 dark:text-red-200',
-  recovery:
-    'bg-purple-100 border-purple-300 text-purple-800 dark:bg-purple-950 dark:border-purple-800 dark:text-purple-200',
-  mixed:
-    'bg-gray-100 border-gray-300 text-gray-800 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200',
-}
+import { getWorkoutIntensityColors } from '@/lib/constants/activity-styles'
 
 /**
  * Get workout type display name
@@ -95,7 +76,7 @@ export function WorkoutCard({
     return null
   }
 
-  const colorClass = WORKOUT_TYPE_COLORS[workout.type] ?? WORKOUT_TYPE_COLORS.mixed
+  const colorClass = getWorkoutIntensityColors(workout.type || 'mixed')
 
   if (isCompact) {
     return (

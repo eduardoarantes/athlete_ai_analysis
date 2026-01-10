@@ -11,19 +11,7 @@
 import { Clock, Zap } from 'lucide-react'
 import type { DragData, LibraryWorkoutDragData, PlacedWorkoutDragData } from './types'
 import { cn } from '@/lib/utils'
-
-/**
- * Color mapping for workout types
- */
-const WORKOUT_TYPE_COLORS: Record<string, string> = {
-  endurance: 'bg-blue-100 border-blue-300 text-blue-800',
-  tempo: 'bg-green-100 border-green-300 text-green-800',
-  sweet_spot: 'bg-yellow-100 border-yellow-300 text-yellow-800',
-  threshold: 'bg-orange-100 border-orange-300 text-orange-800',
-  vo2max: 'bg-red-100 border-red-300 text-red-800',
-  recovery: 'bg-purple-100 border-purple-300 text-purple-800',
-  mixed: 'bg-gray-100 border-gray-300 text-gray-800',
-}
+import { getWorkoutIntensityColors } from '@/lib/constants/activity-styles'
 
 /**
  * Format duration in minutes
@@ -66,7 +54,7 @@ export function DragOverlayContent({ dragData }: DragOverlayContentProps) {
  */
 function LibraryWorkoutOverlay({ data }: { data: LibraryWorkoutDragData }) {
   const { workout } = data
-  const colorClass = WORKOUT_TYPE_COLORS[workout.type] ?? WORKOUT_TYPE_COLORS.mixed
+  const colorClass = getWorkoutIntensityColors(workout.type || 'mixed')
 
   return (
     <div

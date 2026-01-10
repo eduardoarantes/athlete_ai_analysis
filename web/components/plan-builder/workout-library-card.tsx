@@ -14,29 +14,7 @@ import { useState } from 'react'
 import type { WorkoutLibraryItem, LibraryWorkoutSegment } from '@/lib/types/workout-library'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-
-/**
- * Color mapping for workout types
- */
-const WORKOUT_TYPE_COLORS: Record<string, string> = {
-  endurance: 'border-l-blue-500',
-  tempo: 'border-l-green-500',
-  sweet_spot: 'border-l-yellow-500',
-  threshold: 'border-l-orange-500',
-  vo2max: 'border-l-red-500',
-  recovery: 'border-l-purple-500',
-  mixed: 'border-l-gray-500',
-}
-
-/**
- * Intensity badge colors
- */
-const INTENSITY_COLORS: Record<string, string> = {
-  easy: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-  moderate: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-  hard: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
-  very_hard: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-}
+import { getWorkoutBorderColor, getIntensityBadgeColors } from '@/lib/constants/activity-styles'
 
 /**
  * Format workout type for display
@@ -117,8 +95,8 @@ export function WorkoutLibraryCard({
 }: WorkoutLibraryCardProps) {
   const [isExpanded, setIsExpanded] = useState(false)
 
-  const borderColor = WORKOUT_TYPE_COLORS[workout.type] ?? WORKOUT_TYPE_COLORS.mixed
-  const intensityColor = INTENSITY_COLORS[workout.intensity] ?? INTENSITY_COLORS.moderate
+  const borderColor = getWorkoutBorderColor(workout.type)
+  const intensityColor = getIntensityBadgeColors(workout.intensity)
 
   const hasSegments = workout.segments && workout.segments.length > 0
   const hasDescription = workout.detailed_description && workout.detailed_description.trim() !== ''
