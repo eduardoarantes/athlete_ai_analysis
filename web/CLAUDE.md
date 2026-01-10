@@ -289,6 +289,53 @@ async function processWebhookEvent(event: WebhookEvent): Promise<void> {
 
 ---
 
+## Activity & Workout Styles Library
+
+**Location:** `@/lib/constants/activity-styles`
+
+Use the shared styles library for consistent activity and workout styling across the application. **Never define activity/workout colors locally** - always use this library.
+
+### Quick Usage
+
+```typescript
+import {
+  getActivityIcon,
+  getActivityColors,
+  getWorkoutIntensityColors,
+  getComplianceColors,
+} from '@/lib/constants/activity-styles'
+
+// Get icon for a Strava activity (size: 'xs' | 'sm' | 'md' | 'lg')
+const icon = getActivityIcon('Ride', 'sm')
+
+// Get Tailwind classes for activity background/border
+const colors = getActivityColors('Run')
+// Returns: "bg-orange-100/80 hover:bg-orange-200/80 border-orange-200"
+
+// Get workout intensity colors (with dark mode support)
+const workoutColors = getWorkoutIntensityColors('threshold')
+// Returns: "bg-orange-100/80 hover:bg-orange-200/80 border-orange-200 dark:bg-orange-900/30 dark:border-orange-800"
+
+// Get compliance colors for workout matching
+const complianceColors = getComplianceColors(95, false)
+// Returns colors based on percentage (90-110% = green, 75-89% = yellow, etc.)
+```
+
+### Available Exports
+
+| Export                                      | Description                                                               |
+| ------------------------------------------- | ------------------------------------------------------------------------- |
+| `getActivityIcon(sportType, size)`          | Returns Lucide icon element for Strava sport type                         |
+| `getActivityColors(sportType)`              | Returns Tailwind classes for activity styling                             |
+| `getWorkoutIntensityColors(type)`           | Returns classes for workout intensity (endurance, tempo, threshold, etc.) |
+| `getComplianceStatus(percentage, isFuture)` | Returns compliance category string                                        |
+| `getComplianceColors(percentage, isFuture)` | Returns Tailwind classes for compliance state                             |
+| `ACTIVITY_COLORS`                           | Raw color mapping object                                                  |
+| `WORKOUT_INTENSITY_COLORS`                  | Raw intensity color mapping                                               |
+| `COMPLIANCE_COLORS`                         | Raw compliance color mapping                                              |
+
+---
+
 ## Custom Hooks
 
 ### useIsAdmin
@@ -316,6 +363,53 @@ function MyComponent() {
 - Returns `false` initially, then updates after the RPC call completes
 - Result is cached for the component lifetime
 - Use this hook instead of manually calling `supabase.rpc('is_admin')` to avoid duplicate RPC calls
+
+---
+
+## Activity & Workout Styles Library
+
+Use the shared styles library for consistent activity and workout styling across the application.
+
+**Location:** `@/lib/constants/activity-styles`
+
+**Usage:**
+
+```typescript
+import {
+  getActivityIcon,
+  getActivityColors,
+  getWorkoutIntensityColors,
+  getComplianceColors,
+  getComplianceStatus,
+  ACTIVITY_COLORS,
+  WORKOUT_INTENSITY_COLORS,
+  COMPLIANCE_COLORS,
+} from '@/lib/constants/activity-styles'
+
+// Get activity icon with size variant
+const icon = getActivityIcon('Ride', 'sm') // 'xs' | 'sm' | 'md' | 'lg'
+
+// Get activity background/border colors
+const colors = getActivityColors('Ride')
+// Returns: 'bg-blue-100/80 hover:bg-blue-200/80 border-blue-200'
+
+// Get workout intensity colors (with dark mode support)
+const workoutColors = getWorkoutIntensityColors('threshold')
+
+// Get compliance colors based on percentage
+const complianceColors = getComplianceColors(95) // on_target = green
+const missedColors = getComplianceColors(null) // missed = red
+const futureColors = getComplianceColors(null, true) // future = gray
+```
+
+**Icon Sizes:**
+
+- `xs` - 12px (h-3 w-3) - compact views like calendar cells
+- `sm` - 16px (h-4 w-4) - default, for lists
+- `md` - 20px (h-5 w-5) - medium emphasis
+- `lg` - 24px (h-6 w-6) - large emphasis
+
+**Key Principle:** Never define activity/workout colors locally. Always use this shared library.
 
 ---
 

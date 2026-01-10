@@ -3,12 +3,8 @@
 import { Clock, Zap, CheckCircle2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import {
-  type Workout,
-  getWorkoutColors,
-  formatDuration,
-  calculateWorkoutDuration,
-} from '@/lib/types/training-plan'
+import { type Workout, formatDuration, calculateWorkoutDuration } from '@/lib/types/training-plan'
+import { getWorkoutIntensityColors } from '@/lib/constants/activity-styles'
 
 export interface MatchedActivityInfo {
   name: string
@@ -26,7 +22,7 @@ interface WorkoutCardProps {
 
 export function WorkoutCard({ workout, matchedActivity, className, onClick }: WorkoutCardProps) {
   const duration = calculateWorkoutDuration(workout)
-  const colorClasses = getWorkoutColors(workout.type || 'mixed')
+  const colorClasses = getWorkoutIntensityColors(workout.type || 'mixed')
   const isMatched = !!matchedActivity
 
   return (
