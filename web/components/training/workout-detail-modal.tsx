@@ -34,10 +34,13 @@ import {
 import {
   type Workout,
   type WorkoutSegment,
+  type WorkoutStructure,
+  type StepTarget,
   formatDuration,
   calculateWorkoutDuration,
+  convertStepLengthToMinutes,
 } from '@/lib/types/training-plan'
-import { PowerProfileSVG } from './power-profile-svg'
+import { PowerProfileSVG, type WorkoutSegmentInput } from './power-profile-svg'
 import { getPowerRangeColor } from '@/lib/types/power-zones'
 
 export interface MatchedActivityData {
@@ -95,6 +98,70 @@ interface GroupedSegment {
   segment?: ExpandedSegment
 }
 
+/**
+ * Extract power target values from step targets array
+ */
+function extractPowerTargetPct(targets: StepTarget[]): { lowPct: number; highPct: number } {
+  const powerTarget = targets.find((t) => t.type === 'power')
+  if (powerTarget) {
+    return { lowPct: powerTarget.minValue, highPct: powerTarget.maxValue }
+  }
+  return { lowPct: 50, highPct: 60 }
+}
+
+/**
+ * Group WorkoutStructure into display-friendly format (Issue #96)
+ */
+function groupStructure(structure: WorkoutStructure): GroupedSegment[] {
+  const grouped: GroupedSegment[] = []
+
+  for (const segment of structure.structure) {
+    const repetitions = segment.length.value
+
+    if (segment.type === 'repetition' && repetitions > 1) {
+      // Multi-step interval - create repeat group
+      const expandedSteps: ExpandedSegment[] = segment.steps.map((step) => {
+        const { lowPct, highPct } = extractPowerTargetPct(step.targets)
+        return {
+          type: step.intensityClass,
+          duration_min: convertStepLengthToMinutes(step.length),
+          power_low_pct: lowPct,
+          power_high_pct: highPct,
+          description: step.name,
+        }
+      })
+
+      grouped.push({
+        type: 'repeat',
+        repeat_count: repetitions,
+        segments: expandedSteps,
+      })
+    } else {
+      // Single step or single repetition - add as individual segments
+      for (let rep = 0; rep < repetitions; rep++) {
+        for (const step of segment.steps) {
+          const { lowPct, highPct } = extractPowerTargetPct(step.targets)
+          grouped.push({
+            type: 'single',
+            segment: {
+              type: step.intensityClass,
+              duration_min: convertStepLengthToMinutes(step.length),
+              power_low_pct: lowPct,
+              power_high_pct: highPct,
+              description: step.name,
+            },
+          })
+        }
+      }
+    }
+  }
+
+  return grouped
+}
+
+/**
+ * Group legacy WorkoutSegments into display-friendly format
+ */
 function groupSegments(segments: WorkoutSegment[]): GroupedSegment[] {
   const grouped: GroupedSegment[] = []
 
@@ -133,6 +200,21 @@ function groupSegments(segments: WorkoutSegment[]): GroupedSegment[] {
   })
 
   return grouped
+}
+
+/**
+ * Get grouped segments from either structure or legacy segments
+ */
+function getGroupedSegments(workout: Workout): GroupedSegment[] {
+  // Prefer new structure format
+  if (workout.structure?.structure && workout.structure.structure.length > 0) {
+    return groupStructure(workout.structure)
+  }
+  // Fall back to legacy segments
+  if (workout.segments && workout.segments.length > 0) {
+    return groupSegments(workout.segments)
+  }
+  return []
 }
 
 function formatPowerRange(ftp: number, lowPct: number, highPct: number): string {
@@ -297,7 +379,7 @@ export function WorkoutDetailModal({
       return sum
     }, 0) || 0
 
-  const groupedSegments = workout.segments ? groupSegments(workout.segments) : []
+  const groupedSegments = getGroupedSegments(workout)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -363,13 +445,17 @@ export function WorkoutDetailModal({
           )}
 
           {/* Power Profile Visualization */}
-          {workout.segments && workout.segments.length > 0 && (
+          {(workout.structure?.structure?.length || (workout.segments && workout.segments.length > 0)) && (
             <Card className="gap-1 py-3">
               <CardHeader className="pb-0">
                 <CardTitle className="text-sm font-medium">{t('powerProfile')}</CardTitle>
               </CardHeader>
               <CardContent>
-                <PowerProfileSVG segments={workout.segments} ftp={ftp} />
+                <PowerProfileSVG
+                  segments={workout.segments as WorkoutSegmentInput[] | undefined}
+                  structure={workout.structure}
+                  ftp={ftp}
+                />
               </CardContent>
             </Card>
           )}

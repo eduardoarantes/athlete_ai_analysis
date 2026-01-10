@@ -155,13 +155,13 @@ export function getPowerZone(powerPct: number): PowerZone {
 
 interface PowerProfileSVGProps {
   /** Legacy segment format */
-  segments?: WorkoutSegmentInput[]
+  segments?: WorkoutSegmentInput[] | undefined
   /** NEW: WorkoutStructure format (Issue #96) - takes precedence over segments */
-  structure?: StructuredWorkoutInput
+  structure?: StructuredWorkoutInput | undefined
   /** FTP value to display on chart. Pass 0 or undefined to hide FTP label */
-  ftp?: number
+  ftp?: number | undefined
   /** Mini mode: just bars, no labels, grid lines, or FTP reference */
-  mini?: boolean
+  mini?: boolean | undefined
 }
 
 /**
