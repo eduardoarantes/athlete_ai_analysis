@@ -14,31 +14,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { invokePythonApi } from '@/lib/services/lambda-client'
 import { errorLogger } from '@/lib/monitoring/error-logger'
-import { parseLocalDate } from '@/lib/utils/date-utils'
+import { getWorkoutFromOverrides, getWorkoutFromPlan } from '@/lib/utils/workout-overrides-helpers'
 import type { WorkoutComplianceAnalysis } from '@/lib/services/compliance-analysis-service'
-import type { TrainingPlanData, Workout, WorkoutSegment } from '@/lib/types/training-plan'
+import type { WorkoutOverrides, TrainingPlanData, Workout } from '@/lib/types/training-plan'
 import type { Json } from '@/lib/types/database'
-
-interface WorkoutOverrides {
-  moves?: Record<string, { original_date: string; original_index: number }>
-  copies?: Record<
-    string,
-    {
-      source_date: string
-      source_index: number
-      library_workout?: {
-        id?: string
-        name?: string
-        type?: string
-        tss?: number
-        duration_min?: number
-        description?: string
-        segments?: WorkoutSegment[]
-      }
-    }
-  >
-  deleted?: string[]
-}
 
 // ============================================================================
 // Types
@@ -97,88 +76,6 @@ interface PlanInstanceRow {
 // ============================================================================
 
 /**
- * Get workout from workout_overrides (for library workouts and copies)
- */
-function getWorkoutFromOverrides(
-  overrides: WorkoutOverrides | null | undefined,
-  targetDate: string,
-  workoutIndex: number
-): Workout | null {
-  if (!overrides?.copies) return null
-
-  const key = `${targetDate}:${workoutIndex}`
-  const copy = overrides.copies[key]
-
-  if (!copy) return null
-
-  // Check if this is a library workout with stored data
-  if (copy.source_date.startsWith('library:') && copy.library_workout) {
-    const lib = copy.library_workout
-    const workout: Workout = {
-      weekday: 'Monday', // Placeholder - actual date is known from context
-      name: lib.name || 'Library Workout',
-      source: 'library',
-    }
-    if (lib.id) workout.id = lib.id
-    if (lib.type) workout.type = lib.type
-    if (lib.tss !== undefined) workout.tss = lib.tss
-    if (lib.description) workout.description = lib.description
-    if (lib.segments) workout.segments = lib.segments
-    return workout
-  }
-
-  return null
-}
-
-/**
- * Get workout from plan instance for a specific date and index
- */
-function getWorkoutFromPlan(
-  planData: TrainingPlanData,
-  startDate: string,
-  targetDate: string,
-  workoutIndex: number
-): Workout | null {
-  // Use parseLocalDate to avoid timezone issues with date strings
-  const start = parseLocalDate(startDate)
-  const target = parseLocalDate(targetDate)
-
-  // Calculate weekOneMonday - the Monday of the week containing the start date
-  // This matches how schedule-calendar.tsx places workouts on dates
-  const startDayOfWeek = start.getDay() // 0 = Sunday, 1 = Monday, etc.
-  const daysToMonday = startDayOfWeek === 0 ? -6 : 1 - startDayOfWeek
-  const weekOneMonday = new Date(start)
-  weekOneMonday.setDate(start.getDate() + daysToMonday)
-
-  // Calculate week number based on distance from weekOneMonday
-  const diffFromMonday = Math.floor(
-    (target.getTime() - weekOneMonday.getTime()) / (1000 * 60 * 60 * 24)
-  )
-  const weekNumber = Math.floor(diffFromMonday / 7) + 1
-  const dayOfWeek = target.getDay()
-
-  const weekdayMap: Record<number, string> = {
-    0: 'Sunday',
-    1: 'Monday',
-    2: 'Tuesday',
-    3: 'Wednesday',
-    4: 'Thursday',
-    5: 'Friday',
-    6: 'Saturday',
-  }
-  const targetWeekday = weekdayMap[dayOfWeek]
-
-  const week = planData.weekly_plan?.find((w) => w.week_number === weekNumber)
-  if (!week) return null
-
-  const dayWorkouts = week.workouts.filter(
-    (w) => w.weekday?.toLowerCase() === targetWeekday?.toLowerCase()
-  )
-
-  return dayWorkouts[workoutIndex] || null
-}
-
-/**
  * Transform WorkoutComplianceAnalysis to Python API format
  */
 function transformAnalysisForPythonApi(
@@ -215,7 +112,8 @@ function transformAnalysisForPythonApi(
         planned_zone: seg.planned_zone,
         actual_start_sec: seg.actual_start_sec != null ? Math.round(seg.actual_start_sec) : null,
         actual_end_sec: seg.actual_end_sec != null ? Math.round(seg.actual_end_sec) : null,
-        actual_duration_sec: seg.actual_duration_sec != null ? Math.round(seg.actual_duration_sec) : null,
+        actual_duration_sec:
+          seg.actual_duration_sec != null ? Math.round(seg.actual_duration_sec) : null,
         actual_avg_power: seg.actual_avg_power,
         actual_max_power: seg.actual_max_power,
         actual_min_power: seg.actual_min_power,

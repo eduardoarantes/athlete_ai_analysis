@@ -10,8 +10,14 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { startOfDay, parseISO, format, addDays } from 'date-fns'
-import type { TrainingPlanData, Workout, WeeklyPlan, WorkoutSegment } from '@/lib/types/training-plan'
+import type {
+  TrainingPlanData,
+  Workout,
+  WeeklyPlan,
+  WorkoutSegment,
+} from '@/lib/types/training-plan'
 import { errorLogger } from '@/lib/monitoring/error-logger'
+import { LIBRARY_WORKOUT_BASE_INDEX } from '@/lib/utils/workout-overrides-helpers'
 
 // Types for workout overrides
 export interface WorkoutMove {
@@ -483,7 +489,7 @@ export class ScheduleEditService {
     const overrides = await this.getOverrides(instanceId)
 
     // Find next available index for library workouts
-    // We use indices starting at 100 to avoid conflicts with original plan workouts
+    // We use indices starting at LIBRARY_WORKOUT_BASE_INDEX to avoid conflicts with original plan workouts
     const libraryIndices = Object.keys(overrides.copies)
       .filter((key) => {
         const copy = overrides.copies[key]
@@ -493,9 +499,10 @@ export class ScheduleEditService {
         const parts = key.split(':')
         return parseInt(parts[1] || '0', 10)
       })
-      .filter((idx) => idx >= 100)
+      .filter((idx) => idx >= LIBRARY_WORKOUT_BASE_INDEX)
 
-    const assignedIndex = libraryIndices.length > 0 ? Math.max(...libraryIndices) + 1 : 100
+    const assignedIndex =
+      libraryIndices.length > 0 ? Math.max(...libraryIndices) + 1 : LIBRARY_WORKOUT_BASE_INDEX
 
     // Create target key
     const targetKey = createWorkoutKey(targetDate, assignedIndex)

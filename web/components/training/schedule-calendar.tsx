@@ -38,6 +38,7 @@ import {
   CalendarDayContextMenu,
 } from '@/components/schedule'
 import { errorLogger } from '@/lib/monitoring/error-logger'
+import { LIBRARY_WORKOUT_BASE_INDEX } from '@/lib/utils/workout-overrides-helpers'
 
 interface ScheduleCalendarProps {
   instances: PlanInstance[]
@@ -154,6 +155,9 @@ export function ScheduleCalendar({
   const [libraryWorkoutCache, setLibraryWorkoutCache] = useState<Map<string, LibraryWorkoutParams>>(
     new Map()
   )
+
+  // Ref to prevent duplicate drops (race condition protection)
+  const libraryDropInProgressRef = useRef<Set<string>>(new Set())
 
   // Build workouts list for auto-matching (with overrides applied)
   const buildWorkoutsList = useCallback(
@@ -723,6 +727,13 @@ export function ScheduleCalendar({
       return
     }
 
+    // Prevent duplicate drops (race condition protection)
+    const dropKey = `${workout.id}:${targetDate}`
+    if (libraryDropInProgressRef.current.has(dropKey)) {
+      return
+    }
+    libraryDropInProgressRef.current.add(dropKey)
+
     // Save previous state for rollback
     const previousOverrides = localOverrides.get(primaryInstanceId)
 
@@ -730,9 +741,11 @@ export function ScheduleCalendar({
     const existingWorkouts = workoutsByDate.get(targetDate) || []
     const existingLibraryIndices = existingWorkouts
       .map((sw) => sw.index ?? 0)
-      .filter((idx) => idx >= 100)
+      .filter((idx) => idx >= LIBRARY_WORKOUT_BASE_INDEX)
     const nextIndex =
-      existingLibraryIndices.length > 0 ? Math.max(...existingLibraryIndices) + 1 : 100
+      existingLibraryIndices.length > 0
+        ? Math.max(...existingLibraryIndices) + 1
+        : LIBRARY_WORKOUT_BASE_INDEX
 
     // Cache library workout details for proper rendering
     setLibraryWorkoutCache((prev) => {
@@ -821,6 +834,9 @@ export function ScheduleCalendar({
         return newMap
       })
       setErrorMessage('Failed to add workout. Please try again.')
+    } finally {
+      // Clear the drop-in-progress flag
+      libraryDropInProgressRef.current.delete(dropKey)
     }
   }
 
@@ -864,10 +880,7 @@ export function ScheduleCalendar({
           // including segments when library_workout data is stored
           // Only fall back to cache for legacy entries without stored workout data
           let workout = effectiveWorkout.workout
-          if (
-            effectiveWorkout.libraryWorkoutId &&
-            !effectiveWorkout.workout.segments?.length
-          ) {
+          if (effectiveWorkout.libraryWorkoutId && !effectiveWorkout.workout.segments?.length) {
             const cachedParams = libraryWorkoutCache.get(effectiveWorkout.libraryWorkoutId)
             if (cachedParams) {
               // Use cached library workout details only when stored data is incomplete
@@ -1039,8 +1052,7 @@ export function ScheduleCalendar({
                         : null
                       const legacyKey = `${sw.instance.id}:${dateKey}:${workoutIndex}`
                       const matchData =
-                        (workoutIdKey && matchesMap.get(workoutIdKey)) ||
-                        matchesMap.get(legacyKey)
+                        (workoutIdKey && matchesMap.get(workoutIdKey)) || matchesMap.get(legacyKey)
                       const hasMatch = !!matchData
 
                       const workoutCard = (
@@ -1180,7 +1192,11 @@ export function ScheduleCalendar({
               )
             }
 
-            return <div key={dateKey} className="h-full">{dayCellContent}</div>
+            return (
+              <div key={dateKey} className="h-full">
+                {dayCellContent}
+              </div>
+            )
           })}
         </div>
       </Card>
@@ -1220,9 +1236,7 @@ export function ScheduleCalendar({
           selectedWorkout
             ? // Try workout.id key first (new format), fall back to date:index (legacy)
               (selectedWorkout.workout.id &&
-                matchesMap.get(
-                  `${selectedWorkout.instance.id}:${selectedWorkout.workout.id}`
-                )) ||
+                matchesMap.get(`${selectedWorkout.instance.id}:${selectedWorkout.workout.id}`)) ||
               matchesMap.get(
                 `${selectedWorkout.instance.id}:${formatDateString(selectedWorkout.date)}:${selectedWorkout.index}`
               )
