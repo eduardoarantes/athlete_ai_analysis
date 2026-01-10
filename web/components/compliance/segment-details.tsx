@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { SegmentAnalysis, ZoneDistribution } from '@/lib/services/compliance-analysis-service'
+import { POWER_ZONE_COLORS, getSegmentTypeColor } from '@/lib/constants/activity-styles'
 
 // ============================================================================
 // Types
@@ -28,16 +29,6 @@ const matchQualityColors: Record<string, string> = {
   fair: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300',
   poor: 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300',
   skipped: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300',
-}
-
-const segmentTypeColors: Record<string, string> = {
-  warmup: 'bg-blue-500',
-  work: 'bg-red-500',
-  interval: 'bg-red-500',
-  recovery: 'bg-green-500',
-  cooldown: 'bg-blue-500',
-  steady: 'bg-yellow-500',
-  tempo: 'bg-orange-500',
 }
 
 function formatDuration(seconds: number): string {
@@ -67,11 +58,11 @@ interface ZoneDistributionBarProps {
 
 function ZoneDistributionBar({ distribution, targetZone }: ZoneDistributionBarProps) {
   const zones = [
-    { key: 'z1', label: 'Z1', color: 'bg-blue-400', value: distribution.z1 },
-    { key: 'z2', label: 'Z2', color: 'bg-green-400', value: distribution.z2 },
-    { key: 'z3', label: 'Z3', color: 'bg-yellow-400', value: distribution.z3 },
-    { key: 'z4', label: 'Z4', color: 'bg-orange-400', value: distribution.z4 },
-    { key: 'z5', label: 'Z5', color: 'bg-red-400', value: distribution.z5 },
+    { key: 'z1', label: 'Z1', color: POWER_ZONE_COLORS[1], value: distribution.z1 },
+    { key: 'z2', label: 'Z2', color: POWER_ZONE_COLORS[2], value: distribution.z2 },
+    { key: 'z3', label: 'Z3', color: POWER_ZONE_COLORS[3], value: distribution.z3 },
+    { key: 'z4', label: 'Z4', color: POWER_ZONE_COLORS[4], value: distribution.z4 },
+    { key: 'z5', label: 'Z5', color: POWER_ZONE_COLORS[5], value: distribution.z5 },
   ]
 
   return (
@@ -126,12 +117,7 @@ function SegmentRow({ segment, isOpen, onToggle }: SegmentRowProps) {
         )}
       >
         <div className="flex items-center gap-3">
-          <div
-            className={cn(
-              'w-1 h-10 rounded-full',
-              segmentTypeColors[segment.segment_type] || 'bg-gray-400'
-            )}
-          />
+          <div className={cn('w-1 h-10 rounded-full', getSegmentTypeColor(segment.segment_type))} />
           <div>
             <div className="flex items-center gap-2">
               <span className="font-medium">{segment.segment_name}</span>
