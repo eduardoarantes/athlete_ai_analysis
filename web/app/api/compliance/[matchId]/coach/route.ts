@@ -16,8 +16,29 @@ import { invokePythonApi } from '@/lib/services/lambda-client'
 import { errorLogger } from '@/lib/monitoring/error-logger'
 import { parseLocalDate } from '@/lib/utils/date-utils'
 import type { WorkoutComplianceAnalysis } from '@/lib/services/compliance-analysis-service'
-import type { TrainingPlanData, Workout } from '@/lib/types/training-plan'
+import type { TrainingPlanData, Workout, WorkoutSegment } from '@/lib/types/training-plan'
 import type { Json } from '@/lib/types/database'
+
+interface WorkoutOverrides {
+  moves?: Record<string, { original_date: string; original_index: number }>
+  copies?: Record<
+    string,
+    {
+      source_date: string
+      source_index: number
+      library_workout?: {
+        id?: string
+        name?: string
+        type?: string
+        tss?: number
+        duration_min?: number
+        description?: string
+        segments?: WorkoutSegment[]
+      }
+    }
+  >
+  deleted?: string[]
+}
 
 // ============================================================================
 // Types
@@ -68,11 +89,46 @@ interface MatchRow {
 interface PlanInstanceRow {
   plan_data: TrainingPlanData
   start_date: string
+  workout_overrides?: WorkoutOverrides | null
 }
 
 // ============================================================================
 // Helpers
 // ============================================================================
+
+/**
+ * Get workout from workout_overrides (for library workouts and copies)
+ */
+function getWorkoutFromOverrides(
+  overrides: WorkoutOverrides | null | undefined,
+  targetDate: string,
+  workoutIndex: number
+): Workout | null {
+  if (!overrides?.copies) return null
+
+  const key = `${targetDate}:${workoutIndex}`
+  const copy = overrides.copies[key]
+
+  if (!copy) return null
+
+  // Check if this is a library workout with stored data
+  if (copy.source_date.startsWith('library:') && copy.library_workout) {
+    const lib = copy.library_workout
+    const workout: Workout = {
+      weekday: 'Monday', // Placeholder - actual date is known from context
+      name: lib.name || 'Library Workout',
+      source: 'library',
+    }
+    if (lib.id) workout.id = lib.id
+    if (lib.type) workout.type = lib.type
+    if (lib.tss !== undefined) workout.tss = lib.tss
+    if (lib.description) workout.description = lib.description
+    if (lib.segments) workout.segments = lib.segments
+    return workout
+  }
+
+  return null
+}
 
 /**
  * Get workout from plan instance for a specific date and index
@@ -153,13 +209,13 @@ function transformAnalysisForPythonApi(
         segment_name: seg.segment_name,
         segment_type: seg.segment_type,
         match_quality: seg.match_quality,
-        planned_duration_sec: seg.planned_duration_sec,
+        planned_duration_sec: Math.round(seg.planned_duration_sec),
         planned_power_low: seg.planned_power_low,
         planned_power_high: seg.planned_power_high,
         planned_zone: seg.planned_zone,
-        actual_start_sec: seg.actual_start_sec,
-        actual_end_sec: seg.actual_end_sec,
-        actual_duration_sec: seg.actual_duration_sec,
+        actual_start_sec: seg.actual_start_sec != null ? Math.round(seg.actual_start_sec) : null,
+        actual_end_sec: seg.actual_end_sec != null ? Math.round(seg.actual_end_sec) : null,
+        actual_duration_sec: seg.actual_duration_sec != null ? Math.round(seg.actual_duration_sec) : null,
         actual_avg_power: seg.actual_avg_power,
         actual_max_power: seg.actual_max_power,
         actual_min_power: seg.actual_min_power,
@@ -275,7 +331,7 @@ export async function POST(
     // Get workout details for context
     const { data: planInstance } = await supabase
       .from('plan_instances')
-      .select('plan_data, start_date')
+      .select('plan_data, start_date, workout_overrides')
       .eq('id', match.plan_instance_id)
       .single<PlanInstanceRow>()
 
@@ -283,12 +339,19 @@ export async function POST(
       return NextResponse.json({ error: 'Plan instance not found' }, { status: 404 })
     }
 
-    const workout = getWorkoutFromPlan(
-      planInstance.plan_data,
-      planInstance.start_date,
-      match.workout_date,
-      match.workout_index
-    )
+    // Check overrides first (for library workouts), then plan_data
+    const workout =
+      getWorkoutFromOverrides(
+        planInstance.workout_overrides,
+        match.workout_date,
+        match.workout_index
+      ) ||
+      getWorkoutFromPlan(
+        planInstance.plan_data,
+        planInstance.start_date,
+        match.workout_date,
+        match.workout_index
+      )
 
     if (!workout) {
       return NextResponse.json({ error: 'Workout not found in plan' }, { status: 404 })

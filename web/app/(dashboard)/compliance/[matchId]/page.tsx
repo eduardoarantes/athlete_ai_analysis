@@ -20,6 +20,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
   ComplianceHeader,
   CoachFeedbackCard,
+  PowerProfileChart,
   type ComplianceOverview,
 } from '@/components/compliance'
 import { SegmentDetailsCard } from '@/components/compliance/segment-details'
@@ -46,6 +47,7 @@ interface ComplianceContext {
 
 interface ComplianceResponse {
   analysis: WorkoutComplianceAnalysis
+  power_stream?: number[]
   context: ComplianceContext
 }
 
@@ -132,7 +134,7 @@ export default function ComplianceResultsPage() {
     return null
   }
 
-  const { analysis, context } = data
+  const { analysis, power_stream, context } = data
 
   // Build overview for ComplianceHeader
   const overview: ComplianceOverview = {
@@ -232,6 +234,13 @@ export default function ComplianceResultsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Power Profile Chart - matching HTML report layout exactly */}
+      <PowerProfileChart
+        segments={analysis.segments}
+        ftp={context.athlete_ftp}
+        powerStream={power_stream}
+      />
 
       {/* Overall Score */}
       <Card>

@@ -7,4 +7,5 @@
 export * from './types'
 export * from './schedule-dnd-context'
 export * from './draggable-scheduled-workout'
+export * from './draggable-library-workout'
 export * from './droppable-calendar-day'

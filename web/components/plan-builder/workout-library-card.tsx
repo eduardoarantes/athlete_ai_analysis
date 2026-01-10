@@ -102,6 +102,8 @@ interface WorkoutLibraryCardProps {
   onClick?: (() => void) | undefined
   /** Whether draggable */
   isDraggable?: boolean | undefined
+  /** Compact mode for sidebar usage */
+  compact?: boolean | undefined
   /** Additional className */
   className?: string | undefined
 }
@@ -113,6 +115,7 @@ export function WorkoutLibraryCard({
   workout,
   onClick,
   isDraggable = false,
+  compact = false,
   className,
 }: WorkoutLibraryCardProps) {
   const [isExpanded, setIsExpanded] = useState(false)
@@ -126,7 +129,8 @@ export function WorkoutLibraryCard({
   return (
     <div
       className={cn(
-        'group relative flex flex-col p-3 rounded-lg border border-l-4 bg-card',
+        'group relative flex flex-col rounded-lg border border-l-4 bg-card',
+        compact ? 'p-2' : 'p-3',
         borderColor,
         isDraggable && 'cursor-grab active:cursor-grabbing',
         onClick && 'hover:bg-accent/50 cursor-pointer transition-colors',
@@ -139,20 +143,35 @@ export function WorkoutLibraryCard({
       {/* Header */}
       <div className="flex items-start gap-2">
         {isDraggable && (
-          <GripVertical className="h-4 w-4 mt-0.5 opacity-50 group-hover:opacity-100 shrink-0" />
+          <GripVertical
+            className={cn(
+              'opacity-50 group-hover:opacity-100 shrink-0',
+              compact ? 'h-3 w-3 mt-0.5' : 'h-4 w-4 mt-0.5'
+            )}
+          />
         )}
 
         <div className="flex-1 min-w-0">
-          <h4 className="font-medium text-sm leading-tight">{workout.name}</h4>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="text-xs text-muted-foreground">{formatType(workout.type)}</span>
-            <span className={cn('text-xs px-1.5 py-0.5 rounded', intensityColor)}>
+          <h4 className={cn('font-medium leading-tight', compact ? 'text-xs' : 'text-sm')}>
+            {workout.name}
+          </h4>
+          <div className={cn('flex items-center gap-2', compact ? 'mt-0.5' : 'mt-1')}>
+            <span className={cn('text-muted-foreground', compact ? 'text-[10px]' : 'text-xs')}>
+              {formatType(workout.type)}
+            </span>
+            <span
+              className={cn(
+                'rounded',
+                compact ? 'text-[10px] px-1 py-0' : 'text-xs px-1.5 py-0.5',
+                intensityColor
+              )}
+            >
               {formatIntensity(workout.intensity)}
             </span>
           </div>
         </div>
 
-        {onClick && (
+        {onClick && !compact && (
           <Button
             variant="ghost"
             size="icon"
@@ -169,16 +188,21 @@ export function WorkoutLibraryCard({
       </div>
 
       {/* Stats */}
-      <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+      <div
+        className={cn(
+          'flex items-center gap-4 text-muted-foreground',
+          compact ? 'mt-1 text-[10px]' : 'mt-2 text-xs'
+        )}
+      >
         <span className="flex items-center gap-1">
-          <Clock className="h-3 w-3" />
+          <Clock className={compact ? 'h-2.5 w-2.5' : 'h-3 w-3'} />
           {formatDuration(workout.base_duration_min)}
         </span>
         <span className="flex items-center gap-1">
-          <Zap className="h-3 w-3" />
+          <Zap className={compact ? 'h-2.5 w-2.5' : 'h-3 w-3'} />
           {workout.base_tss} TSS
         </span>
-        {workout.suitable_phases && workout.suitable_phases.length > 0 && (
+        {!compact && workout.suitable_phases && workout.suitable_phases.length > 0 && (
           <span className="text-muted-foreground/75">
             {workout.suitable_phases.slice(0, 2).join(', ')}
             {workout.suitable_phases.length > 2 && '...'}
@@ -186,8 +210,8 @@ export function WorkoutLibraryCard({
         )}
       </div>
 
-      {/* Expandable details */}
-      {(hasDescription || hasSegments) && (
+      {/* Expandable details - hidden in compact mode */}
+      {!compact && (hasDescription || hasSegments) && (
         <>
           <Button
             variant="ghost"

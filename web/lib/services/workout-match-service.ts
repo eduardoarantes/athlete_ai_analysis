@@ -8,11 +8,35 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/types/database'
 import { getLocalDateFromTimestamp, parseLocalDate, formatDateString } from '@/lib/utils/date-utils'
 
+/**
+ * Strava activity types that are considered cycling activities
+ */
+export const CYCLING_ACTIVITY_TYPES = [
+  'Ride',
+  'VirtualRide',
+  'EBikeRide',
+  'MountainBikeRide',
+  'GravelRide',
+] as const
+
+export type CyclingActivityType = (typeof CYCLING_ACTIVITY_TYPES)[number]
+
+/**
+ * Check if a workout type is a cycling workout (anything except 'rest')
+ */
+export function isCyclingWorkout(workoutType?: string): boolean {
+  return !workoutType || workoutType !== 'rest'
+}
+
 export interface WorkoutMatch {
   id: string
   user_id: string
   plan_instance_id: string
+  /** Unique workout identifier (UUID format) - primary key for matches */
+  workout_id: string | null
+  /** @deprecated Use workout_id instead - kept for backwards compatibility */
   workout_date: string
+  /** @deprecated Use workout_id instead - kept for backwards compatibility */
   workout_index: number
   strava_activity_id: string
   match_type: 'auto' | 'manual'
@@ -39,7 +63,11 @@ export interface MatchedActivity {
 
 export interface WorkoutMatchInput {
   plan_instance_id: string
-  workout_date: string
+  /** Unique workout identifier (UUID format) - preferred identifier */
+  workout_id?: string
+  /** @deprecated Use workout_id - kept for backwards compatibility during migration */
+  workout_date?: string
+  /** @deprecated Use workout_id - kept for backwards compatibility during migration */
   workout_index?: number
   strava_activity_id: string
   match_type: 'auto' | 'manual'
@@ -69,25 +97,18 @@ function calculateMatchScore(
   activity: { tss: number | null; type: string; moving_time: number | null }
 ): number {
   // Type matching - only cycling activities can match cycling workouts
-  const cyclingActivityTypes = [
-    'Ride',
-    'VirtualRide',
-    'EBikeRide',
-    'MountainBikeRide',
-    'GravelRide',
-  ]
-  const isCyclingActivity = cyclingActivityTypes.includes(activity.type)
-  const isCyclingWorkout = !workout.type || workout.type !== 'rest'
+  const isCyclingActivity = (CYCLING_ACTIVITY_TYPES as readonly string[]).includes(activity.type)
+  const workoutIsCycling = isCyclingWorkout(workout.type)
 
   // CRITICAL: Non-cycling activities cannot match cycling workouts
-  if (isCyclingWorkout && !isCyclingActivity) {
+  if (workoutIsCycling && !isCyclingActivity) {
     return 0
   }
 
   let score = 50 // Base score for same-day match with compatible type
 
   // Bonus for cycling match
-  if (isCyclingActivity && isCyclingWorkout) {
+  if (isCyclingActivity && workoutIsCycling) {
     score += 20
   }
 
@@ -146,6 +167,7 @@ export class WorkoutMatchService {
       .select(
         `
         id,
+        workout_id,
         workout_date,
         workout_index,
         match_type,
@@ -171,11 +193,12 @@ export class WorkoutMatchService {
       throw new Error(`Failed to get matches: ${error.message}`)
     }
 
-    // Build map keyed by "date:index"
+    // Build map keyed by workout_id (preferred) or "date:index" (legacy fallback)
     const matchMap = new Map<string, MatchedActivity>()
 
     for (const match of (data || []) as Array<{
       id: string
+      workout_id: string | null
       workout_date: string
       workout_index: number
       match_type: string
@@ -196,7 +219,8 @@ export class WorkoutMatchService {
       const activity = match.strava_activities
 
       if (activity) {
-        const key = `${match.workout_date}:${match.workout_index}`
+        // Use workout_id as key if available, otherwise fall back to date:index
+        const key = match.workout_id || `${match.workout_date}:${match.workout_index}`
         matchMap.set(key, {
           ...activity,
           match_id: match.id,
@@ -225,6 +249,7 @@ export class WorkoutMatchService {
         `
         id,
         plan_instance_id,
+        workout_id,
         workout_date,
         workout_index,
         match_type,
@@ -250,12 +275,13 @@ export class WorkoutMatchService {
       throw new Error(`Failed to get matches: ${error.message}`)
     }
 
-    // Build map keyed by "instanceId:date:index"
+    // Build map keyed by "instanceId:workoutId" or "instanceId:date:index" (legacy)
     const matchMap = new Map<string, MatchedActivity>()
 
     for (const match of (data || []) as Array<{
       id: string
       plan_instance_id: string
+      workout_id: string | null
       workout_date: string
       workout_index: number
       match_type: string
@@ -276,7 +302,10 @@ export class WorkoutMatchService {
       const activity = match.strava_activities
 
       if (activity) {
-        const key = `${match.plan_instance_id}:${match.workout_date}:${match.workout_index}`
+        // Use workout_id as key if available, otherwise fall back to date:index
+        const key = match.workout_id
+          ? `${match.plan_instance_id}:${match.workout_id}`
+          : `${match.plan_instance_id}:${match.workout_date}:${match.workout_index}`
         matchMap.set(key, {
           ...activity,
           match_id: match.id,
@@ -292,25 +321,44 @@ export class WorkoutMatchService {
   /**
    * Manually match an activity to a workout
    * Note: Uses type assertion because workout_activity_matches table types are not yet generated
+   *
+   * When workout_id is provided, it becomes the primary identifier for the match.
+   * During the migration period, workout_date and workout_index are also saved for backwards compatibility.
    */
   async matchWorkout(input: WorkoutMatchInput): Promise<WorkoutMatch> {
+    // Build the match data
+    const matchData: Record<string, unknown> = {
+      user_id: this.userId,
+      plan_instance_id: input.plan_instance_id,
+      strava_activity_id: input.strava_activity_id,
+      match_type: input.match_type,
+      match_score: input.match_score ?? null,
+    }
+
+    // Add workout_id if provided (preferred identifier)
+    if (input.workout_id) {
+      matchData.workout_id = input.workout_id
+    }
+
+    // Add workout_date and workout_index for backwards compatibility
+    if (input.workout_date !== undefined) {
+      matchData.workout_date = input.workout_date
+    }
+    if (input.workout_index !== undefined) {
+      matchData.workout_index = input.workout_index
+    } else {
+      matchData.workout_index = 0 // Default value
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (this.supabase as any)
       .from('workout_activity_matches')
-      .upsert(
-        {
-          user_id: this.userId,
-          plan_instance_id: input.plan_instance_id,
-          workout_date: input.workout_date,
-          workout_index: input.workout_index ?? 0,
-          strava_activity_id: input.strava_activity_id,
-          match_type: input.match_type,
-          match_score: input.match_score ?? null,
-        },
-        {
-          onConflict: 'plan_instance_id,workout_date,workout_index',
-        }
-      )
+      .upsert(matchData, {
+        // Use workout_id for conflict resolution if available, otherwise fall back to date+index
+        onConflict: input.workout_id
+          ? 'plan_instance_id,workout_id'
+          : 'plan_instance_id,workout_date,workout_index',
+      })
       .select()
       .single()
 
@@ -322,21 +370,54 @@ export class WorkoutMatchService {
   }
 
   /**
-   * Remove a workout match
+   * Remove a workout match by workout_id (preferred) or date+index (legacy)
    * Note: Uses type assertion because workout_activity_matches table types are not yet generated
    */
   async unmatchWorkout(
     planInstanceId: string,
-    workoutDate: string,
-    workoutIndex = 0
+    workoutDateOrId: string,
+    workoutIndex?: number
   ): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let query = (this.supabase as any)
+      .from('workout_activity_matches')
+      .delete()
+      .eq('plan_instance_id', planInstanceId)
+      .eq('user_id', this.userId)
+
+    // If workoutIndex is provided, use date+index (legacy method)
+    // Otherwise, treat workoutDateOrId as workout_id
+    if (workoutIndex !== undefined) {
+      query = query.eq('workout_date', workoutDateOrId).eq('workout_index', workoutIndex)
+    } else {
+      // Check if this looks like a UUID (workout_id) or a date
+      const isUUID = workoutDateOrId.includes('-') && workoutDateOrId.length === 36
+      if (isUUID) {
+        query = query.eq('workout_id', workoutDateOrId)
+      } else {
+        // Fallback: treat as date with index 0
+        query = query.eq('workout_date', workoutDateOrId).eq('workout_index', 0)
+      }
+    }
+
+    const { error } = await query
+
+    if (error) {
+      throw new Error(`Failed to unmatch workout: ${error.message}`)
+    }
+  }
+
+  /**
+   * Remove a workout match by workout_id
+   * This is the preferred method when workout_id is available
+   */
+  async unmatchWorkoutById(planInstanceId: string, workoutId: string): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (this.supabase as any)
       .from('workout_activity_matches')
       .delete()
       .eq('plan_instance_id', planInstanceId)
-      .eq('workout_date', workoutDate)
-      .eq('workout_index', workoutIndex)
+      .eq('workout_id', workoutId)
       .eq('user_id', this.userId)
 
     if (error) {
@@ -348,14 +429,16 @@ export class WorkoutMatchService {
    * Get unmatched activities for a date range
    * Note: Uses type assertion because workout_activity_matches table types are not yet generated
    *
-   * The date range is expanded by 1 day on each end to account for timezone differences.
-   * Activities are stored with UTC timestamps, but workout dates are local dates.
-   * For example, an activity done at 7am local on 2025-12-29 in UTC+11 has UTC timestamp
-   * 2025-12-28T20:00:00Z. Without expansion, a query for 2025-12-29 would miss it.
+   * @param startDate - Start date in YYYY-MM-DD format
+   * @param endDate - End date in YYYY-MM-DD format
+   * @param activityCategory - Optional activity category filter: 'cycling', 'running', 'swimming', 'strength', or undefined for all
+   * @param userTimezone - Optional user timezone for precise date matching (e.g., 'Australia/Sydney')
    */
   async getUnmatchedActivities(
     startDate: string,
-    endDate: string
+    endDate: string,
+    activityCategory?: 'cycling' | 'running' | 'swimming' | 'strength',
+    userTimezone?: string
   ): Promise<
     Array<{
       id: string
@@ -367,20 +450,68 @@ export class WorkoutMatchService {
       moving_time: number | null
     }>
   > {
-    // Expand date range by 1 day on each end to account for timezone differences
-    const expandedStart = parseLocalDate(startDate)
-    expandedStart.setDate(expandedStart.getDate() - 1)
-    const expandedEnd = parseLocalDate(endDate)
-    expandedEnd.setDate(expandedEnd.getDate() + 1)
-
-    // Get all activities in expanded date range
-    const { data: activities, error: activitiesError } = await this.supabase
+    // Build the query
+    let query = this.supabase
       .from('strava_activities')
       .select('id, strava_activity_id, name, type, start_date, tss, moving_time')
       .eq('user_id', this.userId)
-      .gte('start_date', formatDateString(expandedStart))
-      .lte('start_date', formatDateString(expandedEnd) + 'T23:59:59Z')
+
+    // Filter by activity category if specified
+    if (activityCategory === 'cycling') {
+      query = query.in('type', [...CYCLING_ACTIVITY_TYPES])
+    } else if (activityCategory === 'running') {
+      query = query.in('type', ['Run', 'VirtualRun', 'TrailRun'])
+    } else if (activityCategory === 'swimming') {
+      query = query.in('type', ['Swim'])
+    } else if (activityCategory === 'strength') {
+      query = query.in('type', ['WeightTraining', 'Workout'])
+    }
+    // If no category specified, return all activity types
+
+    // Use user timezone for precise date range if available
+    // Otherwise expand by 1 day on each end to account for timezone differences
+    let queryStartDate: string
+    let queryEndDate: string
+
+    if (userTimezone) {
+      // Use timezone-aware date range calculation
+      // Convert local dates to UTC boundaries considering the user's timezone offset
+      try {
+        // Create a date in UTC that represents the start of the day in user's timezone
+        // We expand by the max possible UTC offset (~14 hours) to ensure we catch all activities
+        const expandedStart = parseLocalDate(startDate)
+        expandedStart.setHours(expandedStart.getHours() - 14) // Max UTC offset is ~14 hours
+        const expandedEnd = parseLocalDate(endDate)
+        expandedEnd.setHours(expandedEnd.getHours() + 38) // +24 for end of day + 14 for offset
+
+        queryStartDate = expandedStart.toISOString()
+        queryEndDate = expandedEnd.toISOString()
+      } catch {
+        // Fallback to simple expansion if timezone handling fails
+        const expandedStart = parseLocalDate(startDate)
+        expandedStart.setDate(expandedStart.getDate() - 1)
+        const expandedEnd = parseLocalDate(endDate)
+        expandedEnd.setDate(expandedEnd.getDate() + 1)
+        queryStartDate = formatDateString(expandedStart) + 'T00:00:00Z'
+        queryEndDate = formatDateString(expandedEnd) + 'T23:59:59Z'
+      }
+    } else {
+      // Fallback: expand date range by 1 day on each end to account for timezone differences
+      const expandedStart = parseLocalDate(startDate)
+      expandedStart.setDate(expandedStart.getDate() - 1)
+      const expandedEnd = parseLocalDate(endDate)
+      expandedEnd.setDate(expandedEnd.getDate() + 1)
+      queryStartDate = formatDateString(expandedStart) + 'T00:00:00Z'
+      queryEndDate = formatDateString(expandedEnd) + 'T23:59:59Z'
+    }
+
+    // Apply date range filter
+    query = query
+      .gte('start_date', queryStartDate)
+      .lte('start_date', queryEndDate)
       .order('start_date', { ascending: true })
+
+    const { data: activities, error: activitiesError } = await query
 
     if (activitiesError) {
       throw new Error(`Failed to get activities: ${activitiesError.message}`)

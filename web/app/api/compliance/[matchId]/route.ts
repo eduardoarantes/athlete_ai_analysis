@@ -23,11 +23,59 @@ import { parseLocalDate } from '@/lib/utils/date-utils'
 import type { WorkoutSegment, TrainingPlanData, Workout } from '@/lib/types/training-plan'
 import type { Json } from '@/lib/types/database'
 
+/**
+ * Downsample power data for chart display
+ * Uses max-value-in-window to preserve power peaks
+ */
+function downsamplePowerStream(data: number[], targetLength: number): number[] {
+  if (data.length === 0) return []
+  if (data.length <= targetLength) return data
+
+  const result: number[] = []
+  const step = data.length / targetLength
+
+  for (let i = 0; i < targetLength; i++) {
+    const start = Math.floor(i * step)
+    const end = Math.floor((i + 1) * step)
+    // Use max value in the window to preserve peaks
+    let max = data[start] ?? 0
+    for (let j = start; j < end && j < data.length; j++) {
+      const val = data[j]
+      if (val !== undefined && val > max) max = val
+    }
+    result.push(max)
+  }
+
+  return result
+}
+
+interface WorkoutOverrides {
+  moves?: Record<string, { original_date: string; original_index: number }>
+  copies?: Record<
+    string,
+    {
+      source_date: string
+      source_index: number
+      library_workout?: {
+        id?: string
+        name?: string
+        type?: string
+        tss?: number
+        duration_min?: number
+        description?: string
+        segments?: WorkoutSegment[]
+      }
+    }
+  >
+  deleted?: string[]
+}
+
 interface PlanInstanceRow {
   id: string
   user_id: string
   plan_data: TrainingPlanData
   start_date: string
+  workout_overrides?: WorkoutOverrides | null
 }
 
 interface ProfileRow {
@@ -43,6 +91,40 @@ interface StoredAnalysisRow {
   analyzed_at: string
   algorithm_version: string
   power_data_quality: string
+}
+
+/**
+ * Get workout from workout_overrides (for library workouts and copies)
+ */
+function getWorkoutFromOverrides(
+  overrides: WorkoutOverrides | null | undefined,
+  targetDate: string,
+  workoutIndex: number
+): Workout | null {
+  if (!overrides?.copies) return null
+
+  const key = `${targetDate}:${workoutIndex}`
+  const copy = overrides.copies[key]
+
+  if (!copy) return null
+
+  // Check if this is a library workout with stored data
+  if (copy.source_date.startsWith('library:') && copy.library_workout) {
+    const lib = copy.library_workout
+    const workout: Workout = {
+      weekday: 'Monday', // Placeholder - actual date is known from context
+      name: lib.name || 'Library Workout',
+      source: 'library',
+    }
+    if (lib.id) workout.id = lib.id
+    if (lib.type) workout.type = lib.type
+    if (lib.tss !== undefined) workout.tss = lib.tss
+    if (lib.description) workout.description = lib.description
+    if (lib.segments) workout.segments = lib.segments
+    return workout
+  }
+
+  return null
 }
 
 /**
@@ -156,21 +238,26 @@ export async function GET(
 
     // Check for cached analysis (if not forcing refresh and no FTP override)
     if (!forceRefresh && !ftpOverride) {
-      const { data: cachedAnalysis } = await supabase
-        .from('workout_compliance_analyses')
-        .select(
-          'id, analysis_data, athlete_ftp, athlete_lthr, analyzed_at, algorithm_version, power_data_quality'
-        )
-        .eq('match_id', matchId)
-        .single<StoredAnalysisRow>()
+      // Run cache and plan instance queries in parallel for faster response
+      const [cachedAnalysisResult, planInstanceResult] = await Promise.all([
+        supabase
+          .from('workout_compliance_analyses')
+          .select(
+            'id, analysis_data, athlete_ftp, athlete_lthr, analyzed_at, algorithm_version, power_data_quality'
+          )
+          .eq('match_id', matchId)
+          .single<StoredAnalysisRow>(),
+        supabase
+          .from('plan_instances')
+          .select('plan_data, start_date, workout_overrides')
+          .eq('id', match.plan_instance_id)
+          .single<{ plan_data: TrainingPlanData; start_date: string; workout_overrides?: WorkoutOverrides | null }>(),
+      ])
+
+      const cachedAnalysis = cachedAnalysisResult.data
+      const planInstance = planInstanceResult.data
 
       if (cachedAnalysis) {
-        // Get workout details for context
-        const { data: planInstance } = await supabase
-          .from('plan_instances')
-          .select('plan_data, start_date')
-          .eq('id', match.plan_instance_id)
-          .single<{ plan_data: TrainingPlanData; start_date: string }>()
 
         let workoutContext: {
           workout_name: string
@@ -183,12 +270,19 @@ export async function GET(
         }
 
         if (planInstance) {
-          const workout = getWorkoutFromPlan(
-            planInstance.plan_data,
-            planInstance.start_date,
-            match.workout_date,
-            match.workout_index
-          )
+          // Check overrides first (for library workouts), then plan_data
+          const workout =
+            getWorkoutFromOverrides(
+              planInstance.workout_overrides,
+              match.workout_date,
+              match.workout_index
+            ) ||
+            getWorkoutFromPlan(
+              planInstance.plan_data,
+              planInstance.start_date,
+              match.workout_date,
+              match.workout_index
+            )
           if (workout) {
             workoutContext = {
               workout_name: workout.name,
@@ -199,6 +293,27 @@ export async function GET(
               ...(workout.tss !== undefined && { workout_tss: workout.tss }),
             }
           }
+        }
+
+        // Fetch power stream for chart display
+        let powerStreamForChart: number[] = []
+        try {
+          const stravaService = await StravaService.create()
+          const streams = await stravaService.getActivityStreamsWithRefresh(
+            user.id,
+            String(stravaActivityNumericId),
+            ['watts']
+          )
+          if (streams.watts?.data) {
+            // Downsample to 600 points for chart display
+            powerStreamForChart = downsamplePowerStream(streams.watts.data, 600)
+          }
+        } catch (streamError) {
+          // Non-fatal: chart will render without power overlay
+          errorLogger.logWarning('Failed to fetch power stream for cached analysis', {
+            userId: user.id,
+            metadata: { matchId, error: (streamError as Error).message },
+          })
         }
 
         errorLogger.logInfo('Compliance analysis returned from cache', {
@@ -212,6 +327,7 @@ export async function GET(
 
         return NextResponse.json({
           analysis: cachedAnalysis.analysis_data as unknown as WorkoutComplianceAnalysis,
+          power_stream: powerStreamForChart,
           context: {
             match_id: matchId,
             ...workoutContext,
@@ -232,7 +348,7 @@ export async function GET(
     // Fetch plan instance
     const { data: planInstance, error: planError } = await supabase
       .from('plan_instances')
-      .select('id, user_id, plan_data, start_date')
+      .select('id, user_id, plan_data, start_date, workout_overrides')
       .eq('id', match.plan_instance_id)
       .single<PlanInstanceRow>()
 
@@ -240,13 +356,19 @@ export async function GET(
       return NextResponse.json({ error: 'Plan instance not found' }, { status: 404 })
     }
 
-    // Get workout from plan
-    const workout = getWorkoutFromPlan(
-      planInstance.plan_data,
-      planInstance.start_date,
-      match.workout_date,
-      match.workout_index
-    )
+    // Get workout - check overrides first (for library workouts), then plan_data
+    const workout =
+      getWorkoutFromOverrides(
+        planInstance.workout_overrides,
+        match.workout_date,
+        match.workout_index
+      ) ||
+      getWorkoutFromPlan(
+        planInstance.plan_data,
+        planInstance.start_date,
+        match.workout_date,
+        match.workout_index
+      )
 
     if (!workout) {
       return NextResponse.json(
@@ -385,8 +507,12 @@ export async function GET(
     })
 
     // Return analysis with context
+    // Downsample power stream for chart display
+    const powerStreamForChart = downsamplePowerStream(powerStream, 600)
+
     return NextResponse.json({
       analysis,
+      power_stream: powerStreamForChart,
       context: {
         match_id: matchId,
         workout_name: workout.name,

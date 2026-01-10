@@ -10,7 +10,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { startOfDay, parseISO, format, addDays } from 'date-fns'
-import type { TrainingPlanData, Workout, WeeklyPlan } from '@/lib/types/training-plan'
+import type { TrainingPlanData, Workout, WeeklyPlan, WorkoutSegment } from '@/lib/types/training-plan'
 import { errorLogger } from '@/lib/monitoring/error-logger'
 
 // Types for workout overrides
@@ -20,10 +20,23 @@ export interface WorkoutMove {
   moved_at: string
 }
 
+export interface LibraryWorkoutData {
+  /** Unique identifier for this workout instance (UUID format) */
+  id?: string | undefined
+  name: string
+  type: string
+  tss: number
+  duration_min?: number | undefined
+  description?: string | undefined
+  segments?: WorkoutSegment[] | undefined
+}
+
 export interface WorkoutCopy {
   source_date: string
   source_index: number
   copied_at: string
+  /** Library workout details (only present when source_date starts with 'library:') */
+  library_workout?: LibraryWorkoutData | undefined
 }
 
 export interface WorkoutOverrides {
@@ -350,6 +363,7 @@ export class ScheduleEditService {
   /**
    * Delete a workout from schedule
    * - Only for current or future dates
+   * - Also deletes any associated match from workout_activity_matches
    */
   async deleteWorkout(
     instanceId: string,
@@ -385,7 +399,32 @@ export class ScheduleEditService {
       return { success: false, error: saveResult.error }
     }
 
+    // Delete any associated match from workout_activity_matches
+    await this.deleteWorkoutMatch(instanceId, location.date, location.index)
+
     return { success: true, updatedOverrides: overrides }
+  }
+
+  /**
+   * Delete a workout match from the workout_activity_matches table
+   * This is called when a workout is deleted to clean up orphaned matches
+   */
+  async deleteWorkoutMatch(instanceId: string, date: string, index: number): Promise<void> {
+    const supabase = await createClient()
+
+    const { error } = await supabase
+      .from('workout_activity_matches')
+      .delete()
+      .eq('plan_instance_id', instanceId)
+      .eq('workout_date', date)
+      .eq('workout_index', index)
+
+    if (error) {
+      // Log but don't fail the delete operation
+      errorLogger.logWarning('Failed to delete workout match', {
+        metadata: { instanceId, date, index, error: error.message },
+      })
+    }
   }
 
   /**
@@ -405,6 +444,84 @@ export class ScheduleEditService {
     }
 
     return { success: true, updatedOverrides: { ...EMPTY_OVERRIDES } }
+  }
+
+  /**
+   * Add a library workout to the schedule
+   *
+   * Library workouts are stored as copies with source_date="library:{workoutId}"
+   * and include the workout data for persistence across page reloads.
+   * We use a high base index (100+) to avoid conflicts with original workouts.
+   */
+  async addLibraryWorkout(
+    instanceId: string,
+    userId: string,
+    workoutId: string,
+    targetDate: string,
+    workoutData?: {
+      name: string
+      type: string
+      tss: number
+      duration_min?: number | undefined
+      description?: string | undefined
+      segments?: WorkoutSegment[] | undefined
+    }
+  ): Promise<EditOperationResult & { assignedIndex?: number }> {
+    // Validate access
+    const accessResult = await this.validateAccess(instanceId, userId)
+    if (!accessResult.valid) {
+      return { success: false, error: accessResult.error }
+    }
+
+    // Validate target date
+    const targetValidation = this.validateTargetDate(targetDate)
+    if (!targetValidation.valid) {
+      return { success: false, error: targetValidation.error }
+    }
+
+    // Get current overrides
+    const overrides = await this.getOverrides(instanceId)
+
+    // Find next available index for library workouts
+    // We use indices starting at 100 to avoid conflicts with original plan workouts
+    const libraryIndices = Object.keys(overrides.copies)
+      .filter((key) => {
+        const copy = overrides.copies[key]
+        return copy && copy.source_date.startsWith('library:')
+      })
+      .map((key) => {
+        const parts = key.split(':')
+        return parseInt(parts[1] || '0', 10)
+      })
+      .filter((idx) => idx >= 100)
+
+    const assignedIndex = libraryIndices.length > 0 ? Math.max(...libraryIndices) + 1 : 100
+
+    // Create target key
+    const targetKey = createWorkoutKey(targetDate, assignedIndex)
+
+    // Store the library workout with its data for persistence
+    // Generate a unique ID for this workout instance
+    overrides.copies[targetKey] = {
+      source_date: `library:${workoutId}`,
+      source_index: 0,
+      copied_at: new Date().toISOString(),
+      // Include workout data so it persists across page reloads
+      library_workout: workoutData
+        ? {
+            ...workoutData,
+            id: crypto.randomUUID(), // Unique ID for this workout instance
+          }
+        : undefined,
+    }
+
+    // Save to database
+    const saveResult = await this.saveOverrides(instanceId, overrides)
+    if (!saveResult.success) {
+      return { success: false, error: saveResult.error }
+    }
+
+    return { success: true, updatedOverrides: overrides, assignedIndex }
   }
 
   /**

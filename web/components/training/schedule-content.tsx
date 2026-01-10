@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -8,9 +8,18 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Calendar, Plus, Zap, CalendarDays, Clock, List, LayoutGrid } from 'lucide-react'
 import { ScheduleCalendar } from './schedule-calendar'
-import type { PlanInstance } from '@/lib/types/training-plan'
+import { CollapsibleSidebar } from '@/components/schedule/collapsible-sidebar'
+import { DraggableLibraryWorkout } from '@/components/schedule/dnd/draggable-library-workout'
+import { WorkoutBrowser } from '@/components/plan-builder/workout-browser'
+import { WorkoutLibraryCard } from '@/components/plan-builder/workout-library-card'
+import { useLocalStorage } from '@/lib/hooks/use-local-storage'
+import type { PlanInstance, Workout } from '@/lib/types/training-plan'
+import type { WorkoutLibraryItem } from '@/lib/types/workout-library'
 import { parseLocalDate } from '@/lib/utils/date-utils'
 import { formatWithGoalLabels } from '@/lib/utils/format-utils'
+import { WorkoutDetailModal } from './workout-detail-modal'
+
+const SIDEBAR_STORAGE_KEY = 'schedule-sidebar-collapsed'
 
 interface ScheduleContentProps {
   instances: PlanInstance[]
@@ -42,6 +51,125 @@ export function ScheduleContent({ instances, locale }: ScheduleContentProps) {
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>(
     hasCalendarContent ? 'calendar' : 'list'
   )
+
+  // State for library workout detail popup
+  const [selectedLibraryWorkout, setSelectedLibraryWorkout] = useState<WorkoutLibraryItem | null>(
+    null
+  )
+  const [libraryWorkoutModalOpen, setLibraryWorkoutModalOpen] = useState(false)
+
+  // Sidebar collapsed state (persisted to localStorage)
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useLocalStorage(SIDEBAR_STORAGE_KEY, false)
+
+  // Handler for when a library workout is clicked in the sidebar
+  const handleLibraryWorkoutSelect = useCallback((workout: WorkoutLibraryItem) => {
+    setSelectedLibraryWorkout(workout)
+    setLibraryWorkoutModalOpen(true)
+  }, [])
+
+  // Convert library workout to schedule workout format for display in modal
+  const libraryWorkoutAsScheduleWorkout = useCallback(
+    (libraryWorkout: WorkoutLibraryItem | null): Workout | null => {
+      if (!libraryWorkout) return null
+
+      // Map library segments to workout segments (handle exactOptionalPropertyTypes)
+      const segments = libraryWorkout.segments.map((seg) => {
+        // Build segment with required fields
+        const segment: {
+          type: 'warmup' | 'interval' | 'recovery' | 'cooldown' | 'steady' | 'work' | 'tempo'
+          duration_min: number
+          power_low_pct?: number
+          power_high_pct?: number
+          description?: string
+          sets?: number
+          work?: { duration_min: number; power_low_pct: number; power_high_pct: number }
+          recovery?: { duration_min: number; power_low_pct: number; power_high_pct: number }
+        } = {
+          type: seg.type,
+          duration_min: seg.duration_min ?? 0,
+        }
+
+        // Add optional fields only if they exist
+        if (seg.power_low_pct !== undefined) segment.power_low_pct = seg.power_low_pct
+        if (seg.power_high_pct !== undefined) segment.power_high_pct = seg.power_high_pct
+        if (seg.description !== undefined) segment.description = seg.description
+        if (seg.sets !== undefined) segment.sets = seg.sets
+        if (seg.work !== undefined) segment.work = seg.work
+        if (seg.recovery !== undefined) segment.recovery = seg.recovery
+
+        return segment
+      })
+
+      const workout: Workout = {
+        weekday: 'Monday', // Placeholder
+        name: libraryWorkout.name,
+        type: libraryWorkout.type,
+        tss: libraryWorkout.base_tss,
+        description: libraryWorkout.detailed_description || `${libraryWorkout.type} workout`,
+        segments,
+        source: 'library',
+        library_workout_id: libraryWorkout.id,
+      }
+
+      // Add optional detailed_description if it exists
+      if (libraryWorkout.detailed_description) {
+        workout.detailed_description = libraryWorkout.detailed_description
+      }
+
+      return workout
+    },
+    []
+  )
+
+  // Get FTP from first instance for workout display
+  const ftp = plansWithFutureContent[0]?.plan_data?.athlete_profile?.ftp || 200
+
+  // Get single instance ID for sidebar (only show sidebar for single instance)
+  const singleInstance = plansWithFutureContent.length === 1 ? plansWithFutureContent[0] : null
+
+  // Custom render for workout cards - wrap with schedule DnD
+  const renderWorkoutCard = useCallback(
+    (workout: WorkoutLibraryItem) => {
+      if (!singleInstance) return null
+      return (
+        <DraggableLibraryWorkout key={workout.id} workout={workout} instanceId={singleInstance.id}>
+          <WorkoutLibraryCard
+            workout={workout}
+            onClick={() => handleLibraryWorkoutSelect(workout)}
+            isDraggable
+            compact
+          />
+        </DraggableLibraryWorkout>
+      )
+    },
+    [singleInstance, handleLibraryWorkoutSelect]
+  )
+
+  // Create sidebar content for single instance edit mode
+  const sidebarContent = useMemo(() => {
+    if (!singleInstance) return undefined
+    return (
+      <CollapsibleSidebar
+        isCollapsed={isSidebarCollapsed}
+        onCollapsedChange={setIsSidebarCollapsed}
+        expandedWidth={300}
+      >
+        <WorkoutBrowser
+          compact
+          isDragEnabled={false} // We handle DnD ourselves with custom render
+          onSelectWorkout={handleLibraryWorkoutSelect}
+          renderWorkoutCard={renderWorkoutCard}
+          className="h-full"
+        />
+      </CollapsibleSidebar>
+    )
+  }, [
+    singleInstance,
+    isSidebarCollapsed,
+    setIsSidebarCollapsed,
+    handleLibraryWorkoutSelect,
+    renderWorkoutCard,
+  ])
 
   const getStatusVariant = (status: string) => {
     switch (status) {
@@ -202,7 +330,7 @@ export function ScheduleContent({ instances, locale }: ScheduleContentProps) {
 
       {/* Calendar View */}
       {viewMode === 'calendar' && hasCalendarContent && (
-        <ScheduleCalendar instances={plansWithFutureContent} />
+        <ScheduleCalendar instances={plansWithFutureContent} sidebarContent={sidebarContent} />
       )}
 
       {/* List View */}
@@ -251,6 +379,15 @@ export function ScheduleContent({ instances, locale }: ScheduleContentProps) {
           )}
         </>
       )}
+
+      {/* Library Workout Detail Modal */}
+      <WorkoutDetailModal
+        workout={libraryWorkoutAsScheduleWorkout(selectedLibraryWorkout)}
+        weekNumber={0}
+        ftp={ftp}
+        open={libraryWorkoutModalOpen}
+        onOpenChange={setLibraryWorkoutModalOpen}
+      />
     </div>
   )
 }

@@ -3,6 +3,7 @@
  *
  * Takes the original plan_data and workout_overrides from a plan instance
  * and returns the effective workouts with modifications applied.
+ * Also handles library workout copies (source_date starts with "library:")
  */
 
 import { addDays, parseISO, format } from 'date-fns'
@@ -11,6 +12,7 @@ import type {
   Workout,
   WeeklyPlan,
   WorkoutOverrides,
+  WorkoutSegment,
 } from '@/lib/types/training-plan'
 
 // Re-export for convenience
@@ -20,8 +22,79 @@ export interface EffectiveWorkoutInfo {
   workout: Workout
   originalIndex: number
   isModified: boolean
-  modificationSource?: 'moved' | 'copied'
+  modificationSource?: 'moved' | 'copied' | 'library'
   originalDate?: string
+  /** For library workouts, the library workout ID */
+  libraryWorkoutId?: string
+}
+
+/**
+ * Parameters for creating a schedule workout from library data
+ */
+export interface LibraryWorkoutParams {
+  /** Library workout ID (NanoID format) - for library reference */
+  id: string
+  /** Unique workout instance ID (UUID format) - for matching purposes */
+  workoutInstanceId?: string | undefined
+  /** Display name of the workout */
+  name?: string | undefined
+  /** Workout type category */
+  type?: string | undefined
+  /** Training Stress Score */
+  tss?: number | undefined
+  /** Detailed description */
+  description?: string | undefined
+  /** Duration in minutes (used to create a placeholder segment if no segments provided) */
+  durationMin?: number | undefined
+  /** Full workout segments for proper rendering */
+  segments?: WorkoutSegment[] | undefined
+}
+
+/**
+ * Convert a library workout to a schedule Workout format
+ *
+ * This is used when rendering library workouts on the calendar.
+ * When called from applyWorkoutOverrides, only the ID is available,
+ * so defaults are used. For full workout data, the caller should
+ * fetch the library workout details and pass them as parameters.
+ *
+ * @param params - Library workout parameters (at minimum, just the ID)
+ * @returns A Workout object suitable for rendering on the schedule
+ */
+export function libraryWorkoutToScheduleWorkout(params: LibraryWorkoutParams | string): Workout {
+  // Support legacy call signature (just ID string)
+  const normalized: LibraryWorkoutParams = typeof params === 'string' ? { id: params } : params
+
+  const {
+    id,
+    workoutInstanceId,
+    name = 'Library Workout',
+    type = 'mixed',
+    tss = 50,
+    description,
+    durationMin,
+    segments: providedSegments,
+  } = normalized
+
+  // Use provided segments, or create a placeholder if duration is provided
+  const segments: Workout['segments'] = providedSegments
+    ? providedSegments
+    : durationMin
+      ? [{ type: 'steady', duration_min: durationMin }]
+      : []
+
+  return {
+    // Use provided instance ID, or generate a new one for legacy library workouts
+    id: workoutInstanceId || crypto.randomUUID(),
+    weekday: 'Monday', // Placeholder - actual date comes from the override
+    name,
+    type,
+    tss,
+    description: description || `Library workout: ${name}`,
+    segments,
+    source: 'library',
+    library_workout_id: id,
+  }
 }
 
 const DAY_TO_INDEX: Record<string, number> = {
@@ -174,7 +247,50 @@ export function applyWorkoutOverrides(
     const target = parseWorkoutKey(targetKey)
     if (!target) return
 
-    // Find the source workout
+    // Skip if this copy was deleted
+    if (normalizedOverrides.deleted.includes(targetKey)) {
+      return
+    }
+
+    // Check if this is a library workout copy
+    if (copy.source_date.startsWith('library:')) {
+      // Extract library workout ID from source_date
+      const libraryWorkoutId = copy.source_date.replace('library:', '')
+
+      // Use stored library workout data if available, otherwise create placeholder
+      const workoutParams: LibraryWorkoutParams = copy.library_workout
+        ? {
+            id: libraryWorkoutId,
+            // Use the stored workout instance ID if available
+            workoutInstanceId: copy.library_workout.id,
+            name: copy.library_workout.name,
+            type: copy.library_workout.type,
+            tss: copy.library_workout.tss,
+            durationMin: copy.library_workout.duration_min,
+            description: copy.library_workout.description,
+            segments: copy.library_workout.segments,
+          }
+        : { id: libraryWorkoutId }
+
+      const libraryWorkout = libraryWorkoutToScheduleWorkout(workoutParams)
+
+      const effectiveWorkout: EffectiveWorkoutInfo = {
+        workout: libraryWorkout,
+        originalIndex: target.index,
+        isModified: true,
+        modificationSource: 'library',
+        originalDate: copy.source_date,
+        libraryWorkoutId: libraryWorkoutId,
+      }
+
+      if (!result.has(target.date)) {
+        result.set(target.date, [])
+      }
+      result.get(target.date)!.push(effectiveWorkout)
+      return
+    }
+
+    // Find the source workout for normal copies
     const sourceWorkout = findOriginalWorkout(
       planData,
       startDate,
@@ -183,8 +299,14 @@ export function applyWorkoutOverrides(
     )
 
     if (sourceWorkout) {
+      // Copied workouts get a new ID to distinguish them from the original
+      const copiedWorkout: Workout = {
+        ...sourceWorkout,
+        id: crypto.randomUUID(),
+      }
+
       const effectiveWorkout: EffectiveWorkoutInfo = {
-        workout: sourceWorkout,
+        workout: copiedWorkout,
         originalIndex: target.index,
         isModified: true,
         modificationSource: 'copied',
