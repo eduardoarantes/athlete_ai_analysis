@@ -3,9 +3,11 @@
  *
  * Real workout-activity pairs for offline testing.
  * Workout data from workout_library.json, activity streams from Strava.
+ *
+ * Updated for Issue #96: Supports both legacy WorkoutSegment[] and new WorkoutStructure format
  */
 
-import type { WorkoutSegment } from '@/lib/types/training-plan'
+import type { WorkoutSegment, WorkoutStructure } from '@/lib/types/training-plan'
 import {
   ACTIVITY_15664598790_POWER_STREAM,
   ACTIVITY_14698802921_POWER_STREAM,
@@ -29,6 +31,8 @@ export interface WorkoutActivityPair {
   workoutName: string
   athleteFtp: number
   segments: WorkoutSegment[]
+  /** NEW: WorkoutStructure format (Issue #96) - takes precedence over segments */
+  structure?: WorkoutStructure
   powerStream: number[]
   expectedGrade?: 'A' | 'B' | 'C' | 'D' | 'F'
   description?: string
@@ -920,4 +924,518 @@ export function generatePoorExecutionStream(ftp: number): number[] {
     stream.push(Math.round(ftp * 0.65 + (Math.random() - 0.5) * 30))
   }
   return stream
+}
+
+// ============================================================================
+// Multi-Step Interval Fixtures (Issue #96)
+// ============================================================================
+
+/**
+ * "Above and Below Threshold" - 3-step interval workout (WorkoutStructure format)
+ *
+ * This workout alternates between:
+ * 1. 3 min at Z5 (108-115%)
+ * 2. 3 min at Z4 (95-105%)
+ * 3. 2 min recovery (50-60%)
+ *
+ * Repeated 5 times = 40 min of intervals
+ */
+export const MULTI_STEP_ABOVE_BELOW_THRESHOLD: WorkoutStructure = {
+  primaryIntensityMetric: 'percentOfFtp',
+  primaryLengthMetric: 'duration',
+  structure: [
+    // Warmup - 10 minutes progressive
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Warmup',
+          intensityClass: 'warmUp',
+          length: { unit: 'minute', value: 10 },
+          targets: [{ type: 'power', minValue: 50, maxValue: 70 }],
+        },
+      ],
+    },
+    // Main set: 5x (3min Z5 / 3min Z4 / 2min recovery)
+    {
+      type: 'repetition',
+      length: { unit: 'repetition', value: 5 },
+      steps: [
+        {
+          name: 'Above Threshold',
+          intensityClass: 'active',
+          length: { unit: 'minute', value: 3 },
+          targets: [{ type: 'power', minValue: 108, maxValue: 115 }],
+        },
+        {
+          name: 'At Threshold',
+          intensityClass: 'active',
+          length: { unit: 'minute', value: 3 },
+          targets: [{ type: 'power', minValue: 95, maxValue: 105 }],
+        },
+        {
+          name: 'Recovery',
+          intensityClass: 'rest',
+          length: { unit: 'minute', value: 2 },
+          targets: [{ type: 'power', minValue: 50, maxValue: 60 }],
+        },
+      ],
+    },
+    // Cooldown - 10 minutes
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Cooldown',
+          intensityClass: 'coolDown',
+          length: { unit: 'minute', value: 10 },
+          targets: [{ type: 'power', minValue: 40, maxValue: 50 }],
+        },
+      ],
+    },
+  ],
+}
+
+/**
+ * "Billat 30/30/30" - 3-step VO2max intervals (WorkoutStructure format)
+ *
+ * Classic VO2max workout with three intensity levels:
+ * 1. 30s at 120% (anaerobic)
+ * 2. 30s at 100% (threshold)
+ * 3. 30s at 60% (recovery)
+ *
+ * Repeated 10 times = 15 min of intervals
+ */
+export const MULTI_STEP_BILLAT_30_30_30: WorkoutStructure = {
+  primaryIntensityMetric: 'percentOfFtp',
+  primaryLengthMetric: 'duration',
+  structure: [
+    // Warmup
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Warmup',
+          intensityClass: 'warmUp',
+          length: { unit: 'minute', value: 15 },
+          targets: [{ type: 'power', minValue: 55, maxValue: 75 }],
+        },
+      ],
+    },
+    // Main set: 10x (30s at 120% / 30s at 100% / 30s at 60%)
+    {
+      type: 'repetition',
+      length: { unit: 'repetition', value: 10 },
+      steps: [
+        {
+          name: 'Sprint',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 30 },
+          targets: [{ type: 'power', minValue: 115, maxValue: 125 }],
+        },
+        {
+          name: 'Threshold',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 30 },
+          targets: [{ type: 'power', minValue: 95, maxValue: 105 }],
+        },
+        {
+          name: 'Recovery',
+          intensityClass: 'rest',
+          length: { unit: 'second', value: 30 },
+          targets: [{ type: 'power', minValue: 55, maxValue: 65 }],
+        },
+      ],
+    },
+    // Recovery block
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Rest',
+          intensityClass: 'rest',
+          length: { unit: 'minute', value: 10 },
+          targets: [{ type: 'power', minValue: 50, maxValue: 60 }],
+        },
+      ],
+    },
+    // Second set: 10x again
+    {
+      type: 'repetition',
+      length: { unit: 'repetition', value: 10 },
+      steps: [
+        {
+          name: 'Sprint',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 30 },
+          targets: [{ type: 'power', minValue: 115, maxValue: 125 }],
+        },
+        {
+          name: 'Threshold',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 30 },
+          targets: [{ type: 'power', minValue: 95, maxValue: 105 }],
+        },
+        {
+          name: 'Recovery',
+          intensityClass: 'rest',
+          length: { unit: 'second', value: 30 },
+          targets: [{ type: 'power', minValue: 55, maxValue: 65 }],
+        },
+      ],
+    },
+    // Cooldown
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Cooldown',
+          intensityClass: 'coolDown',
+          length: { unit: 'minute', value: 10 },
+          targets: [{ type: 'power', minValue: 40, maxValue: 55 }],
+        },
+      ],
+    },
+  ],
+}
+
+/**
+ * "4-Step Pyramid" - 4-step interval workout (WorkoutStructure format)
+ *
+ * Progressive intensity pyramid:
+ * 1. 1 min at 80% (sweet spot)
+ * 2. 1 min at 95% (threshold)
+ * 3. 1 min at 110% (VO2max)
+ * 4. 2 min recovery (50%)
+ *
+ * Repeated 6 times = 30 min of intervals
+ */
+export const MULTI_STEP_4_STEP_PYRAMID: WorkoutStructure = {
+  primaryIntensityMetric: 'percentOfFtp',
+  primaryLengthMetric: 'duration',
+  structure: [
+    // Warmup
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Warmup',
+          intensityClass: 'warmUp',
+          length: { unit: 'minute', value: 12 },
+          targets: [{ type: 'power', minValue: 50, maxValue: 70 }],
+        },
+      ],
+    },
+    // Main set: 6x (1min 80% / 1min 95% / 1min 110% / 2min recovery)
+    {
+      type: 'repetition',
+      length: { unit: 'repetition', value: 6 },
+      steps: [
+        {
+          name: 'Sweet Spot',
+          intensityClass: 'active',
+          length: { unit: 'minute', value: 1 },
+          targets: [{ type: 'power', minValue: 76, maxValue: 84 }],
+        },
+        {
+          name: 'Threshold',
+          intensityClass: 'active',
+          length: { unit: 'minute', value: 1 },
+          targets: [{ type: 'power', minValue: 91, maxValue: 99 }],
+        },
+        {
+          name: 'VO2max',
+          intensityClass: 'active',
+          length: { unit: 'minute', value: 1 },
+          targets: [{ type: 'power', minValue: 106, maxValue: 114 }],
+        },
+        {
+          name: 'Recovery',
+          intensityClass: 'rest',
+          length: { unit: 'minute', value: 2 },
+          targets: [{ type: 'power', minValue: 45, maxValue: 55 }],
+        },
+      ],
+    },
+    // Cooldown
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Cooldown',
+          intensityClass: 'coolDown',
+          length: { unit: 'minute', value: 8 },
+          targets: [{ type: 'power', minValue: 40, maxValue: 55 }],
+        },
+      ],
+    },
+  ],
+}
+
+/**
+ * Simple Sweet Spot in WorkoutStructure format (for comparison with legacy)
+ */
+export const SIMPLE_SWEET_SPOT_STRUCTURE: WorkoutStructure = {
+  primaryIntensityMetric: 'percentOfFtp',
+  primaryLengthMetric: 'duration',
+  structure: [
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Warmup',
+          intensityClass: 'warmUp',
+          length: { unit: 'minute', value: 10 },
+          targets: [{ type: 'power', minValue: 50, maxValue: 60 }],
+        },
+      ],
+    },
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Sweet Spot 1',
+          intensityClass: 'active',
+          length: { unit: 'minute', value: 20 },
+          targets: [{ type: 'power', minValue: 88, maxValue: 93 }],
+        },
+      ],
+    },
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Recovery',
+          intensityClass: 'rest',
+          length: { unit: 'minute', value: 5 },
+          targets: [{ type: 'power', minValue: 50, maxValue: 55 }],
+        },
+      ],
+    },
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Sweet Spot 2',
+          intensityClass: 'active',
+          length: { unit: 'minute', value: 20 },
+          targets: [{ type: 'power', minValue: 88, maxValue: 93 }],
+        },
+      ],
+    },
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Cooldown',
+          intensityClass: 'coolDown',
+          length: { unit: 'minute', value: 10 },
+          targets: [{ type: 'power', minValue: 50, maxValue: 60 }],
+        },
+      ],
+    },
+  ],
+}
+
+/**
+ * Multi-step interval with cadence targets (Issue #96 feature)
+ *
+ * High cadence / low cadence alternations:
+ * 1. 2 min at 80% with cadence 100-110 rpm
+ * 2. 2 min at 80% with cadence 60-70 rpm
+ * 3. 1 min recovery at 50%
+ *
+ * Repeated 4 times
+ */
+export const MULTI_STEP_CADENCE_DRILLS: WorkoutStructure = {
+  primaryIntensityMetric: 'percentOfFtp',
+  primaryLengthMetric: 'duration',
+  structure: [
+    // Warmup
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Warmup',
+          intensityClass: 'warmUp',
+          length: { unit: 'minute', value: 10 },
+          targets: [{ type: 'power', minValue: 50, maxValue: 65 }],
+        },
+      ],
+    },
+    // Main set with cadence targets
+    {
+      type: 'repetition',
+      length: { unit: 'repetition', value: 4 },
+      steps: [
+        {
+          name: 'High Cadence',
+          intensityClass: 'active',
+          length: { unit: 'minute', value: 2 },
+          targets: [
+            { type: 'power', minValue: 76, maxValue: 84 },
+            { type: 'cadence', minValue: 100, maxValue: 110, unit: 'rpm' },
+          ],
+        },
+        {
+          name: 'Low Cadence',
+          intensityClass: 'active',
+          length: { unit: 'minute', value: 2 },
+          targets: [
+            { type: 'power', minValue: 76, maxValue: 84 },
+            { type: 'cadence', minValue: 60, maxValue: 70, unit: 'rpm' },
+          ],
+        },
+        {
+          name: 'Recovery',
+          intensityClass: 'rest',
+          length: { unit: 'minute', value: 1 },
+          targets: [{ type: 'power', minValue: 45, maxValue: 55 }],
+        },
+      ],
+    },
+    // Cooldown
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Cooldown',
+          intensityClass: 'coolDown',
+          length: { unit: 'minute', value: 10 },
+          targets: [{ type: 'power', minValue: 40, maxValue: 55 }],
+        },
+      ],
+    },
+  ],
+}
+
+/**
+ * Generate a simulated power stream from WorkoutStructure
+ */
+export function generateSimulatedPowerStreamFromStructure(
+  structure: WorkoutStructure,
+  ftp: number,
+  variability: number = 0.1
+): number[] {
+  const stream: number[] = []
+
+  for (const segment of structure.structure) {
+    const repetitions = segment.length.value
+
+    for (let rep = 0; rep < repetitions; rep++) {
+      for (const step of segment.steps) {
+        // Get power target from targets array
+        const powerTarget = step.targets.find((t) => t.type === 'power')
+        const minPct = powerTarget?.minValue ?? 50
+        const maxPct = powerTarget?.maxValue ?? 60
+        const avgPower = ((minPct + maxPct) / 2 / 100) * ftp
+
+        // Calculate duration in seconds
+        let durationSec: number
+        switch (step.length.unit) {
+          case 'second':
+            durationSec = step.length.value
+            break
+          case 'minute':
+            durationSec = step.length.value * 60
+            break
+          case 'hour':
+            durationSec = step.length.value * 3600
+            break
+          default:
+            durationSec = step.length.value
+        }
+
+        // Generate power values
+        for (let i = 0; i < durationSec; i++) {
+          const variation = (Math.random() - 0.5) * 2 * variability * avgPower
+          stream.push(Math.round(avgPower + variation))
+        }
+      }
+    }
+  }
+
+  return stream
+}
+
+/**
+ * Get multi-step interval test fixtures with WorkoutStructure format
+ */
+export function getMultiStepTestFixtures(): WorkoutActivityPair[] {
+  const FTP = 250
+
+  return [
+    {
+      id: 'multi-step-1',
+      workoutId: 'above-below-threshold',
+      activityId: 'simulated-1',
+      workoutName: 'Above and Below Threshold',
+      athleteFtp: FTP,
+      segments: [], // No legacy segments
+      structure: MULTI_STEP_ABOVE_BELOW_THRESHOLD,
+      powerStream: generateSimulatedPowerStreamFromStructure(
+        MULTI_STEP_ABOVE_BELOW_THRESHOLD,
+        FTP
+      ),
+      description: '3-step intervals: 3min Z5 / 3min Z4 / 2min recovery x5 (~60 min)',
+    },
+    {
+      id: 'multi-step-2',
+      workoutId: 'billat-30-30-30',
+      activityId: 'simulated-2',
+      workoutName: 'Billat 30/30/30',
+      athleteFtp: FTP,
+      segments: [], // No legacy segments
+      structure: MULTI_STEP_BILLAT_30_30_30,
+      powerStream: generateSimulatedPowerStreamFromStructure(MULTI_STEP_BILLAT_30_30_30, FTP),
+      description: '3-step VO2max intervals: 30s sprint / 30s threshold / 30s recovery x10 x2 (~50 min)',
+    },
+    {
+      id: 'multi-step-3',
+      workoutId: '4-step-pyramid',
+      activityId: 'simulated-3',
+      workoutName: '4-Step Pyramid',
+      athleteFtp: FTP,
+      segments: [], // No legacy segments
+      structure: MULTI_STEP_4_STEP_PYRAMID,
+      powerStream: generateSimulatedPowerStreamFromStructure(MULTI_STEP_4_STEP_PYRAMID, FTP),
+      description: '4-step pyramid: 1min 80% / 1min 95% / 1min 110% / 2min recovery x6 (~50 min)',
+    },
+    {
+      id: 'multi-step-cadence',
+      workoutId: 'cadence-drills',
+      activityId: 'simulated-4',
+      workoutName: 'Cadence Drills',
+      athleteFtp: FTP,
+      segments: [], // No legacy segments
+      structure: MULTI_STEP_CADENCE_DRILLS,
+      powerStream: generateSimulatedPowerStreamFromStructure(MULTI_STEP_CADENCE_DRILLS, FTP),
+      description: '3-step with cadence targets: high/low cadence alternations x4 (~40 min)',
+    },
+    {
+      id: 'structure-sweet-spot',
+      workoutId: 'sweet-spot-structure',
+      activityId: 'simulated-5',
+      workoutName: 'Sweet Spot (Structure Format)',
+      athleteFtp: FTP,
+      segments: SIMPLE_SWEET_SPOT_SEGMENTS, // Include legacy for comparison
+      structure: SIMPLE_SWEET_SPOT_STRUCTURE,
+      powerStream: generateSimulatedPowerStreamFromStructure(SIMPLE_SWEET_SPOT_STRUCTURE, FTP),
+      description: 'Sweet spot workout in new structure format for comparison (~65 min)',
+    },
+  ]
 }

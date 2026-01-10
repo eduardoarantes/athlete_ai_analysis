@@ -44,6 +44,14 @@ import {
   generatePoorExecutionStream,
   getTestFixtures,
   getTestFixturesWithRealData,
+  // Multi-step interval fixtures (Issue #96)
+  MULTI_STEP_ABOVE_BELOW_THRESHOLD,
+  MULTI_STEP_BILLAT_30_30_30,
+  MULTI_STEP_4_STEP_PYRAMID,
+  MULTI_STEP_CADENCE_DRILLS,
+  SIMPLE_SWEET_SPOT_STRUCTURE,
+  getMultiStepTestFixtures,
+  generateSimulatedPowerStreamFromStructure,
 } from './fixtures/compliance-test-fixtures'
 import {
   generateComplianceReport,
@@ -1743,5 +1751,298 @@ describe('Real Strava Data Integration Tests', () => {
         expect(result.metadata).toHaveProperty('algorithm_version')
       }).not.toThrow()
     }
+  })
+})
+
+// ============================================================================
+// Multi-Step Interval Tests (Issue #96)
+// ============================================================================
+
+describe('Multi-Step Interval Tests (Issue #96)', () => {
+  const FTP = 250
+
+  describe('WorkoutStructure fixture validation', () => {
+    it('validates Above and Below Threshold structure (3-step)', () => {
+      const structure = MULTI_STEP_ABOVE_BELOW_THRESHOLD
+      expect(structure.primaryIntensityMetric).toBe('percentOfFtp')
+      expect(structure.primaryLengthMetric).toBe('duration')
+
+      // Should have warmup + main set + cooldown = 3 segments
+      expect(structure.structure).toHaveLength(3)
+
+      // Main set should be 5 repetitions of 3 steps
+      const mainSet = structure.structure[1]!
+      expect(mainSet.type).toBe('repetition')
+      expect(mainSet.length.value).toBe(5)
+      expect(mainSet.steps).toHaveLength(3)
+
+      // Verify step intensities
+      expect(mainSet.steps[0]!.name).toBe('Above Threshold')
+      expect(mainSet.steps[1]!.name).toBe('At Threshold')
+      expect(mainSet.steps[2]!.name).toBe('Recovery')
+    })
+
+    it('validates Billat 30/30/30 structure (3-step with seconds)', () => {
+      const structure = MULTI_STEP_BILLAT_30_30_30
+      expect(structure.structure).toHaveLength(5) // warmup + set1 + recovery + set2 + cooldown
+
+      // First interval set
+      const set1 = structure.structure[1]!
+      expect(set1.type).toBe('repetition')
+      expect(set1.length.value).toBe(10)
+      expect(set1.steps).toHaveLength(3)
+
+      // All steps should be 30 seconds
+      for (const step of set1.steps) {
+        expect(step.length.unit).toBe('second')
+        expect(step.length.value).toBe(30)
+      }
+    })
+
+    it('validates 4-Step Pyramid structure (4-step)', () => {
+      const structure = MULTI_STEP_4_STEP_PYRAMID
+      expect(structure.structure).toHaveLength(3) // warmup + main set + cooldown
+
+      const mainSet = structure.structure[1]!
+      expect(mainSet.type).toBe('repetition')
+      expect(mainSet.length.value).toBe(6)
+      expect(mainSet.steps).toHaveLength(4) // 4 steps per rep
+
+      // Verify step names
+      expect(mainSet.steps[0]!.name).toBe('Sweet Spot')
+      expect(mainSet.steps[1]!.name).toBe('Threshold')
+      expect(mainSet.steps[2]!.name).toBe('VO2max')
+      expect(mainSet.steps[3]!.name).toBe('Recovery')
+    })
+
+    it('validates Cadence Drills structure (with multiple targets)', () => {
+      const structure = MULTI_STEP_CADENCE_DRILLS
+      const mainSet = structure.structure[1]!
+      expect(mainSet.steps).toHaveLength(3)
+
+      // First step should have both power and cadence targets
+      const highCadenceStep = mainSet.steps[0]!
+      expect(highCadenceStep.targets).toHaveLength(2)
+      expect(highCadenceStep.targets[0]!.type).toBe('power')
+      expect(highCadenceStep.targets[1]!.type).toBe('cadence')
+      expect(highCadenceStep.targets[1]!.minValue).toBe(100)
+      expect(highCadenceStep.targets[1]!.maxValue).toBe(110)
+    })
+  })
+
+  describe('Power stream generation from WorkoutStructure', () => {
+    it('generates correct length stream for Above and Below Threshold', () => {
+      const stream = generateSimulatedPowerStreamFromStructure(
+        MULTI_STEP_ABOVE_BELOW_THRESHOLD,
+        FTP
+      )
+
+      // 10min warmup + 5x(3+3+2)min main + 10min cooldown = 10 + 40 + 10 = 60 min = 3600 sec
+      expect(stream.length).toBe(3600)
+    })
+
+    it('generates correct length stream for Billat 30/30/30', () => {
+      const stream = generateSimulatedPowerStreamFromStructure(MULTI_STEP_BILLAT_30_30_30, FTP)
+
+      // 15min warmup + 10x(30+30+30)sec + 10min recovery + 10x(30+30+30)sec + 10min cooldown
+      // = 15*60 + 10*90 + 10*60 + 10*90 + 10*60 = 900 + 900 + 600 + 900 + 600 = 3900 sec
+      expect(stream.length).toBe(3900)
+    })
+
+    it('generates correct length stream for 4-Step Pyramid', () => {
+      const stream = generateSimulatedPowerStreamFromStructure(MULTI_STEP_4_STEP_PYRAMID, FTP)
+
+      // 12min warmup + 6x(1+1+1+2)min main + 8min cooldown = 12 + 30 + 8 = 50 min = 3000 sec
+      expect(stream.length).toBe(3000)
+    })
+
+    it('generates power values in expected range', () => {
+      const stream = generateSimulatedPowerStreamFromStructure(
+        MULTI_STEP_ABOVE_BELOW_THRESHOLD,
+        FTP
+      )
+
+      // All values should be positive
+      expect(stream.every((v) => v > 0)).toBe(true)
+
+      // Max power should be reasonable (considering variability)
+      const maxPower = Math.max(...stream)
+      expect(maxPower).toBeLessThan(FTP * 1.5) // Below 150% FTP
+    })
+  })
+
+  describe('flattenWorkoutSegments with multi-step intervals', () => {
+    it('flattens 3-step interval structure correctly', () => {
+      const flattened = flattenWorkoutSegments(undefined, FTP, MULTI_STEP_ABOVE_BELOW_THRESHOLD)
+
+      // 1 warmup + 5x3 intervals + 1 cooldown = 1 + 15 + 1 = 17 segments
+      expect(flattened).toHaveLength(17)
+
+      // Check structure
+      expect(flattened[0]!.type).toBe('warmup')
+      expect(flattened[1]!.type).toBe('work') // First "Above Threshold"
+      expect(flattened[2]!.type).toBe('work') // First "At Threshold"
+      expect(flattened[3]!.type).toBe('recovery') // First "Recovery"
+      expect(flattened[16]!.type).toBe('cooldown')
+    })
+
+    it('flattens 4-step interval structure correctly', () => {
+      const flattened = flattenWorkoutSegments(undefined, FTP, MULTI_STEP_4_STEP_PYRAMID)
+
+      // 1 warmup + 6x4 intervals + 1 cooldown = 1 + 24 + 1 = 26 segments
+      expect(flattened).toHaveLength(26)
+
+      // Verify step pattern repeats
+      expect(flattened[1]!.name).toContain('Sweet Spot')
+      expect(flattened[2]!.name).toContain('Threshold')
+      expect(flattened[3]!.name).toContain('VO2max')
+      expect(flattened[4]!.name).toContain('Recovery')
+    })
+
+    it('calculates correct power targets for multi-step intervals', () => {
+      const flattened = flattenWorkoutSegments(undefined, FTP, MULTI_STEP_ABOVE_BELOW_THRESHOLD)
+
+      // "Above Threshold" step: 108-115% FTP
+      const aboveThreshold = flattened[1]!
+      expect(aboveThreshold.power_low).toBe(270) // 250 * 1.08
+      expect(aboveThreshold.power_high).toBe(288) // 250 * 1.15 rounded
+
+      // "At Threshold" step: 95-105% FTP
+      const atThreshold = flattened[2]!
+      expect(atThreshold.power_low).toBe(238) // 250 * 0.95 rounded
+      expect(atThreshold.power_high).toBe(263) // 250 * 1.05 rounded
+    })
+
+    it('assigns correct target zones for multi-step intervals', () => {
+      const flattened = flattenWorkoutSegments(undefined, FTP, MULTI_STEP_ABOVE_BELOW_THRESHOLD)
+
+      // Above Threshold (108-115%): avg 111.5% → Z5
+      expect(flattened[1]!.target_zone).toBe(5)
+
+      // At Threshold (95-105%): avg 100% → Z4
+      expect(flattened[2]!.target_zone).toBe(4)
+
+      // Recovery (50-60%): avg 55% → Z2
+      expect(flattened[3]!.target_zone).toBe(2)
+    })
+
+    it('handles seconds-based step lengths correctly', () => {
+      const flattened = flattenWorkoutSegments(undefined, FTP, MULTI_STEP_BILLAT_30_30_30)
+
+      // All steps in the first interval set should be 30 seconds
+      const firstWorkStep = flattened[1]!
+      expect(firstWorkStep.duration_sec).toBe(30)
+    })
+  })
+
+  describe('Compliance analysis with multi-step intervals', () => {
+    it('analyzes Above and Below Threshold workout', () => {
+      const powerStream = generateSimulatedPowerStreamFromStructure(
+        MULTI_STEP_ABOVE_BELOW_THRESHOLD,
+        FTP
+      )
+      const result = analyzeWorkoutCompliance(undefined, powerStream, FTP, MULTI_STEP_ABOVE_BELOW_THRESHOLD)
+
+      expect(result.overall.score).toBeGreaterThanOrEqual(0)
+      expect(result.overall.score).toBeLessThanOrEqual(100)
+      expect(['A', 'B', 'C', 'D', 'F']).toContain(result.overall.grade)
+      expect(result.segments.length).toBe(17)
+      expect(result.metadata.algorithm_version).toBeDefined()
+    })
+
+    it('analyzes Billat 30/30/30 workout (short intervals)', () => {
+      const powerStream = generateSimulatedPowerStreamFromStructure(MULTI_STEP_BILLAT_30_30_30, FTP)
+      const result = analyzeWorkoutCompliance(undefined, powerStream, FTP, MULTI_STEP_BILLAT_30_30_30)
+
+      expect(result.overall.score).toBeGreaterThanOrEqual(0)
+      expect(result.overall.score).toBeLessThanOrEqual(100)
+
+      // Should use aggressive smoothing for 30-sec intervals
+      expect(result.metadata.adaptive_parameters.smoothingWindowSec).toBeLessThanOrEqual(10)
+    })
+
+    it('analyzes 4-Step Pyramid workout', () => {
+      const powerStream = generateSimulatedPowerStreamFromStructure(MULTI_STEP_4_STEP_PYRAMID, FTP)
+      const result = analyzeWorkoutCompliance(undefined, powerStream, FTP, MULTI_STEP_4_STEP_PYRAMID)
+
+      expect(result.overall.score).toBeGreaterThanOrEqual(0)
+      expect(result.overall.score).toBeLessThanOrEqual(100)
+      expect(result.segments.length).toBe(26) // 1 + 24 + 1
+    })
+
+    it('analyzes workout with cadence targets', () => {
+      const powerStream = generateSimulatedPowerStreamFromStructure(MULTI_STEP_CADENCE_DRILLS, FTP)
+      const result = analyzeWorkoutCompliance(undefined, powerStream, FTP, MULTI_STEP_CADENCE_DRILLS)
+
+      // Compliance analysis should still work even though cadence targets exist
+      expect(result.overall.score).toBeGreaterThanOrEqual(0)
+      expect(result.overall.score).toBeLessThanOrEqual(100)
+    })
+
+    it('compares legacy and structure format for same workout', () => {
+      // Use the sweet spot workout which has both formats
+      const legacyStream = generatePerfectExecutionStream(SIMPLE_SWEET_SPOT_SEGMENTS, FTP)
+      const structureStream = generateSimulatedPowerStreamFromStructure(
+        SIMPLE_SWEET_SPOT_STRUCTURE,
+        FTP
+      )
+
+      const legacyResult = analyzeWorkoutCompliance(SIMPLE_SWEET_SPOT_SEGMENTS, legacyStream, FTP)
+      const structureResult = analyzeWorkoutCompliance(
+        undefined,
+        structureStream,
+        FTP,
+        SIMPLE_SWEET_SPOT_STRUCTURE
+      )
+
+      // Both should have same number of segments
+      expect(legacyResult.segments.length).toBe(structureResult.segments.length)
+
+      // Both should produce valid results
+      expect(['A', 'B', 'C', 'D', 'F']).toContain(legacyResult.overall.grade)
+      expect(['A', 'B', 'C', 'D', 'F']).toContain(structureResult.overall.grade)
+    })
+  })
+
+  describe('Multi-step fixture collection tests', () => {
+    it('processes all multi-step test fixtures', () => {
+      const fixtures = getMultiStepTestFixtures()
+      expect(fixtures.length).toBe(5)
+
+      for (const fixture of fixtures) {
+        // All fixtures should have structure
+        expect(fixture.structure).toBeDefined()
+
+        const result = analyzeWorkoutCompliance(
+          fixture.segments.length > 0 ? fixture.segments : undefined,
+          fixture.powerStream,
+          fixture.athleteFtp,
+          fixture.structure
+        )
+
+        expect(result.overall.score).toBeGreaterThanOrEqual(0)
+        expect(result.overall.score).toBeLessThanOrEqual(100)
+        expect(['A', 'B', 'C', 'D', 'F']).toContain(result.overall.grade)
+        expect(result.segments.length).toBeGreaterThan(0)
+      }
+    })
+
+    it('fixture with both formats uses structure', () => {
+      const fixtures = getMultiStepTestFixtures()
+      const sweetSpotFixture = fixtures.find((f) => f.id === 'structure-sweet-spot')!
+
+      expect(sweetSpotFixture.segments.length).toBeGreaterThan(0) // Has legacy segments
+      expect(sweetSpotFixture.structure).toBeDefined() // Has structure
+
+      // When both are provided, structure should be used
+      const flattened = flattenWorkoutSegments(
+        sweetSpotFixture.segments,
+        sweetSpotFixture.athleteFtp,
+        sweetSpotFixture.structure
+      )
+
+      // Structure-based name should be used
+      expect(flattened[0]!.name).toBe('Warmup')
+    })
   })
 })

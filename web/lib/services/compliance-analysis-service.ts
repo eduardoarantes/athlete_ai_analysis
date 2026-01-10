@@ -912,17 +912,24 @@ export function calculateOverallCompliance(segments: SegmentAnalysis[]): Overall
 
 /**
  * Analyze workout compliance for a matched workout-activity pair
+ * Supports both legacy WorkoutSegment[] and new WorkoutStructure format (Issue #96)
+ *
+ * @param plannedSegments - Legacy segment format (optional if structure is provided)
+ * @param powerStream - Array of power values from activity (1 value per second)
+ * @param ftp - Athlete's FTP in watts
+ * @param structure - NEW: WorkoutStructure format (takes precedence over plannedSegments)
  */
 export function analyzeWorkoutCompliance(
-  plannedSegments: WorkoutSegment[],
+  plannedSegments: WorkoutSegment[] | undefined,
   powerStream: number[],
-  ftp: number
+  ftp: number,
+  structure?: WorkoutStructure
 ): WorkoutComplianceAnalysis {
   // Step 1: Calculate power zones
   const zones = calculatePowerZones(ftp)
 
-  // Step 2: Flatten planned segments
-  const flattenedSegments = flattenWorkoutSegments(plannedSegments, ftp)
+  // Step 2: Flatten planned segments (structure takes precedence)
+  const flattenedSegments = flattenWorkoutSegments(plannedSegments, ftp, structure)
 
   // Step 3: Calculate adaptive parameters
   const adaptiveParams = calculateAdaptiveParameters(flattenedSegments)
