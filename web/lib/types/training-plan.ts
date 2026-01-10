@@ -71,6 +71,96 @@ export interface WorkoutStructure {
 }
 
 // =========================================================================
+// Type Guards and Validation (Issue #96)
+// =========================================================================
+
+/**
+ * Type guard to check if a WorkoutStructure has valid content
+ * Use this instead of manual checks like `structure?.structure?.length > 0`
+ */
+export function hasValidStructure(structure?: WorkoutStructure): structure is WorkoutStructure {
+  return !!(structure?.structure && structure.structure.length > 0)
+}
+
+/**
+ * Validate StepLength value - must be positive
+ * @throws Error if value is invalid
+ */
+export function validateStepLength(length: StepLength): void {
+  if (length.value <= 0) {
+    throw new Error(`StepLength value must be positive, got ${length.value}`)
+  }
+}
+
+/**
+ * Validate StepTarget values - must be non-negative and minValue <= maxValue
+ * @throws Error if values are invalid
+ */
+export function validateStepTarget(target: StepTarget): void {
+  if (target.minValue < 0) {
+    throw new Error(`StepTarget minValue must be non-negative, got ${target.minValue}`)
+  }
+  if (target.maxValue < 0) {
+    throw new Error(`StepTarget maxValue must be non-negative, got ${target.maxValue}`)
+  }
+  if (target.minValue > target.maxValue) {
+    throw new Error(
+      `StepTarget minValue (${target.minValue}) cannot be greater than maxValue (${target.maxValue})`
+    )
+  }
+}
+
+/**
+ * Safe validation that returns boolean instead of throwing
+ */
+export function isValidStepLength(length: StepLength): boolean {
+  return length.value > 0
+}
+
+/**
+ * Safe validation that returns boolean instead of throwing
+ */
+export function isValidStepTarget(target: StepTarget): boolean {
+  return target.minValue >= 0 && target.maxValue >= 0 && target.minValue <= target.maxValue
+}
+
+// =========================================================================
+// Shared Power Target Extraction (Issue #96)
+// =========================================================================
+
+/**
+ * Power target result from extracting power values from StepTarget array
+ */
+export interface PowerTargetResult {
+  minValue: number
+  maxValue: number
+}
+
+/**
+ * Extract power target values from a step's targets array
+ * Shared utility to avoid duplication across components and services
+ *
+ * @param targets - Array of StepTarget objects
+ * @param defaultMin - Default minimum value if no power target found (default: 50)
+ * @param defaultMax - Default maximum value if no power target found (default: 60)
+ * @returns Power target with minValue and maxValue
+ */
+export function extractPowerTarget(
+  targets: StepTarget[],
+  defaultMin: number = 50,
+  defaultMax: number = 60
+): PowerTargetResult {
+  const powerTarget = targets.find((t) => t.type === 'power')
+  if (powerTarget) {
+    return {
+      minValue: powerTarget.minValue,
+      maxValue: powerTarget.maxValue,
+    }
+  }
+  return { minValue: defaultMin, maxValue: defaultMax }
+}
+
+// =========================================================================
 // Step Length Conversion Functions (Issue #96)
 // =========================================================================
 

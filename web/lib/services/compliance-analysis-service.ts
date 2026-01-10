@@ -9,8 +9,12 @@
  * 4. Calculate an overall compliance score (0-100)
  */
 
-import type { WorkoutSegment, WorkoutStructure, StepTarget } from '@/lib/types/training-plan'
-import { convertStepLengthToSeconds } from '@/lib/types/training-plan'
+import type { WorkoutSegment, WorkoutStructure } from '@/lib/types/training-plan'
+import {
+  convertStepLengthToSeconds,
+  extractPowerTarget,
+  hasValidStructure,
+} from '@/lib/types/training-plan'
 
 // ============================================================================
 // Types
@@ -285,21 +289,6 @@ export function calculateAdaptiveParameters(plannedSegments: PlannedSegment[]): 
 // ============================================================================
 
 /**
- * Extract power target percentages from a step's targets array
- */
-function extractPowerTargetPct(targets: StepTarget[]): { powerLowPct: number; powerHighPct: number } {
-  const powerTarget = targets.find((t) => t.type === 'power')
-  if (powerTarget) {
-    return {
-      powerLowPct: powerTarget.minValue,
-      powerHighPct: powerTarget.maxValue,
-    }
-  }
-  // Default values if no power target
-  return { powerLowPct: 50, powerHighPct: 60 }
-}
-
-/**
  * Map intensity class to PlannedSegment type
  */
 function mapIntensityClassToType(
@@ -333,7 +322,7 @@ function flattenWorkoutStructure(structure: WorkoutStructure, ftp: number): Plan
 
     for (let rep = 1; rep <= repetitions; rep++) {
       for (const step of segment.steps) {
-        const { powerLowPct, powerHighPct } = extractPowerTargetPct(step.targets)
+        const powerTarget = extractPowerTarget(step.targets)
         const durationSec = convertStepLengthToSeconds(step.length)
         const segmentType = mapIntensityClassToType(step.intensityClass)
 
@@ -345,9 +334,9 @@ function flattenWorkoutStructure(structure: WorkoutStructure, ftp: number): Plan
           name,
           type: segmentType,
           duration_sec: durationSec,
-          power_low: Math.round((powerLowPct / 100) * ftp),
-          power_high: Math.round((powerHighPct / 100) * ftp),
-          target_zone: getTargetZone(powerLowPct, powerHighPct),
+          power_low: Math.round((powerTarget.minValue / 100) * ftp),
+          power_high: Math.round((powerTarget.maxValue / 100) * ftp),
+          target_zone: getTargetZone(powerTarget.minValue, powerTarget.maxValue),
         })
       }
     }
@@ -370,7 +359,7 @@ export function flattenWorkoutSegments(
   structure?: WorkoutStructure
 ): PlannedSegment[] {
   // NEW: Handle WorkoutStructure format (takes precedence)
-  if (structure?.structure && structure.structure.length > 0) {
+  if (hasValidStructure(structure)) {
     return flattenWorkoutStructure(structure, ftp)
   }
 

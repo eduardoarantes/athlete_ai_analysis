@@ -35,10 +35,11 @@ import {
   type Workout,
   type WorkoutSegment,
   type WorkoutStructure,
-  type StepTarget,
   formatDuration,
   calculateWorkoutDuration,
   convertStepLengthToMinutes,
+  extractPowerTarget,
+  hasValidStructure,
 } from '@/lib/types/training-plan'
 import { PowerProfileSVG, type WorkoutSegmentInput } from './power-profile-svg'
 import { getPowerRangeColor } from '@/lib/types/power-zones'
@@ -99,17 +100,6 @@ interface GroupedSegment {
 }
 
 /**
- * Extract power target values from step targets array
- */
-function extractPowerTargetPct(targets: StepTarget[]): { lowPct: number; highPct: number } {
-  const powerTarget = targets.find((t) => t.type === 'power')
-  if (powerTarget) {
-    return { lowPct: powerTarget.minValue, highPct: powerTarget.maxValue }
-  }
-  return { lowPct: 50, highPct: 60 }
-}
-
-/**
  * Group WorkoutStructure into display-friendly format (Issue #96)
  */
 function groupStructure(structure: WorkoutStructure): GroupedSegment[] {
@@ -121,12 +111,12 @@ function groupStructure(structure: WorkoutStructure): GroupedSegment[] {
     if (segment.type === 'repetition' && repetitions > 1) {
       // Multi-step interval - create repeat group
       const expandedSteps: ExpandedSegment[] = segment.steps.map((step) => {
-        const { lowPct, highPct } = extractPowerTargetPct(step.targets)
+        const powerTarget = extractPowerTarget(step.targets)
         return {
           type: step.intensityClass,
           duration_min: convertStepLengthToMinutes(step.length),
-          power_low_pct: lowPct,
-          power_high_pct: highPct,
+          power_low_pct: powerTarget.minValue,
+          power_high_pct: powerTarget.maxValue,
           description: step.name,
         }
       })
@@ -140,14 +130,14 @@ function groupStructure(structure: WorkoutStructure): GroupedSegment[] {
       // Single step or single repetition - add as individual segments
       for (let rep = 0; rep < repetitions; rep++) {
         for (const step of segment.steps) {
-          const { lowPct, highPct } = extractPowerTargetPct(step.targets)
+          const powerTarget = extractPowerTarget(step.targets)
           grouped.push({
             type: 'single',
             segment: {
               type: step.intensityClass,
               duration_min: convertStepLengthToMinutes(step.length),
-              power_low_pct: lowPct,
-              power_high_pct: highPct,
+              power_low_pct: powerTarget.minValue,
+              power_high_pct: powerTarget.maxValue,
               description: step.name,
             },
           })
@@ -207,7 +197,7 @@ function groupSegments(segments: WorkoutSegment[]): GroupedSegment[] {
  */
 function getGroupedSegments(workout: Workout): GroupedSegment[] {
   // Prefer new structure format
-  if (workout.structure?.structure && workout.structure.structure.length > 0) {
+  if (hasValidStructure(workout.structure)) {
     return groupStructure(workout.structure)
   }
   // Fall back to legacy segments
@@ -215,6 +205,25 @@ function getGroupedSegments(workout: Workout): GroupedSegment[] {
     return groupSegments(workout.segments)
   }
   return []
+}
+
+/**
+ * Convert WorkoutSegment[] to WorkoutSegmentInput[] for PowerProfileSVG
+ * WorkoutSegment is a more specific type that satisfies WorkoutSegmentInput
+ */
+function toSegmentInput(segments: WorkoutSegment[] | undefined): WorkoutSegmentInput[] | undefined {
+  if (!segments) return undefined
+  // WorkoutSegment is compatible with WorkoutSegmentInput - explicit mapping for type safety
+  return segments.map((seg) => ({
+    type: seg.type,
+    duration_min: seg.duration_min,
+    power_low_pct: seg.power_low_pct,
+    power_high_pct: seg.power_high_pct,
+    description: seg.description,
+    sets: seg.sets,
+    work: seg.work,
+    recovery: seg.recovery,
+  }))
 }
 
 function formatPowerRange(ftp: number, lowPct: number, highPct: number): string {
@@ -452,7 +461,7 @@ export function WorkoutDetailModal({
               </CardHeader>
               <CardContent>
                 <PowerProfileSVG
-                  segments={workout.segments as WorkoutSegmentInput[] | undefined}
+                  segments={toSegmentInput(workout.segments)}
                   structure={workout.structure}
                   ftp={ftp}
                 />

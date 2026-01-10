@@ -2,8 +2,12 @@
 
 import { useMemo } from 'react'
 import { getPowerZoneLabel, getPowerRangeColor, type PowerZone } from '@/lib/types/power-zones'
-import type { WorkoutStructure, StepTarget } from '@/lib/types/training-plan'
-import { convertStepLengthToMinutes } from '@/lib/types/training-plan'
+import type { WorkoutStructure } from '@/lib/types/training-plan'
+import {
+  convertStepLengthToMinutes,
+  extractPowerTarget,
+  hasValidStructure,
+} from '@/lib/types/training-plan'
 
 /**
  * Shared Power Profile SVG Component
@@ -49,23 +53,6 @@ export interface WorkoutSegmentInput {
 export type StructuredWorkoutInput = WorkoutStructure
 
 /**
- * Extract power target values from a step's targets array
- */
-function extractPowerTargets(
-  targets: StepTarget[]
-): { power_low_pct: number; power_high_pct: number } {
-  const powerTarget = targets.find((t) => t.type === 'power')
-  if (powerTarget) {
-    return {
-      power_low_pct: powerTarget.minValue,
-      power_high_pct: powerTarget.maxValue,
-    }
-  }
-  // Default values if no power target
-  return { power_low_pct: 50, power_high_pct: 60 }
-}
-
-/**
  * Expand WorkoutStructure into PowerSegments for visualization
  */
 function expandStructuredWorkout(structure: WorkoutStructure): PowerSegment[] {
@@ -76,12 +63,12 @@ function expandStructuredWorkout(structure: WorkoutStructure): PowerSegment[] {
 
     for (let rep = 0; rep < repetitions; rep++) {
       for (const step of segment.steps) {
-        const powerTargets = extractPowerTargets(step.targets)
+        const powerTarget = extractPowerTarget(step.targets)
         expanded.push({
           type: step.intensityClass,
           duration_min: convertStepLengthToMinutes(step.length),
-          power_low_pct: powerTargets.power_low_pct,
-          power_high_pct: powerTargets.power_high_pct,
+          power_low_pct: powerTarget.minValue,
+          power_high_pct: powerTarget.maxValue,
           description: step.name,
         })
       }
@@ -103,7 +90,7 @@ export function expandSegments(
   structure?: StructuredWorkoutInput
 ): PowerSegment[] {
   // NEW: Handle WorkoutStructure format (takes precedence)
-  if (structure?.structure && structure.structure.length > 0) {
+  if (hasValidStructure(structure)) {
     return expandStructuredWorkout(structure)
   }
 
