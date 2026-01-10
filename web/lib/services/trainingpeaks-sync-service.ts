@@ -6,7 +6,14 @@
  * npx supabase gen types typescript --project-id smzefukhxabhjwdxhuhm --schema public > lib/types/database.ts
  */
 
-import type { PlanInstance, Workout, WorkoutSegment } from '@/lib/types/training-plan'
+import type {
+  PlanInstance,
+  Workout,
+  WorkoutSegment,
+  WorkoutStructure,
+  StepTarget,
+} from '@/lib/types/training-plan'
+import { convertStepLengthToSeconds, calculateStructureDuration } from '@/lib/types/training-plan'
 import type { TPWorkoutCreateRequest, TPWorkoutResponse } from './trainingpeaks-service'
 import { TrainingPeaksService } from './trainingpeaks-service'
 import { createClient } from '@/lib/supabase/server'
@@ -42,15 +49,19 @@ export class TrainingPeaksSyncService {
   private mapSegmentTypeToIntensityClass(type: string, powerPct?: number): string {
     const mapping: Record<string, string> = {
       warmup: 'WarmUp',
+      warmUp: 'WarmUp',
       cooldown: 'Cooldown',
+      coolDown: 'Cooldown',
       recovery: 'Active Recovery',
+      rest: 'Active Recovery',
       steady: 'Endurance',
       tempo: 'Tempo',
       work: 'Threshold',
+      active: 'Threshold',
     }
 
     // For intervals, check power to determine VO2 Max vs Threshold
-    if (type === 'interval') {
+    if (type === 'interval' || type === 'active') {
       return powerPct && powerPct > 105 ? 'VO2 Max' : 'Threshold'
     }
 
@@ -58,9 +69,115 @@ export class TrainingPeaksSyncService {
   }
 
   /**
+   * Extract power target values from step targets array
+   */
+  private extractPowerTarget(
+    targets: StepTarget[]
+  ): { minValue: number; maxValue: number } | undefined {
+    const powerTarget = targets.find((t) => t.type === 'power')
+    if (powerTarget) {
+      return { minValue: powerTarget.minValue, maxValue: powerTarget.maxValue }
+    }
+    return undefined
+  }
+
+  /**
+   * Convert WorkoutStructure to TrainingPeaks Structure JSON (Issue #96)
+   */
+  private convertStructureToTPSteps(structure: WorkoutStructure): Record<string, unknown>[] {
+    const steps: Record<string, unknown>[] = []
+
+    for (const segment of structure.structure) {
+      const repetitions = segment.length.value
+
+      // Build the step block for this segment
+      if (segment.type === 'repetition' && repetitions > 1) {
+        // For repetitions, create a Repeat block
+        const repeatSteps: Record<string, unknown>[] = []
+
+        for (const step of segment.steps) {
+          const powerTarget = this.extractPowerTarget(step.targets)
+          const avgPower = powerTarget
+            ? (powerTarget.minValue + powerTarget.maxValue) / 2
+            : undefined
+
+          const tpStep: Record<string, unknown> = {
+            Type: 'Step',
+            IntensityClass: this.mapSegmentTypeToIntensityClass(step.intensityClass, avgPower),
+            Name: step.name,
+            Length: {
+              Unit: 'Second',
+              Value: Math.round(convertStepLengthToSeconds(step.length)),
+            },
+          }
+
+          if (powerTarget) {
+            tpStep.IntensityTarget = {
+              Unit: 'PercentOfFtp',
+              MinValue: powerTarget.minValue,
+              MaxValue: powerTarget.maxValue,
+              Value: Math.round(avgPower ?? powerTarget.minValue),
+            }
+          }
+
+          repeatSteps.push(tpStep)
+        }
+
+        // Wrap in Repeat block
+        steps.push({
+          Type: 'Repeat',
+          Steps: repeatSteps,
+          RepeatCount: repetitions,
+        })
+      } else {
+        // Single step or single repetition - flatten into individual steps
+        for (let rep = 0; rep < repetitions; rep++) {
+          for (const step of segment.steps) {
+            const powerTarget = this.extractPowerTarget(step.targets)
+            const avgPower = powerTarget
+              ? (powerTarget.minValue + powerTarget.maxValue) / 2
+              : undefined
+
+            const tpStep: Record<string, unknown> = {
+              Type: 'Step',
+              IntensityClass: this.mapSegmentTypeToIntensityClass(step.intensityClass, avgPower),
+              Name: step.name,
+              Length: {
+                Unit: 'Second',
+                Value: Math.round(convertStepLengthToSeconds(step.length)),
+              },
+            }
+
+            if (powerTarget) {
+              tpStep.IntensityTarget = {
+                Unit: 'PercentOfFtp',
+                MinValue: powerTarget.minValue,
+                MaxValue: powerTarget.maxValue,
+                Value: Math.round(avgPower ?? powerTarget.minValue),
+              }
+            }
+
+            steps.push(tpStep)
+          }
+        }
+      }
+    }
+
+    return steps
+  }
+
+  /**
    * Convert internal workout to TrainingPeaks Structure JSON
+   * Supports both legacy segments and new WorkoutStructure format (Issue #96)
    */
   convertWorkoutToTPStructure(workout: Workout): string {
+    // NEW: Handle WorkoutStructure format (takes precedence)
+    if (workout.structure?.structure && workout.structure.structure.length > 0) {
+      const steps = this.convertStructureToTPSteps(workout.structure)
+      return JSON.stringify({ Steps: steps })
+    }
+
+    // Legacy format handling
     if (!workout.segments || workout.segments.length === 0) {
       return ''
     }
@@ -97,6 +214,7 @@ export class TrainingPeaksSyncService {
 
   /**
    * Convert workout to TrainingPeaks API request format
+   * Supports both legacy segments and new WorkoutStructure format (Issue #96)
    */
   convertWorkoutToTPRequest(
     workout: Workout,
@@ -105,8 +223,14 @@ export class TrainingPeaksSyncService {
   ): TPWorkoutCreateRequest {
     const structure = this.convertWorkoutToTPStructure(workout)
 
-    const totalMinutes =
-      workout.segments?.reduce((sum, seg) => sum + (seg.duration_min || 0), 0) ?? 0
+    // NEW: Calculate duration from WorkoutStructure if available
+    let totalMinutes = 0
+    if (workout.structure?.structure && workout.structure.structure.length > 0) {
+      totalMinutes = calculateStructureDuration(workout.structure)
+    } else {
+      totalMinutes =
+        workout.segments?.reduce((sum, seg) => sum + (seg.duration_min || 0), 0) ?? 0
+    }
 
     const request: TPWorkoutCreateRequest = {
       AthleteId: athleteId,

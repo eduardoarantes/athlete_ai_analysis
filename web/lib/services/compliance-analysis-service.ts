@@ -9,7 +9,12 @@
  * 4. Calculate an overall compliance score (0-100)
  */
 
-import type { WorkoutSegment } from '@/lib/types/training-plan'
+import type { WorkoutSegment, WorkoutStructure } from '@/lib/types/training-plan'
+import {
+  convertStepLengthToSeconds,
+  extractPowerTarget,
+  hasValidStructure,
+} from '@/lib/types/training-plan'
 
 // ============================================================================
 // Types
@@ -284,9 +289,85 @@ export function calculateAdaptiveParameters(plannedSegments: PlannedSegment[]): 
 // ============================================================================
 
 /**
- * Flatten workout segments by expanding interval sets into individual segments
+ * Map intensity class to PlannedSegment type
  */
-export function flattenWorkoutSegments(segments: WorkoutSegment[], ftp: number): PlannedSegment[] {
+function mapIntensityClassToType(
+  intensityClass: 'warmUp' | 'active' | 'rest' | 'coolDown'
+): PlannedSegment['type'] {
+  switch (intensityClass) {
+    case 'warmUp':
+      return 'warmup'
+    case 'coolDown':
+      return 'cooldown'
+    case 'rest':
+      return 'recovery'
+    case 'active':
+      return 'work'
+    default:
+      return 'steady'
+  }
+}
+
+/**
+ * Flatten WorkoutStructure into PlannedSegments for compliance analysis
+ * NEW: Supports multi-step intervals (Issue #96)
+ */
+function flattenWorkoutStructure(structure: WorkoutStructure, ftp: number): PlannedSegment[] {
+  const flattened: PlannedSegment[] = []
+  let index = 0
+
+  for (const segment of structure.structure) {
+    const repetitions = segment.length.value
+    const isRepetition = segment.type === 'repetition' && repetitions > 1
+
+    for (let rep = 1; rep <= repetitions; rep++) {
+      for (const step of segment.steps) {
+        const powerTarget = extractPowerTarget(step.targets)
+        const durationSec = convertStepLengthToSeconds(step.length)
+        const segmentType = mapIntensityClassToType(step.intensityClass)
+
+        // For repetitions, append the rep number to the name
+        const name = isRepetition ? `${step.name} ${rep}` : step.name
+
+        flattened.push({
+          index: index++,
+          name,
+          type: segmentType,
+          duration_sec: durationSec,
+          power_low: Math.round((powerTarget.minValue / 100) * ftp),
+          power_high: Math.round((powerTarget.maxValue / 100) * ftp),
+          target_zone: getTargetZone(powerTarget.minValue, powerTarget.maxValue),
+        })
+      }
+    }
+  }
+
+  return flattened
+}
+
+/**
+ * Flatten workout segments by expanding interval sets into individual segments
+ * Supports both legacy WorkoutSegment[] and new WorkoutStructure format
+ *
+ * @param segments - Legacy segment format (optional)
+ * @param ftp - Functional Threshold Power in watts
+ * @param structure - New WorkoutStructure format (optional, takes precedence)
+ */
+export function flattenWorkoutSegments(
+  segments: WorkoutSegment[] | undefined,
+  ftp: number,
+  structure?: WorkoutStructure
+): PlannedSegment[] {
+  // NEW: Handle WorkoutStructure format (takes precedence)
+  if (hasValidStructure(structure)) {
+    return flattenWorkoutStructure(structure, ftp)
+  }
+
+  // Legacy format handling
+  if (!segments || segments.length === 0) {
+    return []
+  }
+
   const flattened: PlannedSegment[] = []
   let index = 0
 
@@ -820,17 +901,24 @@ export function calculateOverallCompliance(segments: SegmentAnalysis[]): Overall
 
 /**
  * Analyze workout compliance for a matched workout-activity pair
+ * Supports both legacy WorkoutSegment[] and new WorkoutStructure format (Issue #96)
+ *
+ * @param plannedSegments - Legacy segment format (optional if structure is provided)
+ * @param powerStream - Array of power values from activity (1 value per second)
+ * @param ftp - Athlete's FTP in watts
+ * @param structure - NEW: WorkoutStructure format (takes precedence over plannedSegments)
  */
 export function analyzeWorkoutCompliance(
-  plannedSegments: WorkoutSegment[],
+  plannedSegments: WorkoutSegment[] | undefined,
   powerStream: number[],
-  ftp: number
+  ftp: number,
+  structure?: WorkoutStructure
 ): WorkoutComplianceAnalysis {
   // Step 1: Calculate power zones
   const zones = calculatePowerZones(ftp)
 
-  // Step 2: Flatten planned segments
-  const flattenedSegments = flattenWorkoutSegments(plannedSegments, ftp)
+  // Step 2: Flatten planned segments (structure takes precedence)
+  const flattenedSegments = flattenWorkoutSegments(plannedSegments, ftp, structure)
 
   // Step 3: Calculate adaptive parameters
   const adaptiveParams = calculateAdaptiveParameters(flattenedSegments)

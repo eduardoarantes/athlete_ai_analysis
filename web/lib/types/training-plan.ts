@@ -3,6 +3,222 @@
  * Defines the structure of training plan data stored in plan_data JSON
  */
 
+// =========================================================================
+// Multi-Step Interval Types (Issue #96)
+// =========================================================================
+
+/**
+ * Length specification for a workout step (duration or distance)
+ */
+export interface StepLength {
+  unit: 'second' | 'minute' | 'hour' | 'meter' | 'kilometer' | 'mile'
+  value: number
+}
+
+/**
+ * Target for a workout step (power, heart rate, cadence)
+ */
+export interface StepTarget {
+  type: 'power' | 'heartrate' | 'cadence'
+  minValue: number
+  maxValue: number
+  /** Unit: 'percentOfFtp' or 'watts' for power, 'bpm' for HR, 'rpm' for cadence */
+  unit?: 'percentOfFtp' | 'watts' | 'bpm' | 'rpm'
+}
+
+/**
+ * A single step within a workout segment
+ */
+export interface WorkoutStep {
+  name: string
+  intensityClass: 'warmUp' | 'active' | 'rest' | 'coolDown'
+  length: StepLength
+  openDuration?: boolean
+  targets: StepTarget[]
+}
+
+/**
+ * Segment/repetition block length (always in repetitions)
+ */
+export interface SegmentLength {
+  unit: 'repetition'
+  value: number
+}
+
+/**
+ * A segment within a workout - supports multi-step intervals
+ *
+ * Examples:
+ * - Single step (warmup): type='step', length.value=1, steps=[{warmup step}]
+ * - 2-step interval: type='repetition', length.value=5, steps=[{work}, {recovery}]
+ * - 3-step interval: type='repetition', length.value=10, steps=[{Z3}, {Z5}, {Z2}]
+ */
+export interface StructuredWorkoutSegment {
+  type: 'step' | 'repetition'
+  length: SegmentLength
+  steps: WorkoutStep[]
+}
+
+/**
+ * Complete workout structure with multi-step interval support
+ */
+export interface WorkoutStructure {
+  primaryIntensityMetric: 'percentOfFtp' | 'watts' | 'heartrate'
+  primaryLengthMetric: 'duration' | 'distance'
+  structure: StructuredWorkoutSegment[]
+  /** Polyline for simplified visualization [[time, intensity], ...] normalized 0-1 */
+  polyline?: [number, number][]
+}
+
+// =========================================================================
+// Type Guards and Validation (Issue #96)
+// =========================================================================
+
+/**
+ * Type guard to check if a WorkoutStructure has valid content
+ * Use this instead of manual checks like `structure?.structure?.length > 0`
+ */
+export function hasValidStructure(structure?: WorkoutStructure): structure is WorkoutStructure {
+  return !!(structure?.structure && structure.structure.length > 0)
+}
+
+/**
+ * Validate StepLength value - must be positive
+ * @throws Error if value is invalid
+ */
+export function validateStepLength(length: StepLength): void {
+  if (length.value <= 0) {
+    throw new Error(`StepLength value must be positive, got ${length.value}`)
+  }
+}
+
+/**
+ * Validate StepTarget values - must be non-negative and minValue <= maxValue
+ * @throws Error if values are invalid
+ */
+export function validateStepTarget(target: StepTarget): void {
+  if (target.minValue < 0) {
+    throw new Error(`StepTarget minValue must be non-negative, got ${target.minValue}`)
+  }
+  if (target.maxValue < 0) {
+    throw new Error(`StepTarget maxValue must be non-negative, got ${target.maxValue}`)
+  }
+  if (target.minValue > target.maxValue) {
+    throw new Error(
+      `StepTarget minValue (${target.minValue}) cannot be greater than maxValue (${target.maxValue})`
+    )
+  }
+}
+
+/**
+ * Safe validation that returns boolean instead of throwing
+ */
+export function isValidStepLength(length: StepLength): boolean {
+  return length.value > 0
+}
+
+/**
+ * Safe validation that returns boolean instead of throwing
+ */
+export function isValidStepTarget(target: StepTarget): boolean {
+  return target.minValue >= 0 && target.maxValue >= 0 && target.minValue <= target.maxValue
+}
+
+// =========================================================================
+// Shared Power Target Extraction (Issue #96)
+// =========================================================================
+
+/**
+ * Power target result from extracting power values from StepTarget array
+ */
+export interface PowerTargetResult {
+  minValue: number
+  maxValue: number
+}
+
+/**
+ * Extract power target values from a step's targets array
+ * Shared utility to avoid duplication across components and services
+ *
+ * @param targets - Array of StepTarget objects
+ * @param defaultMin - Default minimum value if no power target found (default: 50)
+ * @param defaultMax - Default maximum value if no power target found (default: 60)
+ * @returns Power target with minValue and maxValue
+ */
+export function extractPowerTarget(
+  targets: StepTarget[],
+  defaultMin: number = 50,
+  defaultMax: number = 60
+): PowerTargetResult {
+  const powerTarget = targets.find((t) => t.type === 'power')
+  if (powerTarget) {
+    return {
+      minValue: powerTarget.minValue,
+      maxValue: powerTarget.maxValue,
+    }
+  }
+  return { minValue: defaultMin, maxValue: defaultMax }
+}
+
+// =========================================================================
+// Step Length Conversion Functions (Issue #96)
+// =========================================================================
+
+/**
+ * Convert StepLength to seconds
+ */
+export function convertStepLengthToSeconds(length: StepLength): number {
+  switch (length.unit) {
+    case 'second':
+      return length.value
+    case 'minute':
+      return length.value * 60
+    case 'hour':
+      return length.value * 3600
+    default:
+      // For distance-based lengths, return value as-is (caller should handle)
+      return length.value
+  }
+}
+
+/**
+ * Convert StepLength to minutes
+ */
+export function convertStepLengthToMinutes(length: StepLength): number {
+  switch (length.unit) {
+    case 'second':
+      return length.value / 60
+    case 'minute':
+      return length.value
+    case 'hour':
+      return length.value * 60
+    default:
+      // For distance-based lengths, convert value/60 (assumed seconds)
+      return length.value / 60
+  }
+}
+
+/**
+ * Calculate total duration of a WorkoutStructure in minutes
+ */
+export function calculateStructureDuration(structure: WorkoutStructure): number {
+  return structure.structure.reduce((total, segment) => {
+    const repetitions = segment.length.value
+    const stepsTotal = segment.steps.reduce((stepSum, step) => {
+      return stepSum + convertStepLengthToMinutes(step.length)
+    }, 0)
+    return total + stepsTotal * repetitions
+  }, 0)
+}
+
+// =========================================================================
+// Legacy WorkoutSegment Type (current format, will be migrated)
+// =========================================================================
+
+/**
+ * Current workout segment format - will be migrated to StructuredWorkoutSegment
+ * @see StructuredWorkoutSegment for the new multi-step interval format
+ */
 export interface WorkoutSegment {
   type: 'warmup' | 'interval' | 'recovery' | 'cooldown' | 'steady' | 'work' | 'tempo'
   duration_min: number
@@ -10,16 +226,20 @@ export interface WorkoutSegment {
   power_high_pct?: number | undefined
   description?: string | undefined
   sets?: number | undefined
-  work?: {
-    duration_min: number
-    power_low_pct: number
-    power_high_pct: number
-  } | undefined
-  recovery?: {
-    duration_min: number
-    power_low_pct: number
-    power_high_pct: number
-  } | undefined
+  work?:
+    | {
+        duration_min: number
+        power_low_pct: number
+        power_high_pct: number
+      }
+    | undefined
+  recovery?:
+    | {
+        duration_min: number
+        power_low_pct: number
+        power_high_pct: number
+      }
+    | undefined
 }
 
 export interface Workout {
@@ -40,6 +260,9 @@ export interface Workout {
     | 'rest'
     | string
   tss?: number
+  /** NEW: Full workout structure with multi-step interval support (Issue #96) */
+  structure?: WorkoutStructure
+  /** Current segment format - will be migrated to structure */
   segments?: WorkoutSegment[]
   /** Source of the workout: 'library' for pre-defined workouts, 'llm' for AI-generated */
   source?: 'library' | 'llm'
@@ -142,7 +365,9 @@ export interface LibraryWorkoutData {
   tss: number
   duration_min?: number | undefined
   description?: string | undefined
-  /** Full workout segments for proper rendering */
+  /** NEW: Full workout structure with multi-step interval support (Issue #96) */
+  structure?: WorkoutStructure | undefined
+  /** Current segment format - will be migrated to structure */
   segments?: WorkoutSegment[] | undefined
 }
 
@@ -335,9 +560,16 @@ export function formatDuration(totalMinutes: number): string {
 }
 
 /**
- * Calculate total duration of a workout from its segments
+ * Calculate total duration of a workout from its structure or legacy segments
+ * NEW: Supports WorkoutStructure with multi-step intervals (Issue #96)
  */
 export function calculateWorkoutDuration(workout: Workout): number {
+  // NEW: Handle WorkoutStructure format
+  if (workout.structure?.structure) {
+    return calculateStructureDuration(workout.structure)
+  }
+
+  // Legacy format handling
   if (!workout.segments || workout.segments.length === 0) {
     return 0
   }
