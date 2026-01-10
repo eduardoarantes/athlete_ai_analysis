@@ -1,0 +1,41 @@
+name: Claude Issue Validation
+
+on:
+  issue_comment:
+    types: [created]
+  issues:
+    types: [opened, edited, assigned]
+
+jobs:
+  validate-issue:
+    # Only run if @claude is mentioned
+    if: |
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Read validation prompt
+        id: prompt
+        run: |
+          # Read the custom prompt file, replacing $ARGUMENTS with the issue number
+          PROMPT=$(cat .claude/commands/product-team/issue_validation.md | sed 's/\$ARGUMENTS/${{ github.event.issue.number }}/g')
+          # Store in output using heredoc for multiline
+          echo "content<<EOF" >> $GITHUB_OUTPUT
+          echo "$PROMPT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Run Claude Code
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: ${{ steps.prompt.outputs.content }}
