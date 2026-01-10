@@ -19,8 +19,12 @@ import {
   type WorkoutComplianceAnalysis,
 } from '@/lib/services/compliance-analysis-service'
 import { errorLogger } from '@/lib/monitoring/error-logger'
-import { parseLocalDate } from '@/lib/utils/date-utils'
-import type { WorkoutSegment, TrainingPlanData, Workout } from '@/lib/types/training-plan'
+import {
+  downsamplePowerStream,
+  getWorkoutFromOverrides,
+  getWorkoutFromPlan,
+} from '@/lib/utils/workout-overrides-helpers'
+import type { WorkoutOverrides, TrainingPlanData, WorkoutSegment } from '@/lib/types/training-plan'
 import type { Json } from '@/lib/types/database'
 
 interface PlanInstanceRow {
@@ -28,6 +32,7 @@ interface PlanInstanceRow {
   user_id: string
   plan_data: TrainingPlanData
   start_date: string
+  workout_overrides?: WorkoutOverrides | null
 }
 
 interface ProfileRow {
@@ -43,56 +48,6 @@ interface StoredAnalysisRow {
   analyzed_at: string
   algorithm_version: string
   power_data_quality: string
-}
-
-/**
- * Get workout from plan instance for a specific date and index
- */
-function getWorkoutFromPlan(
-  planData: TrainingPlanData,
-  startDate: string,
-  targetDate: string,
-  workoutIndex: number
-): Workout | null {
-  // Use parseLocalDate to avoid timezone issues with date strings
-  const start = parseLocalDate(startDate)
-  const target = parseLocalDate(targetDate)
-
-  // Calculate weekOneMonday - the Monday of the week containing the start date
-  // This matches how schedule-calendar.tsx places workouts on dates
-  const startDayOfWeek = start.getDay() // 0 = Sunday, 1 = Monday, etc.
-  const daysToMonday = startDayOfWeek === 0 ? -6 : 1 - startDayOfWeek
-  const weekOneMonday = new Date(start)
-  weekOneMonday.setDate(start.getDate() + daysToMonday)
-
-  // Calculate week number based on distance from weekOneMonday
-  const diffFromMonday = Math.floor(
-    (target.getTime() - weekOneMonday.getTime()) / (1000 * 60 * 60 * 24)
-  )
-  const weekNumber = Math.floor(diffFromMonday / 7) + 1
-  const dayOfWeek = target.getDay()
-
-  const weekdayMap: Record<number, string> = {
-    0: 'Sunday',
-    1: 'Monday',
-    2: 'Tuesday',
-    3: 'Wednesday',
-    4: 'Thursday',
-    5: 'Friday',
-    6: 'Saturday',
-  }
-  const targetWeekday = weekdayMap[dayOfWeek]
-
-  const week = planData.weekly_plan?.find((w) => w.week_number === weekNumber)
-  if (!week) {
-    return null
-  }
-
-  const dayWorkouts = week.workouts.filter(
-    (w) => w.weekday?.toLowerCase() === targetWeekday?.toLowerCase()
-  )
-
-  return dayWorkouts[workoutIndex] || null
 }
 
 export async function GET(
@@ -156,22 +111,30 @@ export async function GET(
 
     // Check for cached analysis (if not forcing refresh and no FTP override)
     if (!forceRefresh && !ftpOverride) {
-      const { data: cachedAnalysis } = await supabase
-        .from('workout_compliance_analyses')
-        .select(
-          'id, analysis_data, athlete_ftp, athlete_lthr, analyzed_at, algorithm_version, power_data_quality'
-        )
-        .eq('match_id', matchId)
-        .single<StoredAnalysisRow>()
+      // Run cache and plan instance queries in parallel for faster response
+      const [cachedAnalysisResult, planInstanceResult] = await Promise.all([
+        supabase
+          .from('workout_compliance_analyses')
+          .select(
+            'id, analysis_data, athlete_ftp, athlete_lthr, analyzed_at, algorithm_version, power_data_quality'
+          )
+          .eq('match_id', matchId)
+          .single<StoredAnalysisRow>(),
+        supabase
+          .from('plan_instances')
+          .select('plan_data, start_date, workout_overrides')
+          .eq('id', match.plan_instance_id)
+          .single<{
+            plan_data: TrainingPlanData
+            start_date: string
+            workout_overrides?: WorkoutOverrides | null
+          }>(),
+      ])
+
+      const cachedAnalysis = cachedAnalysisResult.data
+      const planInstance = planInstanceResult.data
 
       if (cachedAnalysis) {
-        // Get workout details for context
-        const { data: planInstance } = await supabase
-          .from('plan_instances')
-          .select('plan_data, start_date')
-          .eq('id', match.plan_instance_id)
-          .single<{ plan_data: TrainingPlanData; start_date: string }>()
-
         let workoutContext: {
           workout_name: string
           workout_type: string
@@ -183,12 +146,19 @@ export async function GET(
         }
 
         if (planInstance) {
-          const workout = getWorkoutFromPlan(
-            planInstance.plan_data,
-            planInstance.start_date,
-            match.workout_date,
-            match.workout_index
-          )
+          // Check overrides first (for library workouts), then plan_data
+          const workout =
+            getWorkoutFromOverrides(
+              planInstance.workout_overrides,
+              match.workout_date,
+              match.workout_index
+            ) ||
+            getWorkoutFromPlan(
+              planInstance.plan_data,
+              planInstance.start_date,
+              match.workout_date,
+              match.workout_index
+            )
           if (workout) {
             workoutContext = {
               workout_name: workout.name,
@@ -199,6 +169,27 @@ export async function GET(
               ...(workout.tss !== undefined && { workout_tss: workout.tss }),
             }
           }
+        }
+
+        // Fetch power stream for chart display
+        let powerStreamForChart: number[] = []
+        try {
+          const stravaService = await StravaService.create()
+          const streams = await stravaService.getActivityStreamsWithRefresh(
+            user.id,
+            String(stravaActivityNumericId),
+            ['watts']
+          )
+          if (streams.watts?.data) {
+            // Downsample to 600 points for chart display
+            powerStreamForChart = downsamplePowerStream(streams.watts.data, 600)
+          }
+        } catch (streamError) {
+          // Non-fatal: chart will render without power overlay
+          errorLogger.logWarning('Failed to fetch power stream for cached analysis', {
+            userId: user.id,
+            metadata: { matchId, error: (streamError as Error).message },
+          })
         }
 
         errorLogger.logInfo('Compliance analysis returned from cache', {
@@ -212,6 +203,7 @@ export async function GET(
 
         return NextResponse.json({
           analysis: cachedAnalysis.analysis_data as unknown as WorkoutComplianceAnalysis,
+          power_stream: powerStreamForChart,
           context: {
             match_id: matchId,
             ...workoutContext,
@@ -232,7 +224,7 @@ export async function GET(
     // Fetch plan instance
     const { data: planInstance, error: planError } = await supabase
       .from('plan_instances')
-      .select('id, user_id, plan_data, start_date')
+      .select('id, user_id, plan_data, start_date, workout_overrides')
       .eq('id', match.plan_instance_id)
       .single<PlanInstanceRow>()
 
@@ -240,13 +232,19 @@ export async function GET(
       return NextResponse.json({ error: 'Plan instance not found' }, { status: 404 })
     }
 
-    // Get workout from plan
-    const workout = getWorkoutFromPlan(
-      planInstance.plan_data,
-      planInstance.start_date,
-      match.workout_date,
-      match.workout_index
-    )
+    // Get workout - check overrides first (for library workouts), then plan_data
+    const workout =
+      getWorkoutFromOverrides(
+        planInstance.workout_overrides,
+        match.workout_date,
+        match.workout_index
+      ) ||
+      getWorkoutFromPlan(
+        planInstance.plan_data,
+        planInstance.start_date,
+        match.workout_date,
+        match.workout_index
+      )
 
     if (!workout) {
       return NextResponse.json(
@@ -385,8 +383,12 @@ export async function GET(
     })
 
     // Return analysis with context
+    // Downsample power stream for chart display
+    const powerStreamForChart = downsamplePowerStream(powerStream, 600)
+
     return NextResponse.json({
       analysis,
+      power_stream: powerStreamForChart,
       context: {
         match_id: matchId,
         workout_name: workout.name,

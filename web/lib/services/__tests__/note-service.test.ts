@@ -347,7 +347,10 @@ describe('NoteService', () => {
   // ---------------------------------------------------------------------------
   describe('listNotes', () => {
     it('should list all notes for an instance', async () => {
-      const mockNotes = [createMockNote(), createMockNote({ id: 'note-456', title: 'Another Note' })]
+      const mockNotes = [
+        createMockNote(),
+        createMockNote({ id: 'note-456', title: 'Another Note' }),
+      ]
       const mockSupabase = createMockSupabase({
         fromResults: {
           plan_instance_notes: {

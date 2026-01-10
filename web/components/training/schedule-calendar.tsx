@@ -17,9 +17,15 @@ import type {
   Workout,
   WorkoutOverrides,
   PlanInstanceNote,
+  WorkoutSegment,
 } from '@/lib/types/training-plan'
+import type { WorkoutLibraryItem } from '@/lib/types/workout-library'
 import { parseLocalDate, formatDateString } from '@/lib/utils/date-utils'
-import { applyWorkoutOverrides } from '@/lib/utils/apply-workout-overrides'
+import {
+  applyWorkoutOverrides,
+  libraryWorkoutToScheduleWorkout,
+  type LibraryWorkoutParams,
+} from '@/lib/utils/apply-workout-overrides'
 import { formatWithGoalLabels } from '@/lib/utils/format-utils'
 import {
   ScheduleDndContext,
@@ -32,14 +38,36 @@ import {
   CalendarDayContextMenu,
 } from '@/components/schedule'
 import { errorLogger } from '@/lib/monitoring/error-logger'
+import { LIBRARY_WORKOUT_BASE_INDEX } from '@/lib/utils/workout-overrides-helpers'
 
 interface ScheduleCalendarProps {
   instances: PlanInstance[]
   isAdmin?: boolean
   allowEditing?: boolean
+  /** Sidebar content to render inside the DnD context (for library workout drag) */
+  sidebarContent?: React.ReactNode
 }
 
 const DAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+/**
+ * Convert library workout segments to schedule workout segments
+ * Ensures duration_min has a default value (required in WorkoutSegment)
+ */
+function convertLibrarySegmentsToSchedule(
+  librarySegments: WorkoutLibraryItem['segments']
+): WorkoutSegment[] {
+  return librarySegments.map((segment) => ({
+    type: segment.type,
+    duration_min: segment.duration_min ?? 0,
+    power_low_pct: segment.power_low_pct,
+    power_high_pct: segment.power_high_pct,
+    description: segment.description,
+    sets: segment.sets,
+    work: segment.work,
+    recovery: segment.recovery,
+  }))
+}
 
 interface ScheduledWorkout {
   workout: Workout
@@ -53,6 +81,7 @@ export function ScheduleCalendar({
   instances,
   isAdmin = false,
   allowEditing = true,
+  sidebarContent,
 }: ScheduleCalendarProps) {
   const t = useTranslations('schedule')
   const tPlan = useTranslations('trainingPlan')
@@ -116,10 +145,19 @@ export function ScheduleCalendar({
     [localOverrides, instances]
   )
 
-  // Matches state: Map of "instanceId:date:index" -> MatchedActivityData
+  // Matches state: Map of "instanceId:workoutId" (or legacy "instanceId:date:index") -> MatchedActivityData
   const [matchesMap, setMatchesMap] = useState<Map<string, MatchedActivityData>>(new Map())
   const [matchesRefreshKey, setMatchesRefreshKey] = useState(0)
   const autoMatchedRef = useRef<Set<string>>(new Set())
+
+  // Library workout details cache: Map of libraryWorkoutId -> workout params
+  // This allows us to display full workout info for library workouts added in this session
+  const [libraryWorkoutCache, setLibraryWorkoutCache] = useState<Map<string, LibraryWorkoutParams>>(
+    new Map()
+  )
+
+  // Ref to prevent duplicate drops (race condition protection)
+  const libraryDropInProgressRef = useRef<Set<string>>(new Set())
 
   // Build workouts list for auto-matching (with overrides applied)
   const buildWorkoutsList = useCallback(
@@ -283,39 +321,33 @@ export function ScheduleCalendar({
   }, [])
 
   // Optimistic note creation - add temp note to UI immediately
-  const handleOptimisticNoteCreate = useCallback(
-    (tempNote: PlanInstanceNote) => {
-      setNotesByDate((prev) => {
-        const newMap = new Map(prev)
-        const existing = newMap.get(tempNote.note_date) || []
-        newMap.set(tempNote.note_date, [...existing, tempNote])
-        return newMap
-      })
-    },
-    []
-  )
+  const handleOptimisticNoteCreate = useCallback((tempNote: PlanInstanceNote) => {
+    setNotesByDate((prev) => {
+      const newMap = new Map(prev)
+      const existing = newMap.get(tempNote.note_date) || []
+      newMap.set(tempNote.note_date, [...existing, tempNote])
+      return newMap
+    })
+  }, [])
 
   // On successful note creation - replace temp note with real one
-  const handleNoteSuccess = useCallback(
-    (note: PlanInstanceNote, tempId?: string) => {
-      setNotesByDate((prev) => {
-        const newMap = new Map(prev)
-        const existing = newMap.get(note.note_date) || []
+  const handleNoteSuccess = useCallback((note: PlanInstanceNote, tempId?: string) => {
+    setNotesByDate((prev) => {
+      const newMap = new Map(prev)
+      const existing = newMap.get(note.note_date) || []
 
-        if (tempId) {
-          // Replace temp note with real note
-          const updatedNotes = existing.map((n) => (n.id === tempId ? note : n))
-          newMap.set(note.note_date, updatedNotes)
-        } else {
-          // Edit case - replace by real ID
-          const updatedNotes = existing.map((n) => (n.id === note.id ? note : n))
-          newMap.set(note.note_date, updatedNotes)
-        }
-        return newMap
-      })
-    },
-    []
-  )
+      if (tempId) {
+        // Replace temp note with real note
+        const updatedNotes = existing.map((n) => (n.id === tempId ? note : n))
+        newMap.set(note.note_date, updatedNotes)
+      } else {
+        // Edit case - replace by real ID
+        const updatedNotes = existing.map((n) => (n.id === note.id ? note : n))
+        newMap.set(note.note_date, updatedNotes)
+      }
+      return newMap
+    })
+  }, [])
 
   // Rollback optimistic create on error
   const handleNoteCreateError = useCallback((tempId: string, noteDate: string) => {
@@ -689,6 +721,125 @@ export function ScheduleCalendar({
     )
   }
 
+  // Handler for adding library workouts via drag-and-drop
+  const handleAddLibraryWorkout = async (workout: WorkoutLibraryItem, targetDate: string) => {
+    if (!primaryInstanceId) {
+      return
+    }
+
+    // Prevent duplicate drops (race condition protection)
+    const dropKey = `${workout.id}:${targetDate}`
+    if (libraryDropInProgressRef.current.has(dropKey)) {
+      return
+    }
+    libraryDropInProgressRef.current.add(dropKey)
+
+    // Save previous state for rollback
+    const previousOverrides = localOverrides.get(primaryInstanceId)
+
+    // Calculate next index for the library workout (use high indices to avoid conflicts)
+    const existingWorkouts = workoutsByDate.get(targetDate) || []
+    const existingLibraryIndices = existingWorkouts
+      .map((sw) => sw.index ?? 0)
+      .filter((idx) => idx >= LIBRARY_WORKOUT_BASE_INDEX)
+    const nextIndex =
+      existingLibraryIndices.length > 0
+        ? Math.max(...existingLibraryIndices) + 1
+        : LIBRARY_WORKOUT_BASE_INDEX
+
+    // Cache library workout details for proper rendering
+    setLibraryWorkoutCache((prev) => {
+      const newCache = new Map(prev)
+      const cacheEntry: LibraryWorkoutParams = {
+        id: workout.id,
+        name: workout.name,
+        type: workout.type,
+        tss: workout.base_tss,
+        durationMin: workout.base_duration_min,
+      }
+      // Only include description if it exists (exactOptionalPropertyTypes compliance)
+      if (workout.detailed_description) {
+        cacheEntry.description = workout.detailed_description
+      }
+      newCache.set(workout.id, cacheEntry)
+      return newCache
+    })
+
+    // Convert library segments to schedule format
+    const scheduleSegments = convertLibrarySegmentsToSchedule(workout.segments)
+
+    // Optimistic update - include library_workout data for proper rendering
+    applyOptimisticOverride(primaryInstanceId, (current) => ({
+      ...current,
+      copies: {
+        ...current.copies,
+        [`${targetDate}:${nextIndex}`]: {
+          source_date: `library:${workout.id}`,
+          source_index: 0,
+          copied_at: new Date().toISOString(),
+          library_workout: {
+            name: workout.name,
+            type: workout.type,
+            tss: workout.base_tss,
+            duration_min: workout.base_duration_min,
+            description: workout.detailed_description,
+            segments: scheduleSegments,
+          },
+        },
+      },
+    }))
+
+    // API call - include workout data for persistence
+    try {
+      const response = await fetch(`/api/schedule/${primaryInstanceId}/workouts/add`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          workout_id: workout.id,
+          target_date: targetDate,
+          // Include workout data so it persists across page reloads
+          workout_data: {
+            name: workout.name,
+            type: workout.type,
+            tss: workout.base_tss,
+            duration_min: workout.base_duration_min,
+            description: workout.detailed_description,
+            segments: scheduleSegments,
+          },
+        }),
+      })
+
+      if (!response.ok) {
+        // Rollback on error
+        setLocalOverrides((prev) => {
+          const newMap = new Map(prev)
+          if (previousOverrides) {
+            newMap.set(primaryInstanceId, previousOverrides)
+          } else {
+            newMap.delete(primaryInstanceId)
+          }
+          return newMap
+        })
+        setErrorMessage('Failed to add workout. Please try again.')
+      }
+    } catch {
+      // Rollback on error
+      setLocalOverrides((prev) => {
+        const newMap = new Map(prev)
+        if (previousOverrides) {
+          newMap.set(primaryInstanceId, previousOverrides)
+        } else {
+          newMap.delete(primaryInstanceId)
+        }
+        return newMap
+      })
+      setErrorMessage('Failed to add workout. Please try again.')
+    } finally {
+      // Clear the drop-in-progress flag
+      libraryDropInProgressRef.current.delete(dropKey)
+    }
+  }
+
   // Get FTP from first instance's athlete profile
   const ftp = instances[0]?.plan_data?.athlete_profile?.ftp || 200
 
@@ -725,8 +876,20 @@ export function ScheduleCalendar({
 
         const existing = map.get(dateKey) || []
         workouts.forEach((effectiveWorkout) => {
+          // Use the workout from applyWorkoutOverrides - it already has full data
+          // including segments when library_workout data is stored
+          // Only fall back to cache for legacy entries without stored workout data
+          let workout = effectiveWorkout.workout
+          if (effectiveWorkout.libraryWorkoutId && !effectiveWorkout.workout.segments?.length) {
+            const cachedParams = libraryWorkoutCache.get(effectiveWorkout.libraryWorkoutId)
+            if (cachedParams) {
+              // Use cached library workout details only when stored data is incomplete
+              workout = libraryWorkoutToScheduleWorkout(cachedParams)
+            }
+          }
+
           existing.push({
-            workout: effectiveWorkout.workout,
+            workout,
             instance,
             weekNumber,
             date: workoutDate,
@@ -738,7 +901,7 @@ export function ScheduleCalendar({
     })
 
     return map
-  }, [instances, localOverrides])
+  }, [instances, localOverrides, libraryWorkoutCache])
 
   // Get calendar grid for current month
   const calendarDays = useMemo(() => {
@@ -854,7 +1017,7 @@ export function ScheduleCalendar({
           {/* Day Cells */}
           {calendarDays.map((date, index) => {
             if (!date) {
-              return <div key={`empty-${index}`} className="bg-muted/30 min-h-[120px]" />
+              return <div key={`empty-${index}`} className="bg-muted/30 min-h-[120px] h-full" />
             }
 
             const dateKey = formatDateString(date)
@@ -865,7 +1028,7 @@ export function ScheduleCalendar({
 
             const dayCellContent = (
               <div
-                className={`bg-background p-1.5 min-h-[120px] ${
+                className={`bg-background p-1.5 min-h-[120px] h-full ${
                   isToday ? 'ring-2 ring-primary ring-inset' : ''
                 } ${!isCurrentMonth ? 'opacity-50' : ''}`}
               >
@@ -883,8 +1046,13 @@ export function ScheduleCalendar({
                     {workouts.map((sw, idx) => {
                       // Use stored index (week.workouts index) for consistency with overrides
                       const workoutIndex = sw.index ?? idx
-                      const matchKey = `${sw.instance.id}:${dateKey}:${workoutIndex}`
-                      const matchData = matchesMap.get(matchKey)
+                      // Try workout.id key first (new format), fall back to date:index (legacy)
+                      const workoutIdKey = sw.workout.id
+                        ? `${sw.instance.id}:${sw.workout.id}`
+                        : null
+                      const legacyKey = `${sw.instance.id}:${dateKey}:${workoutIndex}`
+                      const matchData =
+                        (workoutIdKey && matchesMap.get(workoutIdKey)) || matchesMap.get(legacyKey)
                       const hasMatch = !!matchData
 
                       const workoutCard = (
@@ -1017,14 +1185,18 @@ export function ScheduleCalendar({
                   existingWorkoutsCount={workouts.length}
                   onAddNote={() => handleAddNote(dateKey)}
                 >
-                  <DroppableCalendarDay date={dateKey} isEditMode={canEdit}>
+                  <DroppableCalendarDay date={dateKey} isEditMode={canEdit} className="h-full">
                     {dayCellContent}
                   </DroppableCalendarDay>
                 </CalendarDayContextMenu>
               )
             }
 
-            return <div key={dateKey}>{dayCellContent}</div>
+            return (
+              <div key={dateKey} className="h-full">
+                {dayCellContent}
+              </div>
+            )
           })}
         </div>
       </Card>
@@ -1062,7 +1234,10 @@ export function ScheduleCalendar({
         workoutIndex={selectedWorkout?.index}
         matchedActivity={
           selectedWorkout
-            ? matchesMap.get(
+            ? // Try workout.id key first (new format), fall back to date:index (legacy)
+              (selectedWorkout.workout.id &&
+                matchesMap.get(`${selectedWorkout.instance.id}:${selectedWorkout.workout.id}`)) ||
+              matchesMap.get(
                 `${selectedWorkout.instance.id}:${formatDateString(selectedWorkout.date)}:${selectedWorkout.index}`
               )
             : undefined
@@ -1095,10 +1270,18 @@ export function ScheduleCalendar({
       <ScheduleClipboardProvider instanceId={primaryInstanceId} onPaste={handlePasteWorkout}>
         <ScheduleDndContext
           onMoveWorkout={handleMoveWorkout}
+          onAddLibraryWorkout={handleAddLibraryWorkout}
           onError={handleError}
           isEditMode={canEdit}
         >
-          {calendarContent}
+          {sidebarContent ? (
+            <div className="flex h-full">
+              {sidebarContent}
+              <div className="flex-1 overflow-auto pl-5">{calendarContent}</div>
+            </div>
+          ) : (
+            calendarContent
+          )}
         </ScheduleDndContext>
       </ScheduleClipboardProvider>
     )

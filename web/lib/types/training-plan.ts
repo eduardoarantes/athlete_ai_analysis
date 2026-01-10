@@ -6,23 +6,25 @@
 export interface WorkoutSegment {
   type: 'warmup' | 'interval' | 'recovery' | 'cooldown' | 'steady' | 'work' | 'tempo'
   duration_min: number
-  power_low_pct?: number
-  power_high_pct?: number
-  description?: string
-  sets?: number
+  power_low_pct?: number | undefined
+  power_high_pct?: number | undefined
+  description?: string | undefined
+  sets?: number | undefined
   work?: {
     duration_min: number
     power_low_pct: number
     power_high_pct: number
-  }
+  } | undefined
   recovery?: {
     duration_min: number
     power_low_pct: number
     power_high_pct: number
-  }
+  } | undefined
 }
 
 export interface Workout {
+  /** Unique identifier for this workout instance (UUID format) */
+  id?: string
   weekday: string
   name: string
   description?: string
@@ -131,6 +133,19 @@ export interface TrainingPlan {
   end_date?: string
 }
 
+/** Library workout data stored in copies for persistence */
+export interface LibraryWorkoutData {
+  /** Unique identifier for this workout instance (UUID format) */
+  id?: string
+  name: string
+  type: string
+  tss: number
+  duration_min?: number | undefined
+  description?: string | undefined
+  /** Full workout segments for proper rendering */
+  segments?: WorkoutSegment[] | undefined
+}
+
 /**
  * Workout overrides for schedule modifications
  * Stored in plan_instances.workout_overrides JSONB column
@@ -138,8 +153,17 @@ export interface TrainingPlan {
 export interface WorkoutOverrides {
   /** Moved workouts: target key -> source location */
   moves: Record<string, { original_date: string; original_index: number; moved_at: string }>
-  /** Copied workouts: target key -> source location */
-  copies: Record<string, { source_date: string; source_index: number; copied_at: string }>
+  /** Copied workouts: target key -> source location. For library workouts, includes workout data. */
+  copies: Record<
+    string,
+    {
+      source_date: string
+      source_index: number
+      copied_at: string
+      /** Library workout details (only present when source_date starts with 'library:') */
+      library_workout?: LibraryWorkoutData
+    }
+  >
   /** Deleted workout keys (date:index format) */
   deleted: string[]
 }

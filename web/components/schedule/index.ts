@@ -7,3 +7,5 @@
 export * from './dnd'
 export * from './schedule-clipboard-provider'
 export * from './workout-context-menu'
+export * from './collapsible-sidebar'
+export * from './schedule-with-sidebar'

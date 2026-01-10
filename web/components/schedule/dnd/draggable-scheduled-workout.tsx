@@ -11,7 +11,6 @@
 
 import { ReactNode } from 'react'
 import { useDraggable } from '@dnd-kit/core'
-import { CSS } from '@dnd-kit/utilities'
 import { startOfDay, parseISO } from 'date-fns'
 import { Lock } from 'lucide-react'
 import { ScheduledWorkoutDragData, createScheduledWorkoutDraggableId } from './types'
@@ -56,17 +55,14 @@ export function DraggableScheduledWorkout({
     hasMatch,
   }
 
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: createScheduledWorkoutDraggableId(instanceId, date, index),
     data: dragData,
     disabled: isDragDisabled,
   })
 
-  const style = transform
-    ? {
-        transform: CSS.Translate.toString(transform),
-      }
-    : undefined
+  // Note: We don't apply transform here because we use DragOverlay to show the dragged item.
+  // The original element stays in place and becomes semi-transparent during drag.
 
   // If not in edit mode, just render children
   if (!isEditMode) {
@@ -85,8 +81,7 @@ export function DraggableScheduledWorkout({
   return (
     <div
       ref={setNodeRef}
-      style={style}
-      className={`relative group ${isDragging ? 'opacity-50 z-50' : ''} ${className || ''}`}
+      className={`relative group ${isDragging ? 'opacity-50' : ''} ${className || ''}`}
       {...props}
     >
       {/* Lock icon for matched workouts */}

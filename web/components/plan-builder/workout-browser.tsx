@@ -9,7 +9,7 @@
  * Part of Issue #22: Plan Builder Phase 2 - Core UI
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, type ReactNode } from 'react'
 import { Search, Filter } from 'lucide-react'
 import type {
   WorkoutLibraryItem,
@@ -52,6 +52,11 @@ const initialFilters: FilterState = {
 }
 
 /**
+ * Number of items to load per page
+ */
+const ITEMS_PER_PAGE = 10
+
+/**
  * All workout types
  */
 const ALL_WORKOUT_TYPES: WorkoutType[] = [
@@ -82,6 +87,12 @@ interface WorkoutBrowserProps {
   onSelectWorkout?: ((workout: WorkoutLibraryItem) => void) | undefined
   /** Whether workouts are draggable */
   isDragEnabled?: boolean | undefined
+  /** Compact mode for sidebar usage */
+  compact?: boolean | undefined
+  /** Custom workout card renderer (for DnD wrapper in sidebar) */
+  renderWorkoutCard?:
+    | ((workout: WorkoutLibraryItem, defaultCard: ReactNode) => ReactNode)
+    | undefined
   /** Additional className */
   className?: string | undefined
 }
@@ -145,6 +156,8 @@ function formatIntensity(intensity: WorkoutIntensity): string {
 export function WorkoutBrowser({
   onSelectWorkout,
   isDragEnabled = false,
+  compact = false,
+  renderWorkoutCard,
   className,
 }: WorkoutBrowserProps) {
   const [filters, setFilters] = useState<FilterState>(initialFilters)
@@ -152,6 +165,7 @@ export function WorkoutBrowser({
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchInput, setSearchInput] = useState('')
+  const [displayedCount, setDisplayedCount] = useState(ITEMS_PER_PAGE)
 
   // Debounce search
   useEffect(() => {
@@ -169,6 +183,8 @@ export function WorkoutBrowser({
     async function loadWorkouts() {
       setIsLoading(true)
       setError(null)
+      // Reset displayed count when filters change
+      setDisplayedCount(ITEMS_PER_PAGE)
 
       try {
         const data = await fetchWorkouts(filters)
@@ -231,26 +247,50 @@ export function WorkoutBrowser({
     return filters.types.length + filters.intensities.length + filters.phases.length
   }, [filters])
 
+  // Paginated workouts to display
+  const displayedWorkouts = useMemo(() => {
+    return workouts.slice(0, displayedCount)
+  }, [workouts, displayedCount])
+
+  // Check if there are more workouts to load
+  const hasMore = displayedCount < workouts.length
+
+  // Load more workouts
+  const loadMore = useCallback(() => {
+    setDisplayedCount((prev) => prev + ITEMS_PER_PAGE)
+  }, [])
+
   return (
     <div className={cn('flex flex-col h-full', className)}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold">Workout Library</h3>
-        <span className="text-sm text-muted-foreground">
-          {isLoading ? 'Loading...' : `${workouts.length} workouts`}
+      <div className={cn('flex items-center justify-between', compact ? 'mb-2' : 'mb-4')}>
+        <h3 className={cn('font-semibold', compact ? 'text-sm' : 'text-lg')}>
+          {compact ? 'Library' : 'Workout Library'}
+        </h3>
+        <span className="text-xs text-muted-foreground">
+          {isLoading
+            ? '...'
+            : hasMore
+              ? `${displayedWorkouts.length}/${workouts.length}`
+              : workouts.length}
         </span>
       </div>
 
       {/* Search and Filters */}
-      <div className="flex gap-2 mb-4">
+      <div className={cn('flex gap-2', compact ? 'mb-2' : 'mb-4')}>
         <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search
+            className={cn(
+              'absolute text-muted-foreground',
+              compact ? 'left-2 top-2 h-3 w-3' : 'left-2.5 top-2.5 h-4 w-4'
+            )}
+          />
           <Input
             type="text"
-            placeholder="Search workouts..."
+            placeholder={compact ? 'Search...' : 'Search workouts...'}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="pl-8"
+            className={cn(compact ? 'pl-7 h-8 text-sm' : 'pl-8')}
           />
         </div>
 
@@ -349,17 +389,22 @@ export function WorkoutBrowser({
       )}
 
       {/* Workout list */}
-      <div className="flex-1 overflow-y-auto space-y-2">
+      <div className={cn('flex-1 overflow-y-auto', compact ? 'space-y-1.5' : 'space-y-2')}>
         {isLoading ? (
           <>
             <WorkoutLibraryCardSkeleton />
             <WorkoutLibraryCardSkeleton />
             <WorkoutLibraryCardSkeleton />
-            <WorkoutLibraryCardSkeleton />
+            {!compact && <WorkoutLibraryCardSkeleton />}
           </>
         ) : error ? (
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <p className="text-sm text-destructive">{error}</p>
+          <div
+            className={cn(
+              'flex flex-col items-center justify-center text-center',
+              compact ? 'py-4' : 'py-8'
+            )}
+          >
+            <p className={cn('text-destructive', compact ? 'text-xs' : 'text-sm')}>{error}</p>
             <Button
               variant="outline"
               size="sm"
@@ -370,8 +415,15 @@ export function WorkoutBrowser({
             </Button>
           </div>
         ) : workouts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <p className="text-sm text-muted-foreground">No workouts found</p>
+          <div
+            className={cn(
+              'flex flex-col items-center justify-center text-center',
+              compact ? 'py-4' : 'py-8'
+            )}
+          >
+            <p className={cn('text-muted-foreground', compact ? 'text-xs' : 'text-sm')}>
+              No workouts found
+            </p>
             {activeFilterCount > 0 && (
               <Button variant="outline" size="sm" className="mt-2" onClick={clearFilters}>
                 Clear filters
@@ -379,23 +431,47 @@ export function WorkoutBrowser({
             )}
           </div>
         ) : (
-          workouts.map((workout) =>
-            isDragEnabled ? (
-              <DraggableLibraryWorkout key={workout.id} workout={workout}>
+          <>
+            {displayedWorkouts.map((workout) => {
+              // Build the default card
+              const defaultCard = isDragEnabled ? (
+                <DraggableLibraryWorkout key={workout.id} workout={workout}>
+                  <WorkoutLibraryCard
+                    workout={workout}
+                    onClick={onSelectWorkout ? () => onSelectWorkout(workout) : undefined}
+                    isDraggable
+                    compact={compact}
+                  />
+                </DraggableLibraryWorkout>
+              ) : (
                 <WorkoutLibraryCard
+                  key={workout.id}
                   workout={workout}
                   onClick={onSelectWorkout ? () => onSelectWorkout(workout) : undefined}
-                  isDraggable
+                  compact={compact}
                 />
-              </DraggableLibraryWorkout>
-            ) : (
-              <WorkoutLibraryCard
-                key={workout.id}
-                workout={workout}
-                onClick={onSelectWorkout ? () => onSelectWorkout(workout) : undefined}
-              />
-            )
-          )
+              )
+
+              // Allow custom rendering (e.g., for schedule sidebar DnD)
+              if (renderWorkoutCard) {
+                return <div key={workout.id}>{renderWorkoutCard(workout, defaultCard)}</div>
+              }
+
+              return defaultCard
+            })}
+
+            {/* Load More button */}
+            {hasMore && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full mt-2"
+                onClick={loadMore}
+              >
+                Load more ({workouts.length - displayedCount} remaining)
+              </Button>
+            )}
+          </>
         )}
       </div>
     </div>

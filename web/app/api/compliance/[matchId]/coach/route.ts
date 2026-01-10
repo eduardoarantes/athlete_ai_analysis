@@ -14,9 +14,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { invokePythonApi } from '@/lib/services/lambda-client'
 import { errorLogger } from '@/lib/monitoring/error-logger'
-import { parseLocalDate } from '@/lib/utils/date-utils'
+import { getWorkoutFromOverrides, getWorkoutFromPlan } from '@/lib/utils/workout-overrides-helpers'
 import type { WorkoutComplianceAnalysis } from '@/lib/services/compliance-analysis-service'
-import type { TrainingPlanData, Workout } from '@/lib/types/training-plan'
+import type { WorkoutOverrides, TrainingPlanData, Workout } from '@/lib/types/training-plan'
 import type { Json } from '@/lib/types/database'
 
 // ============================================================================
@@ -68,59 +68,12 @@ interface MatchRow {
 interface PlanInstanceRow {
   plan_data: TrainingPlanData
   start_date: string
+  workout_overrides?: WorkoutOverrides | null
 }
 
 // ============================================================================
 // Helpers
 // ============================================================================
-
-/**
- * Get workout from plan instance for a specific date and index
- */
-function getWorkoutFromPlan(
-  planData: TrainingPlanData,
-  startDate: string,
-  targetDate: string,
-  workoutIndex: number
-): Workout | null {
-  // Use parseLocalDate to avoid timezone issues with date strings
-  const start = parseLocalDate(startDate)
-  const target = parseLocalDate(targetDate)
-
-  // Calculate weekOneMonday - the Monday of the week containing the start date
-  // This matches how schedule-calendar.tsx places workouts on dates
-  const startDayOfWeek = start.getDay() // 0 = Sunday, 1 = Monday, etc.
-  const daysToMonday = startDayOfWeek === 0 ? -6 : 1 - startDayOfWeek
-  const weekOneMonday = new Date(start)
-  weekOneMonday.setDate(start.getDate() + daysToMonday)
-
-  // Calculate week number based on distance from weekOneMonday
-  const diffFromMonday = Math.floor(
-    (target.getTime() - weekOneMonday.getTime()) / (1000 * 60 * 60 * 24)
-  )
-  const weekNumber = Math.floor(diffFromMonday / 7) + 1
-  const dayOfWeek = target.getDay()
-
-  const weekdayMap: Record<number, string> = {
-    0: 'Sunday',
-    1: 'Monday',
-    2: 'Tuesday',
-    3: 'Wednesday',
-    4: 'Thursday',
-    5: 'Friday',
-    6: 'Saturday',
-  }
-  const targetWeekday = weekdayMap[dayOfWeek]
-
-  const week = planData.weekly_plan?.find((w) => w.week_number === weekNumber)
-  if (!week) return null
-
-  const dayWorkouts = week.workouts.filter(
-    (w) => w.weekday?.toLowerCase() === targetWeekday?.toLowerCase()
-  )
-
-  return dayWorkouts[workoutIndex] || null
-}
 
 /**
  * Transform WorkoutComplianceAnalysis to Python API format
@@ -153,13 +106,14 @@ function transformAnalysisForPythonApi(
         segment_name: seg.segment_name,
         segment_type: seg.segment_type,
         match_quality: seg.match_quality,
-        planned_duration_sec: seg.planned_duration_sec,
+        planned_duration_sec: Math.round(seg.planned_duration_sec),
         planned_power_low: seg.planned_power_low,
         planned_power_high: seg.planned_power_high,
         planned_zone: seg.planned_zone,
-        actual_start_sec: seg.actual_start_sec,
-        actual_end_sec: seg.actual_end_sec,
-        actual_duration_sec: seg.actual_duration_sec,
+        actual_start_sec: seg.actual_start_sec != null ? Math.round(seg.actual_start_sec) : null,
+        actual_end_sec: seg.actual_end_sec != null ? Math.round(seg.actual_end_sec) : null,
+        actual_duration_sec:
+          seg.actual_duration_sec != null ? Math.round(seg.actual_duration_sec) : null,
         actual_avg_power: seg.actual_avg_power,
         actual_max_power: seg.actual_max_power,
         actual_min_power: seg.actual_min_power,
@@ -275,7 +229,7 @@ export async function POST(
     // Get workout details for context
     const { data: planInstance } = await supabase
       .from('plan_instances')
-      .select('plan_data, start_date')
+      .select('plan_data, start_date, workout_overrides')
       .eq('id', match.plan_instance_id)
       .single<PlanInstanceRow>()
 
@@ -283,12 +237,19 @@ export async function POST(
       return NextResponse.json({ error: 'Plan instance not found' }, { status: 404 })
     }
 
-    const workout = getWorkoutFromPlan(
-      planInstance.plan_data,
-      planInstance.start_date,
-      match.workout_date,
-      match.workout_index
-    )
+    // Check overrides first (for library workouts), then plan_data
+    const workout =
+      getWorkoutFromOverrides(
+        planInstance.workout_overrides,
+        match.workout_date,
+        match.workout_index
+      ) ||
+      getWorkoutFromPlan(
+        planInstance.plan_data,
+        planInstance.start_date,
+        match.workout_date,
+        match.workout_index
+      )
 
     if (!workout) {
       return NextResponse.json({ error: 'Workout not found in plan' }, { status: 404 })

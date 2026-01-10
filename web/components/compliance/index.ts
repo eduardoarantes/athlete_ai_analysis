@@ -26,3 +26,6 @@ export {
 
 // Segment details component
 export { SegmentDetailsCard } from './segment-details'
+
+// Power profile chart component
+export { PowerProfileChart } from './power-profile-chart'

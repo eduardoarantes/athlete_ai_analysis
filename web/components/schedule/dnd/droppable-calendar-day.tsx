@@ -6,12 +6,13 @@
  * Makes a calendar day cell a valid drop target for workouts.
  * - Disabled for past dates
  * - Shows visual feedback when dragging over
+ * - Different visual feedback for library vs scheduled workout drops
  */
 
 import { ReactNode } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { startOfDay, parseISO } from 'date-fns'
-import { createCalendarDayDroppableId, CalendarDayDropData } from './types'
+import { createCalendarDayDroppableId, CalendarDayDropData, type ScheduleDragData } from './types'
 
 interface DroppableCalendarDayProps extends React.HTMLAttributes<HTMLDivElement> {
   children: ReactNode
@@ -36,8 +37,9 @@ export function DroppableCalendarDay({
     isPast,
   }
 
+  const droppableId = createCalendarDayDroppableId(date)
   const { isOver, setNodeRef, active } = useDroppable({
-    id: createCalendarDayDroppableId(date),
+    id: droppableId,
     data: dropData,
     disabled: !isEditMode || isPast,
   })
@@ -47,13 +49,20 @@ export function DroppableCalendarDay({
   const isValidDrop = isOver && !isPast && isEditMode
   const isInvalidDrop = isOver && isPast && isEditMode
 
+  // Check if this is a library workout being dragged
+  const activeData = active?.data.current as ScheduleDragData | undefined
+  const isLibraryDrag = activeData?.type === 'library-workout'
+
   // Build class names for visual feedback
   const dropClasses = [
     className,
     // Base transition
     'transition-all duration-150',
-    // Valid drop target (hovering over future date)
-    isValidDrop && 'ring-2 ring-primary ring-inset bg-primary/10',
+    // Valid drop target - blue for library, primary for move
+    isValidDrop &&
+      (isLibraryDrag
+        ? 'ring-2 ring-blue-500 ring-inset bg-blue-50 dark:bg-blue-900/20'
+        : 'ring-2 ring-primary ring-inset bg-primary/10'),
     // Invalid drop target (hovering over past date)
     isInvalidDrop && 'ring-2 ring-destructive ring-inset bg-destructive/10',
     // Potential drop zone (dragging but not over)
@@ -72,7 +81,13 @@ export function DroppableCalendarDay({
   }
 
   return (
-    <div ref={setNodeRef} className={dropClasses} {...props}>
+    <div
+      {...props}
+      ref={setNodeRef}
+      className={dropClasses}
+      data-droppable-id={droppableId}
+      data-date={date}
+    >
       {children}
     </div>
   )

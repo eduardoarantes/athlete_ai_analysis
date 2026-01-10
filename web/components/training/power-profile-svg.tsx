@@ -24,21 +24,21 @@ export interface PowerSegment {
 
 export interface WorkoutSegmentInput {
   type: string
-  duration_min?: number
-  power_low_pct?: number
-  power_high_pct?: number
-  description?: string
-  sets?: number | null
+  duration_min?: number | undefined
+  power_low_pct?: number | undefined
+  power_high_pct?: number | undefined
+  description?: string | undefined
+  sets?: number | null | undefined
   work?: {
     duration_min: number
     power_low_pct: number
     power_high_pct: number
-  } | null
+  } | null | undefined
   recovery?: {
     duration_min: number
     power_low_pct: number
     power_high_pct: number
-  } | null
+  } | null | undefined
 }
 
 /**

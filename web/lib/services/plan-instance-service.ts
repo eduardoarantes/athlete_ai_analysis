@@ -11,6 +11,7 @@ import type {
   PlanInstance,
   CreatePlanInstanceInput,
   OverlapCheckResult,
+  TrainingPlanData,
 } from '@/lib/types/training-plan'
 import {
   assertPlanInstance,
@@ -19,6 +20,24 @@ import {
   asPlanInstances,
 } from '@/lib/types/type-guards'
 import { calculateEndDate } from '@/lib/utils/date-utils'
+
+/**
+ * Add unique IDs to all workouts in a training plan data structure.
+ * This ensures each workout has a stable identifier for matching purposes.
+ */
+function addWorkoutIds(planData: TrainingPlanData): TrainingPlanData {
+  return {
+    ...planData,
+    weekly_plan: planData.weekly_plan.map((week) => ({
+      ...week,
+      workouts: week.workouts.map((workout) => ({
+        ...workout,
+        // Preserve existing ID or generate a new UUID
+        id: workout.id || crypto.randomUUID(),
+      })),
+    })),
+  }
+}
 
 export class PlanInstanceService {
   /**
@@ -55,6 +74,9 @@ export class PlanInstanceService {
     }
 
     // 4. Create the instance with snapshot of template data
+    // Add unique IDs to all workouts for stable identification
+    const planDataWithIds = addWorkoutIds(typedTemplate.plan_data)
+
     const { data: instance, error: insertError } = await supabase
       .from('plan_instances')
       .insert({
@@ -64,7 +86,7 @@ export class PlanInstanceService {
         start_date: input.start_date,
         end_date: endDate,
         weeks_total: weeksTotal,
-        plan_data: typedTemplate.plan_data as unknown as Json,
+        plan_data: planDataWithIds as unknown as Json,
         status: 'scheduled',
       })
       .select()

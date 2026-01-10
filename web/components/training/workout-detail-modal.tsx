@@ -191,8 +191,12 @@ export function WorkoutDetailModal({
         const endDate = new Date(date)
         endDate.setDate(date.getDate() + 3)
 
+        // Build query params - show all activities, user chooses which to match
+        const startDateStr = startDate.toISOString().split('T')[0] ?? ''
+        const endDateStr = endDate.toISOString().split('T')[0] ?? ''
+
         const response = await fetch(
-          `/api/schedule/matches/activities?start_date=${startDate.toISOString().split('T')[0]}&end_date=${endDate.toISOString().split('T')[0]}`
+          `/api/schedule/matches/activities?start_date=${startDateStr}&end_date=${endDateStr}`
         )
         if (response.ok) {
           const data = await response.json()
@@ -209,7 +213,9 @@ export function WorkoutDetailModal({
   }, [showActivitySelector, workoutDate])
 
   const handleMatch = async () => {
-    if (!planInstanceId || !workoutDate || !selectedActivityId) return
+    if (!planInstanceId || !selectedActivityId) return
+    // Require either workout_id or workoutDate for identification
+    if (!workout?.id && !workoutDate) return
 
     setIsMatching(true)
     try {
@@ -218,6 +224,7 @@ export function WorkoutDetailModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           plan_instance_id: planInstanceId,
+          workout_id: workout?.id,
           workout_date: workoutDate,
           workout_index: workoutIndex,
           strava_activity_id: selectedActivityId,
@@ -238,14 +245,22 @@ export function WorkoutDetailModal({
   }
 
   const handleUnmatch = async () => {
-    if (!planInstanceId || !workoutDate) return
+    if (!planInstanceId) return
+    // Require either workout_id or workoutDate for identification
+    if (!workout?.id && !workoutDate) return
 
     setIsUnmatching(true)
     try {
-      const response = await fetch(
-        `/api/schedule/matches?plan_instance_id=${planInstanceId}&workout_date=${workoutDate}&workout_index=${workoutIndex}`,
-        { method: 'DELETE' }
-      )
+      // Build query params - prefer workout_id if available
+      const params = new URLSearchParams({ plan_instance_id: planInstanceId })
+      if (workout?.id) {
+        params.set('workout_id', workout.id)
+      } else if (workoutDate) {
+        params.set('workout_date', workoutDate)
+        params.set('workout_index', workoutIndex.toString())
+      }
+
+      const response = await fetch(`/api/schedule/matches?${params.toString()}`, { method: 'DELETE' })
 
       if (response.ok) {
         onMatchChange?.()
@@ -286,7 +301,7 @@ export function WorkoutDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader className="pb-2 text-center">
           <div className="flex items-center justify-center gap-2 flex-wrap">
             <DialogTitle className="text-lg">{workout.name}</DialogTitle>
@@ -355,6 +370,149 @@ export function WorkoutDetailModal({
               </CardHeader>
               <CardContent>
                 <PowerProfileSVG segments={workout.segments} ftp={ftp} />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Matched Activity Section - moved to top for visibility */}
+          {planInstanceId && workoutDate && (
+            <Card className="gap-1 py-3">
+              <CardHeader className="pb-0">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Activity className="h-4 w-4" />
+                  Completed Activity
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {matchedActivity ? (
+                  <div className="space-y-3">
+                    {/* Matched Activity Info */}
+                    <div className="flex items-start gap-3 p-3 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg">
+                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-green-900 dark:text-green-100">
+                          {matchedActivity.name}
+                        </div>
+                        <div className="text-sm text-green-700 dark:text-green-300 mt-1">
+                          <span className="capitalize">
+                            {(matchedActivity.sport_type || 'Unknown').replace('_', ' ')}
+                          </span>
+                          {matchedActivity.tss != null && (
+                            <span className="ml-2">• {Math.round(matchedActivity.tss)} TSS</span>
+                          )}
+                          {matchedActivity.average_watts != null && (
+                            <span className="ml-2">
+                              • {Math.round(matchedActivity.average_watts)}W avg
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-green-600 dark:text-green-400 mt-1">
+                          {new Date(matchedActivity.start_date).toLocaleDateString()} •{' '}
+                          <span className="capitalize">{matchedActivity.match_type} match</span>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Action Buttons */}
+                    <div className="flex gap-2">
+                      <Button variant="default" size="sm" asChild className="flex-1">
+                        <Link href={`/compliance/${matchedActivity.match_id}`}>
+                          <BarChart3 className="h-4 w-4 mr-2" />
+                          View Compliance
+                        </Link>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleUnmatch}
+                        disabled={isUnmatching}
+                      >
+                        {isUnmatching ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Unlink className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                ) : showActivitySelector ? (
+                  <div className="space-y-3">
+                    {loadingActivities ? (
+                      <div className="flex items-center justify-center py-4">
+                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                        <span className="ml-2 text-sm text-muted-foreground">
+                          Loading activities...
+                        </span>
+                      </div>
+                    ) : availableActivities.length === 0 ? (
+                      <div className="text-sm text-muted-foreground text-center py-4">
+                        No unmatched activities found within ±3 days of this workout
+                      </div>
+                    ) : (
+                      <>
+                        <Select value={selectedActivityId} onValueChange={setSelectedActivityId}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select an activity to match" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {availableActivities.map((activity) => (
+                              <SelectItem key={activity.id} value={activity.id}>
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{activity.name}</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {new Date(activity.start_date).toLocaleDateString()} •{' '}
+                                    {(activity.type || 'Unknown').replace('_', ' ')}
+                                    {activity.tss != null && ` • ${Math.round(activity.tss)} TSS`}
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setShowActivitySelector(false)
+                              setSelectedActivityId('')
+                            }}
+                            className="flex-1"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={handleMatch}
+                            disabled={!selectedActivityId || isMatching}
+                            className="flex-1"
+                          >
+                            {isMatching ? (
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            ) : (
+                              <Link2 className="h-4 w-4 mr-2" />
+                            )}
+                            Match
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="text-sm text-muted-foreground text-center py-2">
+                      No activity matched to this workout yet
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowActivitySelector(true)}
+                      className="w-full"
+                    >
+                      <Link2 className="h-4 w-4 mr-2" />
+                      Match Activity
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
@@ -478,7 +636,7 @@ export function WorkoutDetailModal({
                     <div className="flex items-start gap-3 p-3 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg">
                       <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium text-green-900 dark:text-green-100 truncate">
+                        <div className="font-medium text-green-900 dark:text-green-100">
                           {matchedActivity.name}
                         </div>
                         <div className="text-sm text-green-700 dark:text-green-300 mt-1">
