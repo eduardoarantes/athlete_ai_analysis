@@ -69,6 +69,28 @@ export type ComplianceStatus =
   | 'missed' // No activity recorded
   | 'future' // Not yet due
 
+/**
+ * Power zone number (1-5 standard model)
+ */
+export type PowerZone = 1 | 2 | 3 | 4 | 5
+
+/**
+ * Workout segment types for interval visualization
+ */
+export type SegmentType =
+  | 'warmup'
+  | 'work'
+  | 'interval'
+  | 'recovery'
+  | 'cooldown'
+  | 'steady'
+  | 'tempo'
+
+/**
+ * Workout intensity levels for badge styling
+ */
+export type IntensityLevel = 'easy' | 'moderate' | 'hard' | 'very_hard'
+
 // ============================================================================
 // Icon Size Mapping
 // ============================================================================
@@ -287,6 +309,83 @@ export const COMPLIANCE_COLORS: Record<ComplianceStatus, string> = {
 }
 
 // ============================================================================
+// Power Zone Color Mapping
+// ============================================================================
+
+/**
+ * Maps power zones to Tailwind CSS background classes
+ * Used for zone distribution visualization in compliance analysis
+ *
+ * Zone model:
+ * - Z1: Active Recovery (blue)
+ * - Z2: Endurance (green)
+ * - Z3: Tempo (yellow)
+ * - Z4: Threshold (orange)
+ * - Z5: VO2max (red)
+ */
+export const POWER_ZONE_COLORS: Record<PowerZone, string> = {
+  1: 'bg-blue-400',
+  2: 'bg-green-400',
+  3: 'bg-yellow-400',
+  4: 'bg-orange-400',
+  5: 'bg-red-400',
+}
+
+// ============================================================================
+// Segment Type Color Mapping
+// ============================================================================
+
+/**
+ * Maps segment types to Tailwind CSS background classes
+ * Used for workout segment indicators in compliance analysis
+ */
+export const SEGMENT_TYPE_COLORS: Record<SegmentType, string> = {
+  warmup: 'bg-blue-500',
+  work: 'bg-red-500',
+  interval: 'bg-red-500',
+  recovery: 'bg-green-500',
+  cooldown: 'bg-blue-500',
+  steady: 'bg-yellow-500',
+  tempo: 'bg-orange-500',
+}
+
+const DEFAULT_SEGMENT_COLOR = 'bg-gray-400'
+
+// ============================================================================
+// Intensity Badge Color Mapping
+// ============================================================================
+
+/**
+ * Maps intensity levels to badge styling
+ * Includes dark mode support
+ */
+export const INTENSITY_BADGE_COLORS: Record<IntensityLevel, string> = {
+  easy: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+  moderate: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+  hard: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+  very_hard: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+}
+
+// ============================================================================
+// Workout Border Color Mapping (for left-border styling)
+// ============================================================================
+
+/**
+ * Maps workout intensity types to left-border Tailwind CSS classes
+ * Used for workout cards with accent left borders
+ */
+export const WORKOUT_BORDER_COLORS: Record<WorkoutIntensityType, string> = {
+  endurance: 'border-l-green-500',
+  tempo: 'border-l-yellow-500',
+  sweet_spot: 'border-l-amber-500',
+  threshold: 'border-l-orange-500',
+  vo2max: 'border-l-red-500',
+  recovery: 'border-l-blue-500',
+  rest: 'border-l-gray-500',
+  mixed: 'border-l-purple-500',
+}
+
+// ============================================================================
 // Helper Functions
 // ============================================================================
 
@@ -403,4 +502,82 @@ export function getComplianceStatus(
 export function getComplianceColors(percentage: number | null, isFuture?: boolean): string {
   const status = getComplianceStatus(percentage, isFuture)
   return COMPLIANCE_COLORS[status]
+}
+
+/**
+ * Returns Tailwind CSS class for a power zone
+ *
+ * @param zone - Power zone number (1-5)
+ * @returns string - Tailwind CSS background class
+ *
+ * @example
+ * ```tsx
+ * <div className={getPowerZoneColor(3)}>Zone 3</div>
+ * // Returns: "bg-yellow-400"
+ * ```
+ */
+export function getPowerZoneColor(zone: number): string {
+  if (zone >= 1 && zone <= 5) {
+    return POWER_ZONE_COLORS[zone as PowerZone]
+  }
+  return 'bg-gray-400'
+}
+
+/**
+ * Returns Tailwind CSS class for a workout segment type
+ *
+ * @param segmentType - Type of workout segment
+ * @returns string - Tailwind CSS background class
+ *
+ * @example
+ * ```tsx
+ * <div className={getSegmentTypeColor('warmup')}>Warmup</div>
+ * // Returns: "bg-blue-500"
+ * ```
+ */
+export function getSegmentTypeColor(segmentType: string): string {
+  if (segmentType in SEGMENT_TYPE_COLORS) {
+    return SEGMENT_TYPE_COLORS[segmentType as SegmentType]
+  }
+  return DEFAULT_SEGMENT_COLOR
+}
+
+/**
+ * Returns Tailwind CSS classes for intensity level badges
+ *
+ * @param intensity - Intensity level string
+ * @returns string - Tailwind CSS classes for badge styling
+ *
+ * @example
+ * ```tsx
+ * <Badge className={getIntensityBadgeColors('hard')}>Hard</Badge>
+ * // Returns: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
+ * ```
+ */
+export function getIntensityBadgeColors(intensity: string): string {
+  if (intensity in INTENSITY_BADGE_COLORS) {
+    return INTENSITY_BADGE_COLORS[intensity as IntensityLevel]
+  }
+  return INTENSITY_BADGE_COLORS.moderate
+}
+
+/**
+ * Returns Tailwind CSS class for workout left-border styling
+ *
+ * @param type - Workout intensity type
+ * @returns string - Tailwind CSS border-left class
+ *
+ * @example
+ * ```tsx
+ * <div className={`border-l-4 ${getWorkoutBorderColor('threshold')}`}>
+ *   Workout card
+ * </div>
+ * // Returns: "border-l-orange-500"
+ * ```
+ */
+export function getWorkoutBorderColor(type: string): string {
+  if (type in WORKOUT_BORDER_COLORS) {
+    return WORKOUT_BORDER_COLORS[type as WorkoutIntensityType]
+  }
+  return WORKOUT_BORDER_COLORS.mixed
 }
