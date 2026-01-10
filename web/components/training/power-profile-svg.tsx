@@ -2,6 +2,8 @@
 
 import { useMemo } from 'react'
 import { getPowerZoneLabel, getPowerRangeColor, type PowerZone } from '@/lib/types/power-zones'
+import type { WorkoutStructure, StepTarget } from '@/lib/types/training-plan'
+import { convertStepLengthToMinutes } from '@/lib/types/training-plan'
 
 /**
  * Shared Power Profile SVG Component
@@ -42,9 +44,74 @@ export interface WorkoutSegmentInput {
 }
 
 /**
- * Expand interval sets into individual segments for visualization
+ * Input type for new WorkoutStructure format (Issue #96)
  */
-export function expandSegments(segments: WorkoutSegmentInput[]): PowerSegment[] {
+export type StructuredWorkoutInput = WorkoutStructure
+
+/**
+ * Extract power target values from a step's targets array
+ */
+function extractPowerTargets(
+  targets: StepTarget[]
+): { power_low_pct: number; power_high_pct: number } {
+  const powerTarget = targets.find((t) => t.type === 'power')
+  if (powerTarget) {
+    return {
+      power_low_pct: powerTarget.minValue,
+      power_high_pct: powerTarget.maxValue,
+    }
+  }
+  // Default values if no power target
+  return { power_low_pct: 50, power_high_pct: 60 }
+}
+
+/**
+ * Expand WorkoutStructure into PowerSegments for visualization
+ */
+function expandStructuredWorkout(structure: WorkoutStructure): PowerSegment[] {
+  const expanded: PowerSegment[] = []
+
+  for (const segment of structure.structure) {
+    const repetitions = segment.length.value
+
+    for (let rep = 0; rep < repetitions; rep++) {
+      for (const step of segment.steps) {
+        const powerTargets = extractPowerTargets(step.targets)
+        expanded.push({
+          type: step.intensityClass,
+          duration_min: convertStepLengthToMinutes(step.length),
+          power_low_pct: powerTargets.power_low_pct,
+          power_high_pct: powerTargets.power_high_pct,
+          description: step.name,
+        })
+      }
+    }
+  }
+
+  return expanded
+}
+
+/**
+ * Expand interval sets into individual segments for visualization
+ * Supports both legacy WorkoutSegmentInput[] and new WorkoutStructure format
+ *
+ * @param segments - Legacy segment format (optional)
+ * @param structure - New WorkoutStructure format (optional, takes precedence)
+ */
+export function expandSegments(
+  segments?: WorkoutSegmentInput[],
+  structure?: StructuredWorkoutInput
+): PowerSegment[] {
+  // NEW: Handle WorkoutStructure format (takes precedence)
+  if (structure?.structure && structure.structure.length > 0) {
+    return expandStructuredWorkout(structure)
+  }
+
+  // Legacy format handling
+  if (!segments || segments.length === 0) {
+    return []
+  }
+
   const expanded: PowerSegment[] = []
 
   segments.forEach((segment) => {
@@ -87,7 +154,10 @@ export function getPowerZone(powerPct: number): PowerZone {
 }
 
 interface PowerProfileSVGProps {
-  segments: WorkoutSegmentInput[]
+  /** Legacy segment format */
+  segments?: WorkoutSegmentInput[]
+  /** NEW: WorkoutStructure format (Issue #96) - takes precedence over segments */
+  structure?: StructuredWorkoutInput
   /** FTP value to display on chart. Pass 0 or undefined to hide FTP label */
   ftp?: number
   /** Mini mode: just bars, no labels, grid lines, or FTP reference */
@@ -96,9 +166,13 @@ interface PowerProfileSVGProps {
 
 /**
  * SVG visualization of workout power profile
+ * Supports both legacy segments and new WorkoutStructure format
  */
-export function PowerProfileSVG({ segments, ftp, mini = false }: PowerProfileSVGProps) {
-  const expanded = useMemo(() => expandSegments(segments), [segments])
+export function PowerProfileSVG({ segments, structure, ftp, mini = false }: PowerProfileSVGProps) {
+  const expanded = useMemo(
+    () => expandSegments(segments, structure),
+    [segments, structure]
+  )
 
   if (expanded.length === 0) return null
 

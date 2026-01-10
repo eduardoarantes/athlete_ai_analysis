@@ -398,6 +398,223 @@ describe('Segment Flattening', () => {
       // = 1 + 10 + 1 + 6 + 1 = 19 segments
       expect(flattened.length).toBeGreaterThan(15)
     })
+
+    // NEW: WorkoutStructure format tests (Issue #96)
+    describe('WorkoutStructure format support', () => {
+      it('flattens single step segments from structure', () => {
+        const structure = {
+          primaryIntensityMetric: 'percentOfFtp' as const,
+          primaryLengthMetric: 'duration' as const,
+          structure: [
+            {
+              type: 'step' as const,
+              length: { unit: 'repetition' as const, value: 1 },
+              steps: [
+                {
+                  name: 'Warm Up',
+                  intensityClass: 'warmUp' as const,
+                  length: { unit: 'minute' as const, value: 15 },
+                  targets: [
+                    { type: 'power' as const, minValue: 56, maxValue: 66, unit: 'percentOfFtp' as const },
+                  ],
+                },
+              ],
+            },
+          ],
+        }
+
+        const flattened = flattenWorkoutSegments(undefined, FTP, structure)
+
+        expect(flattened).toHaveLength(1)
+        expect(flattened[0]).toMatchObject({
+          name: 'Warm Up',
+          type: 'warmup',
+          duration_sec: 900, // 15 min
+          power_low: 140, // 250 * 0.56
+          power_high: 165, // 250 * 0.66
+          target_zone: 2,
+        })
+      })
+
+      it('expands 2-step intervals with repetitions from structure', () => {
+        const structure = {
+          primaryIntensityMetric: 'percentOfFtp' as const,
+          primaryLengthMetric: 'duration' as const,
+          structure: [
+            {
+              type: 'repetition' as const,
+              length: { unit: 'repetition' as const, value: 3 },
+              steps: [
+                {
+                  name: 'Work',
+                  intensityClass: 'active' as const,
+                  length: { unit: 'minute' as const, value: 4 },
+                  targets: [
+                    { type: 'power' as const, minValue: 100, maxValue: 105, unit: 'percentOfFtp' as const },
+                  ],
+                },
+                {
+                  name: 'Recovery',
+                  intensityClass: 'rest' as const,
+                  length: { unit: 'minute' as const, value: 4 },
+                  targets: [
+                    { type: 'power' as const, minValue: 50, maxValue: 60, unit: 'percentOfFtp' as const },
+                  ],
+                },
+              ],
+            },
+          ],
+        }
+
+        const flattened = flattenWorkoutSegments(undefined, FTP, structure)
+
+        // 3 reps x 2 steps = 6 segments
+        expect(flattened).toHaveLength(6)
+        expect(flattened[0]!.name).toBe('Work 1')
+        expect(flattened[0]!.type).toBe('work')
+        expect(flattened[1]!.name).toBe('Recovery 1')
+        expect(flattened[1]!.type).toBe('recovery')
+      })
+
+      it('expands 3-step intervals (Above and Below Threshold)', () => {
+        const structure = {
+          primaryIntensityMetric: 'percentOfFtp' as const,
+          primaryLengthMetric: 'duration' as const,
+          structure: [
+            {
+              type: 'repetition' as const,
+              length: { unit: 'repetition' as const, value: 2 },
+              steps: [
+                {
+                  name: 'Z3 Hard',
+                  intensityClass: 'active' as const,
+                  length: { unit: 'second' as const, value: 90 },
+                  targets: [
+                    { type: 'power' as const, minValue: 84, maxValue: 90, unit: 'percentOfFtp' as const },
+                  ],
+                },
+                {
+                  name: 'Z5 Harder',
+                  intensityClass: 'active' as const,
+                  length: { unit: 'second' as const, value: 30 },
+                  targets: [
+                    { type: 'power' as const, minValue: 105, maxValue: 110, unit: 'percentOfFtp' as const },
+                  ],
+                },
+                {
+                  name: 'Z2 Recovery',
+                  intensityClass: 'rest' as const,
+                  length: { unit: 'minute' as const, value: 1 },
+                  targets: [
+                    { type: 'power' as const, minValue: 56, maxValue: 65, unit: 'percentOfFtp' as const },
+                  ],
+                },
+              ],
+            },
+          ],
+        }
+
+        const flattened = flattenWorkoutSegments(undefined, FTP, structure)
+
+        // 2 reps x 3 steps = 6 segments
+        expect(flattened).toHaveLength(6)
+        expect(flattened[0]!.duration_sec).toBe(90) // 90 seconds
+        expect(flattened[1]!.duration_sec).toBe(30) // 30 seconds
+        expect(flattened[2]!.duration_sec).toBe(60) // 1 minute
+        expect(flattened[0]!.target_zone).toBe(3) // 84-90% is Z3
+        expect(flattened[1]!.target_zone).toBe(5) // 105-110% is Z5
+      })
+
+      it('prefers structure over legacy segments when both provided', () => {
+        const legacySegments = [
+          { type: 'warmup' as const, duration_min: 10, power_low_pct: 50, power_high_pct: 60 },
+        ]
+        const structure = {
+          primaryIntensityMetric: 'percentOfFtp' as const,
+          primaryLengthMetric: 'duration' as const,
+          structure: [
+            {
+              type: 'step' as const,
+              length: { unit: 'repetition' as const, value: 1 },
+              steps: [
+                {
+                  name: 'Different Warmup',
+                  intensityClass: 'warmUp' as const,
+                  length: { unit: 'minute' as const, value: 20 },
+                  targets: [
+                    { type: 'power' as const, minValue: 40, maxValue: 50, unit: 'percentOfFtp' as const },
+                  ],
+                },
+              ],
+            },
+          ],
+        }
+
+        const flattened = flattenWorkoutSegments(legacySegments, FTP, structure)
+
+        expect(flattened).toHaveLength(1)
+        expect(flattened[0]!.duration_sec).toBe(1200) // 20 min from structure
+        expect(flattened[0]!.name).toBe('Different Warmup')
+      })
+
+      it('handles complete workout with mixed segment types', () => {
+        const structure = {
+          primaryIntensityMetric: 'percentOfFtp' as const,
+          primaryLengthMetric: 'duration' as const,
+          structure: [
+            {
+              type: 'step' as const,
+              length: { unit: 'repetition' as const, value: 1 },
+              steps: [
+                {
+                  name: 'Warm Up',
+                  intensityClass: 'warmUp' as const,
+                  length: { unit: 'minute' as const, value: 10 },
+                  targets: [{ type: 'power' as const, minValue: 50, maxValue: 60 }],
+                },
+              ],
+            },
+            {
+              type: 'repetition' as const,
+              length: { unit: 'repetition' as const, value: 3 },
+              steps: [
+                {
+                  name: 'On',
+                  intensityClass: 'active' as const,
+                  length: { unit: 'minute' as const, value: 4 },
+                  targets: [{ type: 'power' as const, minValue: 100, maxValue: 105 }],
+                },
+                {
+                  name: 'Off',
+                  intensityClass: 'rest' as const,
+                  length: { unit: 'minute' as const, value: 4 },
+                  targets: [{ type: 'power' as const, minValue: 50, maxValue: 55 }],
+                },
+              ],
+            },
+            {
+              type: 'step' as const,
+              length: { unit: 'repetition' as const, value: 1 },
+              steps: [
+                {
+                  name: 'Cool Down',
+                  intensityClass: 'coolDown' as const,
+                  length: { unit: 'minute' as const, value: 10 },
+                  targets: [{ type: 'power' as const, minValue: 40, maxValue: 50 }],
+                },
+              ],
+            },
+          ],
+        }
+
+        const flattened = flattenWorkoutSegments(undefined, FTP, structure)
+
+        // 1 warmup + (3 * 2 intervals) + 1 cooldown = 8 segments
+        expect(flattened).toHaveLength(8)
+        expect(flattened[0]!.type).toBe('warmup')
+        expect(flattened[7]!.type).toBe('cooldown')
+      })
+    })
   })
 })
 
