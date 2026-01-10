@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useCallback, useRef } from 'react'
 import type { SegmentAnalysis } from '@/lib/services/compliance-analysis-service'
+import { downsamplePowerStream } from '@/lib/utils/workout-overrides-helpers'
 
 // ============================================================================
 // Types
@@ -52,31 +53,6 @@ function powerToY(power: number, ftp: number): number {
  */
 function getZoneColor(zone: number): string {
   return ZONE_COLORS[zone] ?? ZONE_COLORS[1] ?? '#94A3B8'
-}
-
-/**
- * Downsample an array to a target length
- */
-function downsample(data: number[], targetLength: number): number[] {
-  if (data.length === 0) return []
-  if (data.length <= targetLength) return data
-
-  const result: number[] = []
-  const step = data.length / targetLength
-
-  for (let i = 0; i < targetLength; i++) {
-    const start = Math.floor(i * step)
-    const end = Math.floor((i + 1) * step)
-    // Use max value in the window to preserve peaks
-    let max = data[start] ?? 0
-    for (let j = start; j < end && j < data.length; j++) {
-      const val = data[j]
-      if (val !== undefined && val > max) max = val
-    }
-    result.push(max)
-  }
-
-  return result
 }
 
 // ============================================================================
@@ -146,7 +122,7 @@ export function PowerProfileChart({
     let polyline = ''
     if (powerStream && powerStream.length > 0) {
       // Downsample to SVG width
-      const sampled = downsample(powerStream, SVG_WIDTH)
+      const sampled = downsamplePowerStream(powerStream, SVG_WIDTH)
       const points: string[] = []
 
       for (let i = 0; i < sampled.length; i++) {
@@ -186,16 +162,13 @@ export function PowerProfileChart({
   }, [])
 
   // Mouse event handlers
-  const handleMouseMove = useCallback(
-    (e: React.MouseEvent<SVGSVGElement>) => {
-      if (!svgRef.current) return
-      const rect = svgRef.current.getBoundingClientRect()
-      const x = e.clientX - rect.left
-      const normalizedX = x / rect.width
-      setTrackerX(normalizedX * SVG_WIDTH)
-    },
-    []
-  )
+  const handleMouseMove = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+    if (!svgRef.current) return
+    const rect = svgRef.current.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const normalizedX = x / rect.width
+    setTrackerX(normalizedX * SVG_WIDTH)
+  }, [])
 
   const handleMouseEnter = useCallback(() => setIsHovering(true), [])
   const handleMouseLeave = useCallback(() => {
