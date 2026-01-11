@@ -7,6 +7,13 @@ import type { Json } from '@/lib/types/database'
 import { DAYS_OF_WEEK } from '@/lib/types/plan-builder'
 
 /**
+ * Capitalize first letter of a string (monday -> Monday)
+ */
+function capitalize(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1)
+}
+
+/**
  * Convert WorkoutsData (custom builder format) to Workout[] (standard format)
  */
 function convertWorkoutsDataToWorkouts(workoutsData: WorkoutsData): Workout[] {
@@ -17,7 +24,7 @@ function convertWorkoutsDataToWorkouts(workoutsData: WorkoutsData): Workout[] {
     for (const placement of placements) {
       workouts.push({
         id: placement.id,
-        weekday: day,
+        weekday: capitalize(day), // Capitalize to match schedule format (Monday, Tuesday, etc.)
         name: placement.workout?.name || 'Workout',
         type: placement.workout?.type || 'mixed',
         tss: placement.workout?.base_tss || 0,
