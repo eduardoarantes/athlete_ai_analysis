@@ -22,6 +22,14 @@ import {
 import { calculateEndDate } from '@/lib/utils/date-utils'
 
 /**
+ * Convert day number (0-6, where 0 = Monday) to weekday string
+ */
+function dayNumberToWeekday(day: number): string {
+  const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+  return weekdays[day] || 'monday'
+}
+
+/**
  * Add unique IDs to all workouts in a training plan data structure.
  * This ensures each workout has a stable identifier for matching purposes.
  */
@@ -73,9 +81,53 @@ export class PlanInstanceService {
       throw new Error(`Schedule conflict with: ${conflictNames}`)
     }
 
-    // 4. Create the instance with snapshot of template data
+    // 4. Get plan data - either from plan_data or custom_plan_weeks
+    let planData: TrainingPlanData
+
+    if (typedTemplate.created_from === 'custom_builder') {
+      // Custom plans store weeks in custom_plan_weeks table
+      const { data: weeks, error: weeksError } = await supabase
+        .from('custom_plan_weeks')
+        .select('*')
+        .eq('plan_id', input.template_id)
+        .order('week_number', { ascending: true })
+
+      if (weeksError) {
+        throw new Error('Failed to fetch custom plan weeks')
+      }
+
+      // Convert custom_plan_weeks to TrainingPlanData format
+      planData = {
+        athlete_profile: {
+          ftp: 0, // Custom plans don't store athlete profile, use placeholder
+        },
+        plan_metadata: {
+          total_weeks: weeksTotal,
+          current_ftp: 0,
+          target_ftp: 0,
+        },
+        weekly_plan: (weeks || []).map((week) => ({
+          week_number: week.week_number,
+          phase: week.phase || 'Base',
+          week_tss: week.weekly_tss || 0,
+          workouts: (week.workouts_data as { day: number; workout: { library_workout_id?: string; name?: string; tss?: number } }[] || []).map(
+            (w: { day: number; workout: { library_workout_id?: string; name?: string; tss?: number } }) => ({
+              id: crypto.randomUUID(),
+              weekday: dayNumberToWeekday(w.day),
+              name: w.workout?.name || 'Workout',
+              tss: w.workout?.tss || 0,
+              // Conditionally include library_workout_id only if defined (exactOptionalPropertyTypes)
+              ...(w.workout?.library_workout_id && { library_workout_id: w.workout.library_workout_id }),
+            })
+          ),
+        })),
+      }
+    } else {
+      planData = typedTemplate.plan_data
+    }
+
     // Add unique IDs to all workouts for stable identification
-    const planDataWithIds = addWorkoutIds(typedTemplate.plan_data)
+    const planDataWithIds = addWorkoutIds(planData)
 
     const { data: instance, error: insertError } = await supabase
       .from('plan_instances')
