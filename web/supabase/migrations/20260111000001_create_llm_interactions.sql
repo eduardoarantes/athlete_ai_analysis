@@ -32,9 +32,8 @@ CREATE TABLE IF NOT EXISTS public.llm_interactions (
   error_code TEXT,
   retry_count INTEGER DEFAULT 0,
 
-  -- Timestamps
-  timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  -- Timestamp
+  timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Indexes for analytics queries
@@ -93,3 +92,6 @@ COMMENT ON COLUMN public.llm_interactions.triggered_by IS
 
 COMMENT ON COLUMN public.llm_interactions.estimated_cost IS
   'Estimated cost in USD based on model pricing and token counts';
+
+COMMENT ON COLUMN public.llm_interactions.timestamp IS
+  'When the interaction occurred (ISO 8601 format with timezone)';

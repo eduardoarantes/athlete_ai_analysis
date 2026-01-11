@@ -8,7 +8,6 @@ for analytics and cost tracking purposes.
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from cycling_ai.providers.interaction_metrics import InteractionMetrics
 
@@ -33,7 +32,7 @@ class DatabaseStorage:
             supabase_key: Supabase service role key (with write access)
         """
         self.enabled = False
-        self.client: Any = None
+        self.client = None  # Supabase client instance (optional dependency)
 
         # Check if credentials are provided
         if not supabase_url or not supabase_key:
@@ -42,7 +41,7 @@ class DatabaseStorage:
 
         # Try to initialize Supabase client
         try:
-            from supabase import create_client
+            from supabase import create_client  # type: ignore[attr-defined]
 
             self.client = create_client(supabase_url, supabase_key)
             self.enabled = True
