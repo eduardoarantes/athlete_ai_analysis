@@ -545,13 +545,23 @@ export function formatFileSize(bytes: number): string {
 
 /**
  * Format duration in minutes to human-readable string
+ * - Less than 1 minute: shows in seconds (e.g., "30s")
+ * - 1-59 minutes: shows with max 1 decimal (e.g., "5m", "5.5m")
+ * - 60+ minutes: shows hours and minutes (e.g., "1h 30m")
  */
 export function formatDuration(totalMinutes: number): string {
+  if (totalMinutes < 1) {
+    // Less than 1 minute - show in seconds
+    return `${Math.round(totalMinutes * 60)}s`
+  }
+
   const hours = Math.floor(totalMinutes / 60)
   const minutes = Math.round(totalMinutes % 60)
 
   if (hours === 0) {
-    return `${minutes}m`
+    // Less than an hour - show with max 1 decimal if needed
+    const rounded = Math.round(totalMinutes * 10) / 10
+    return Number.isInteger(rounded) ? `${rounded}m` : `${rounded.toFixed(1)}m`
   }
   if (minutes === 0) {
     return `${hours}h`

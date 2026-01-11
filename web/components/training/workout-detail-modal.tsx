@@ -239,12 +239,15 @@ function formatPowerRange(ftp: number, lowPct: number, highPct: number): string 
 function formatSegmentDuration(durationMin: number): string {
   if (durationMin >= 60) {
     const hours = Math.floor(durationMin / 60)
-    const mins = durationMin % 60
-    return `${hours}h${mins > 0 ? mins + 'm' : ''}`
+    const mins = Math.round(durationMin % 60)
+    return `${hours}h${mins > 0 ? ` ${mins}m` : ''}`
   } else if (durationMin < 1) {
+    // Less than 1 minute - show in seconds
     return `${Math.round(durationMin * 60)}s`
   }
-  return `${durationMin} min`
+  // 1-59 minutes - show with max 1 decimal, or no decimal if whole number
+  const rounded = Math.round(durationMin * 10) / 10
+  return Number.isInteger(rounded) ? `${rounded} min` : `${rounded.toFixed(1)} min`
 }
 
 export function WorkoutDetailModal({
