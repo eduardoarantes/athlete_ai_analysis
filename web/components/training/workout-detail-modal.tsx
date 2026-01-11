@@ -268,7 +268,7 @@ export function WorkoutDetailModal({
                 <CardTitle className="text-sm font-medium">{t('workoutDescription')}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground leading-relaxed">
+                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
                   {workout.detailed_description || workout.description}
                 </p>
               </CardContent>

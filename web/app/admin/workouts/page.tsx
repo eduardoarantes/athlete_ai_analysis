@@ -537,7 +537,7 @@ export default function AdminWorkoutsPage() {
                   {selectedWorkout.detailed_description && (
                     <div>
                       <h4 className="font-medium mb-1">Description</h4>
-                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                      <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
                         {selectedWorkout.detailed_description}
                       </p>
                     </div>
