@@ -66,6 +66,25 @@ const PHASES: TrainingPhase[] = ['Base', 'Build', 'Peak', 'Recovery', 'Taper', '
 
 const PAGE_SIZE = 20
 
+/**
+ * Format duration in minutes to human-readable format
+ * - Less than 1 minute: shows in seconds (e.g., "30s")
+ * - 1-59 minutes: shows with max 1 decimal (e.g., "5m", "5.5m")
+ * - 60+ minutes: shows hours and minutes (e.g., "1h 30m")
+ */
+function formatDuration(minutes: number): string {
+  if (minutes < 1) {
+    return `${Math.round(minutes * 60)}s`
+  }
+  if (minutes < 60) {
+    const rounded = Math.round(minutes * 10) / 10
+    return Number.isInteger(rounded) ? `${rounded}m` : `${rounded.toFixed(1)}m`
+  }
+  const hours = Math.floor(minutes / 60)
+  const mins = Math.round(minutes % 60)
+  return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`
+}
+
 type ViewMode = 'table' | 'tiles'
 
 export default function AdminWorkoutsPage() {
@@ -616,7 +635,7 @@ export default function AdminWorkoutsPage() {
                                       }}
                                     >
                                       <div className="font-semibold min-w-[70px]">
-                                        {segment.work.duration_min} min
+                                        {formatDuration(segment.work.duration_min)}
                                       </div>
                                       <div
                                         className="font-medium"
@@ -646,7 +665,7 @@ export default function AdminWorkoutsPage() {
                                       }}
                                     >
                                       <div className="font-semibold min-w-[70px]">
-                                        {segment.recovery.duration_min} min
+                                        {formatDuration(segment.recovery.duration_min)}
                                       </div>
                                       <div
                                         className="font-medium"
@@ -683,7 +702,7 @@ export default function AdminWorkoutsPage() {
                                 }}
                               >
                                 <div className="font-semibold min-w-[70px]">
-                                  {segment.duration_min} min
+                                  {formatDuration(segment.duration_min ?? 0)}
                                 </div>
                                 <div
                                   className="font-medium"

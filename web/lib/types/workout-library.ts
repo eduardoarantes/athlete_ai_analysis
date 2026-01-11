@@ -155,6 +155,9 @@ export interface WorkoutLibraryItem {
 
   /** Source format (for library maintenance) */
   source_format?: string
+
+  /** SHA-256 hash of workout structure for duplicate detection (Issue #97) */
+  signature?: string
 }
 
 /**

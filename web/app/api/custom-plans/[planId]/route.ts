@@ -6,9 +6,67 @@ import type {
   SavePlanResponse,
   WeekState,
   WorkoutsData,
+  WorkoutPlacement,
 } from '@/lib/types/plan-builder'
+import type { TrainingPlanData, WeeklyPlan, Workout } from '@/lib/types/training-plan'
 import type { TrainingPhase } from '@/lib/types/workout-library'
 import type { Json } from '@/lib/types/database'
+import { DAYS_OF_WEEK } from '@/lib/types/plan-builder'
+
+/**
+ * Capitalize first letter of a string (monday -> Monday)
+ */
+function capitalize(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1)
+}
+
+/**
+ * Convert WorkoutsData (custom builder format) to Workout[] (standard format)
+ */
+function convertWorkoutsDataToWorkouts(workoutsData: WorkoutsData): Workout[] {
+  const workouts: Workout[] = []
+
+  for (const day of DAYS_OF_WEEK) {
+    const placements = workoutsData[day] as WorkoutPlacement[]
+    for (const placement of placements) {
+      workouts.push({
+        id: placement.id,
+        weekday: capitalize(day), // Capitalize to match schedule format (Monday, Tuesday, etc.)
+        name: placement.workout?.name || 'Workout',
+        type: placement.workout?.type || 'mixed',
+        tss: placement.workout?.base_tss || 0,
+        ...(placement.workoutKey && { library_workout_id: placement.workoutKey }),
+      })
+    }
+  }
+
+  return workouts
+}
+
+/**
+ * Convert SavePlanRequest to TrainingPlanData (standard format)
+ */
+function convertToTrainingPlanData(body: SavePlanRequest): TrainingPlanData {
+  const weeklyPlan: WeeklyPlan[] = body.weeks.map((week) => ({
+    week_number: week.weekNumber,
+    phase: week.phase,
+    week_tss: week.weeklyTss,
+    workouts: convertWorkoutsDataToWorkouts(week.workouts),
+    ...(week.notes && { weekly_focus: week.notes }),
+  }))
+
+  return {
+    athlete_profile: {
+      ftp: body.metadata.targetFtp || 0,
+    },
+    plan_metadata: {
+      total_weeks: body.weeks.length,
+      current_ftp: body.metadata.targetFtp || 0,
+      target_ftp: body.metadata.targetFtp || 0,
+    },
+    weekly_plan: weeklyPlan,
+  }
+}
 
 // Extended training plan type with custom builder fields
 interface ExtendedTrainingPlan {
@@ -154,7 +212,10 @@ export async function PUT(
       return NextResponse.json({ error: 'Plan not found' }, { status: 404 })
     }
 
-    // Update the training plan
+    // Convert to standard TrainingPlanData format (same as AI plans)
+    const planData = convertToTrainingPlanData(body)
+
+    // Update the training plan with plan_data
     const { error: planError } = await supabase
       .from('training_plans')
       .update({
@@ -165,6 +226,7 @@ export async function PUT(
         target_ftp: body.metadata.targetFtp ?? null,
         is_draft: !body.publish,
         status: body.publish ? 'active' : 'draft',
+        plan_data: planData as unknown as Json,
         updated_at: new Date().toISOString(),
       })
       .eq('id', planId)

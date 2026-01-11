@@ -47,13 +47,22 @@ function formatIntensity(intensity: string): string {
 
 /**
  * Format duration in minutes to human-readable format
+ * - Less than 1 minute: shows in seconds (e.g., "30s")
+ * - 1-59 minutes: shows with max 1 decimal (e.g., "5m", "5.5m")
+ * - 60+ minutes: shows hours and minutes (e.g., "1h 30m")
  */
 function formatDuration(minutes: number): string {
+  if (minutes < 1) {
+    // Less than 1 minute - show in seconds
+    return `${Math.round(minutes * 60)}s`
+  }
   if (minutes < 60) {
-    return `${minutes}m`
+    // Less than an hour - show with max 1 decimal if needed
+    const rounded = Math.round(minutes * 10) / 10
+    return Number.isInteger(rounded) ? `${rounded}m` : `${rounded.toFixed(1)}m`
   }
   const hours = Math.floor(minutes / 60)
-  const mins = minutes % 60
+  const mins = Math.round(minutes % 60)
   return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`
 }
 

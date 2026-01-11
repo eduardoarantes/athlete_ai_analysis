@@ -73,8 +73,7 @@ export class PlanInstanceService {
       throw new Error(`Schedule conflict with: ${conflictNames}`)
     }
 
-    // 4. Create the instance with snapshot of template data
-    // Add unique IDs to all workouts for stable identification
+    // 4. Get plan data and add unique IDs to all workouts for stable identification
     const planDataWithIds = addWorkoutIds(typedTemplate.plan_data)
 
     const { data: instance, error: insertError } = await supabase

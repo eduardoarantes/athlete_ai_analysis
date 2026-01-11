@@ -13,8 +13,8 @@ import secrets
 import string
 from pathlib import Path
 
-# NanoID alphabet (URL-safe)
-NANOID_ALPHABET = string.ascii_letters + string.digits + "_-"
+# NanoID alphabet (alphanumeric only - no symbols)
+NANOID_ALPHABET = string.ascii_letters + string.digits
 NANOID_LENGTH = 10
 
 

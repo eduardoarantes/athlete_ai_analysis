@@ -9,8 +9,8 @@ class IntervalPart(BaseModel):
     """Work or recovery part of an interval set."""
 
     duration_min: float
-    power_low_pct: int
-    power_high_pct: int
+    power_low_pct: float
+    power_high_pct: float
     description: str
 
 
@@ -27,8 +27,8 @@ class WorkoutSegment(BaseModel):
 
     # For simple segments (warmup, cooldown, steady, recovery)
     duration_min: float | None = None
-    power_low_pct: int | None = None
-    power_high_pct: int | None = None
+    power_low_pct: float | None = None
+    power_high_pct: float | None = None
     description: str | None = None
 
     # For interval sets
@@ -67,6 +67,7 @@ class Workout(BaseModel):
     variable_components: VariableComponents | None = None
     source_file: str | None = None  # Optional for new workouts
     source_format: str | None = None  # Optional for new workouts
+    signature: str | None = None  # SHA-256 hash for duplicate detection (Issue #97)
 
 
 class WorkoutLibrary(BaseModel):
