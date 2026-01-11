@@ -6,7 +6,7 @@
   "deduplicated_count": 107,
   "workouts": [
     {
-      "id": "Ukqa9_44l9",
+      "id": "ugbtSyxMXD",
       "name": "Cardio Drift Test",
       "type": "threshold",
       "intensity": "moderate",
@@ -126,7 +126,7 @@
       ]
     },
     {
-      "id": "LLVMhZhJdM",
+      "id": "BMNY08Kmaj",
       "name": "2hr Base Fitness",
       "type": "endurance",
       "intensity": "easy",
@@ -239,7 +239,7 @@
       "source_file": "workout_2458718625.json",
       "source_format": "json",
       "signature": "c5511adcd3f9c935",
-      "detailed_description": "Riding on the trainer or outside in Zone 2 at a comfortable cadence.\n\nThe aim of this ride is to improve your efficiency at a low aerobic power, build mitochondria and increase your ability to utilise fat as a fuel source. Listen to your body and watch your HR to remain in zone 2.\n\nAvoid going above zone 2 at all times and ride with constant pressure on the pedals on both up and down hills.\n\nIf you want to improve your efficiency in a more aerodynamic position spend some time in the drops/ aero position so your muscles can develop strength in that position.\n\nRide at a comfortable cadence in the 80-100rpm range where possible.",
+      "detailed_description": "Riding on the trainer or outside\u00a0in Zone 2 at a comfortable cadence.\n\nThe aim of this ride is to improve your efficiency at a low aerobic power, build mitochondria and increase your ability to utilise fat as a fuel source. Listen to your body and watch your HR to remain in zone 2.\n\nAvoid going above zone 2 at all times and ride with constant pressure on the pedals on both up and down hills.\n\nIf you want to improve your efficiency in a more aerodynamic position spend some time in the drops/ aero position so your muscles can develop strength in that position.\n\nRide at a comfortable cadence in the 80-100rpm range where possible.",
       "suitable_phases": [
         "Base",
         "Foundation",
@@ -247,7 +247,7 @@
       ]
     },
     {
-      "id": "LwXGHHqFQm",
+      "id": "f4SvAqNCuL",
       "name": "1hr Base Fitness @ 60-65% Threshold",
       "type": "threshold",
       "intensity": "easy",
@@ -360,14 +360,14 @@
       "source_file": "workout_2494372909.json",
       "source_format": "json",
       "signature": "90cd6abbf369834d",
-      "detailed_description": "Riding on the trainer or outside in low to mid Zone 2 at a comfortable cadence.\n\nThis is slightly easier than a typical zone 2 ride at 60-65% threshold. The aim here to reduce the pressure on the legs and bring the heart rate into the desired zone to see what response your body has.\n\nThe aim of this ride is to improve your efficiency at a low aerobic power, build mitochondria and increase your ability to utilise fat as a fuel source. Listen to your body and watch your HR to remain in zone 2.\n\nAvoid going above zone 2 at all times and ride with constant pressure on the pedals on both up and down hills.\n\nIf you want to improve your efficiency in a more aerodynamic position spend some time in the drops/ aero position so your muscles can develop strength in that position.\n\nRide at a comfortable cadence in the 80-100rpm range where possible.",
+      "detailed_description": "Riding on the trainer or outside\u00a0in low to mid Zone 2 at a comfortable cadence.\n\nThis is slightly easier than a typical zone 2 ride at 60-65% threshold. The aim here to reduce the pressure on the legs and bring the heart rate into the desired zone to see what response your body has.\n\nThe aim of this ride is to improve your efficiency at a low aerobic power, build mitochondria and increase your ability to utilise fat as a fuel source. Listen to your body and watch your HR to remain in zone 2.\n\nAvoid going above zone 2 at all times and ride with constant pressure on the pedals on both up and down hills.\n\nIf you want to improve your efficiency in a more aerodynamic position spend some time in the drops/ aero position so your muscles can develop strength in that position.\n\nRide at a comfortable cadence in the 80-100rpm range where possible.",
       "suitable_phases": [
         "Build",
         "Peak"
       ]
     },
     {
-      "id": "VgPoKTyHwr",
+      "id": "gLtRZxsQ3c",
       "name": "3x12' Tempo",
       "type": "endurance",
       "intensity": "moderate",
@@ -519,7 +519,7 @@
       ]
     },
     {
-      "id": "EoGsplcRRO",
+      "id": "5rbCkg8xyA",
       "name": "3x15' Tempo",
       "type": "endurance",
       "intensity": "moderate",
@@ -671,7 +671,7 @@
       ]
     },
     {
-      "id": "YZ8mHfqahU",
+      "id": "R1A4wNUEg4",
       "name": "Active Recovery",
       "type": "recovery",
       "intensity": "easy",
@@ -728,7 +728,7 @@
       ]
     },
     {
-      "id": "ZjoYxZ28h9",
+      "id": "QWxBzlsg0u",
       "name": "3hr Base Fitness",
       "type": "endurance",
       "intensity": "easy",
@@ -841,7 +841,7 @@
       "source_file": "workout_2458716047.json",
       "source_format": "json",
       "signature": "c5be9d779622dea2",
-      "detailed_description": "Riding on the trainer or outside in Zone 2 at a comfortable cadence.\n\nThe aim of this ride is to improve your efficiency at a low aerobic power, build mitochondria and increase your ability to utilise fat as a fuel source. Listen to your body and watch your HR to remain in zone 2.\n\nAvoid going above zone 2 at all times and ride with constant pressure on the pedals on both up and down hills.\n\nIf you want to improve your efficiency in a more aerodynamic position spend some time in the drops/ aero position so your muscles can develop strength in that position.\n\nRide at a comfortable cadence in the 80-100rpm range where possible.",
+      "detailed_description": "Riding on the trainer or outside\u00a0in Zone 2 at a comfortable cadence.\n\nThe aim of this ride is to improve your efficiency at a low aerobic power, build mitochondria and increase your ability to utilise fat as a fuel source. Listen to your body and watch your HR to remain in zone 2.\n\nAvoid going above zone 2 at all times and ride with constant pressure on the pedals on both up and down hills.\n\nIf you want to improve your efficiency in a more aerodynamic position spend some time in the drops/ aero position so your muscles can develop strength in that position.\n\nRide at a comfortable cadence in the 80-100rpm range where possible.",
       "suitable_phases": [
         "Base",
         "Foundation",
@@ -849,7 +849,7 @@
       ]
     },
     {
-      "id": "HAxaoPyQo3",
+      "id": "gwqknjoUfr",
       "name": "3.5hr Base Fitness",
       "type": "endurance",
       "intensity": "easy",
@@ -962,7 +962,7 @@
       "source_file": "workout_2458716265.json",
       "source_format": "json",
       "signature": "24db8ea8692cfba9",
-      "detailed_description": "Riding on the trainer or outside in Zone 2 at a comfortable cadence.\n\nThe aim of this ride is to improve your efficiency at a low aerobic power, build mitochondria and increase your ability to utilise fat as a fuel source. Listen to your body and watch your HR to remain in zone 2.\n\nAvoid going above zone 2 at all times and ride with constant pressure on the pedals on both up and down hills.\n\nIf you want to improve your efficiency in a more aerodynamic position spend some time in the drops/ aero position so your muscles can develop strength in that position.\n\nRide at a comfortable cadence in the 80-100rpm range where possible.",
+      "detailed_description": "Riding on the trainer or outside\u00a0in Zone 2 at a comfortable cadence.\n\nThe aim of this ride is to improve your efficiency at a low aerobic power, build mitochondria and increase your ability to utilise fat as a fuel source. Listen to your body and watch your HR to remain in zone 2.\n\nAvoid going above zone 2 at all times and ride with constant pressure on the pedals on both up and down hills.\n\nIf you want to improve your efficiency in a more aerodynamic position spend some time in the drops/ aero position so your muscles can develop strength in that position.\n\nRide at a comfortable cadence in the 80-100rpm range where possible.",
       "suitable_phases": [
         "Base",
         "Foundation",
@@ -970,7 +970,7 @@
       ]
     },
     {
-      "id": "wy6dHi78dO",
+      "id": "pPr9uQYGGW",
       "name": "Zwift - New Workout in Watopia",
       "type": "endurance",
       "intensity": "easy",
@@ -1090,7 +1090,7 @@
       ]
     },
     {
-      "id": "Gm_LL4OvRk",
+      "id": "4YlCcpp8LA",
       "name": "1.5hr Base Fitness",
       "type": "endurance",
       "intensity": "moderate",
@@ -1209,7 +1209,7 @@
       "source_file": "workout_2526824695.json",
       "source_format": "json",
       "signature": "c1f5b463ab18d366",
-      "detailed_description": "Riding on the trainer or outside in Zone 2 at a comfortable cadence.\n\nThe aim of this ride is to improve your efficiency at a low aerobic power, build mitochondria and increase your ability to utilise fat as a fuel source. Listen to your body and watch your HR to remain in zone 2.\n\nAvoid going above zone 2 at all times and ride with constant pressure on the pedals on both up and down hills.\n\nIf you want to improve your efficiency in a more aerodynamic position spend some time in the drops/ aero position so your muscles can develop strength in that position.\n\nRide at a comfortable cadence in the 80-100rpm range where possible.",
+      "detailed_description": "Riding on the trainer or outside\u00a0in Zone 2 at a comfortable cadence.\n\nThe aim of this ride is to improve your efficiency at a low aerobic power, build mitochondria and increase your ability to utilise fat as a fuel source. Listen to your body and watch your HR to remain in zone 2.\n\nAvoid going above zone 2 at all times and ride with constant pressure on the pedals on both up and down hills.\n\nIf you want to improve your efficiency in a more aerodynamic position spend some time in the drops/ aero position so your muscles can develop strength in that position.\n\nRide at a comfortable cadence in the 80-100rpm range where possible.",
       "suitable_phases": [
         "Base",
         "Foundation",
@@ -1217,7 +1217,7 @@
       ]
     },
     {
-      "id": "1wzlwVJCax",
+      "id": "74GPWrdaus",
       "name": "FTP Progression 2 5x7",
       "type": "threshold",
       "intensity": "hard",
@@ -1419,7 +1419,7 @@
       ]
     },
     {
-      "id": "hvdNxqI9fk",
+      "id": "BB5epMKMwL",
       "name": "Wahoo SYSTM: FTP Over Unders: 3 sets 8x1",
       "type": "threshold",
       "intensity": "very_hard",
@@ -1945,7 +1945,7 @@
       ]
     },
     {
-      "id": "KybsZur4Es",
+      "id": "bqRZvoz6WL",
       "name": "General Endurance",
       "type": "endurance",
       "intensity": "moderate",
@@ -2002,7 +2002,7 @@
       ]
     },
     {
-      "id": "lpf5n-TCcX",
+      "id": "UIHMMfY6zr",
       "name": "Zone 2 with Cadence Variation",
       "type": "endurance",
       "intensity": "easy",
@@ -2160,7 +2160,7 @@
       ]
     },
     {
-      "id": "LCZm3UMDBI",
+      "id": "kL9eUebxqf",
       "name": "4hr Base Fitness",
       "type": "endurance",
       "intensity": "easy",
@@ -2273,7 +2273,7 @@
       "source_file": "workout_2579964436.json",
       "source_format": "json",
       "signature": "ef7858c8d8f859c3",
-      "detailed_description": "Riding on the trainer or outside in Zone 2 at a comfortable cadence.\n\nThe aim of this ride is to improve your efficiency at a low aerobic power, build mitochondria and increase your ability to utilise fat as a fuel source. Listen to your body and watch your HR to remain in zone 2.\n\nAvoid going above zone 2 at all times and ride with constant pressure on the pedals on both up and down hills.\n\nIf you want to improve your efficiency in a more aerodynamic position spend some time in the drops/ aero position so your muscles can develop strength in that position.\n\nRide at a comfortable cadence in the 80-100rpm range where possible.",
+      "detailed_description": "Riding on the trainer or outside\u00a0in Zone 2 at a comfortable cadence.\n\nThe aim of this ride is to improve your efficiency at a low aerobic power, build mitochondria and increase your ability to utilise fat as a fuel source. Listen to your body and watch your HR to remain in zone 2.\n\nAvoid going above zone 2 at all times and ride with constant pressure on the pedals on both up and down hills.\n\nIf you want to improve your efficiency in a more aerodynamic position spend some time in the drops/ aero position so your muscles can develop strength in that position.\n\nRide at a comfortable cadence in the 80-100rpm range where possible.",
       "suitable_phases": [
         "Base",
         "Foundation",
@@ -2281,7 +2281,7 @@
       ]
     },
     {
-      "id": "kcyAmoqxXl",
+      "id": "1KdFGKSNzd",
       "name": "Tempo Repeats",
       "type": "endurance",
       "intensity": "moderate",
@@ -2433,7 +2433,7 @@
       ]
     },
     {
-      "id": "SUGILUEaoC",
+      "id": "YQGNEgWsTS",
       "name": "Tempo Repeats",
       "type": "endurance",
       "intensity": "moderate",
@@ -2585,7 +2585,7 @@
       ]
     },
     {
-      "id": "92blpD2W-y",
+      "id": "sW2HliVDJc",
       "name": "The Benchmark Test!",
       "type": "vo2max",
       "intensity": "very_hard",
@@ -2811,14 +2811,14 @@
       "source_file": "workout_2581776894.json",
       "source_format": "json",
       "signature": "86f00f3a60bd22fc",
-      "detailed_description": "Find your favourite 3-12 minute effort/climb in your local area. We're going for a personal best today! If you can't think of anything in your local area, you have 2 other options:\n\n1- Find a segment on zwift that you want to substitute for outside. I.e. the Volcano KOM or Epic KOM.\n\n2- You can choose a certain time frame. I.e. 5min or 10min and just go as hard as you can for that period of time to get your best power for that time frame.\n\nYou're going to rip it as hard as you can go.\n\nBe careful not to go too hard out of the blocks!\n\nAlso, you may want to ride the climb at a lower intensity first, You can do your 'priming' efforts up the climb, roll down, and then off you go.\n\nPriming efforts will open the doors to your upper-end systems before you go all out. They include:\n\n3 X 1 min efforts between Zone 4 - Zone 5 with 1 min rest in-between. This is to be done before you rip it up the hill.\n\nGood luck.",
+      "detailed_description": "Find your favourite 3-12\u00a0minute effort/climb in your local area. We're going for a personal best today! If you can't think of anything in your local area, you have 2 other options:\n\n1- Find a segment on zwift that you want to substitute for outside. I.e. the Volcano KOM or Epic KOM.\n\n2- You can choose a certain time frame. I.e. 5min or 10min and just go as hard as you can for that period of time to get your best power for that time frame.\n\nYou're going to rip it as hard as you can go.\n\nBe careful not to go too hard out of the blocks!\n\nAlso, you may want to ride the climb at a lower intensity first, You can do your 'priming' efforts up the climb, roll down, and then off you go.\n\nPriming efforts will open the doors to your upper-end systems before you go all out. They include:\n\n3 X 1 min efforts between Zone 4 - Zone 5 with 1 min rest in-between. This is to be done before you rip it up the hill.\n\nGood luck.",
       "suitable_phases": [
         "Build",
         "Peak"
       ]
     },
     {
-      "id": "A3BEwezGle",
+      "id": "9iVUOCNy7g",
       "name": "5min Strength Efforts (Zone 3)",
       "type": "recovery",
       "intensity": "hard",
@@ -2980,7 +2980,7 @@
       "source_file": "workout_2581776895.json",
       "source_format": "json",
       "signature": "be5f6d6b48bbce33",
-      "detailed_description": "These sessions are to build muscular strength on the bike by increasing the amount of time your muscles are contracting each pedal stroke with a lower cadence (increased torque). By doing this, we aim to increase your force production throughout the pedal stroke.\n\nIt is okay to do these sessions as hill repeats where you coast/ free wheel a bit down the hill during your recovery period to start your next effort.\n\nIt is important if you are doing this session on the trainer or on flat road to pedal at a high cadence (85-95rpm) to flush your legs out during the recovery periods.\n\nIdeally this session is done on the ergo or on a hill with a steady gradient.\n\nIf completing on the ergo, you can make the warm up and cool down 10min.",
+      "detailed_description": "These sessions are to build muscular strength on the bike by increasing the amount of time your muscles are contracting each pedal stroke with a lower cadence (increased torque). By doing this, we aim to increase your force production throughout the pedal stroke.\n\nIt is okay to do these sessions as hill repeats where you coast/ free wheel a bit down the hill during your recovery period to start your next effort.\n\nIt is important if you are doing this session on the trainer or on flat road\u00a0to pedal at a high cadence (85-95rpm)\u00a0to flush your legs out during the recovery periods.\n\nIdeally this session is done on the ergo or on a hill with a steady gradient.\n\nIf completing on the ergo, you can make the warm up and cool down 10min.",
       "suitable_phases": [
         "Recovery",
         "Taper",
@@ -2988,7 +2988,7 @@
       ]
     },
     {
-      "id": "Jvli4ftrfD",
+      "id": "Ia8x8iaLo2",
       "name": "Base Fitness Training (Zone Two)",
       "type": "endurance",
       "intensity": "moderate",
@@ -3119,7 +3119,7 @@
       "source_file": "workout_2657868694.json",
       "source_format": "json",
       "signature": "7d9b9ef40cbeb612",
-      "detailed_description": "Riding on the trainer or outside in Zone 2 at a comfortable cadence for 1.5 hours with 5mins warm up and a 10mins cooldown in Zone 1 at the end.\n\nIf you want to improve your efficiency in a more aerodynamic position spend some time in the drops. For example: 5 mins on drops every 30mins.",
+      "detailed_description": "Riding on the trainer or outside\u00a0in Zone 2 at a comfortable cadence for 1.5 hours with 5mins warm up\u00a0and a 10mins cooldown in Zone 1 at the end.\n\nIf you want to improve your efficiency in a more aerodynamic position spend some time in the drops. For example:\u00a05 mins on drops every 30mins.",
       "suitable_phases": [
         "Base",
         "Foundation",
@@ -3127,7 +3127,7 @@
       ]
     },
     {
-      "id": "j1dQvlOL2Z",
+      "id": "rJg2MWweYL",
       "name": "Sweet Spot Repeats",
       "type": "threshold",
       "intensity": "hard",
@@ -3265,14 +3265,14 @@
       "source_file": "workout_2581776979.json",
       "source_format": "json",
       "signature": "8a9b7af5f935234f",
-      "detailed_description": "Efforts just below threshold.\n\nAt this percentage of FTP, you are at a physiological point where the lactate clearance and utilisation is at a steady state. This type of training will improve your ability to clear accumulated lactate when necessary and improve your muscular endurance.\n\nIf you are aiming to improve your climbing, do these as repeats on a climb. If you want to improve your speed on the flat, do these on a flat road without interruptions.\n\nYou can also complete these workouts on the trainer as prescribed below.",
+      "detailed_description": "Efforts just below threshold.\n\nAt this percentage of FTP, you are at a physiological point where the lactate\u00a0clearance and utilisation is at a steady state. This type of training will improve your ability\u00a0to\u00a0clear accumulated lactate when necessary and improve your muscular endurance.\n\nIf you are aiming to improve your climbing, do these as repeats on a climb. If you want to improve your speed on the flat, do these on a flat road without interruptions.\n\nYou can also complete these workouts on the trainer as prescribed below.",
       "suitable_phases": [
         "Build",
         "Peak"
       ]
     },
     {
-      "id": "7vT0o-WPVe",
+      "id": "RwGvaYFtF5",
       "name": "Base Fitness Training (Zone Two)",
       "type": "endurance",
       "intensity": "moderate",
@@ -3403,7 +3403,7 @@
       "source_file": "workout_2657868692.json",
       "source_format": "json",
       "signature": "ee5da3014abd62c4",
-      "detailed_description": "Riding in Zone 2 for two hours at a comfortable cadence with 5mins warm-up and a 5min cooldown in Zone 1\n\nIf you want to improve your efficiency in a more aerodynamic position spend some time in the drops. For example: 5 mins on drops every 30mins.",
+      "detailed_description": "Riding in Zone 2 for two hours at a comfortable cadence with 5mins warm-up and a 5min cooldown in Zone 1\n\nIf you want to improve your efficiency in a more aerodynamic position spend some time in the drops. For example:\u00a05 mins on drops every 30mins.",
       "suitable_phases": [
         "Base",
         "Foundation",
@@ -3411,7 +3411,7 @@
       ]
     },
     {
-      "id": "fKuPSfIyX0",
+      "id": "J9qZANw6lu",
       "name": "40/20s (5min)",
       "type": "recovery",
       "intensity": "very_hard",
@@ -3881,7 +3881,7 @@
       ]
     },
     {
-      "id": "J1J92BFaDd",
+      "id": "d2cnz0J0eI",
       "name": "VO2 Repeats 5x3'",
       "type": "vo2max",
       "intensity": "very_hard",
@@ -4083,7 +4083,7 @@
       ]
     },
     {
-      "id": "CHV2ekb27j",
+      "id": "mhvBiIPGrF",
       "name": "5min Strength Efforts (Zone 3)",
       "type": "recovery",
       "intensity": "hard",
@@ -4245,7 +4245,7 @@
       "source_file": "workout_2581776902.json",
       "source_format": "json",
       "signature": "5b767dcfb849f544",
-      "detailed_description": "These sessions are to build muscular strength on the bike by increasing the amount of time your muscles are contracting each pedal stroke with a lower cadence (increased torque). By doing this, we aim to increase your force production throughout the pedal stroke.\n\nIt is okay to do these sessions as hill repeats where you coast/ free wheel a bit down the hill during your recovery period to start your next effort.\n\nIt is important if you are doing this session on the trainer or on flat road to pedal at a high cadence (85-95rpm) to flush your legs out during the recovery periods.\n\nIdeally this session is done on the ergo or on a hill with a steady gradient.\n\nIf completing on the ergo, you can make the warm up and cool down 10min.",
+      "detailed_description": "These sessions are to build muscular strength on the bike by increasing the amount of time your muscles are contracting each pedal stroke with a lower cadence (increased torque). By doing this, we aim to increase your force production throughout the pedal stroke.\n\nIt is okay to do these sessions as hill repeats where you coast/ free wheel a bit down the hill during your recovery period to start your next effort.\n\nIt is important if you are doing this session on the trainer or on flat road\u00a0to pedal at a high cadence (85-95rpm)\u00a0to flush your legs out during the recovery periods.\n\nIdeally this session is done on the ergo or on a hill with a steady gradient.\n\nIf completing on the ergo, you can make the warm up and cool down 10min.",
       "suitable_phases": [
         "Recovery",
         "Taper",
@@ -4253,7 +4253,7 @@
       ]
     },
     {
-      "id": "0Vo7s6DZnr",
+      "id": "QibF97aFxq",
       "name": "5min Strength Efforts",
       "type": "recovery",
       "intensity": "hard",
@@ -4415,7 +4415,7 @@
       "source_file": "workout_2581776904.json",
       "source_format": "json",
       "signature": "55a46282be810ed1",
-      "detailed_description": "These sessions are to build muscular strength on the bike by increasing the amount of time your muscles are contracting each pedal stroke with a lower cadence (increased torque). By doing this, we aim to increase your force production throughout the pedal stroke.\n\nIt is okay to do these sessions as hill repeats where you coast/ free wheel a bit down the hill during your recovery period to start your next effort.\n\nIt is important if you are doing this session on the trainer or on flat road to pedal at a high cadence (85-95rpm) to flush your legs out during the recovery periods.\n\nIdeally this session is done on the ergo or on a hill with a steady gradient.\n\nIf completing on the ergo, you can make the warm up and cool down 10min.",
+      "detailed_description": "These sessions are to build muscular strength on the bike by increasing the amount of time your muscles are contracting each pedal stroke with a lower cadence (increased torque). By doing this, we aim to increase your force production throughout the pedal stroke.\n\nIt is okay to do these sessions as hill repeats where you coast/ free wheel a bit down the hill during your recovery period to start your next effort.\n\nIt is important if you are doing this session on the trainer or on flat road\u00a0to pedal at a high cadence (85-95rpm)\u00a0to flush your legs out during the recovery periods.\n\nIdeally this session is done on the ergo or on a hill with a steady gradient.\n\nIf completing on the ergo, you can make the warm up and cool down 10min.",
       "suitable_phases": [
         "Recovery",
         "Taper",
@@ -4423,7 +4423,7 @@
       ]
     },
     {
-      "id": "qydFeJX9Ti",
+      "id": "BHk8zrOpzM",
       "name": "1hr Base Fitness",
       "type": "endurance",
       "intensity": "moderate",
@@ -4542,7 +4542,7 @@
       "source_file": "workout_2581776905.json",
       "source_format": "json",
       "signature": "72402c440c52840e",
-      "detailed_description": "Riding on the trainer or outside in Zone 2 at a comfortable cadence.\n\nThe aim of this ride is to improve your efficiency at a low aerobic power, build mitochondria and increase your ability to utilise fat as a fuel source. Listen to your body and watch your HR to remain in zone 2.\n\nAvoid going above zone 2 at all times and ride with constant pressure on the pedals on both up and down hills.\n\nIf you want to improve your efficiency in a more aerodynamic position spend some time in the drops/ aero position so your muscles can develop strength in that position.\n\nRide at a comfortable cadence in the 80-100rpm range where possible.",
+      "detailed_description": "Riding on the trainer or outside\u00a0in Zone 2 at a comfortable cadence.\n\nThe aim of this ride is to improve your efficiency at a low aerobic power, build mitochondria and increase your ability to utilise fat as a fuel source. Listen to your body and watch your HR to remain in zone 2.\n\nAvoid going above zone 2 at all times and ride with constant pressure on the pedals on both up and down hills.\n\nIf you want to improve your efficiency in a more aerodynamic position spend some time in the drops/ aero position so your muscles can develop strength in that position.\n\nRide at a comfortable cadence in the 80-100rpm range where possible.",
       "suitable_phases": [
         "Base",
         "Foundation",
@@ -4550,7 +4550,7 @@
       ]
     },
     {
-      "id": "60vcV-ZLjo",
+      "id": "JLrhQvpuRJ",
       "name": "1hr Base Fitness",
       "type": "endurance",
       "intensity": "easy",
@@ -4669,7 +4669,7 @@
       "source_file": "workout_2726494992.json",
       "source_format": "json",
       "signature": "01fea274836a2bf9",
-      "detailed_description": "Riding on the trainer or outside in Zone 2 at a comfortable cadence.\n\nThe aim of this ride is to improve your efficiency at a low aerobic power, build mitochondria and increase your ability to utilise fat as a fuel source. Listen to your body and watch your HR to remain in zone 2.\n\nAvoid going above zone 2 at all times and ride with constant pressure on the pedals on both up and down hills.\n\nIf you want to improve your efficiency in a more aerodynamic position spend some time in the drops/ aero position so your muscles can develop strength in that position.\n\nRide at a comfortable cadence in the 80-100rpm range where possible.",
+      "detailed_description": "Riding on the trainer or outside\u00a0in Zone 2 at a comfortable cadence.\n\nThe aim of this ride is to improve your efficiency at a low aerobic power, build mitochondria and increase your ability to utilise fat as a fuel source. Listen to your body and watch your HR to remain in zone 2.\n\nAvoid going above zone 2 at all times and ride with constant pressure on the pedals on both up and down hills.\n\nIf you want to improve your efficiency in a more aerodynamic position spend some time in the drops/ aero position so your muscles can develop strength in that position.\n\nRide at a comfortable cadence in the 80-100rpm range where possible.",
       "suitable_phases": [
         "Base",
         "Foundation",
@@ -4677,7 +4677,7 @@
       ]
     },
     {
-      "id": "DQDHjQV7pn",
+      "id": "ar2MIvjjTm",
       "name": "1.5hr Base Fitness @ 60-65% Threshold",
       "type": "threshold",
       "intensity": "easy",
@@ -4796,14 +4796,14 @@
       "source_file": "workout_2581776973.json",
       "source_format": "json",
       "signature": "a511e1d84195a3be",
-      "detailed_description": "Riding on the trainer or outside in low to mid Zone 2 at a comfortable cadence.\n\nThis is slightly easier than a typical zone 2 ride at 60-65% threshold. The aim here to reduce the pressure on the legs and bring the heart rate into the desired zone to see what response your body has.\n\nThe aim of this ride is to improve your efficiency at a low aerobic power, build mitochondria and increase your ability to utilise fat as a fuel source. Listen to your body and watch your HR to remain in zone 2.\n\nAvoid going above zone 2 at all times and ride with constant pressure on the pedals on both up and down hills.\n\nIf you want to improve your efficiency in a more aerodynamic position spend some time in the drops/ aero position so your muscles can develop strength in that position.\n\nRide at a comfortable cadence in the 80-100rpm range where possible.",
+      "detailed_description": "Riding on the trainer or outside\u00a0in low to mid Zone 2 at a comfortable cadence.\n\nThis is slightly easier than a typical zone 2 ride at 60-65% threshold. The aim here to reduce the pressure on the legs and bring the heart rate into the desired zone to see what response your body has.\n\nThe aim of this ride is to improve your efficiency at a low aerobic power, build mitochondria and increase your ability to utilise fat as a fuel source. Listen to your body and watch your HR to remain in zone 2.\n\nAvoid going above zone 2 at all times and ride with constant pressure on the pedals on both up and down hills.\n\nIf you want to improve your efficiency in a more aerodynamic position spend some time in the drops/ aero position so your muscles can develop strength in that position.\n\nRide at a comfortable cadence in the 80-100rpm range where possible.",
       "suitable_phases": [
         "Build",
         "Peak"
       ]
     },
     {
-      "id": "CEm0btKPxu",
+      "id": "hMJJ1DXTi7",
       "name": "Threshold",
       "type": "threshold",
       "intensity": "hard",
@@ -4948,7 +4948,7 @@
       ]
     },
     {
-      "id": "HcUBU7sdYR",
+      "id": "9qXz45gLvf",
       "name": "10min Strength Efforts",
       "type": "recovery",
       "intensity": "hard",
@@ -5179,7 +5179,7 @@
       "source_file": "workout_2581776911.json",
       "source_format": "json",
       "signature": "0c87383493deb9e4",
-      "detailed_description": "These sessions are to build muscular strength on the bike by increasing the amount of time your muscles are contracting each pedal stroke with a lower cadence. My doing this, we aim to increase your ability to push higher power and should translate to racing when you operate at a higher cadence.\n\nIt is okay to do these sessions as hill repeats where you coast/ free wheel a bit down the hill during your recovery period to start your next effort.\n\nIt is important if you are doing this session on the trainer or on flat road to pedal at a high cadence (85-95rpm) to flush your legs out during the recovery periods.\n\nIdeally this session is done on the ergo or on a hill with a steady gradient.\n\nIf completing on the ergo, you can make the warm up and cool down 10min.",
+      "detailed_description": "These sessions are to build muscular strength on the bike by increasing the amount of time your muscles are contracting each pedal stroke with a lower cadence. My doing this, we aim to increase your ability to push higher power and should translate to racing when you operate at a higher cadence.\n\nIt is okay to do these sessions as hill repeats where you coast/ free wheel a bit down the hill during your recovery period to start your next effort.\n\nIt is important if you are doing this session on the trainer or on flat road\u00a0to pedal at a high cadence (85-95rpm)\u00a0to flush your legs out during the recovery periods.\n\nIdeally this session is done on the ergo or on a hill with a steady gradient.\n\nIf completing on the ergo, you can make the warm up and cool down 10min.",
       "suitable_phases": [
         "Recovery",
         "Taper",
@@ -5187,7 +5187,7 @@
       ]
     },
     {
-      "id": "vetLQzOsvc",
+      "id": "V76NmlIv2k",
       "name": "Threshold",
       "type": "threshold",
       "intensity": "hard",
@@ -5332,7 +5332,7 @@
       ]
     },
     {
-      "id": "KZEoBQLGU4",
+      "id": "jU4TJjcEXP",
       "name": "Base Fitness Training (Zone Two)",
       "type": "endurance",
       "intensity": "easy",
@@ -5463,7 +5463,7 @@
       "source_file": "workout_2581776934.json",
       "source_format": "json",
       "signature": "8ae330e8078aea47",
-      "detailed_description": "Riding on the trainer or outside in Zone 2 at a comfortable cadence\n\nIf you want to improve your efficiency in a more aerodynamic position spend some time in the drops. For example: 5 mins on drops every 30mins.",
+      "detailed_description": "Riding on the trainer or outside\u00a0in Zone 2 at a comfortable cadence\n\nIf you want to improve your efficiency in a more aerodynamic position spend some time in the drops. For example:\u00a05 mins on drops every 30mins.",
       "suitable_phases": [
         "Base",
         "Foundation",
@@ -5471,7 +5471,7 @@
       ]
     },
     {
-      "id": "09_CLmESbE",
+      "id": "GF7aLH5ilw",
       "name": "2x20' Tempo",
       "type": "endurance",
       "intensity": "moderate",
@@ -5623,7 +5623,7 @@
       ]
     },
     {
-      "id": "uyHtahMlXC",
+      "id": "mL0J7wOxos",
       "name": "1hr Base Fitness @ 60-65% Threshold",
       "type": "threshold",
       "intensity": "easy",
@@ -5742,14 +5742,14 @@
       "source_file": "workout_2581776952.json",
       "source_format": "json",
       "signature": "eba2314e4f1bb741",
-      "detailed_description": "Riding on the trainer or outside in low to mid Zone 2 at a comfortable cadence.\n\nThis is slightly easier than a typical zone 2 ride at 60-65% threshold. The aim here to reduce the pressure on the legs and bring the heart rate into the desired zone to see what response your body has.\n\nThe aim of this ride is to improve your efficiency at a low aerobic power, build mitochondria and increase your ability to utilise fat as a fuel source. Listen to your body and watch your HR to remain in zone 2.\n\nAvoid going above zone 2 at all times and ride with constant pressure on the pedals on both up and down hills.\n\nIf you want to improve your efficiency in a more aerodynamic position spend some time in the drops/ aero position so your muscles can develop strength in that position.\n\nRide at a comfortable cadence in the 80-100rpm range where possible.",
+      "detailed_description": "Riding on the trainer or outside\u00a0in low to mid Zone 2 at a comfortable cadence.\n\nThis is slightly easier than a typical zone 2 ride at 60-65% threshold. The aim here to reduce the pressure on the legs and bring the heart rate into the desired zone to see what response your body has.\n\nThe aim of this ride is to improve your efficiency at a low aerobic power, build mitochondria and increase your ability to utilise fat as a fuel source. Listen to your body and watch your HR to remain in zone 2.\n\nAvoid going above zone 2 at all times and ride with constant pressure on the pedals on both up and down hills.\n\nIf you want to improve your efficiency in a more aerodynamic position spend some time in the drops/ aero position so your muscles can develop strength in that position.\n\nRide at a comfortable cadence in the 80-100rpm range where possible.",
       "suitable_phases": [
         "Build",
         "Peak"
       ]
     },
     {
-      "id": "dayqJfApYi",
+      "id": "ilTau690lt",
       "name": "Tempo with spikes",
       "type": "vo2max",
       "intensity": "very_hard",
@@ -6040,7 +6040,7 @@
       ]
     },
     {
-      "id": "YQuMCHHZP-",
+      "id": "Q2HNkVFZFJ",
       "name": "30/30s (3x10')",
       "type": "recovery",
       "intensity": "very_hard",
@@ -6392,7 +6392,7 @@
       "source_file": "workout_2581776956.json",
       "source_format": "json",
       "signature": "2f8faa423c9a85d8",
-      "detailed_description": "These short hard efforts with short recovery are focused on your ability to repeat an effort and recover in a short period of time.\n\nThese should not be too difficult to begin with but will become harder towards the end and the longer the complete effort is.\n\nAim is to do these seated as much as possible. Once comfortable with power and you understand the demands of this session, you can push above the limits of the power suggestion IF you are feeling good.",
+      "detailed_description": "These short hard efforts with short recovery are focused on your ability to repeat an effort and recover in a short period of time.\n\nThese should not be too difficult to begin with but will become harder towards the end and the longer the complete effort is.\n\nAim is to do these seated as much as possible. Once comfortable with power and you understand the demands of this session, you can push above the limits\u00a0of the power suggestion IF you are feeling good.",
       "suitable_phases": [
         "Recovery",
         "Taper",
@@ -6400,7 +6400,7 @@
       ]
     },
     {
-      "id": "HEh4XElt4r",
+      "id": "mUKUuuIzyK",
       "name": "Tempo with spikes",
       "type": "vo2max",
       "intensity": "very_hard",
@@ -6691,7 +6691,7 @@
       ]
     },
     {
-      "id": "yqQnZVE8__",
+      "id": "dQ1OauEjzF",
       "name": "40/20s (5min)",
       "type": "recovery",
       "intensity": "very_hard",
@@ -7161,7 +7161,7 @@
       ]
     },
     {
-      "id": "dtbSztuCrm",
+      "id": "Gnks0BIRAb",
       "name": "120/60s",
       "type": "threshold",
       "intensity": "very_hard",
@@ -7395,7 +7395,7 @@
       ]
     },
     {
-      "id": "EihqRKslOj",
+      "id": "27DY2gETXt",
       "name": "Activations",
       "type": "vo2max",
       "intensity": "very_hard",
@@ -7668,7 +7668,7 @@
       ]
     },
     {
-      "id": "I4KdTXA6ry",
+      "id": "iRbAw0sUNX",
       "name": "Threshold Test (5' + 20')",
       "type": "threshold",
       "intensity": "very_hard",
@@ -7902,14 +7902,14 @@
       "source_file": "workout_2726494999.json",
       "source_format": "json",
       "signature": "31b0584f880b8452",
-      "detailed_description": "This is your typical 20min test with the all out 5min effort all out effort prior to your 20min FTP test. The reason you do the 5min all out effort is to remove the anaerobic contribution to your 'aerobic threshold'. You will have plenty of time to recover after the 5min effort before doing your 20min effort. We will take 95% of your average power across the 20minutes as your FTP.\n\nDo this test either on a hill, a flat consistent road with no interruptions or on a flat criterium track.\n\nThe best way to approach this test is to have a target in mind so that you don't go out too hard. You want to manage your effort well at the start so you can maintain the right power. You should aim for similar to your previous best to begin with or even slightly higher and then once you know you are capable of more and feel strong, lift 10-20w and hold on for as long as you can. Don't worry if you power drops off, just keep pushing as hard as you can. If you feel like you have energy left in the final few minutes, empty the tank.\n\nYou should finish this test completely empty, so don't leave anything on the road!!\n\nGood luck and give it your all!",
+      "detailed_description": "This is your typical 20min test with the all out\u00a05min effort all out effort prior to your 20min FTP test. The reason you do the 5min all out effort is to remove the anaerobic contribution to your 'aerobic threshold'. You will have plenty of time to recover after the 5min effort before doing your 20min effort. We will take 95% of your average power across the 20minutes as your FTP.\n\nDo this test either on a hill, a flat consistent road with no interruptions\u00a0or on a flat criterium track.\n\nThe best way to approach this test is to have a target in mind so that you don't go out too hard. You want to manage your effort well at the start so you can maintain the right power. You should aim for similar to your previous best to begin with or even slightly higher and then once you know you are capable of more and feel strong, lift 10-20w and hold on for as long as you can. Don't worry if you power drops off, just keep pushing as hard as you can. If you feel like you have energy left in the final few minutes, empty the tank.\n\nYou should finish this test completely empty, so don't leave anything on the road!!\n\nGood luck and give it your all!",
       "suitable_phases": [
         "Build",
         "Peak"
       ]
     },
     {
-      "id": "RffEHub7O3",
+      "id": "U7mnqNEiSu",
       "name": "Stanny Loop",
       "type": "vo2max",
       "intensity": "very_hard",
@@ -8199,14 +8199,14 @@
       "source_file": "workout_2726495002.json",
       "source_format": "json",
       "signature": "b3268597e817de47",
-      "detailed_description": "Find your favourite 3-12 minute effort/climb in your local area. We're going for a personal best today! If you can't think of anything in your local area, you have 2 other options:\n\n1- Find a segment on zwift that you want to substitute for outside. I.e. the Volcano KOM or Epic KOM.\n\n2- You can choose a certain time frame. I.e. 5min or 10min and just go as hard as you can for that period of time to get your best power for that time frame.\n\nYou're going to rip it as hard as you can go.\n\nBe careful not to go too hard out of the blocks!\n\nAlso, you may want to ride the climb at a lower intensity first, You can do your 'priming' efforts up the climb, roll down, and then off you go.\n\nPriming efforts will open the doors to your upper-end systems before you go all out. They include:\n\n3 X 1 min efforts between Zone 4 - Zone 5 with 1 min rest in-between. This is to be done before you rip it up the hill.\n\nGood luck.",
+      "detailed_description": "Find your favourite 3-12\u00a0minute effort/climb in your local area. We're going for a personal best today! If you can't think of anything in your local area, you have 2 other options:\n\n1- Find a segment on zwift that you want to substitute for outside. I.e. the Volcano KOM or Epic KOM.\n\n2- You can choose a certain time frame. I.e. 5min or 10min and just go as hard as you can for that period of time to get your best power for that time frame.\n\nYou're going to rip it as hard as you can go.\n\nBe careful not to go too hard out of the blocks!\n\nAlso, you may want to ride the climb at a lower intensity first, You can do your 'priming' efforts up the climb, roll down, and then off you go.\n\nPriming efforts will open the doors to your upper-end systems before you go all out. They include:\n\n3 X 1 min efforts between Zone 4 - Zone 5 with 1 min rest in-between. This is to be done before you rip it up the hill.\n\nGood luck.",
       "suitable_phases": [
         "Build",
         "Peak"
       ]
     },
     {
-      "id": "yzy-9hqqQD",
+      "id": "Jk1I4sAyio",
       "name": "Tempo with spikes",
       "type": "vo2max",
       "intensity": "very_hard",
@@ -8497,7 +8497,7 @@
       ]
     },
     {
-      "id": "oE11li_6dQ",
+      "id": "d15wWK2PiL",
       "name": "Sub Threshold Efforts",
       "type": "threshold",
       "intensity": "moderate",
@@ -8642,7 +8642,7 @@
       ]
     },
     {
-      "id": "7j-y07rySv",
+      "id": "SXeXD6VVFN",
       "name": "Aerobic Endurance Ride",
       "type": "endurance",
       "intensity": "moderate",
@@ -8699,7 +8699,7 @@
       ]
     },
     {
-      "id": "6FGwypgyd3",
+      "id": "xQkVxW7Rmp",
       "name": "Sub Threshold, Low Cadence Efforts.",
       "type": "endurance",
       "intensity": "moderate",
@@ -8914,7 +8914,7 @@
       ]
     },
     {
-      "id": "g9QN68CW4M",
+      "id": "8tsejxzWwi",
       "name": "OPTIONAL: Aerobic Endurance Bike",
       "type": "endurance",
       "intensity": "moderate",
@@ -9117,7 +9117,7 @@
       ]
     },
     {
-      "id": "YPZ9NBGwGY",
+      "id": "ykSfAR4MKw",
       "name": "Fitness Test: FTP and Threshold HR (50 mins)",
       "type": "threshold",
       "intensity": "very_hard",
@@ -9294,7 +9294,7 @@
       ]
     },
     {
-      "id": "BGcJzQMREI",
+      "id": "cfasX3Hvdw",
       "name": "M.A.P Efforts",
       "type": "vo2max",
       "intensity": "very_hard",
@@ -9528,7 +9528,7 @@
       ]
     },
     {
-      "id": "4_hG4cmtLJ",
+      "id": "sCPEurHH6s",
       "name": "Stanny Loop",
       "type": "endurance",
       "intensity": "moderate",
@@ -9674,7 +9674,7 @@
       ]
     },
     {
-      "id": "AqCq_93Mkt",
+      "id": "go2vRYyNWK",
       "name": "Aerobic Endurance Ride",
       "type": "endurance",
       "intensity": "moderate",
@@ -9731,7 +9731,7 @@
       ]
     },
     {
-      "id": "fE1EL_DInW",
+      "id": "tqOydb3Qm8",
       "name": "Sub Threshold Efforts",
       "type": "tempo",
       "intensity": "moderate",
@@ -9876,7 +9876,7 @@
       ]
     },
     {
-      "id": "mrcJ_qcxzQ",
+      "id": "oB9Nlev7d0",
       "name": "Sub Threshold Efforts",
       "type": "tempo",
       "intensity": "moderate",
@@ -10014,14 +10014,14 @@
       "source_file": "workout_2752977957.json",
       "source_format": "json",
       "signature": "b0dd114954600eaf",
-      "detailed_description": "Warm Up:\n22 mins in Z2.\n\nMain Set:\n6 x (10 mins in upper Z3 + 3 min recoveries in Z2).\n\nWarm Down:\n10 mins in low Z2.",
+      "detailed_description": "Warm Up:\n22\u00a0mins in Z2.\n\nMain Set:\n6 x (10 mins in upper Z3 + 3 min recoveries in Z2).\n\nWarm Down:\n10 mins in low Z2.",
       "suitable_phases": [
         "Base",
         "Build"
       ]
     },
     {
-      "id": "wnkNy97dp_",
+      "id": "Snvr5KipIl",
       "name": "Aerobic Endurance Ride",
       "type": "endurance",
       "intensity": "moderate",
@@ -10078,7 +10078,7 @@
       ]
     },
     {
-      "id": "4TQY6Y65ww",
+      "id": "WahjZ21uEk",
       "name": "Aerobic Endurance Ride",
       "type": "endurance",
       "intensity": "moderate",
@@ -10135,7 +10135,7 @@
       ]
     },
     {
-      "id": "SzllVrSkNO",
+      "id": "ZQGwHWA3LL",
       "name": "Aerobic Endurance Ride",
       "type": "endurance",
       "intensity": "moderate",
@@ -10192,7 +10192,7 @@
       ]
     },
     {
-      "id": "ZGbzkAxodJ",
+      "id": "FZPxin5wMO",
       "name": "Aerobic Endurance Ride",
       "type": "endurance",
       "intensity": "moderate",
@@ -10249,7 +10249,7 @@
       ]
     },
     {
-      "id": "T5YA22V1bU",
+      "id": "mMCHdHT9DB",
       "name": "Aerobic Endurance Ride",
       "type": "endurance",
       "intensity": "moderate",
@@ -10306,7 +10306,7 @@
       ]
     },
     {
-      "id": "CxgBfsaAgd",
+      "id": "BstGKpzFKq",
       "name": "Aerobic Endurance Ride",
       "type": "endurance",
       "intensity": "moderate",
@@ -10363,7 +10363,7 @@
       ]
     },
     {
-      "id": "YkN5XYhtuO",
+      "id": "m73gsCblbl",
       "name": "Sub Threshold Efforts",
       "type": "tempo",
       "intensity": "moderate",
@@ -10508,7 +10508,7 @@
       ]
     },
     {
-      "id": "-dGpO2JAJl",
+      "id": "RL31W390Rl",
       "name": "M.A.P Efforts",
       "type": "vo2max",
       "intensity": "very_hard",
@@ -10742,7 +10742,7 @@
       ]
     },
     {
-      "id": "H9Bw5Th2wz",
+      "id": "bxZjY8oRPV",
       "name": "Above and Below Threshold",
       "type": "threshold",
       "intensity": "very_hard",
@@ -10965,7 +10965,7 @@
       ]
     },
     {
-      "id": "_OpVKHJO02",
+      "id": "irxLfBqF8y",
       "name": "Sub Threshold Efforts",
       "type": "threshold",
       "intensity": "moderate",
@@ -11110,7 +11110,7 @@
       ]
     },
     {
-      "id": "1uzzD_P7Fg",
+      "id": "GibHiX8knk",
       "name": "Sub Threshold Efforts",
       "type": "endurance",
       "intensity": "moderate",
@@ -11256,7 +11256,7 @@
       ]
     },
     {
-      "id": "VjuvOFp2cs",
+      "id": "6SOebuesaq",
       "name": "OPTIONAL: Aerobic Endurance Ride",
       "type": "endurance",
       "intensity": "moderate",
@@ -11377,7 +11377,7 @@
       ]
     },
     {
-      "id": "xcMzYm4wwm",
+      "id": "54RT4BajoK",
       "name": "Aerobic Endurance Ride",
       "type": "recovery",
       "intensity": "moderate",
@@ -11683,7 +11683,7 @@
       ]
     },
     {
-      "id": "WeUrAmMkBy",
+      "id": "DVTd2EjzTh",
       "name": "Aerobic Endurance Bike",
       "type": "endurance",
       "intensity": "moderate",
@@ -11943,7 +11943,7 @@
       ]
     },
     {
-      "id": "bDzi8bP9Cd",
+      "id": "YwRugsFLWl",
       "name": "Aerobic Endurance Ride",
       "type": "recovery",
       "intensity": "moderate",
@@ -12377,7 +12377,7 @@
       ]
     },
     {
-      "id": "FX9QoV6QhE",
+      "id": "citf5uoJch",
       "name": "Aerobic Endurance Bike",
       "type": "recovery",
       "intensity": "moderate",
@@ -12669,7 +12669,7 @@
       ]
     },
     {
-      "id": "6JB-EJzh_7",
+      "id": "OMzNYCziJU",
       "name": "Aerobic Endurance Bike",
       "type": "recovery",
       "intensity": "moderate",
@@ -12929,7 +12929,7 @@
       ]
     },
     {
-      "id": "5TkcetHazx",
+      "id": "0rqb1gcSFI",
       "name": "Above and Below Threshold",
       "type": "vo2max",
       "intensity": "very_hard",
@@ -13152,7 +13152,7 @@
       ]
     },
     {
-      "id": "rXMF8e0WBm",
+      "id": "FjV1bFocgw",
       "name": "Above and Below Threshold",
       "type": "vo2max",
       "intensity": "very_hard",
@@ -13375,7 +13375,7 @@
       ]
     },
     {
-      "id": "WS5TCSkQV5",
+      "id": "ngBC11I9L7",
       "name": "Threshold Efforts",
       "type": "endurance",
       "intensity": "hard",
@@ -13610,7 +13610,7 @@
       ]
     },
     {
-      "id": "vr621khuHk",
+      "id": "0UfLqfPTuz",
       "name": "OPTIONAL: Aerobic Endurance Bike",
       "type": "endurance",
       "intensity": "moderate",
@@ -13813,7 +13813,7 @@
       ]
     },
     {
-      "id": "p3d_WvFK1a",
+      "id": "zEE1F2ueW6",
       "name": "Threshold Efforts",
       "type": "endurance",
       "intensity": "hard",
@@ -14048,7 +14048,7 @@
       ]
     },
     {
-      "id": "Km8PhwGBFQ",
+      "id": "N0fZRaB7nj",
       "name": "Threshold Efforts",
       "type": "recovery",
       "intensity": "hard",
@@ -14372,7 +14372,7 @@
       ]
     },
     {
-      "id": "VwwlAKcOJH",
+      "id": "BAkWkaPHvo",
       "name": "Threshold Efforts",
       "type": "recovery",
       "intensity": "hard",
@@ -14721,7 +14721,7 @@
       ]
     },
     {
-      "id": "y1z0wz4SXD",
+      "id": "GprJMtOG6a",
       "name": "M.A.P Efforts",
       "type": "vo2max",
       "intensity": "very_hard",
@@ -14955,7 +14955,7 @@
       ]
     },
     {
-      "id": "-ywldGs_KG",
+      "id": "9smlHkbt4U",
       "name": "Aerobic Endurance Bike",
       "type": "endurance",
       "intensity": "moderate",
@@ -15215,7 +15215,7 @@
       ]
     },
     {
-      "id": "0rGnbPrOmB",
+      "id": "wtcn6DOqT6",
       "name": "Aerobic Endurance Ride",
       "type": "endurance",
       "intensity": "moderate",
@@ -15272,7 +15272,7 @@
       ]
     },
     {
-      "id": "-YpCLBiIM0",
+      "id": "LA5clrG4ZC",
       "name": "M.A.P Efforts",
       "type": "vo2max",
       "intensity": "very_hard",
@@ -15506,7 +15506,7 @@
       ]
     },
     {
-      "id": "y9Uqv4OCev",
+      "id": "9ge9D1vTtE",
       "name": "M.A.P Efforts",
       "type": "vo2max",
       "intensity": "very_hard",
@@ -15740,7 +15740,7 @@
       ]
     },
     {
-      "id": "BO7n-4y6Xy",
+      "id": "jVDtGT0f1h",
       "name": "M.A.P Efforts",
       "type": "vo2max",
       "intensity": "very_hard",
@@ -15974,7 +15974,7 @@
       ]
     },
     {
-      "id": "KYBf-25IVZ",
+      "id": "cfkiTUUL6L",
       "name": "Threshold Efforts",
       "type": "recovery",
       "intensity": "hard",
@@ -16298,7 +16298,7 @@
       ]
     },
     {
-      "id": "8L-pkvKps3",
+      "id": "JWjqbqz2JC",
       "name": "Sub Threshold Effort",
       "type": "endurance",
       "intensity": "moderate",
@@ -16451,7 +16451,7 @@
       ]
     },
     {
-      "id": "-0MNxCj7Mu",
+      "id": "8KnF3Vk5Bh",
       "name": "M.A.P Efforts",
       "type": "vo2max",
       "intensity": "very_hard",
@@ -16685,7 +16685,7 @@
       ]
     },
     {
-      "id": "DsnyQMjWJz",
+      "id": "mo7uIjo6dc",
       "name": "Threshold Efforts",
       "type": "endurance",
       "intensity": "hard",
@@ -16920,7 +16920,7 @@
       ]
     },
     {
-      "id": "ACydoptFZc",
+      "id": "AvC0UrMVJd",
       "name": "Sub Threshold Efforts",
       "type": "tempo",
       "intensity": "moderate",
@@ -17097,7 +17097,7 @@
       ]
     },
     {
-      "id": "Nh3EDNUjQx",
+      "id": "LhtBVbAxpz",
       "name": "Sub Threshold Efforts",
       "type": "tempo",
       "intensity": "moderate",
@@ -17242,7 +17242,7 @@
       ]
     },
     {
-      "id": "74lpfzK26E",
+      "id": "PWJhL7eZix",
       "name": "Sub Threshold Efforts",
       "type": "tempo",
       "intensity": "moderate",
@@ -17387,7 +17387,7 @@
       ]
     },
     {
-      "id": "jQjGuBvmEu",
+      "id": "GOEAk3VDv5",
       "name": "Sub Threshold Efforts",
       "type": "tempo",
       "intensity": "moderate",
@@ -17532,7 +17532,7 @@
       ]
     },
     {
-      "id": "TijeK7vpoS",
+      "id": "nO2p5pSQ1c",
       "name": "Sub Threshold Efforts",
       "type": "tempo",
       "intensity": "moderate",
@@ -17677,7 +17677,7 @@
       ]
     },
     {
-      "id": "flaDOh7gXJ",
+      "id": "YgNKlVChmQ",
       "name": "Sub Threshold Efforts",
       "type": "tempo",
       "intensity": "moderate",
@@ -17822,7 +17822,7 @@
       ]
     },
     {
-      "id": "LHkAlXMDM3",
+      "id": "2lSBYNg8IV",
       "name": "Sub Threshold Efforts",
       "type": "tempo",
       "intensity": "moderate",
@@ -17967,7 +17967,7 @@
       ]
     },
     {
-      "id": "Kn4wft3C3Y",
+      "id": "b4yoZ08ZDw",
       "name": "Aerobic Endurance Bike",
       "type": "recovery",
       "intensity": "moderate",
@@ -18259,7 +18259,7 @@
       ]
     },
     {
-      "id": "crZx78Tt9D",
+      "id": "Lb5LDQoZR6",
       "name": "Aerobic Endurance Bike",
       "type": "endurance",
       "intensity": "moderate",
@@ -18462,7 +18462,7 @@
       ]
     },
     {
-      "id": "xBtoT-gylo",
+      "id": "agGCaDRogT",
       "name": "Aerobic Endurance Bike",
       "type": "endurance",
       "intensity": "moderate",
@@ -18665,7 +18665,7 @@
       ]
     },
     {
-      "id": "-oQB5_-FNF",
+      "id": "KYrPa3ckAd",
       "name": "Above and Below Threshold",
       "type": "vo2max",
       "intensity": "very_hard",
@@ -18888,7 +18888,7 @@
       ]
     },
     {
-      "id": "n-yMqiR_sA",
+      "id": "OXlWh579aG",
       "name": "Above and Below Threshold",
       "type": "vo2max",
       "intensity": "very_hard",
@@ -19111,7 +19111,7 @@
       ]
     },
     {
-      "id": "rIC1lsTKLU",
+      "id": "JIij9KsoJJ",
       "name": "Threshold Efforts",
       "type": "endurance",
       "intensity": "hard",
@@ -19346,7 +19346,7 @@
       ]
     },
     {
-      "id": "lKYKI4d3_O",
+      "id": "wvgCzoPv3l",
       "name": "Threshold Efforts",
       "type": "recovery",
       "intensity": "hard",
@@ -19752,7 +19752,7 @@
       ]
     },
     {
-      "id": "JnVHyyBKdU",
+      "id": "I09u38c8wN",
       "name": "Threshold Efforts",
       "type": "recovery",
       "intensity": "hard",
@@ -20215,7 +20215,7 @@
       ]
     },
     {
-      "id": "HYvQLufBwY",
+      "id": "92iTg6RzsF",
       "name": "M.A.P Efforts",
       "type": "vo2max",
       "intensity": "very_hard",
@@ -20455,7 +20455,7 @@
       ]
     },
     {
-      "id": "eKjEz4njea",
+      "id": "luDI1qLqxE",
       "name": "Aerobic Endurance Ride",
       "type": "endurance",
       "intensity": "moderate",
@@ -20512,7 +20512,7 @@
       ]
     },
     {
-      "id": "aPIhLcxpOe",
+      "id": "0mXxsfYNTu",
       "name": "Sub Threshold Efforts",
       "type": "endurance",
       "intensity": "moderate",
@@ -20690,7 +20690,7 @@
       ]
     },
     {
-      "id": "2Y7Rr9jG0C",
+      "id": "IhmTSCa0G0",
       "name": "Sub Threshold Effort",
       "type": "endurance",
       "intensity": "moderate",
@@ -20843,7 +20843,7 @@
       ]
     },
     {
-      "id": "JQKR7aqCs-",
+      "id": "g1OxC08UCk",
       "name": "Aerobic Endurance Ride",
       "type": "endurance",
       "intensity": "moderate",
@@ -20900,7 +20900,7 @@
       ]
     },
     {
-      "id": "RXNRb3MU-_",
+      "id": "OIb8LcTm9r",
       "name": "OPTIONAL: Aerobic Endurance Ride",
       "type": "endurance",
       "intensity": "moderate",
@@ -21046,7 +21046,7 @@
       ]
     },
     {
-      "id": "ITNFeRZ839",
+      "id": "l4lFzMqDVU",
       "name": "OPTIONAL: Aerobic Endurance Ride",
       "type": "endurance",
       "intensity": "moderate",
@@ -21192,7 +21192,7 @@
       ]
     },
     {
-      "id": "yj1YE4yKOO",
+      "id": "L1qrtVpRAZ",
       "name": "OPTIONAL: Aerobic Endurance Ride",
       "type": "endurance",
       "intensity": "easy",
@@ -21313,7 +21313,7 @@
       ]
     },
     {
-      "id": "R0mXYaCRGO",
+      "id": "5ktkq20VrW",
       "name": "Aerobic Endurance Ride",
       "type": "endurance",
       "intensity": "moderate",
@@ -21370,7 +21370,7 @@
       ]
     },
     {
-      "id": "BdacG8cAwA",
+      "id": "cyPi2BneCE",
       "name": "Aerobic Endurance Ride",
       "type": "endurance",
       "intensity": "moderate",
@@ -21427,7 +21427,7 @@
       ]
     },
     {
-      "id": "Qj6-kpXpAs",
+      "id": "sWcdxdX56r",
       "name": "Threshold Efforts",
       "type": "endurance",
       "intensity": "hard",
@@ -21662,7 +21662,7 @@
       ]
     },
     {
-      "id": "6f0BvpstRg",
+      "id": "rvOE6NDHRT",
       "name": "30 s x 4m interval repeats",
       "type": "vo2max",
       "intensity": "very_hard",
