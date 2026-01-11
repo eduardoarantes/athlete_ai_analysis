@@ -52,12 +52,16 @@ interface StructuredWorkoutSegment {
   steps: WorkoutStep[]
 }
 
-interface WorkoutStructure {
+// WorkoutStructure interface for reference (validates input shape)
+interface _WorkoutStructure {
   primaryIntensityMetric: 'percentOfFtp' | 'watts' | 'heartrate'
   primaryLengthMetric: 'duration' | 'distance'
   structure: StructuredWorkoutSegment[]
   polyline?: [number, number][]
 }
+
+// Export to mark as intentionally defined for documentation
+export type { _WorkoutStructure as WorkoutStructureSchema }
 
 // ============================================================================
 // Validation Result Types
