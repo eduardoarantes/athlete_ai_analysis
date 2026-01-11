@@ -1,0 +1,52 @@
+◾️ 3, January Training status ◾️
+😍 Best training status (514)
+🌳 Fitness 41, Fatigue 78, Balance -37
+
+◾️ Ride Summary ◾️
+🐴 Racepace Training (threshold intensity)
+🏷️ Practical training, Race/Event
+🚵 Hillclimb Ride
+📊 RP 194, Int 0.88, Vol 272
+✨ Recovery time 72 hour
+
+◾️ Peak power ◾️
+⚡ 15sec 682w (89%)
+⚡ 1min 397w (95%)
+⚡ 2min 354w (104%) 🏆 PR
+⚡ 5min 227w (89%)
+⚡ 10min 191w (82%)
+⚡ 20min 177w (86%)
+⚡ 40min 162w (88%)
+⚡ 1hour 137w (80%)
+⚡ 2hour 84w (54%)
+⚡ 4hour 79w (61%)
+
+◾️ Power zone ◾️
+⚪ 1zone 45% (+6%)
+🔵 2zone 17% (-4%)
+🟢 3zone 12% (-2%)
+🟡 4zone 8% (-2%)
+🟠 5zone 5% (-2%)
+🔴 6zone 6%
+⭕ 7zone 6% (+3%)
+
+◾️ Heartrate zone ◾️
+🤍 1zone 14%
+💙 2zone 29%
+💚 3zone 38%
+💛 4zone 17%
+🧡 5zone 3%
+
+◾️ Anaerobic work ◾️
+🕯️ Matches 29.3
+⌛ AWC duration 35m 20s
+🏋 AWC energy 190.1kJ
+🔋 Maximum discharge 100%
+
+◾️ Energy metabolism ◾️
+🔥 Calories burned 1574
+🧀 Fat 45.1%
+🍞 Carb 54.9%
+⏲ Fat loss 76.3g
+
+--- Insights by Riduck ---

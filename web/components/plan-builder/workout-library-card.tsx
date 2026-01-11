@@ -15,8 +15,8 @@ import type { WorkoutLibraryItem } from '@/lib/types/workout-library'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { getWorkoutBorderColor, getIntensityBadgeColors } from '@/lib/constants/activity-styles'
-import { structureToDisplaySegments, type DisplaySegment } from '@/lib/utils/workout-structure-helpers'
 import { formatDuration } from '@/lib/types/training-plan'
+import { WorkoutStructureDisplay } from '@/components/workout/workout-structure-display'
 
 /**
  * Format workout type for display
@@ -47,19 +47,6 @@ function formatIntensity(intensity: string): string {
   return labels[intensity] ?? intensity
 }
 
-
-/**
- * Format zone for segment display
- */
-function formatZone(segment: DisplaySegment): string {
-  if (segment.power_low_pct && segment.power_high_pct) {
-    if (segment.power_low_pct === segment.power_high_pct) {
-      return `${segment.power_low_pct}%`
-    }
-    return `${Math.round(segment.power_low_pct)}-${Math.round(segment.power_high_pct)}%`
-  }
-  return ''
-}
 
 /**
  * Props for WorkoutLibraryCard
@@ -212,27 +199,8 @@ export function WorkoutLibraryCard({
 
               {hasStructure && (
                 <div className="space-y-1">
-                  <span className="text-xs font-medium">Segments:</span>
-                  <div className="grid gap-1">
-                    {structureToDisplaySegments(workout.structure).map((segment, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between text-xs bg-muted/50 rounded px-2 py-1"
-                      >
-                        <span className="flex items-center gap-2">
-                          <span className="font-medium">
-                            {formatDuration(segment.duration_min)}
-                          </span>
-                          <span className="text-muted-foreground">
-                            {segment.description || segment.type}
-                          </span>
-                        </span>
-                        <span className="font-mono text-muted-foreground">
-                          {formatZone(segment)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                  <span className="text-xs font-medium">Structure:</span>
+                  <WorkoutStructureDisplay structure={workout.structure} />
                 </div>
               )}
             </div>
