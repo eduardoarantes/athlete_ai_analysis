@@ -348,6 +348,8 @@ export interface TrainingPlan {
   /** Source metadata tracking how the plan was generated */
   metadata: PlanSourceMetadata | null
   status: 'draft' | 'active' | 'completed' | 'archived' | null
+  /** Source of plan creation: 'custom_builder', 'ai', 'imported', etc. */
+  created_from?: string | null
   created_at: string
   updated_at: string
   /** @deprecated Will be removed after migration - use PlanInstance.start_date instead */
