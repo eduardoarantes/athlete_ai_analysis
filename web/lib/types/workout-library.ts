@@ -135,11 +135,8 @@ export interface WorkoutLibraryItem {
   /** Days of the week where this workout is typically scheduled */
   suitable_weekdays?: Weekday[]
 
-  /** NEW: Full workout structure with multi-step interval support (Issue #96) */
-  structure?: WorkoutStructure
-
-  /** Workout segments (warmup, intervals, cooldown, etc.) - current format */
-  segments: LibraryWorkoutSegment[]
+  /** Full workout structure with multi-step interval support (Issue #96) */
+  structure: WorkoutStructure
 
   /** Base duration in minutes */
   base_duration_min: number
@@ -203,29 +200,12 @@ export const INTENSITY_LABELS: Record<WorkoutIntensity, string> = {
 }
 
 /**
- * Calculate total duration of a library workout from its structure or segments
- * NEW: Supports WorkoutStructure with multi-step intervals (Issue #96)
+ * Calculate total duration of a library workout from its structure
  */
 export function calculateLibraryWorkoutDuration(workout: WorkoutLibraryItem): number {
-  // NEW: Handle WorkoutStructure format
   if (workout.structure?.structure) {
     return calculateStructureDuration(workout.structure)
   }
-
-  // Current format handling
-  if (!workout.segments || workout.segments.length === 0) {
-    return workout.base_duration_min
-  }
-
-  return workout.segments.reduce((total, segment) => {
-    let segmentDuration = segment.duration_min || 0
-
-    // Handle interval sets
-    if (segment.sets && segment.work && segment.recovery) {
-      const setDuration = (segment.work.duration_min + segment.recovery.duration_min) * segment.sets
-      segmentDuration = setDuration
-    }
-
-    return total + segmentDuration
-  }, 0)
+  // Fallback to base_duration_min if structure is somehow empty
+  return workout.base_duration_min
 }

@@ -9,7 +9,6 @@
 import type {
   PlanInstance,
   Workout,
-  WorkoutSegment,
   WorkoutStructure,
   StepTarget,
 } from '@/lib/types/training-plan'
@@ -47,6 +46,7 @@ export class TrainingPeaksSyncService {
    * Map internal segment type to TrainingPeaks IntensityClass
    */
   private mapSegmentTypeToIntensityClass(type: string, powerPct?: number): string {
+    // Handle non-active types first
     const mapping: Record<string, string> = {
       warmup: 'WarmUp',
       warmUp: 'WarmUp',
@@ -54,18 +54,31 @@ export class TrainingPeaksSyncService {
       coolDown: 'Cooldown',
       recovery: 'Active Recovery',
       rest: 'Active Recovery',
-      steady: 'Endurance',
-      tempo: 'Tempo',
-      work: 'Threshold',
-      active: 'Threshold',
     }
 
-    // For intervals, check power to determine VO2 Max vs Threshold
-    if (type === 'interval' || type === 'active') {
-      return powerPct && powerPct > 105 ? 'VO2 Max' : 'Threshold'
+    if (mapping[type]) {
+      return mapping[type]
     }
 
-    return mapping[type] || 'Active Recovery'
+    // For active/interval/work types, use power percentage to determine intensity
+    if (type === 'active' || type === 'interval' || type === 'work') {
+      if (!powerPct) {
+        return 'Threshold' // Default for active with no power data
+      }
+
+      // Map based on standard power zones
+      if (powerPct > 105) return 'VO2 Max' // Zone 5+
+      if (powerPct >= 91) return 'Threshold' // Zone 4
+      if (powerPct >= 76) return 'Tempo' // Zone 3
+      if (powerPct >= 56) return 'Endurance' // Zone 2
+      return 'Active Recovery' // Zone 1
+    }
+
+    // Legacy segment types
+    if (type === 'steady') return 'Endurance'
+    if (type === 'tempo') return 'Tempo'
+
+    return 'Active Recovery'
   }
 
   /**
@@ -177,39 +190,8 @@ export class TrainingPeaksSyncService {
       return JSON.stringify({ Steps: steps })
     }
 
-    // Legacy format handling
-    if (!workout.segments || workout.segments.length === 0) {
-      return ''
-    }
-
-    const steps = workout.segments.map((segment: WorkoutSegment) => {
-      const avgPower = segment.power_high_pct
-        ? ((segment.power_low_pct || 0) + segment.power_high_pct) / 2
-        : segment.power_low_pct
-
-      const step: Record<string, unknown> = {
-        Type: 'Step',
-        IntensityClass: this.mapSegmentTypeToIntensityClass(segment.type, avgPower),
-        Name: segment.description || segment.type,
-        Length: {
-          Unit: 'Second',
-          Value: Math.round(segment.duration_min * 60),
-        },
-      }
-
-      if (segment.power_low_pct !== undefined) {
-        step.IntensityTarget = {
-          Unit: 'PercentOfFtp',
-          MinValue: segment.power_low_pct,
-          MaxValue: segment.power_high_pct ?? segment.power_low_pct,
-          Value: Math.round(avgPower ?? segment.power_low_pct),
-        }
-      }
-
-      return step
-    })
-
-    return JSON.stringify({ Steps: steps })
+    // No structure available
+    return ''
   }
 
   /**
@@ -223,14 +205,11 @@ export class TrainingPeaksSyncService {
   ): TPWorkoutCreateRequest {
     const structure = this.convertWorkoutToTPStructure(workout)
 
-    // NEW: Calculate duration from WorkoutStructure if available
-    let totalMinutes = 0
-    if (workout.structure?.structure && workout.structure.structure.length > 0) {
-      totalMinutes = calculateStructureDuration(workout.structure)
-    } else {
-      totalMinutes =
-        workout.segments?.reduce((sum, seg) => sum + (seg.duration_min || 0), 0) ?? 0
-    }
+    // Calculate duration from WorkoutStructure
+    const totalMinutes =
+      workout.structure?.structure && workout.structure.structure.length > 0
+        ? calculateStructureDuration(workout.structure)
+        : 0
 
     const request: TPWorkoutCreateRequest = {
       AthleteId: athleteId,

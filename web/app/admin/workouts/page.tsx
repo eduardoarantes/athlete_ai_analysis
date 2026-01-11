@@ -49,6 +49,7 @@ import { INTENSITY_LABELS } from '@/lib/types/workout-library'
 import { getWorkoutIntensityColors } from '@/lib/constants/activity-styles'
 import { PowerProfileSVG } from '@/components/training/power-profile-svg'
 import { getPowerRangeColor } from '@/lib/types/power-zones'
+import { structureToDisplaySegments, hasValidStructure } from '@/lib/utils/workout-structure-helpers'
 
 const WORKOUT_TYPES: WorkoutType[] = [
   'endurance',
@@ -432,11 +433,11 @@ export default function AdminWorkoutsPage() {
                   >
                     {/* Mini Power Profile */}
                     <div className="bg-muted/30 p-2 border-b">
-                      {workout.segments && workout.segments.length > 0 ? (
-                        <PowerProfileSVG segments={workout.segments} mini />
+                      {hasValidStructure(workout.structure) ? (
+                        <PowerProfileSVG structure={workout.structure} mini />
                       ) : (
                         <div className="h-[44px] flex items-center justify-center text-xs text-muted-foreground">
-                          No segments
+                          No structure
                         </div>
                       )}
                     </div>
@@ -592,23 +593,23 @@ export default function AdminWorkoutsPage() {
                     )}
 
                   {/* Power Profile Chart */}
-                  {selectedWorkout.segments && selectedWorkout.segments.length > 0 && (
+                  {hasValidStructure(selectedWorkout.structure) && (
                     <div>
                       <h4 className="font-medium mb-2">Power Profile</h4>
                       <div className="rounded-md border p-3 bg-muted/30">
-                        <PowerProfileSVG segments={selectedWorkout.segments} />
+                        <PowerProfileSVG structure={selectedWorkout.structure} />
                       </div>
                     </div>
                   )}
 
-                  {/* Segments */}
-                  {selectedWorkout.segments && selectedWorkout.segments.length > 0 && (
+                  {/* Workout Structure */}
+                  {hasValidStructure(selectedWorkout.structure) && (
                     <div>
                       <h4 className="font-medium mb-2">Workout Structure</h4>
                       <div className="space-y-3">
-                        {selectedWorkout.segments.map((segment, idx) => {
+                        {structureToDisplaySegments(selectedWorkout.structure).map((segment, idx) => {
                           // Interval set with work/recovery
-                          if (segment.sets && segment.work && segment.recovery) {
+                          if (segment.type === 'interval' && segment.sets && segment.work && segment.recovery) {
                             return (
                               <div
                                 key={idx}
@@ -676,8 +677,7 @@ export default function AdminWorkoutsPage() {
                                           ),
                                         }}
                                       >
-                                        {segment.recovery.power_low_pct}-
-                                        {segment.recovery.power_high_pct}%
+                                        {segment.recovery.power_low_pct}-{segment.recovery.power_high_pct}%
                                       </div>
                                       <div className="text-sm text-muted-foreground">
                                         {segment.recovery.description || 'Recovery'}
@@ -696,29 +696,27 @@ export default function AdminWorkoutsPage() {
                                 className="flex items-center gap-4 p-3 border-l-4"
                                 style={{
                                   borderLeftColor: getPowerRangeColor(
-                                    segment.power_low_pct ?? 50,
-                                    segment.power_high_pct ?? 60
+                                    segment.power_low_pct,
+                                    segment.power_high_pct
                                   ),
                                 }}
                               >
                                 <div className="font-semibold min-w-[70px]">
-                                  {formatDuration(segment.duration_min ?? 0)}
+                                  {formatDuration(segment.duration_min)}
                                 </div>
                                 <div
                                   className="font-medium"
                                   style={{
                                     color: getPowerRangeColor(
-                                      segment.power_low_pct ?? 50,
-                                      segment.power_high_pct ?? 60
+                                      segment.power_low_pct,
+                                      segment.power_high_pct
                                     ),
                                   }}
                                 >
-                                  {segment.power_low_pct && segment.power_high_pct
-                                    ? `${segment.power_low_pct}-${segment.power_high_pct}%`
-                                    : '-'}
+                                  {segment.power_low_pct}-{segment.power_high_pct}%
                                 </div>
                                 <div className="text-sm text-muted-foreground capitalize">
-                                  {segment.description || segment.type}
+                                  {segment.description}
                                 </div>
                               </div>
                             </div>

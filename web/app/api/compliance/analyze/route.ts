@@ -21,7 +21,8 @@ import { createClient } from '@/lib/supabase/server'
 import { StravaService } from '@/lib/services/strava-service'
 import { analyzeWorkoutCompliance } from '@/lib/services/compliance-analysis-service'
 import { errorLogger } from '@/lib/monitoring/error-logger'
-import type { WorkoutSegment, TrainingPlanData, Workout } from '@/lib/types/training-plan'
+import type { TrainingPlanData, Workout } from '@/lib/types/training-plan'
+import { hasValidStructure } from '@/lib/types/training-plan'
 import type { Json } from '@/lib/types/database'
 
 interface AnalyzeRequest {
@@ -199,13 +200,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get workout segments
-    const segments: WorkoutSegment[] = workout.segments || []
-
-    if (segments.length === 0) {
+    // Check if workout has valid structure
+    if (!hasValidStructure(workout.structure)) {
       return NextResponse.json(
         {
-          error: 'Workout has no segments defined for compliance analysis',
+          error: 'Workout has no structure defined for compliance analysis',
           workout_name: workout.name,
           workout_type: workout.type,
         },
@@ -256,7 +255,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Run compliance analysis
-    const analysis = analyzeWorkoutCompliance(segments, powerStream, ftp)
+    const analysis = analyzeWorkoutCompliance(undefined, powerStream, ftp, workout.structure)
 
     // Store analysis to database if we have a match_id and save is enabled
     let savedAnalysisId: string | null = null
@@ -347,7 +346,7 @@ export async function POST(request: NextRequest) {
         athlete_ftp: ftp,
         athlete_lthr: lthr,
         power_stream_length: powerStream.length,
-        planned_segments: segments.length,
+        planned_segments: analysis.overall.segments_total,
         saved_analysis_id: savedAnalysisId,
       },
     })

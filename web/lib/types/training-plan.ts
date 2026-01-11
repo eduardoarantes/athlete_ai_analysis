@@ -260,10 +260,8 @@ export interface Workout {
     | 'rest'
     | string
   tss?: number
-  /** NEW: Full workout structure with multi-step interval support (Issue #96) */
+  /** Full workout structure with multi-step interval support (Issue #96) */
   structure?: WorkoutStructure
-  /** Current segment format - will be migrated to structure */
-  segments?: WorkoutSegment[]
   /** Source of the workout: 'library' for pre-defined workouts, 'llm' for AI-generated */
   source?: 'library' | 'llm'
   /** ID of the workout in the library - NanoID format (only present when source='library') */
@@ -367,10 +365,8 @@ export interface LibraryWorkoutData {
   tss: number
   duration_min?: number | undefined
   description?: string | undefined
-  /** NEW: Full workout structure with multi-step interval support (Issue #96) */
+  /** Full workout structure with multi-step interval support (Issue #96) */
   structure?: WorkoutStructure | undefined
-  /** Current segment format - will be migrated to structure */
-  segments?: WorkoutSegment[] | undefined
 }
 
 /**
@@ -572,29 +568,11 @@ export function formatDuration(totalMinutes: number): string {
 }
 
 /**
- * Calculate total duration of a workout from its structure or legacy segments
- * NEW: Supports WorkoutStructure with multi-step intervals (Issue #96)
+ * Calculate total duration of a workout from its structure
  */
 export function calculateWorkoutDuration(workout: Workout): number {
-  // NEW: Handle WorkoutStructure format
   if (workout.structure?.structure) {
     return calculateStructureDuration(workout.structure)
   }
-
-  // Legacy format handling
-  if (!workout.segments || workout.segments.length === 0) {
-    return 0
-  }
-
-  return workout.segments.reduce((total, segment) => {
-    let segmentDuration = segment.duration_min || 0
-
-    // Handle interval sets
-    if (segment.sets && segment.work && segment.recovery) {
-      const setDuration = (segment.work.duration_min + segment.recovery.duration_min) * segment.sets
-      segmentDuration += setDuration
-    }
-
-    return total + segmentDuration
-  }, 0)
+  return 0
 }

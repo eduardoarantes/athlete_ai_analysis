@@ -4,9 +4,16 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+from cycling_ai.core.workout_library.structure_helpers import WorkoutStructure
+
 
 class IntervalPart(BaseModel):
-    """Work or recovery part of an interval set."""
+    """
+    Work or recovery part of an interval set.
+
+    DEPRECATED: Legacy format. Use WorkoutStructure instead.
+    Kept for backward compatibility during migration.
+    """
 
     duration_min: float
     power_low_pct: float
@@ -17,6 +24,9 @@ class IntervalPart(BaseModel):
 class WorkoutSegment(BaseModel):
     """
     A segment within a workout.
+
+    DEPRECATED: Legacy format. Use WorkoutStructure instead.
+    Kept for backward compatibility during migration.
 
     Can be either:
     - Simple segment (warmup, cooldown, steady, recovery) with direct duration/power
@@ -61,7 +71,7 @@ class Workout(BaseModel):
     suitable_weekdays: (
         list[Literal["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]] | None
     ) = None  # Optional
-    segments: list[WorkoutSegment]
+    structure: WorkoutStructure  # Multi-step interval support (Issue #96)
     base_duration_min: float
     base_tss: float
     variable_components: VariableComponents | None = None

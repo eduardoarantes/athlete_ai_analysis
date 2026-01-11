@@ -114,7 +114,7 @@ export function getWorkoutFromOverrides(
     if (lib.type) workout.type = lib.type
     if (lib.tss !== undefined) workout.tss = lib.tss
     if (lib.description) workout.description = lib.description
-    if (lib.segments) workout.segments = lib.segments
+    if (lib.structure) workout.structure = lib.structure
     return workout
   }
 

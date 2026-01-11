@@ -91,29 +91,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 5,
-          "description": "Warm up",
-          "power_low_pct": 45,
-          "power_high_pct": 55
-        },
-        {
-          "type": "steady",
-          "duration_min": 60,
-          "description": "Active",
-          "power_low_pct": 70,
-          "power_high_pct": 70
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down",
-          "power_low_pct": 45,
-          "power_high_pct": 55
-        }
-      ],
       "base_duration_min": 70,
       "base_tss": 53.2,
       "source_file": "workout_2458720789.json",
@@ -211,29 +188,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 5,
-          "description": "Warm up",
-          "power_low_pct": 40,
-          "power_high_pct": 50
-        },
-        {
-          "type": "steady",
-          "duration_min": 110,
-          "description": "Active",
-          "power_low_pct": 60,
-          "power_high_pct": 65
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down",
-          "power_low_pct": 40,
-          "power_high_pct": 50
-        }
-      ],
       "base_duration_min": 120,
       "base_tss": 75,
       "source_file": "workout_2458718625.json",
@@ -332,29 +286,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 5,
-          "description": "Warm up",
-          "power_low_pct": 40,
-          "power_high_pct": 50
-        },
-        {
-          "type": "steady",
-          "duration_min": 60,
-          "description": "Active",
-          "power_low_pct": 60,
-          "power_high_pct": 65
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down",
-          "power_low_pct": 40,
-          "power_high_pct": 50
-        }
-      ],
       "base_duration_min": 70,
       "base_tss": 42.4,
       "source_file": "workout_2494372909.json",
@@ -474,38 +405,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 15,
-          "description": "Warm up",
-          "power_low_pct": 55,
-          "power_high_pct": 65
-        },
-        {
-          "type": "interval",
-          "sets": 3,
-          "work": {
-            "duration_min": 12,
-            "power_low_pct": 85,
-            "power_high_pct": 90,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 5,
-            "power_low_pct": 50,
-            "power_high_pct": 55,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down",
-          "power_low_pct": 40,
-          "power_high_pct": 50
-        }
-      ],
       "base_duration_min": 71,
       "base_tss": 63.5,
       "source_file": "workout_2455678179.json",
@@ -626,38 +525,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 15,
-          "description": "Warm up",
-          "power_low_pct": 55,
-          "power_high_pct": 65
-        },
-        {
-          "type": "interval",
-          "sets": 3,
-          "work": {
-            "duration_min": 15,
-            "power_low_pct": 85,
-            "power_high_pct": 90,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 5,
-            "power_low_pct": 50,
-            "power_high_pct": 55,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down",
-          "power_low_pct": 40,
-          "power_high_pct": 50
-        }
-      ],
       "base_duration_min": 80,
       "base_tss": 75,
       "source_file": "workout_2458704690.json",
@@ -706,15 +573,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 45,
-          "description": "Active",
-          "power_low_pct": 45,
-          "power_high_pct": 55
-        }
-      ],
       "base_duration_min": 45,
       "base_tss": 18.8,
       "source_file": "workout_2726495001.json",
@@ -813,29 +671,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 5,
-          "description": "Warm up",
-          "power_low_pct": 40,
-          "power_high_pct": 50
-        },
-        {
-          "type": "steady",
-          "duration_min": 170,
-          "description": "Active",
-          "power_low_pct": 60,
-          "power_high_pct": 65
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down",
-          "power_low_pct": 40,
-          "power_high_pct": 50
-        }
-      ],
       "base_duration_min": 180,
       "base_tss": 114.1,
       "source_file": "workout_2458716047.json",
@@ -934,29 +769,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 5,
-          "description": "Warm up",
-          "power_low_pct": 40,
-          "power_high_pct": 50
-        },
-        {
-          "type": "steady",
-          "duration_min": 200,
-          "description": "Active",
-          "power_low_pct": 60,
-          "power_high_pct": 65
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down",
-          "power_low_pct": 40,
-          "power_high_pct": 50
-        }
-      ],
       "base_duration_min": 210,
       "base_tss": 133.6,
       "source_file": "workout_2458716265.json",
@@ -1055,29 +867,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 5,
-          "description": "Warm up",
-          "power_low_pct": 40,
-          "power_high_pct": 50
-        },
-        {
-          "type": "steady",
-          "duration_min": 80,
-          "description": "Active",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "recovery",
-          "duration_min": 5,
-          "description": "Recovery",
-          "power_low_pct": 50,
-          "power_high_pct": 60
-        }
-      ],
       "base_duration_min": 90,
       "base_tss": 61.4,
       "source_file": "workout_2511585593.json",
@@ -1181,29 +970,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 5,
-          "description": "Warm up",
-          "power_low_pct": 40,
-          "power_high_pct": 50
-        },
-        {
-          "type": "steady",
-          "duration_min": 80,
-          "description": "Active",
-          "power_low_pct": 65,
-          "power_high_pct": 70
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down",
-          "power_low_pct": 40,
-          "power_high_pct": 50
-        }
-      ],
       "base_duration_min": 90,
       "base_tss": 64.1,
       "source_file": "workout_2526824695.json",
@@ -1359,54 +1125,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 20,
-          "description": "Warmup",
-          "power_low_pct": 50,
-          "power_high_pct": 65
-        },
-        {
-          "type": "interval",
-          "sets": 2,
-          "work": {
-            "duration_min": 1,
-            "power_low_pct": 95,
-            "power_high_pct": 100,
-            "description": "Activations"
-          },
-          "recovery": {
-            "duration_min": 3,
-            "power_low_pct": 45,
-            "power_high_pct": 55,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 7,
-            "power_low_pct": 95,
-            "power_high_pct": 100,
-            "description": "Threshold"
-          },
-          "recovery": {
-            "duration_min": 3,
-            "power_low_pct": 45,
-            "power_high_pct": 45,
-            "description": "Rest"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 10,
-          "description": "Cool Down",
-          "power_low_pct": 42.5,
-          "power_high_pct": 56
-        }
-      ],
       "base_duration_min": 88,
       "base_tss": 81.2,
       "source_file": "workout_2526823735.json",
@@ -1800,139 +1518,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 5,
-          "description": "Warmup",
-          "power_low_pct": 42.5,
-          "power_high_pct": 56
-        },
-        {
-          "type": "interval",
-          "sets": 1,
-          "work": {
-            "duration_min": 0.5,
-            "power_low_pct": 76,
-            "power_high_pct": 83,
-            "description": "Ramp 1"
-          },
-          "recovery": {
-            "duration_min": 0.5,
-            "power_low_pct": 56,
-            "power_high_pct": 56,
-            "description": "Ramp 1 - Rest"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 1,
-          "work": {
-            "duration_min": 0.5,
-            "power_low_pct": 91,
-            "power_high_pct": 98,
-            "description": "Ramp 2"
-          },
-          "recovery": {
-            "duration_min": 0.5,
-            "power_low_pct": 56,
-            "power_high_pct": 56,
-            "description": "Ramp 2 - Rest"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 1,
-          "work": {
-            "duration_min": 0.5,
-            "power_low_pct": 106,
-            "power_high_pct": 113,
-            "description": "Ramp 3"
-          },
-          "recovery": {
-            "duration_min": 0.5,
-            "power_low_pct": 56,
-            "power_high_pct": 56,
-            "description": "Ramp 3 - Rest"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 3,
-          "description": "Recover",
-          "power_low_pct": 42.5,
-          "power_high_pct": 56
-        },
-        {
-          "type": "interval",
-          "sets": 4,
-          "work": {
-            "duration_min": 1,
-            "power_low_pct": 102.2,
-            "power_high_pct": 103.6,
-            "description": "Over Unders"
-          },
-          "recovery": {
-            "duration_min": 1,
-            "power_low_pct": 93.8,
-            "power_high_pct": 93.8,
-            "description": "Over Unders - Rest"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 4,
-          "description": "Recover",
-          "power_low_pct": 42.5,
-          "power_high_pct": 56
-        },
-        {
-          "type": "interval",
-          "sets": 4,
-          "work": {
-            "duration_min": 1,
-            "power_low_pct": 102.2,
-            "power_high_pct": 103.6,
-            "description": "Over Unders"
-          },
-          "recovery": {
-            "duration_min": 1,
-            "power_low_pct": 93.8,
-            "power_high_pct": 93.8,
-            "description": "Over Unders - Rest"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 4,
-          "description": "Recover",
-          "power_low_pct": 42.5,
-          "power_high_pct": 56
-        },
-        {
-          "type": "interval",
-          "sets": 4,
-          "work": {
-            "duration_min": 1,
-            "power_low_pct": 102.2,
-            "power_high_pct": 103.6,
-            "description": "Over Unders"
-          },
-          "recovery": {
-            "duration_min": 1,
-            "power_low_pct": 93.8,
-            "power_high_pct": 93.8,
-            "description": "Over Unders - Rest"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 10,
-          "description": "Cool Down",
-          "power_low_pct": 42.5,
-          "power_high_pct": 56
-        }
-      ],
       "base_duration_min": 53,
       "base_tss": 52.3,
       "source_file": "workout_2526824601.json",
@@ -1980,15 +1565,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 240,
-          "description": "Active",
-          "power_low_pct": 65,
-          "power_high_pct": 75
-        }
-      ],
       "base_duration_min": 240,
       "base_tss": 196,
       "source_file": "workout_2535789702.json",
@@ -2115,38 +1691,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 5,
-          "description": "Warm up",
-          "power_low_pct": 40,
-          "power_high_pct": 50
-        },
-        {
-          "type": "interval",
-          "sets": 6,
-          "work": {
-            "duration_min": 5,
-            "power_low_pct": 65,
-            "power_high_pct": 65,
-            "description": "High Cadence "
-          },
-          "recovery": {
-            "duration_min": 5,
-            "power_low_pct": 70,
-            "power_high_pct": 70,
-            "description": "Low Cadence "
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down",
-          "power_low_pct": 40,
-          "power_high_pct": 50
-        }
-      ],
       "base_duration_min": 70,
       "base_tss": 49,
       "source_file": "workout_2535790712.json",
@@ -2245,29 +1789,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 5,
-          "description": "Warm up",
-          "power_low_pct": 40,
-          "power_high_pct": 50
-        },
-        {
-          "type": "steady",
-          "duration_min": 230,
-          "description": "Active",
-          "power_low_pct": 60,
-          "power_high_pct": 65
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down",
-          "power_low_pct": 40,
-          "power_high_pct": 50
-        }
-      ],
       "base_duration_min": 240,
       "base_tss": 153.1,
       "source_file": "workout_2579964436.json",
@@ -2388,38 +1909,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 8,
-          "description": "Warm up",
-          "power_low_pct": 55,
-          "power_high_pct": 65
-        },
-        {
-          "type": "interval",
-          "sets": 3,
-          "work": {
-            "duration_min": 15,
-            "power_low_pct": 85,
-            "power_high_pct": 90,
-            "description": "Steady State "
-          },
-          "recovery": {
-            "duration_min": 5,
-            "power_low_pct": 50,
-            "power_high_pct": 55,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 6,
-          "description": "Cool Down",
-          "power_low_pct": 55,
-          "power_high_pct": 65
-        }
-      ],
       "base_duration_min": 74,
       "base_tss": 72.7,
       "source_file": "workout_2581776891.json",
@@ -2540,38 +2029,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 20,
-          "description": "Warm up",
-          "power_low_pct": 55,
-          "power_high_pct": 65
-        },
-        {
-          "type": "interval",
-          "sets": 3,
-          "work": {
-            "duration_min": 15,
-            "power_low_pct": 85,
-            "power_high_pct": 90,
-            "description": "Steady State "
-          },
-          "recovery": {
-            "duration_min": 5,
-            "power_low_pct": 50,
-            "power_high_pct": 55,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 20,
-          "description": "Cool Down",
-          "power_low_pct": 55,
-          "power_high_pct": 65
-        }
-      ],
       "base_duration_min": 100,
       "base_tss": 88.3,
       "source_file": "workout_2581776892.json",
@@ -2760,52 +2217,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 30,
-          "description": "Warmup",
-          "power_low_pct": 50,
-          "power_high_pct": 65
-        },
-        {
-          "type": "interval",
-          "sets": 3,
-          "work": {
-            "duration_min": 1,
-            "power_low_pct": 100,
-            "power_high_pct": 110,
-            "description": "Priming Efforts"
-          },
-          "recovery": {
-            "duration_min": 2,
-            "power_low_pct": 45,
-            "power_high_pct": 55,
-            "description": "Rest"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 5,
-          "description": "Recovery before Effort",
-          "power_low_pct": 45,
-          "power_high_pct": 55
-        },
-        {
-          "type": "steady",
-          "duration_min": 5,
-          "description": "ALL OUT EFFORT",
-          "power_low_pct": 120,
-          "power_high_pct": 130
-        },
-        {
-          "type": "steady",
-          "duration_min": 30,
-          "description": "Recovery roll home",
-          "power_low_pct": 50,
-          "power_high_pct": 60
-        }
-      ],
       "base_duration_min": 79,
       "base_tss": 54.8,
       "source_file": "workout_2581776894.json",
@@ -2943,38 +2354,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 15,
-          "description": "Warmup",
-          "power_low_pct": 50,
-          "power_high_pct": 60
-        },
-        {
-          "type": "interval",
-          "sets": 4,
-          "work": {
-            "duration_min": 5,
-            "power_low_pct": 85,
-            "power_high_pct": 95,
-            "description": "Strength Efforts"
-          },
-          "recovery": {
-            "duration_min": 3,
-            "power_low_pct": 45,
-            "power_high_pct": 55,
-            "description": "Rest"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 10,
-          "description": "Cool Down",
-          "power_low_pct": 50,
-          "power_high_pct": 60
-        }
-      ],
       "base_duration_min": 57,
       "base_tss": 44.6,
       "source_file": "workout_2581776895.json",
@@ -3091,29 +2470,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 5,
-          "description": "Warm-up",
-          "power_low_pct": 45,
-          "power_high_pct": 55
-        },
-        {
-          "type": "steady",
-          "duration_min": 90,
-          "description": "The Complete Session",
-          "power_low_pct": 65,
-          "power_high_pct": 70
-        },
-        {
-          "type": "steady",
-          "duration_min": 10,
-          "description": "Cooldown",
-          "power_low_pct": 45,
-          "power_high_pct": 55
-        }
-      ],
       "base_duration_min": 105,
       "base_tss": 74.6,
       "source_file": "workout_2657868694.json",
@@ -3228,38 +2584,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 20,
-          "description": "Warmup",
-          "power_low_pct": 45,
-          "power_high_pct": 60
-        },
-        {
-          "type": "interval",
-          "sets": 4,
-          "work": {
-            "duration_min": 10,
-            "power_low_pct": 90,
-            "power_high_pct": 97,
-            "description": "Sweet Spot"
-          },
-          "recovery": {
-            "duration_min": 5,
-            "power_low_pct": 45,
-            "power_high_pct": 55,
-            "description": "Rest"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 15,
-          "description": "Cool down",
-          "power_low_pct": 45,
-          "power_high_pct": 55
-        }
-      ],
       "base_duration_min": 95,
       "base_tss": 82.1,
       "source_file": "workout_2581776979.json",
@@ -3375,29 +2699,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 5,
-          "description": "Warm-up",
-          "power_low_pct": 45,
-          "power_high_pct": 55
-        },
-        {
-          "type": "steady",
-          "duration_min": 120,
-          "description": "The Complete Session",
-          "power_low_pct": 65,
-          "power_high_pct": 70
-        },
-        {
-          "type": "steady",
-          "duration_min": 5,
-          "description": "Cooldown",
-          "power_low_pct": 45,
-          "power_high_pct": 55
-        }
-      ],
       "base_duration_min": 130,
       "base_tss": 95.3,
       "source_file": "workout_2657868692.json",
@@ -3751,123 +3052,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 10,
-          "description": "Warmup",
-          "power_low_pct": 50,
-          "power_high_pct": 65
-        },
-        {
-          "type": "interval",
-          "sets": 2,
-          "work": {
-            "duration_min": 1,
-            "power_low_pct": 105,
-            "power_high_pct": 110,
-            "description": "Activations"
-          },
-          "recovery": {
-            "duration_min": 2,
-            "power_low_pct": 45,
-            "power_high_pct": 55,
-            "description": "Rest"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.6666666666666666,
-            "power_low_pct": 115,
-            "power_high_pct": 130,
-            "description": "40s hard "
-          },
-          "recovery": {
-            "duration_min": 0.3333333333333333,
-            "power_low_pct": 42.5,
-            "power_high_pct": 42.5,
-            "description": "Rest"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 4,
-          "description": "Recovery",
-          "power_low_pct": 45,
-          "power_high_pct": 55
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.6666666666666666,
-            "power_low_pct": 115,
-            "power_high_pct": 130,
-            "description": "40s hard "
-          },
-          "recovery": {
-            "duration_min": 0.3333333333333333,
-            "power_low_pct": 42.5,
-            "power_high_pct": 42.5,
-            "description": "Rest"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 4,
-          "description": "Recovery",
-          "power_low_pct": 45,
-          "power_high_pct": 55
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.6666666666666666,
-            "power_low_pct": 115,
-            "power_high_pct": 130,
-            "description": "40s hard "
-          },
-          "recovery": {
-            "duration_min": 0.3333333333333333,
-            "power_low_pct": 42.5,
-            "power_high_pct": 42.5,
-            "description": "Rest"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 4,
-          "description": "Recovery",
-          "power_low_pct": 45,
-          "power_high_pct": 55
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.6666666666666666,
-            "power_low_pct": 115,
-            "power_high_pct": 130,
-            "description": "40s hard "
-          },
-          "recovery": {
-            "duration_min": 0.3333333333333333,
-            "power_low_pct": 42.5,
-            "power_high_pct": 42.5,
-            "description": "Rest"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 10,
-          "description": "Cool Down",
-          "power_low_pct": 50,
-          "power_high_pct": 60
-        }
-      ],
       "base_duration_min": 58,
       "base_tss": 56.4,
       "source_file": "workout_2581776899.json",
@@ -4023,54 +3207,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 20,
-          "description": "Warmup",
-          "power_low_pct": 50,
-          "power_high_pct": 65
-        },
-        {
-          "type": "interval",
-          "sets": 2,
-          "work": {
-            "duration_min": 1,
-            "power_low_pct": 105,
-            "power_high_pct": 110,
-            "description": "Activations"
-          },
-          "recovery": {
-            "duration_min": 2,
-            "power_low_pct": 45,
-            "power_high_pct": 55,
-            "description": "Rest"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 3,
-            "power_low_pct": 115,
-            "power_high_pct": 125,
-            "description": "VO2 Repeats"
-          },
-          "recovery": {
-            "duration_min": 3,
-            "power_low_pct": 45,
-            "power_high_pct": 55,
-            "description": "Rest"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 20,
-          "description": "Cool Down",
-          "power_low_pct": 50,
-          "power_high_pct": 60
-        }
-      ],
       "base_duration_min": 76,
       "base_tss": 68.9,
       "source_file": "workout_2581776900.json",
@@ -4208,38 +3344,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 20,
-          "description": "Warmup",
-          "power_low_pct": 50,
-          "power_high_pct": 60
-        },
-        {
-          "type": "interval",
-          "sets": 4,
-          "work": {
-            "duration_min": 5,
-            "power_low_pct": 85,
-            "power_high_pct": 95,
-            "description": "Strength Efforts"
-          },
-          "recovery": {
-            "duration_min": 3,
-            "power_low_pct": 45,
-            "power_high_pct": 55,
-            "description": "Rest"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 20,
-          "description": "Cool Down",
-          "power_low_pct": 50,
-          "power_high_pct": 60
-        }
-      ],
       "base_duration_min": 72,
       "base_tss": 52.2,
       "source_file": "workout_2581776902.json",
@@ -4378,38 +3482,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 10,
-          "description": "Warmup",
-          "power_low_pct": 50,
-          "power_high_pct": 60
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 5,
-            "power_low_pct": 95,
-            "power_high_pct": 100,
-            "description": "Strength Efforts"
-          },
-          "recovery": {
-            "duration_min": 3,
-            "power_low_pct": 45,
-            "power_high_pct": 55,
-            "description": "Rest"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 10,
-          "description": "Cool Down",
-          "power_low_pct": 50,
-          "power_high_pct": 60
-        }
-      ],
       "base_duration_min": 60,
       "base_tss": 55.9,
       "source_file": "workout_2581776904.json",
@@ -4514,29 +3586,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 5,
-          "description": "Warm up",
-          "power_low_pct": 40,
-          "power_high_pct": 50
-        },
-        {
-          "type": "steady",
-          "duration_min": 90,
-          "description": "Active",
-          "power_low_pct": 65,
-          "power_high_pct": 70
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down",
-          "power_low_pct": 40,
-          "power_high_pct": 50
-        }
-      ],
       "base_duration_min": 100,
       "base_tss": 71.7,
       "source_file": "workout_2581776905.json",
@@ -4641,29 +3690,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 5,
-          "description": "Warm up",
-          "power_low_pct": 40,
-          "power_high_pct": 50
-        },
-        {
-          "type": "steady",
-          "duration_min": 60,
-          "description": "Active",
-          "power_low_pct": 65,
-          "power_high_pct": 70
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down",
-          "power_low_pct": 40,
-          "power_high_pct": 50
-        }
-      ],
       "base_duration_min": 70,
       "base_tss": 48.9,
       "source_file": "workout_2726494992.json",
@@ -4768,29 +3794,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 5,
-          "description": "Warm up",
-          "power_low_pct": 40,
-          "power_high_pct": 50
-        },
-        {
-          "type": "steady",
-          "duration_min": 80,
-          "description": "Active",
-          "power_low_pct": 60,
-          "power_high_pct": 65
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down",
-          "power_low_pct": 40,
-          "power_high_pct": 50
-        }
-      ],
       "base_duration_min": 90,
       "base_tss": 55.5,
       "source_file": "workout_2581776973.json",
@@ -4904,38 +3907,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 20,
-          "description": "Warm up",
-          "power_low_pct": 55,
-          "power_high_pct": 65
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 6,
-            "power_low_pct": 98,
-            "power_high_pct": 102,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 2,
-            "power_low_pct": 45,
-            "power_high_pct": 55,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 20,
-          "description": "Cool Down",
-          "power_low_pct": 45,
-          "power_high_pct": 55
-        }
-      ],
       "base_duration_min": 80,
       "base_tss": 74.5,
       "source_file": "workout_2581776910.json",
@@ -5126,54 +4097,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 20,
-          "description": "Warmup",
-          "power_low_pct": 50,
-          "power_high_pct": 60
-        },
-        {
-          "type": "interval",
-          "sets": 2,
-          "work": {
-            "duration_min": 1,
-            "power_low_pct": 90,
-            "power_high_pct": 95,
-            "description": "Activations"
-          },
-          "recovery": {
-            "duration_min": 2,
-            "power_low_pct": 45,
-            "power_high_pct": 55,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 3,
-          "work": {
-            "duration_min": 10,
-            "power_low_pct": 85,
-            "power_high_pct": 90,
-            "description": "Strength Efforts"
-          },
-          "recovery": {
-            "duration_min": 5,
-            "power_low_pct": 50,
-            "power_high_pct": 55,
-            "description": "Rest"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 10,
-          "description": "Cool Down",
-          "power_low_pct": 50,
-          "power_high_pct": 60
-        }
-      ],
       "base_duration_min": 81,
       "base_tss": 64.8,
       "source_file": "workout_2581776911.json",
@@ -5288,38 +4211,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 20,
-          "description": "Warm up",
-          "power_low_pct": 55,
-          "power_high_pct": 65
-        },
-        {
-          "type": "interval",
-          "sets": 4,
-          "work": {
-            "duration_min": 8,
-            "power_low_pct": 98,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 4,
-            "power_low_pct": 45,
-            "power_high_pct": 55,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 20,
-          "description": "Cool Down",
-          "power_low_pct": 45,
-          "power_high_pct": 55
-        }
-      ],
       "base_duration_min": 88,
       "base_tss": 81.9,
       "source_file": "workout_2581776987.json",
@@ -5435,29 +4326,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 5,
-          "description": "Warm-up",
-          "power_low_pct": 45,
-          "power_high_pct": 55
-        },
-        {
-          "type": "steady",
-          "duration_min": 60,
-          "description": "The Complete Session",
-          "power_low_pct": 65,
-          "power_high_pct": 65
-        },
-        {
-          "type": "steady",
-          "duration_min": 10,
-          "description": "Cooldown",
-          "power_low_pct": 45,
-          "power_high_pct": 55
-        }
-      ],
       "base_duration_min": 75,
       "base_tss": 48.5,
       "source_file": "workout_2581776934.json",
@@ -5578,38 +4446,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 20,
-          "description": "Warm up",
-          "power_low_pct": 55,
-          "power_high_pct": 65
-        },
-        {
-          "type": "interval",
-          "sets": 2,
-          "work": {
-            "duration_min": 20,
-            "power_low_pct": 85,
-            "power_high_pct": 85,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 5,
-            "power_low_pct": 50,
-            "power_high_pct": 55,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 15,
-          "description": "Cool Down",
-          "power_low_pct": 45,
-          "power_high_pct": 55
-        }
-      ],
       "base_duration_min": 85,
       "base_tss": 71,
       "source_file": "workout_2581776937.json",
@@ -5714,29 +4550,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 5,
-          "description": "Warm up",
-          "power_low_pct": 40,
-          "power_high_pct": 50
-        },
-        {
-          "type": "steady",
-          "duration_min": 60,
-          "description": "Active",
-          "power_low_pct": 60,
-          "power_high_pct": 65
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down",
-          "power_low_pct": 40,
-          "power_high_pct": 50
-        }
-      ],
       "base_duration_min": 70,
       "base_tss": 42.4,
       "source_file": "workout_2581776952.json",
@@ -5957,77 +4770,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 20,
-          "description": "Warm up",
-          "power_low_pct": 50,
-          "power_high_pct": 65
-        },
-        {
-          "type": "interval",
-          "sets": 2,
-          "work": {
-            "duration_min": 1,
-            "power_low_pct": 95,
-            "power_high_pct": 100,
-            "description": "Activations"
-          },
-          "recovery": {
-            "duration_min": 3,
-            "power_low_pct": 45,
-            "power_high_pct": 55,
-            "description": "Recovery"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 3,
-          "work": {
-            "duration_min": 4.5,
-            "power_low_pct": 80,
-            "power_high_pct": 90,
-            "description": "Tempo"
-          },
-          "recovery": {
-            "duration_min": 0.5,
-            "power_low_pct": 120,
-            "power_high_pct": 130,
-            "description": "Power Spike"
-          }
-        },
-        {
-          "type": "recovery",
-          "duration_min": 5,
-          "description": "Recovery",
-          "power_low_pct": 50,
-          "power_high_pct": 60
-        },
-        {
-          "type": "interval",
-          "sets": 3,
-          "work": {
-            "duration_min": 4.5,
-            "power_low_pct": 80,
-            "power_high_pct": 90,
-            "description": "Tempo"
-          },
-          "recovery": {
-            "duration_min": 0.5,
-            "power_low_pct": 120,
-            "power_high_pct": 130,
-            "description": "Power Spike"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 20,
-          "description": "Cool Down",
-          "power_low_pct": 45,
-          "power_high_pct": 55
-        }
-      ],
       "base_duration_min": 83,
       "base_tss": 67.9,
       "source_file": "workout_2581776954.json",
@@ -6309,84 +5051,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 20,
-          "description": "Warmup",
-          "power_low_pct": 50,
-          "power_high_pct": 60
-        },
-        {
-          "type": "interval",
-          "sets": 10,
-          "work": {
-            "duration_min": 0.5,
-            "power_low_pct": 120,
-            "power_high_pct": 130,
-            "description": "30sec hard "
-          },
-          "recovery": {
-            "duration_min": 0.5,
-            "power_low_pct": 45,
-            "power_high_pct": 55,
-            "description": "Rest"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 5,
-          "description": "Recovery",
-          "power_low_pct": 50,
-          "power_high_pct": 60
-        },
-        {
-          "type": "interval",
-          "sets": 10,
-          "work": {
-            "duration_min": 0.5,
-            "power_low_pct": 120,
-            "power_high_pct": 130,
-            "description": "30sec hard "
-          },
-          "recovery": {
-            "duration_min": 0.5,
-            "power_low_pct": 45,
-            "power_high_pct": 55,
-            "description": "Rest"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 5,
-          "description": "Recovery",
-          "power_low_pct": 50,
-          "power_high_pct": 60
-        },
-        {
-          "type": "interval",
-          "sets": 10,
-          "work": {
-            "duration_min": 0.5,
-            "power_low_pct": 120,
-            "power_high_pct": 130,
-            "description": "30sec hard "
-          },
-          "recovery": {
-            "duration_min": 0.5,
-            "power_low_pct": 45,
-            "power_high_pct": 55,
-            "description": "Rest"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 20,
-          "description": "Cool Down",
-          "power_low_pct": 50,
-          "power_high_pct": 60
-        }
-      ],
       "base_duration_min": 80,
       "base_tss": 70.5,
       "source_file": "workout_2581776956.json",
@@ -6608,77 +5272,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 20,
-          "description": "Warm up",
-          "power_low_pct": 50,
-          "power_high_pct": 65
-        },
-        {
-          "type": "interval",
-          "sets": 2,
-          "work": {
-            "duration_min": 1,
-            "power_low_pct": 95,
-            "power_high_pct": 100,
-            "description": "Activations"
-          },
-          "recovery": {
-            "duration_min": 3,
-            "power_low_pct": 45,
-            "power_high_pct": 55,
-            "description": "Recovery"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 4,
-          "work": {
-            "duration_min": 4.5,
-            "power_low_pct": 80,
-            "power_high_pct": 90,
-            "description": "Tempo"
-          },
-          "recovery": {
-            "duration_min": 0.5,
-            "power_low_pct": 120,
-            "power_high_pct": 130,
-            "description": "Power Spike"
-          }
-        },
-        {
-          "type": "recovery",
-          "duration_min": 10,
-          "description": "Recovery",
-          "power_low_pct": 45,
-          "power_high_pct": 55
-        },
-        {
-          "type": "interval",
-          "sets": 4,
-          "work": {
-            "duration_min": 4.5,
-            "power_low_pct": 80,
-            "power_high_pct": 90,
-            "description": "Tempo"
-          },
-          "recovery": {
-            "duration_min": 0.5,
-            "power_low_pct": 120,
-            "power_high_pct": 130,
-            "description": "Power Spike"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 20,
-          "description": "Cool Down",
-          "power_low_pct": 45,
-          "power_high_pct": 55
-        }
-      ],
       "base_duration_min": 98,
       "base_tss": 83,
       "source_file": "workout_2581776961.json",
@@ -7031,123 +5624,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 20,
-          "description": "Warmup",
-          "power_low_pct": 50,
-          "power_high_pct": 65
-        },
-        {
-          "type": "interval",
-          "sets": 2,
-          "work": {
-            "duration_min": 1,
-            "power_low_pct": 105,
-            "power_high_pct": 110,
-            "description": "Activations"
-          },
-          "recovery": {
-            "duration_min": 2,
-            "power_low_pct": 45,
-            "power_high_pct": 55,
-            "description": "Rest"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.6666666666666666,
-            "power_low_pct": 115,
-            "power_high_pct": 130,
-            "description": "40s hard "
-          },
-          "recovery": {
-            "duration_min": 0.3333333333333333,
-            "power_low_pct": 42.5,
-            "power_high_pct": 42.5,
-            "description": "Rest"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 4,
-          "description": "Recovery",
-          "power_low_pct": 45,
-          "power_high_pct": 55
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.6666666666666666,
-            "power_low_pct": 115,
-            "power_high_pct": 130,
-            "description": "40s hard "
-          },
-          "recovery": {
-            "duration_min": 0.3333333333333333,
-            "power_low_pct": 42.5,
-            "power_high_pct": 42.5,
-            "description": "Rest"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 4,
-          "description": "Recovery",
-          "power_low_pct": 45,
-          "power_high_pct": 55
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.6666666666666666,
-            "power_low_pct": 115,
-            "power_high_pct": 130,
-            "description": "40s hard "
-          },
-          "recovery": {
-            "duration_min": 0.3333333333333333,
-            "power_low_pct": 42.5,
-            "power_high_pct": 42.5,
-            "description": "Rest"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 4,
-          "description": "Recovery",
-          "power_low_pct": 45,
-          "power_high_pct": 55
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.6666666666666666,
-            "power_low_pct": 115,
-            "power_high_pct": 130,
-            "description": "40s hard "
-          },
-          "recovery": {
-            "duration_min": 0.3333333333333333,
-            "power_low_pct": 42.5,
-            "power_high_pct": 42.5,
-            "description": "Rest"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 20,
-          "description": "Cool Down",
-          "power_low_pct": 50,
-          "power_high_pct": 60
-        }
-      ],
       "base_duration_min": 78,
       "base_tss": 67,
       "source_file": "workout_2657868695.json",
@@ -7328,61 +5804,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 20,
-          "description": "Warmup",
-          "power_low_pct": 50,
-          "power_high_pct": 60
-        },
-        {
-          "type": "interval",
-          "sets": 4,
-          "work": {
-            "duration_min": 2,
-            "power_low_pct": 105,
-            "power_high_pct": 115,
-            "description": "120\" ON"
-          },
-          "recovery": {
-            "duration_min": 1,
-            "power_low_pct": 45,
-            "power_high_pct": 55,
-            "description": "Rest"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 10,
-          "description": "Recovery",
-          "power_low_pct": 50,
-          "power_high_pct": 60
-        },
-        {
-          "type": "interval",
-          "sets": 4,
-          "work": {
-            "duration_min": 2,
-            "power_low_pct": 105,
-            "power_high_pct": 115,
-            "description": "120\" ON"
-          },
-          "recovery": {
-            "duration_min": 1,
-            "power_low_pct": 45,
-            "power_high_pct": 55,
-            "description": "Rest"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 20,
-          "description": "Cool Down",
-          "power_low_pct": 50,
-          "power_high_pct": 60
-        }
-      ],
       "base_duration_min": 74,
       "base_tss": 60.8,
       "source_file": "workout_2581776977.json",
@@ -7596,66 +6017,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 20,
-          "description": "Warm up",
-          "power_low_pct": 55,
-          "power_high_pct": 65
-        },
-        {
-          "type": "steady",
-          "duration_min": 10,
-          "description": "Active",
-          "power_low_pct": 80,
-          "power_high_pct": 90
-        },
-        {
-          "type": "recovery",
-          "duration_min": 5,
-          "description": "Recovery",
-          "power_low_pct": 50,
-          "power_high_pct": 60
-        },
-        {
-          "type": "steady",
-          "duration_min": 5,
-          "description": "Active",
-          "power_low_pct": 95,
-          "power_high_pct": 102
-        },
-        {
-          "type": "recovery",
-          "duration_min": 5,
-          "description": "Recovery",
-          "power_low_pct": 50,
-          "power_high_pct": 60
-        },
-        {
-          "type": "interval",
-          "sets": 2,
-          "work": {
-            "duration_min": 0.16666666666666666,
-            "power_low_pct": 250,
-            "power_high_pct": 300,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 3,
-            "power_low_pct": 50,
-            "power_high_pct": 60,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 8.666666666666666,
-          "description": "Cool Down",
-          "power_low_pct": 45,
-          "power_high_pct": 55
-        }
-      ],
       "base_duration_min": 60,
       "base_tss": 48,
       "source_file": "workout_2726494994.json",
@@ -7844,59 +6205,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 20,
-          "description": "Warm up",
-          "power_low_pct": 55,
-          "power_high_pct": 65
-        },
-        {
-          "type": "interval",
-          "sets": 2,
-          "work": {
-            "duration_min": 1,
-            "power_low_pct": 100,
-            "power_high_pct": 110,
-            "description": "Activations"
-          },
-          "recovery": {
-            "duration_min": 3,
-            "power_low_pct": 50,
-            "power_high_pct": 60,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 5,
-          "description": "5' VO2/ All out effort ",
-          "power_low_pct": 110,
-          "power_high_pct": 125
-        },
-        {
-          "type": "recovery",
-          "duration_min": 10,
-          "description": "Recovery",
-          "power_low_pct": 45,
-          "power_high_pct": 55
-        },
-        {
-          "type": "steady",
-          "duration_min": 20,
-          "description": "20' All Out Effort",
-          "power_low_pct": 105,
-          "power_high_pct": 115
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 20,
-          "description": "Cool Down",
-          "power_low_pct": 40,
-          "power_high_pct": 50
-        }
-      ],
       "base_duration_min": 83,
       "base_tss": 81.5,
       "source_file": "workout_2726494999.json",
@@ -8134,66 +6442,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 30,
-          "description": "Warmup",
-          "power_low_pct": 50,
-          "power_high_pct": 65
-        },
-        {
-          "type": "interval",
-          "sets": 3,
-          "work": {
-            "duration_min": 1,
-            "power_low_pct": 100,
-            "power_high_pct": 110,
-            "description": "Priming Efforts"
-          },
-          "recovery": {
-            "duration_min": 2,
-            "power_low_pct": 45,
-            "power_high_pct": 55,
-            "description": "Rest"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 5,
-          "description": "Recovery before Effort",
-          "power_low_pct": 45,
-          "power_high_pct": 55
-        },
-        {
-          "type": "steady",
-          "duration_min": 5,
-          "description": "ALL OUT EFFORT",
-          "power_low_pct": 120,
-          "power_high_pct": 130
-        },
-        {
-          "type": "recovery",
-          "duration_min": 5,
-          "description": "Recovery",
-          "power_low_pct": 55,
-          "power_high_pct": 55
-        },
-        {
-          "type": "steady",
-          "duration_min": 90,
-          "description": "Enduance",
-          "power_low_pct": 60,
-          "power_high_pct": 70
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 10,
-          "description": "Cool Down",
-          "power_low_pct": 45,
-          "power_high_pct": 45
-        }
-      ],
       "base_duration_min": 154,
       "base_tss": 108.9,
       "source_file": "workout_2726495002.json",
@@ -8414,77 +6662,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 10,
-          "description": "Warm up",
-          "power_low_pct": 50,
-          "power_high_pct": 65
-        },
-        {
-          "type": "interval",
-          "sets": 2,
-          "work": {
-            "duration_min": 1,
-            "power_low_pct": 95,
-            "power_high_pct": 100,
-            "description": "Activations"
-          },
-          "recovery": {
-            "duration_min": 3,
-            "power_low_pct": 45,
-            "power_high_pct": 55,
-            "description": "Recovery"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 4,
-          "work": {
-            "duration_min": 4.5,
-            "power_low_pct": 80,
-            "power_high_pct": 90,
-            "description": "Tempo"
-          },
-          "recovery": {
-            "duration_min": 0.5,
-            "power_low_pct": 120,
-            "power_high_pct": 130,
-            "description": "Power Spike"
-          }
-        },
-        {
-          "type": "recovery",
-          "duration_min": 10,
-          "description": "Recovery",
-          "power_low_pct": 45,
-          "power_high_pct": 55
-        },
-        {
-          "type": "interval",
-          "sets": 4,
-          "work": {
-            "duration_min": 4.5,
-            "power_low_pct": 80,
-            "power_high_pct": 90,
-            "description": "Tempo"
-          },
-          "recovery": {
-            "duration_min": 0.5,
-            "power_low_pct": 120,
-            "power_high_pct": 130,
-            "description": "Power Spike"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down",
-          "power_low_pct": 45,
-          "power_high_pct": 55
-        }
-      ],
       "base_duration_min": 73,
       "base_tss": 71.2,
       "source_file": "workout_2657868688.json",
@@ -8598,38 +6775,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 20,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 4,
-          "work": {
-            "duration_min": 10,
-            "power_low_pct": 84,
-            "power_high_pct": 90,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 5,
-            "power_low_pct": 56,
-            "power_high_pct": 75,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 10,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 90,
       "base_tss": 85.3,
       "source_file": "workout_2752977951.json",
@@ -8677,15 +6822,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 180,
-          "description": "Active",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        }
-      ],
       "base_duration_min": 180,
       "base_tss": 128.7,
       "source_file": "workout_2752977953.json",
@@ -8853,54 +6989,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 10,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.25,
-            "power_low_pct": 83,
-            "power_high_pct": 90,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 0.75,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 3,
-          "work": {
-            "duration_min": 10,
-            "power_low_pct": 83,
-            "power_high_pct": 90,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 2,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 65
-        }
-      ],
       "base_duration_min": 56,
       "base_tss": 55.1,
       "source_file": "workout_2752977990.json",
@@ -9056,54 +7144,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 5,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.3333333333333333,
-            "power_low_pct": 76,
-            "power_high_pct": 90,
-            "description": "Moderate/Hard"
-          },
-          "recovery": {
-            "duration_min": 0.6666666666666666,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 5,
-            "power_low_pct": 65,
-            "power_high_pct": 75,
-            "description": "Moderate"
-          },
-          "recovery": {
-            "duration_min": 1.5,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 48,
       "base_tss": 35.6,
       "source_file": "workout_2752978008.json",
@@ -9243,45 +7283,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 15,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.25,
-            "power_low_pct": 91,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 0.75,
-            "power_low_pct": 56,
-            "power_high_pct": 75,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 20,
-          "description": "Active",
-          "power_low_pct": 90,
-          "power_high_pct": 110
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 10,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        }
-      ],
       "base_duration_min": 50,
       "base_tss": 55.9,
       "source_file": "workout_3093132079.json",
@@ -9461,61 +7462,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 12,
-          "description": "Warm up 1",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.16666666666666666,
-            "power_low_pct": 105,
-            "power_high_pct": 112,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 0.8333333333333334,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "warmup",
-          "duration_min": 3,
-          "description": "Warm up 2",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 3,
-          "work": {
-            "duration_min": 5,
-            "power_low_pct": 105,
-            "power_high_pct": 112,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 4,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 10,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 65
-        }
-      ],
       "base_duration_min": 57,
       "base_tss": 57.8,
       "source_file": "workout_2752977969.json",
@@ -9629,38 +7575,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 20,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 2,
-          "work": {
-            "duration_min": 20,
-            "power_low_pct": 84,
-            "power_high_pct": 90,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 10,
-            "power_low_pct": 56,
-            "power_high_pct": 75,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 15,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 95,
       "base_tss": 88.4,
       "source_file": "workout_2752977952.json",
@@ -9709,15 +7623,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 200,
-          "description": "Active",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        }
-      ],
       "base_duration_min": 200,
       "base_tss": 143,
       "source_file": "workout_2752977955.json",
@@ -9832,38 +7737,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 15,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 3,
-          "work": {
-            "duration_min": 20,
-            "power_low_pct": 84,
-            "power_high_pct": 90,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 5,
-            "power_low_pct": 56,
-            "power_high_pct": 75,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 10,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 100,
       "base_tss": 103.3,
       "source_file": "workout_2752977956.json",
@@ -9977,38 +7850,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 30,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 6,
-          "work": {
-            "duration_min": 10,
-            "power_low_pct": 84,
-            "power_high_pct": 90,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 3,
-            "power_low_pct": 56,
-            "power_high_pct": 75,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 10,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 118,
       "base_tss": 116.2,
       "source_file": "workout_2752977957.json",
@@ -10056,15 +7897,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 220,
-          "description": "Active",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        }
-      ],
       "base_duration_min": 220,
       "base_tss": 157.3,
       "source_file": "workout_2752977958.json",
@@ -10113,15 +7945,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 240,
-          "description": "Active",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        }
-      ],
       "base_duration_min": 240,
       "base_tss": 171.6,
       "source_file": "workout_2752977959.json",
@@ -10170,15 +7993,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 260,
-          "description": "Active",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        }
-      ],
       "base_duration_min": 260,
       "base_tss": 185.9,
       "source_file": "workout_2752977961.json",
@@ -10227,15 +8041,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 300,
-          "description": "Active",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        }
-      ],
       "base_duration_min": 300,
       "base_tss": 214.5,
       "source_file": "workout_2752977964.json",
@@ -10284,15 +8089,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 280,
-          "description": "Active",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        }
-      ],
       "base_duration_min": 280,
       "base_tss": 200.2,
       "source_file": "workout_2752977965.json",
@@ -10341,15 +8137,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 210,
-          "description": "Active",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        }
-      ],
       "base_duration_min": 210,
       "base_tss": 150.2,
       "source_file": "workout_2808628953.json",
@@ -10464,38 +8251,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 20,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 2,
-          "work": {
-            "duration_min": 30,
-            "power_low_pct": 84,
-            "power_high_pct": 90,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 10,
-            "power_low_pct": 56,
-            "power_high_pct": 74,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 105,
       "base_tss": 107.2,
       "source_file": "workout_2752977968.json",
@@ -10675,61 +8430,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 12,
-          "description": "Warm up 1",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.16666666666666666,
-            "power_low_pct": 105,
-            "power_high_pct": 112,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 0.8333333333333334,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "warmup",
-          "duration_min": 3,
-          "description": "Warm up 2",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 7,
-          "work": {
-            "duration_min": 2,
-            "power_low_pct": 105,
-            "power_high_pct": 112,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 2,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 10,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 65
-        }
-      ],
       "base_duration_min": 58,
       "base_tss": 57,
       "source_file": "workout_2752977970.json",
@@ -10900,59 +8600,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 15,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.16666666666666666,
-            "power_low_pct": 91,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 0.8333333333333334,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 15,
-          "description": "Hard (10x)",
-          "power_low_pct": 84,
-          "power_high_pct": 90
-        },
-        {
-          "type": "steady",
-          "duration_min": 5,
-          "description": "Harder (10x)",
-          "power_low_pct": 105,
-          "power_high_pct": 110
-        },
-        {
-          "type": "recovery",
-          "duration_min": 10,
-          "description": "Easy (10x)",
-          "power_low_pct": 56,
-          "power_high_pct": 65
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 10,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 60,
       "base_tss": 54.1,
       "source_file": "workout_3043193530.json",
@@ -11066,38 +8713,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 20,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 4,
-          "work": {
-            "duration_min": 20,
-            "power_low_pct": 84,
-            "power_high_pct": 90,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 5,
-            "power_low_pct": 56,
-            "power_high_pct": 75,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 10,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 130,
       "base_tss": 135.7,
       "source_file": "workout_3043192679.json",
@@ -11211,38 +8826,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 20,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 3,
-          "work": {
-            "duration_min": 25,
-            "power_low_pct": 84,
-            "power_high_pct": 90,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 10,
-            "power_low_pct": 56,
-            "power_high_pct": 75,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 25,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 150,
       "base_tss": 145.9,
       "source_file": "workout_2752977974.json",
@@ -11341,29 +8924,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 20,
-          "description": "Warm Up",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        },
-        {
-          "type": "steady",
-          "duration_min": 30,
-          "description": "Upper Z2",
-          "power_low_pct": 65,
-          "power_high_pct": 75
-        },
-        {
-          "type": "steady",
-          "duration_min": 10,
-          "description": "Warm Down",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 60,
       "base_tss": 43.1,
       "source_file": "workout_3145140875.json",
@@ -11603,73 +9163,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 10,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.5,
-            "power_low_pct": 66,
-            "power_high_pct": 75,
-            "description": "Upper Zone 2"
-          },
-          "recovery": {
-            "duration_min": 0.5,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Lower Zone 2"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 10,
-          "description": "Active",
-          "power_low_pct": 66,
-          "power_high_pct": 75
-        },
-        {
-          "type": "recovery",
-          "duration_min": 1,
-          "description": "Recovery",
-          "power_low_pct": 56,
-          "power_high_pct": 65
-        },
-        {
-          "type": "steady",
-          "duration_min": 12,
-          "description": "Active",
-          "power_low_pct": 66,
-          "power_high_pct": 75
-        },
-        {
-          "type": "recovery",
-          "duration_min": 1,
-          "description": "Recovery",
-          "power_low_pct": 56,
-          "power_high_pct": 65
-        },
-        {
-          "type": "steady",
-          "duration_min": 14,
-          "description": "Active",
-          "power_low_pct": 66,
-          "power_high_pct": 75
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 7,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 65
-        }
-      ],
       "base_duration_min": 60,
       "base_tss": 46.1,
       "source_file": "workout_3043192707.json",
@@ -11866,70 +9359,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 10,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.3333333333333333,
-            "power_low_pct": 76,
-            "power_high_pct": 90,
-            "description": "Moderate"
-          },
-          "recovery": {
-            "duration_min": 0.6666666666666666,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 3,
-          "work": {
-            "duration_min": 8,
-            "power_low_pct": 66,
-            "power_high_pct": 75,
-            "description": "Moderate"
-          },
-          "recovery": {
-            "duration_min": 0.5,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 3,
-          "work": {
-            "duration_min": 5,
-            "power_low_pct": 66,
-            "power_high_pct": 75,
-            "description": "Moderate"
-          },
-          "recovery": {
-            "duration_min": 0.5,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 65
-        }
-      ],
       "base_duration_min": 62,
       "base_tss": 48.3,
       "source_file": "workout_3043192710.json",
@@ -12269,101 +9698,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 10,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.5,
-            "power_low_pct": 66,
-            "power_high_pct": 75,
-            "description": "Warm Up: Moderate"
-          },
-          "recovery": {
-            "duration_min": 0.5,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Warm Up: Easy"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 10,
-          "description": "Active",
-          "power_low_pct": 66,
-          "power_high_pct": 75
-        },
-        {
-          "type": "recovery",
-          "duration_min": 1,
-          "description": "Recovery",
-          "power_low_pct": 56,
-          "power_high_pct": 65
-        },
-        {
-          "type": "steady",
-          "duration_min": 8,
-          "description": "Active",
-          "power_low_pct": 66,
-          "power_high_pct": 75
-        },
-        {
-          "type": "recovery",
-          "duration_min": 1,
-          "description": "Recovery",
-          "power_low_pct": 56,
-          "power_high_pct": 65
-        },
-        {
-          "type": "steady",
-          "duration_min": 6,
-          "description": "Active",
-          "power_low_pct": 66,
-          "power_high_pct": 75
-        },
-        {
-          "type": "recovery",
-          "duration_min": 1,
-          "description": "Recovery",
-          "power_low_pct": 56,
-          "power_high_pct": 65
-        },
-        {
-          "type": "steady",
-          "duration_min": 4,
-          "description": "Active",
-          "power_low_pct": 66,
-          "power_high_pct": 75
-        },
-        {
-          "type": "recovery",
-          "duration_min": 1,
-          "description": "Recovery",
-          "power_low_pct": 56,
-          "power_high_pct": 65
-        },
-        {
-          "type": "steady",
-          "duration_min": 2,
-          "description": "Active",
-          "power_low_pct": 66,
-          "power_high_pct": 75
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 10,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 65
-        }
-      ],
       "base_duration_min": 59,
       "base_tss": 44.1,
       "source_file": "workout_3043192715.json",
@@ -12585,77 +9919,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 7,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.5,
-            "power_low_pct": 66,
-            "power_high_pct": 75,
-            "description": "Moderate"
-          },
-          "recovery": {
-            "duration_min": 0.5,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 1,
-          "work": {
-            "duration_min": 16,
-            "power_low_pct": 66,
-            "power_high_pct": 75,
-            "description": "Moderate"
-          },
-          "recovery": {
-            "duration_min": 1.5,
-            "power_low_pct": 55,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 1,
-          "work": {
-            "duration_min": 14,
-            "power_low_pct": 66,
-            "power_high_pct": 75,
-            "description": "Moderate"
-          },
-          "recovery": {
-            "duration_min": 1.5,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 12,
-          "description": "Moderate",
-          "power_low_pct": 65,
-          "power_high_pct": 75
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 65
-        }
-      ],
       "base_duration_min": 62,
       "base_tss": 48.1,
       "source_file": "workout_3043192711.json",
@@ -12852,70 +10115,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 10,
-          "description": "Warm up",
-          "power_low_pct": 55,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.3333333333333333,
-            "power_low_pct": 76,
-            "power_high_pct": 90,
-            "description": "Warm up"
-          },
-          "recovery": {
-            "duration_min": 0.6666666666666666,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Warm up"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 1,
-          "work": {
-            "duration_min": 12,
-            "power_low_pct": 66,
-            "power_high_pct": 75,
-            "description": "Moderate"
-          },
-          "recovery": {
-            "duration_min": 1,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 4,
-          "work": {
-            "duration_min": 6,
-            "power_low_pct": 65,
-            "power_high_pct": 75,
-            "description": "Moderate"
-          },
-          "recovery": {
-            "duration_min": 0.5,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 59,
       "base_tss": 45.5,
       "source_file": "workout_3043194269.json",
@@ -13087,59 +10286,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 15,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.16666666666666666,
-            "power_low_pct": 91,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 0.8333333333333334,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 20,
-          "description": "Hard (10x)",
-          "power_low_pct": 84,
-          "power_high_pct": 90
-        },
-        {
-          "type": "steady",
-          "duration_min": 5,
-          "description": "Harder (10x)",
-          "power_low_pct": 105,
-          "power_high_pct": 110
-        },
-        {
-          "type": "recovery",
-          "duration_min": 10,
-          "description": "Easy (10x)",
-          "power_low_pct": 56,
-          "power_high_pct": 65
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 60,
       "base_tss": 57.3,
       "source_file": "workout_3067830245.json",
@@ -13310,59 +10456,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 15,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.16666666666666666,
-            "power_low_pct": 91,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 0.8333333333333334,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 10,
-          "description": "Hard (10x)",
-          "power_low_pct": 76,
-          "power_high_pct": 90
-        },
-        {
-          "type": "steady",
-          "duration_min": 10,
-          "description": "Harder (10x)",
-          "power_low_pct": 105,
-          "power_high_pct": 110
-        },
-        {
-          "type": "recovery",
-          "duration_min": 10,
-          "description": "Easy (10x)",
-          "power_low_pct": 56,
-          "power_high_pct": 65
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 10,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 60,
       "base_tss": 56.3,
       "source_file": "workout_3043192718.json",
@@ -13542,61 +10635,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 10,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.25,
-            "power_low_pct": 91,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 0.75,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 4,
-          "work": {
-            "duration_min": 5,
-            "power_low_pct": 95,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 3.5,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down 1",
-          "power_low_pct": 65,
-          "power_high_pct": 75
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down 2",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 59,
       "base_tss": 59.7,
       "source_file": "workout_3043192722.json",
@@ -13752,54 +10790,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 5,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.3333333333333333,
-            "power_low_pct": 76,
-            "power_high_pct": 90,
-            "description": "Moderate/Hard"
-          },
-          "recovery": {
-            "duration_min": 0.6666666666666666,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 12,
-          "work": {
-            "duration_min": 3,
-            "power_low_pct": 65,
-            "power_high_pct": 75,
-            "description": "Moderate"
-          },
-          "recovery": {
-            "duration_min": 0.5,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 57,
       "base_tss": 43.7,
       "source_file": "workout_2752977994.json",
@@ -13980,61 +10970,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 10,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.25,
-            "power_low_pct": 91,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 0.75,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 6,
-          "work": {
-            "duration_min": 3,
-            "power_low_pct": 95,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 2,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down 1",
-          "power_low_pct": 65,
-          "power_high_pct": 75
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down 2",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 55,
       "base_tss": 55.2,
       "source_file": "workout_2752977995.json",
@@ -14281,84 +11216,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 10,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.25,
-            "power_low_pct": 91,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 0.75,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 2,
-            "power_low_pct": 95,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 1,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "recovery",
-          "duration_min": 2,
-          "description": "Recovery",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 2,
-            "power_low_pct": 95,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 1,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down 1",
-          "power_low_pct": 65,
-          "power_high_pct": 75
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 10,
-          "description": "Cool Down 2",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 62,
       "base_tss": 61.6,
       "source_file": "workout_3145140653.json",
@@ -14621,93 +11478,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 10,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.25,
-            "power_low_pct": 91,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 0.75,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 1,
-          "work": {
-            "duration_min": 6,
-            "power_low_pct": 95,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 3,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 1,
-          "work": {
-            "duration_min": 7,
-            "power_low_pct": 95,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 3,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 1,
-          "work": {
-            "duration_min": 8,
-            "power_low_pct": 95,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 3,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down 1",
-          "power_low_pct": 65,
-          "power_high_pct": 75
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 10,
-          "description": "Cool Down 2",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 60,
       "base_tss": 61.4,
       "source_file": "workout_2808628957.json",
@@ -14888,61 +11658,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 10,
-          "description": "Warm up 1",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.16666666666666666,
-            "power_low_pct": 105,
-            "power_high_pct": 112,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 0.8333333333333334,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "warmup",
-          "duration_min": 3,
-          "description": "Warm up 2",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 6,
-          "work": {
-            "duration_min": 3,
-            "power_low_pct": 105,
-            "power_high_pct": 112,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 3,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 7,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 65
-        }
-      ],
       "base_duration_min": 61,
       "base_tss": 64,
       "source_file": "workout_3043192730.json",
@@ -15138,70 +11853,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 10,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.3333333333333333,
-            "power_low_pct": 76,
-            "power_high_pct": 90,
-            "description": "Moderate"
-          },
-          "recovery": {
-            "duration_min": 0.6666666666666666,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 3,
-          "work": {
-            "duration_min": 5,
-            "power_low_pct": 66,
-            "power_high_pct": 75,
-            "description": "Moderate"
-          },
-          "recovery": {
-            "duration_min": 1,
-            "power_low_pct": 56,
-            "power_high_pct": 61,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 3,
-          "work": {
-            "duration_min": 3,
-            "power_low_pct": 66,
-            "power_high_pct": 75,
-            "description": "Moderate"
-          },
-          "recovery": {
-            "duration_min": 1,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 10,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 55,
       "base_tss": 40.8,
       "source_file": "workout_3093132073.json",
@@ -15250,15 +11901,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 120,
-          "description": "Active",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        }
-      ],
       "base_duration_min": 120,
       "base_tss": 85.8,
       "source_file": "workout_2752978000.json",
@@ -15439,61 +12081,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 10,
-          "description": "Warm up 1",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.16666666666666666,
-            "power_low_pct": 105,
-            "power_high_pct": 112,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 0.8333333333333334,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "warmup",
-          "duration_min": 3,
-          "description": "Warm up 2",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 4,
-          "work": {
-            "duration_min": 5,
-            "power_low_pct": 105,
-            "power_high_pct": 112,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 4,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 6,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 65
-        }
-      ],
       "base_duration_min": 60,
       "base_tss": 66.1,
       "source_file": "workout_2808628955.json",
@@ -15673,61 +12260,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 10,
-          "description": "Warm up 1",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.16666666666666666,
-            "power_low_pct": 105,
-            "power_high_pct": 112,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 0.8333333333333334,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "warmup",
-          "duration_min": 3,
-          "description": "Warm up 2",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 9,
-          "work": {
-            "duration_min": 2,
-            "power_low_pct": 105,
-            "power_high_pct": 112,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 2,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 8,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 65
-        }
-      ],
       "base_duration_min": 62,
       "base_tss": 64.7,
       "source_file": "workout_3043192731.json",
@@ -15907,61 +12439,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 10,
-          "description": "Warm up 1",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.16666666666666666,
-            "power_low_pct": 105,
-            "power_high_pct": 112,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 0.8333333333333334,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "warmup",
-          "duration_min": 3,
-          "description": "Warm up 2",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 2,
-          "work": {
-            "duration_min": 3,
-            "power_low_pct": 105,
-            "power_high_pct": 112,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 4,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 8,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 65
-        }
-      ],
       "base_duration_min": 40,
       "base_tss": 35,
       "source_file": "workout_3093128647.json",
@@ -16207,84 +12684,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 10,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.25,
-            "power_low_pct": 91,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 0.75,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 4,
-          "work": {
-            "duration_min": 3,
-            "power_low_pct": 95,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 1.5,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "recovery",
-          "duration_min": 2.5,
-          "description": "Recovery",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        },
-        {
-          "type": "interval",
-          "sets": 3,
-          "work": {
-            "duration_min": 3,
-            "power_low_pct": 95,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 1.5,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down 1",
-          "power_low_pct": 65,
-          "power_high_pct": 75
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 10,
-          "description": "Cool Down 2",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 64,
       "base_tss": 63.9,
       "source_file": "workout_3043192728.json",
@@ -16408,36 +12807,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 20,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "steady",
-          "duration_min": 20,
-          "description": "Hard",
-          "power_low_pct": 84,
-          "power_high_pct": 90
-        },
-        {
-          "type": "steady",
-          "duration_min": 20,
-          "description": "Active",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 20,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 80,
       "base_tss": 66.2,
       "source_file": "workout_2752978005.json",
@@ -16618,61 +12987,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 10,
-          "description": "Warm up 1",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.16666666666666666,
-            "power_low_pct": 105,
-            "power_high_pct": 112,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 0.8333333333333334,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "warmup",
-          "duration_min": 3,
-          "description": "Warm up 2",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 3,
-          "work": {
-            "duration_min": 2,
-            "power_low_pct": 105,
-            "power_high_pct": 112,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 3,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 6,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 65
-        }
-      ],
       "base_duration_min": 39,
       "base_tss": 34.4,
       "source_file": "workout_3093132076.json",
@@ -16852,61 +13166,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 10,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.25,
-            "power_low_pct": 91,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 0.75,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 2,
-          "work": {
-            "duration_min": 10,
-            "power_low_pct": 95,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 5,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down 1",
-          "power_low_pct": 65,
-          "power_high_pct": 75
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 10,
-          "description": "Cool Down 2",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 60,
       "base_tss": 60.3,
       "source_file": "workout_3043192723.json",
@@ -17046,45 +13305,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 20,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 2,
-          "work": {
-            "duration_min": 30,
-            "power_low_pct": 84,
-            "power_high_pct": 90,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 10,
-            "power_low_pct": 56,
-            "power_high_pct": 74,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 20,
-          "description": "Hard",
-          "power_low_pct": 84,
-          "power_high_pct": 90
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 10,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 130,
       "base_tss": 135.5,
       "source_file": "workout_3043192680.json",
@@ -17198,38 +13418,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 20,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 2,
-          "work": {
-            "duration_min": 40,
-            "power_low_pct": 84,
-            "power_high_pct": 90,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 10,
-            "power_low_pct": 56,
-            "power_high_pct": 75,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 10,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 130,
       "base_tss": 135.7,
       "source_file": "workout_3043192681.json",
@@ -17343,38 +13531,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 15,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 3,
-          "work": {
-            "duration_min": 30,
-            "power_low_pct": 84,
-            "power_high_pct": 90,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 10,
-            "power_low_pct": 56,
-            "power_high_pct": 75,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 10,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 145,
       "base_tss": 151.9,
       "source_file": "workout_3043192682.json",
@@ -17488,38 +13644,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 15,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 4,
-          "work": {
-            "duration_min": 20,
-            "power_low_pct": 84,
-            "power_high_pct": 90,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 10,
-            "power_low_pct": 56,
-            "power_high_pct": 75,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 140,
       "base_tss": 143.3,
       "source_file": "workout_3043192683.json",
@@ -17633,38 +13757,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 20,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 2,
-          "work": {
-            "duration_min": 40,
-            "power_low_pct": 84,
-            "power_high_pct": 90,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 15,
-            "power_low_pct": 56,
-            "power_high_pct": 75,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 15,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 145,
       "base_tss": 146,
       "source_file": "workout_3043192685.json",
@@ -17778,38 +13870,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 20,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 20,
-            "power_low_pct": 84,
-            "power_high_pct": 90,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 5,
-            "power_low_pct": 56,
-            "power_high_pct": 75,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 10,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 155,
       "base_tss": 164.5,
       "source_file": "workout_3043192686.json",
@@ -17923,38 +13983,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 20,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 3,
-          "work": {
-            "duration_min": 30,
-            "power_low_pct": 84,
-            "power_high_pct": 90,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 10,
-            "power_low_pct": 56,
-            "power_high_pct": 75,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 10,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 150,
       "base_tss": 155.5,
       "source_file": "workout_3043192687.json",
@@ -18175,77 +14203,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 10,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.5,
-            "power_low_pct": 66,
-            "power_high_pct": 75,
-            "description": "Moderate"
-          },
-          "recovery": {
-            "duration_min": 0.5,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 1,
-          "work": {
-            "duration_min": 14,
-            "power_low_pct": 66,
-            "power_high_pct": 75,
-            "description": "Moderate"
-          },
-          "recovery": {
-            "duration_min": 1,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 1,
-          "work": {
-            "duration_min": 13,
-            "power_low_pct": 66,
-            "power_high_pct": 75,
-            "description": "Moderate"
-          },
-          "recovery": {
-            "duration_min": 1,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 12,
-          "description": "Moderate",
-          "power_low_pct": 66,
-          "power_high_pct": 75
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 65
-        }
-      ],
       "base_duration_min": 61,
       "base_tss": 47.3,
       "source_file": "workout_3043192705.json",
@@ -18401,54 +14358,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 5,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.3333333333333333,
-            "power_low_pct": 76,
-            "power_high_pct": 90,
-            "description": "Moderate/Hard"
-          },
-          "recovery": {
-            "duration_min": 0.6666666666666666,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 9,
-          "work": {
-            "duration_min": 5,
-            "power_low_pct": 66,
-            "power_high_pct": 75,
-            "description": "Moderate"
-          },
-          "recovery": {
-            "duration_min": 0.5,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 65
-        }
-      ],
       "base_duration_min": 65,
       "base_tss": 50.6,
       "source_file": "workout_3043192712.json",
@@ -18604,54 +14513,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 5,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.3333333333333333,
-            "power_low_pct": 76,
-            "power_high_pct": 90,
-            "description": "Moderate"
-          },
-          "recovery": {
-            "duration_min": 0.6666666666666666,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 4,
-          "work": {
-            "duration_min": 11,
-            "power_low_pct": 66,
-            "power_high_pct": 75,
-            "description": "Moderate"
-          },
-          "recovery": {
-            "duration_min": 1,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 65
-        }
-      ],
       "base_duration_min": 63,
       "base_tss": 49.5,
       "source_file": "workout_3043192713.json",
@@ -18823,59 +14684,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 15,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.16666666666666666,
-            "power_low_pct": 91,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 0.8333333333333334,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 20,
-          "description": "Hard (5x)",
-          "power_low_pct": 84,
-          "power_high_pct": 90
-        },
-        {
-          "type": "steady",
-          "duration_min": 10,
-          "description": "Harder (5x)",
-          "power_low_pct": 105,
-          "power_high_pct": 110
-        },
-        {
-          "type": "recovery",
-          "duration_min": 10,
-          "description": "Easy (5x)",
-          "power_low_pct": 56,
-          "power_high_pct": 65
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 65,
       "base_tss": 66.9,
       "source_file": "workout_3043192719.json",
@@ -19046,59 +14854,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 10,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.16666666666666666,
-            "power_low_pct": 91,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 0.8333333333333334,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 20,
-          "description": "Hard (4x)",
-          "power_low_pct": 76,
-          "power_high_pct": 90
-        },
-        {
-          "type": "steady",
-          "duration_min": 12,
-          "description": "Harder (4x)",
-          "power_low_pct": 105,
-          "power_high_pct": 110
-        },
-        {
-          "type": "recovery",
-          "duration_min": 12,
-          "description": "Easy (4x)",
-          "power_low_pct": 56,
-          "power_high_pct": 65
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 64,
       "base_tss": 66.6,
       "source_file": "workout_3043192721.json",
@@ -19278,61 +15033,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 10,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.25,
-            "power_low_pct": 91,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 0.75,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 3,
-          "work": {
-            "duration_min": 7,
-            "power_low_pct": 95,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 4,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down 1",
-          "power_low_pct": 65,
-          "power_high_pct": 75
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 10,
-          "description": "Cool Down 2",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 63,
       "base_tss": 63.3,
       "source_file": "workout_3043192724.json",
@@ -19636,109 +15336,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 10,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.25,
-            "power_low_pct": 91,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 0.75,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 1,
-          "work": {
-            "duration_min": 7,
-            "power_low_pct": 95,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 3,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 1,
-          "work": {
-            "duration_min": 6,
-            "power_low_pct": 95,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 3,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 1,
-          "work": {
-            "duration_min": 5,
-            "power_low_pct": 95,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 3,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 1,
-          "work": {
-            "duration_min": 4,
-            "power_low_pct": 95,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 3,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down 1",
-          "power_low_pct": 65,
-          "power_high_pct": 75
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down 2",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 59,
       "base_tss": 61.8,
       "source_file": "workout_3043192725.json",
@@ -20083,125 +15680,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 10,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.25,
-            "power_low_pct": 91,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 0.75,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 1,
-          "work": {
-            "duration_min": 5,
-            "power_low_pct": 95,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 2,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 1,
-          "work": {
-            "duration_min": 6,
-            "power_low_pct": 95,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 2,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 1,
-          "work": {
-            "duration_min": 7,
-            "power_low_pct": 95,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 2,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 1,
-          "work": {
-            "duration_min": 6,
-            "power_low_pct": 95,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 2,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 1,
-          "work": {
-            "duration_min": 5,
-            "power_low_pct": 95,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 2,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down 1",
-          "power_low_pct": 65,
-          "power_high_pct": 75
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down 2",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 64,
       "base_tss": 72.2,
       "source_file": "workout_3043192726.json",
@@ -20388,61 +15866,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 10,
-          "description": "Warm up 1",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.16666666666666666,
-            "power_low_pct": 105,
-            "power_high_pct": 112,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 0.8333333333333334,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "warmup",
-          "duration_min": 3,
-          "description": "Warm up 2",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 3,
-          "work": {
-            "duration_min": 2,
-            "power_low_pct": 105,
-            "power_high_pct": 112,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 3,
-            "power_low_pct": 56,
-            "power_high_pct": 65,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 7,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 65
-        }
-      ],
       "base_duration_min": 40,
       "base_tss": 35,
       "source_file": "workout_3043192735.json",
@@ -20490,15 +15913,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 90,
-          "description": "Active",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        }
-      ],
       "base_duration_min": 90,
       "base_tss": 64.4,
       "source_file": "workout_3093128648.json",
@@ -20638,45 +16052,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 20,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "interval",
-          "sets": 2,
-          "work": {
-            "duration_min": 10,
-            "power_low_pct": 84,
-            "power_high_pct": 90,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 5,
-            "power_low_pct": 56,
-            "power_high_pct": 74,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 20,
-          "description": "Active",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 10,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 80,
       "base_tss": 67.1,
       "source_file": "workout_3043192737.json",
@@ -20800,36 +16175,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 20,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "steady",
-          "duration_min": 20,
-          "description": "Hard",
-          "power_low_pct": 84,
-          "power_high_pct": 90
-        },
-        {
-          "type": "steady",
-          "duration_min": 20,
-          "description": "Active",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 10,
-          "description": "Cool Down",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 70,
       "base_tss": 60,
       "source_file": "workout_3093128641.json",
@@ -20878,15 +16223,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 135,
-          "description": "Active",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        }
-      ],
       "base_duration_min": 135,
       "base_tss": 96.5,
       "source_file": "workout_3043192743.json",
@@ -21001,38 +16337,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 15,
-          "description": "Warm Down",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        },
-        {
-          "type": "interval",
-          "sets": 3,
-          "work": {
-            "duration_min": 10,
-            "power_low_pct": 65,
-            "power_high_pct": 75,
-            "description": "Upper Z2"
-          },
-          "recovery": {
-            "duration_min": 3,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Low Z2"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 7,
-          "description": "Warm Down",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 61,
       "base_tss": 43.7,
       "source_file": "workout_3043192753.json",
@@ -21147,38 +16451,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 15,
-          "description": "Warm Up",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        },
-        {
-          "type": "interval",
-          "sets": 2,
-          "work": {
-            "duration_min": 15,
-            "power_low_pct": 65,
-            "power_high_pct": 75,
-            "description": "Upper Z2"
-          },
-          "recovery": {
-            "duration_min": 3,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Low Z2"
-          }
-        },
-        {
-          "type": "steady",
-          "duration_min": 10,
-          "description": "Warm Down",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 61,
       "base_tss": 43.7,
       "source_file": "workout_3043192758.json",
@@ -21277,29 +16549,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 20,
-          "description": "Warm Up",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        },
-        {
-          "type": "steady",
-          "duration_min": 20,
-          "description": "Upper Z2",
-          "power_low_pct": 65,
-          "power_high_pct": 75
-        },
-        {
-          "type": "steady",
-          "duration_min": 10,
-          "description": "Warm Down",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 50,
       "base_tss": 34.9,
       "source_file": "workout_3093128643.json",
@@ -21348,15 +16597,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 150,
-          "description": "Active",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        }
-      ],
       "base_duration_min": 150,
       "base_tss": 107.3,
       "source_file": "workout_3043192752.json",
@@ -21405,15 +16645,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 160,
-          "description": "Active",
-          "power_low_pct": 56,
-          "power_high_pct": 75
-        }
-      ],
       "base_duration_min": 160,
       "base_tss": 114.4,
       "source_file": "workout_3043192756.json",
@@ -21594,61 +16825,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "warmup",
-          "duration_min": 10,
-          "description": "Warm up",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        },
-        {
-          "type": "interval",
-          "sets": 5,
-          "work": {
-            "duration_min": 0.25,
-            "power_low_pct": 91,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 0.75,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "interval",
-          "sets": 3,
-          "work": {
-            "duration_min": 3,
-            "power_low_pct": 95,
-            "power_high_pct": 105,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 2,
-            "power_low_pct": 56,
-            "power_high_pct": 66,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down 1",
-          "power_low_pct": 65,
-          "power_high_pct": 75
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 5,
-          "description": "Cool Down 2",
-          "power_low_pct": 56,
-          "power_high_pct": 66
-        }
-      ],
       "base_duration_min": 40,
       "base_tss": 36.4,
       "source_file": "workout_3093128653.json",
@@ -21902,89 +17078,6 @@
           }
         ]
       },
-      "segments": [
-        {
-          "type": "steady",
-          "duration_min": 3,
-          "description": "Active (1x)",
-          "power_low_pct": 55,
-          "power_high_pct": 65
-        },
-        {
-          "type": "steady",
-          "duration_min": 3,
-          "description": "Active (1x)",
-          "power_low_pct": 65,
-          "power_high_pct": 75
-        },
-        {
-          "type": "steady",
-          "duration_min": 3,
-          "description": "Active (1x)",
-          "power_low_pct": 75,
-          "power_high_pct": 85
-        },
-        {
-          "type": "steady",
-          "duration_min": 1,
-          "description": "Active (1x)",
-          "power_low_pct": 85,
-          "power_high_pct": 95
-        },
-        {
-          "type": "warmup",
-          "duration_min": 5,
-          "description": "Warm up",
-          "power_low_pct": 40,
-          "power_high_pct": 50
-        },
-        {
-          "type": "interval",
-          "sets": 3,
-          "work": {
-            "duration_min": 0.5,
-            "power_low_pct": 120,
-            "power_high_pct": 150,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 4,
-            "power_low_pct": 50,
-            "power_high_pct": 60,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "recovery",
-          "duration_min": 10,
-          "description": "Recovery",
-          "power_low_pct": 50,
-          "power_high_pct": 60
-        },
-        {
-          "type": "interval",
-          "sets": 4,
-          "work": {
-            "duration_min": 0.5,
-            "power_low_pct": 120,
-            "power_high_pct": 150,
-            "description": "Hard"
-          },
-          "recovery": {
-            "duration_min": 4,
-            "power_low_pct": 50,
-            "power_high_pct": 60,
-            "description": "Easy"
-          }
-        },
-        {
-          "type": "cooldown",
-          "duration_min": 10,
-          "description": "Cool down",
-          "power_low_pct": 40,
-          "power_high_pct": 50
-        }
-      ],
       "base_duration_min": 67,
       "base_tss": 43.7,
       "source_file": "workout_3411097497.json",

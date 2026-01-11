@@ -11,10 +11,12 @@
 
 import { Clock, Zap, GripVertical, Plus, ChevronDown, ChevronUp } from 'lucide-react'
 import { useState } from 'react'
-import type { WorkoutLibraryItem, LibraryWorkoutSegment } from '@/lib/types/workout-library'
+import type { WorkoutLibraryItem } from '@/lib/types/workout-library'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { getWorkoutBorderColor, getIntensityBadgeColors } from '@/lib/constants/activity-styles'
+import { structureToDisplaySegments, type DisplaySegment } from '@/lib/utils/workout-structure-helpers'
+import { formatDuration } from '@/lib/types/training-plan'
 
 /**
  * Format workout type for display
@@ -45,36 +47,16 @@ function formatIntensity(intensity: string): string {
   return labels[intensity] ?? intensity
 }
 
-/**
- * Format duration in minutes to human-readable format
- * - Less than 1 minute: shows in seconds (e.g., "30s")
- * - 1-59 minutes: shows with max 1 decimal (e.g., "5m", "5.5m")
- * - 60+ minutes: shows hours and minutes (e.g., "1h 30m")
- */
-function formatDuration(minutes: number): string {
-  if (minutes < 1) {
-    // Less than 1 minute - show in seconds
-    return `${Math.round(minutes * 60)}s`
-  }
-  if (minutes < 60) {
-    // Less than an hour - show with max 1 decimal if needed
-    const rounded = Math.round(minutes * 10) / 10
-    return Number.isInteger(rounded) ? `${rounded}m` : `${rounded.toFixed(1)}m`
-  }
-  const hours = Math.floor(minutes / 60)
-  const mins = Math.round(minutes % 60)
-  return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`
-}
 
 /**
  * Format zone for segment display
  */
-function formatZone(segment: LibraryWorkoutSegment): string {
+function formatZone(segment: DisplaySegment): string {
   if (segment.power_low_pct && segment.power_high_pct) {
     if (segment.power_low_pct === segment.power_high_pct) {
       return `${segment.power_low_pct}%`
     }
-    return `${segment.power_low_pct}-${segment.power_high_pct}%`
+    return `${Math.round(segment.power_low_pct)}-${Math.round(segment.power_high_pct)}%`
   }
   return ''
 }
@@ -110,7 +92,7 @@ export function WorkoutLibraryCard({
   const borderColor = getWorkoutBorderColor(workout.type)
   const intensityColor = getIntensityBadgeColors(workout.intensity)
 
-  const hasSegments = workout.segments && workout.segments.length > 0
+  const hasStructure = workout.structure?.structure && workout.structure.structure.length > 0
   const hasDescription = workout.detailed_description && workout.detailed_description.trim() !== ''
 
   return (
@@ -198,7 +180,7 @@ export function WorkoutLibraryCard({
       </div>
 
       {/* Expandable details - hidden in compact mode */}
-      {!compact && (hasDescription || hasSegments) && (
+      {!compact && (hasDescription || hasStructure) && (
         <>
           <Button
             variant="ghost"
@@ -228,18 +210,18 @@ export function WorkoutLibraryCard({
                 <p className="text-xs text-muted-foreground">{workout.detailed_description}</p>
               )}
 
-              {hasSegments && (
+              {hasStructure && (
                 <div className="space-y-1">
                   <span className="text-xs font-medium">Segments:</span>
                   <div className="grid gap-1">
-                    {workout.segments!.map((segment, index) => (
+                    {structureToDisplaySegments(workout.structure).map((segment, index) => (
                       <div
                         key={index}
                         className="flex items-center justify-between text-xs bg-muted/50 rounded px-2 py-1"
                       >
                         <span className="flex items-center gap-2">
                           <span className="font-medium">
-                            {formatDuration(segment.duration_min ?? 0)}
+                            {formatDuration(segment.duration_min)}
                           </span>
                           <span className="text-muted-foreground">
                             {segment.description || segment.type}

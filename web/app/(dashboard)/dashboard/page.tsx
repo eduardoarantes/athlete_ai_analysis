@@ -15,7 +15,7 @@ import {
   type UpcomingWorkoutData,
 } from '@/components/dashboard/upcoming-workouts'
 import { asPlanInstances } from '@/lib/types/type-guards'
-import type { PlanInstance, Workout } from '@/lib/types/training-plan'
+import { type PlanInstance, type Workout, calculateWorkoutDuration } from '@/lib/types/training-plan'
 import { User, Zap, Heart, Scale, TrendingUp } from 'lucide-react'
 import { PowerZonesHoverCard } from '@/components/profile/power-zones-hover-card'
 import { HeartZonesHoverCard } from '@/components/profile/heart-zones-hover-card'
@@ -56,10 +56,8 @@ function getUpcomingWorkouts(instances: PlanInstance[], limit: number = 3): Upco
 
         // Only include future workouts (today or later)
         if (workoutDate >= today) {
-          // Calculate duration from segments
-          const durationMinutes =
-            (workout as Workout).segments?.reduce((sum, seg) => sum + (seg.duration_min || 0), 0) ||
-            60
+          // Calculate duration from workout structure
+          const durationMinutes = calculateWorkoutDuration(workout as Workout) || 60
 
           const workoutData: UpcomingWorkoutData = {
             id: `${instance.id}-${week.week_number}-${workout.weekday}`,

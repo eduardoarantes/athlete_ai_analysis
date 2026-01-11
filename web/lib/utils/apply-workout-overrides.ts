@@ -12,9 +12,9 @@ import type {
   Workout,
   WeeklyPlan,
   WorkoutOverrides,
-  WorkoutSegment,
   WorkoutStructure,
 } from '@/lib/types/training-plan'
+import { createPlaceholderStructure } from '@/lib/utils/workout-structure-helpers'
 
 // Re-export for convenience
 export type { WorkoutOverrides }
@@ -45,11 +45,9 @@ export interface LibraryWorkoutParams {
   tss?: number | undefined
   /** Detailed description */
   description?: string | undefined
-  /** Duration in minutes (used to create a placeholder segment if no segments provided) */
+  /** Duration in minutes (used to create a placeholder structure if no structure provided) */
   durationMin?: number | undefined
-  /** Full workout segments for proper rendering (legacy format) */
-  segments?: WorkoutSegment[] | undefined
-  /** NEW: WorkoutStructure format (Issue #96) - takes precedence over segments */
+  /** WorkoutStructure format (Issue #96) */
   structure?: WorkoutStructure | undefined
 }
 
@@ -76,16 +74,15 @@ export function libraryWorkoutToScheduleWorkout(params: LibraryWorkoutParams | s
     tss = 50,
     description,
     durationMin,
-    segments: providedSegments,
     structure: providedStructure,
   } = normalized
 
-  // Use provided segments, or create a placeholder if duration is provided
-  const segments: Workout['segments'] = providedSegments
-    ? providedSegments
+  // Use provided structure, or create a placeholder if duration is provided
+  const structure: WorkoutStructure | undefined = providedStructure
+    ? providedStructure
     : durationMin
-      ? [{ type: 'steady', duration_min: durationMin }]
-      : []
+      ? createPlaceholderStructure(durationMin)
+      : undefined
 
   const workout: Workout = {
     // Use provided instance ID, or generate a new one for legacy library workouts
@@ -95,14 +92,13 @@ export function libraryWorkoutToScheduleWorkout(params: LibraryWorkoutParams | s
     type,
     tss,
     description: description || `Library workout: ${name}`,
-    segments,
     source: 'library',
     library_workout_id: id,
   }
 
-  // NEW: Add structure if provided (Issue #96)
-  if (providedStructure) {
-    workout.structure = providedStructure
+  // Add structure if available
+  if (structure) {
+    workout.structure = structure
   }
 
   return workout
@@ -279,8 +275,6 @@ export function applyWorkoutOverrides(
             tss: copy.library_workout.tss,
             durationMin: copy.library_workout.duration_min,
             description: copy.library_workout.description,
-            segments: copy.library_workout.segments,
-            // NEW: Include structure if available (Issue #96)
             structure: copy.library_workout.structure,
           }
         : { id: libraryWorkoutId }

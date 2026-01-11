@@ -33,7 +33,6 @@ import {
 } from '@/components/ui/select'
 import {
   type Workout,
-  type WorkoutSegment,
   type WorkoutStructure,
   formatDuration,
   calculateWorkoutDuration,
@@ -41,7 +40,8 @@ import {
   extractPowerTarget,
   hasValidStructure,
 } from '@/lib/types/training-plan'
-import { PowerProfileSVG, type WorkoutSegmentInput } from './power-profile-svg'
+import { getStructureWorkTime } from '@/lib/utils/workout-structure-helpers'
+import { PowerProfileSVG } from './power-profile-svg'
 import { getPowerRangeColor } from '@/lib/types/power-zones'
 
 export interface MatchedActivityData {
@@ -149,82 +149,17 @@ function groupStructure(structure: WorkoutStructure): GroupedSegment[] {
   return grouped
 }
 
-/**
- * Group legacy WorkoutSegments into display-friendly format
- */
-function groupSegments(segments: WorkoutSegment[]): GroupedSegment[] {
-  const grouped: GroupedSegment[] = []
-
-  segments.forEach((segment) => {
-    if (segment.sets != null && segment.work && segment.recovery) {
-      const workSeg: ExpandedSegment = {
-        type: 'work',
-        duration_min: segment.work.duration_min,
-        power_low_pct: segment.work.power_low_pct,
-        power_high_pct: segment.work.power_high_pct,
-        description: segment.description,
-      }
-      const recoverySeg: ExpandedSegment = {
-        type: 'recovery',
-        duration_min: segment.recovery.duration_min,
-        power_low_pct: segment.recovery.power_low_pct,
-        power_high_pct: segment.recovery.power_high_pct,
-      }
-      grouped.push({
-        type: 'repeat',
-        repeat_count: segment.sets,
-        segments: [workSeg, recoverySeg],
-      })
-    } else {
-      grouped.push({
-        type: 'single',
-        segment: {
-          type: segment.type,
-          duration_min: segment.duration_min,
-          power_low_pct: segment.power_low_pct ?? 50,
-          power_high_pct: segment.power_high_pct ?? 60,
-          description: segment.description,
-        },
-      })
-    }
-  })
-
-  return grouped
-}
 
 /**
- * Get grouped segments from either structure or legacy segments
+ * Get grouped segments from workout structure
  */
 function getGroupedSegments(workout: Workout): GroupedSegment[] {
-  // Prefer new structure format
   if (hasValidStructure(workout.structure)) {
     return groupStructure(workout.structure)
-  }
-  // Fall back to legacy segments
-  if (workout.segments && workout.segments.length > 0) {
-    return groupSegments(workout.segments)
   }
   return []
 }
 
-/**
- * Convert WorkoutSegment[] to WorkoutSegmentInput[] for PowerProfileSVG
- * WorkoutSegment is a more specific type that satisfies WorkoutSegmentInput
- */
-function toSegmentInput(segments: WorkoutSegment[] | undefined): WorkoutSegmentInput[] | undefined {
-  if (!segments) return undefined
-  // WorkoutSegment is compatible with WorkoutSegmentInput - explicit mapping for type safety
-  return segments.map((seg) => ({
-    type: seg.type,
-    duration_min: seg.duration_min,
-    power_low_pct: seg.power_low_pct,
-    power_high_pct: seg.power_high_pct,
-    description: seg.description,
-    sets: seg.sets,
-    work: seg.work,
-    recovery: seg.recovery,
-  }))
-}
 
 function formatPowerRange(ftp: number, lowPct: number, highPct: number): string {
   const lowWatts = Math.round((lowPct / 100) * ftp)
@@ -379,17 +314,7 @@ export function WorkoutDetailModal({
   if (!workout) return null
 
   const totalDuration = calculateWorkoutDuration(workout)
-  const workTime =
-    workout.segments?.reduce((sum, seg) => {
-      if (seg.type !== 'warmup' && seg.type !== 'cooldown' && seg.type !== 'recovery') {
-        let duration = seg.duration_min || 0
-        if (seg.sets && seg.work) {
-          duration = seg.work.duration_min * seg.sets
-        }
-        return sum + duration
-      }
-      return sum
-    }, 0) || 0
+  const workTime = workout.structure ? getStructureWorkTime(workout.structure) : 0
 
   const groupedSegments = getGroupedSegments(workout)
 
@@ -457,17 +382,13 @@ export function WorkoutDetailModal({
           )}
 
           {/* Power Profile Visualization */}
-          {(workout.structure?.structure?.length || (workout.segments && workout.segments.length > 0)) && (
+          {workout.structure?.structure?.length && (
             <Card className="gap-1 py-3">
               <CardHeader className="pb-0">
                 <CardTitle className="text-sm font-medium">{t('powerProfile')}</CardTitle>
               </CardHeader>
               <CardContent>
-                <PowerProfileSVG
-                  segments={toSegmentInput(workout.segments)}
-                  structure={workout.structure}
-                  ftp={ftp}
-                />
+                <PowerProfileSVG structure={workout.structure} ftp={ftp} />
               </CardContent>
             </Card>
           )}

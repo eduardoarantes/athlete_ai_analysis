@@ -30,7 +30,24 @@ const createMockWorkout = (overrides: Partial<WorkoutLibraryItem> = {}): Workout
   intensity: 'moderate',
   base_duration_min: 60,
   base_tss: 50,
-  segments: [],
+  structure: {
+    primaryIntensityMetric: 'percentOfFtp',
+    primaryLengthMetric: 'duration',
+    structure: [
+      {
+        type: 'step',
+        length: { unit: 'repetition', value: 1 },
+        steps: [
+          {
+            name: 'Endurance',
+            intensityClass: 'active',
+            length: { unit: 'minute', value: 60 },
+            targets: [{ type: 'power', minValue: 55, maxValue: 75, unit: 'percentOfFtp' }],
+          },
+        ],
+      },
+    ],
+  },
   ...overrides,
 })
 

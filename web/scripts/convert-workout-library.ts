@@ -35,7 +35,6 @@ import type {
   WorkoutLibraryItem,
   WorkoutType,
   WorkoutIntensity,
-  LibraryWorkoutSegment,
 } from '../lib/types/workout-library'
 import { convertStepLengthToMinutes, convertStepLengthToSeconds } from '../lib/types/training-plan'
 
@@ -207,105 +206,6 @@ export function convertSourceSegment(segment: SourceSegment): StructuredWorkoutS
       value: segment.length.value,
     },
     steps: segment.steps.map((s) => convertSourceStep(s)),
-  }
-}
-
-// ============================================================================
-// Legacy Segment Conversion (for backward compatibility)
-// ============================================================================
-
-/**
- * Convert WorkoutStructure to legacy LibraryWorkoutSegment format.
- */
-function convertToLegacySegments(structure: WorkoutStructure): LibraryWorkoutSegment[] {
-  const segments: LibraryWorkoutSegment[] = []
-
-  for (const segment of structure.structure) {
-    const reps = segment.length.value
-
-    if (segment.steps.length === 1) {
-      // Single step segment
-      const step = segment.steps[0]!
-      const durationMin = convertStepLengthToMinutes(step.length)
-      const powerTarget = step.targets.find((t) => t.type === 'power')
-
-      const legacyType = mapIntensityToLegacyType(step.intensityClass)
-
-      const legacySegment: LibraryWorkoutSegment = {
-        type: legacyType,
-        duration_min: durationMin * reps,
-        description: step.name,
-      }
-      if (powerTarget) {
-        legacySegment.power_low_pct = powerTarget.minValue
-        legacySegment.power_high_pct = powerTarget.maxValue
-      }
-      segments.push(legacySegment)
-    } else if (segment.steps.length === 2 && segment.type === 'repetition') {
-      // Two-step interval (work + recovery)
-      const workStep = segment.steps[0]!
-      const recoveryStep = segment.steps[1]!
-      const workPower = workStep.targets.find((t) => t.type === 'power')
-      const recoveryPower = recoveryStep.targets.find((t) => t.type === 'power')
-
-      segments.push({
-        type: 'interval',
-        sets: reps,
-        work: {
-          duration_min: convertStepLengthToMinutes(workStep.length),
-          power_low_pct: workPower?.minValue ?? 100,
-          power_high_pct: workPower?.maxValue ?? 100,
-          description: workStep.name,
-        },
-        recovery: {
-          duration_min: convertStepLengthToMinutes(recoveryStep.length),
-          power_low_pct: recoveryPower?.minValue ?? 50,
-          power_high_pct: recoveryPower?.maxValue ?? 60,
-          description: recoveryStep.name,
-        },
-      })
-    } else {
-      // Multi-step segment (3+ steps) - flatten to individual segments
-      for (const step of segment.steps) {
-        const durationMin = convertStepLengthToMinutes(step.length)
-        const powerTarget = step.targets.find((t) => t.type === 'power')
-        const legacyType = mapIntensityToLegacyType(step.intensityClass)
-
-        // For multi-step intervals, add each step separately multiplied by reps
-        const legacySegment: LibraryWorkoutSegment = {
-          type: legacyType,
-          duration_min: durationMin * reps,
-          description: `${step.name} (${reps}x)`,
-        }
-        if (powerTarget) {
-          legacySegment.power_low_pct = powerTarget.minValue
-          legacySegment.power_high_pct = powerTarget.maxValue
-        }
-        segments.push(legacySegment)
-      }
-    }
-  }
-
-  return segments
-}
-
-/**
- * Map intensity class to legacy segment type.
- */
-function mapIntensityToLegacyType(
-  intensityClass: 'warmUp' | 'active' | 'rest' | 'coolDown'
-): LibraryWorkoutSegment['type'] {
-  switch (intensityClass) {
-    case 'warmUp':
-      return 'warmup'
-    case 'coolDown':
-      return 'cooldown'
-    case 'rest':
-      return 'recovery'
-    case 'active':
-      return 'steady'
-    default:
-      return 'steady'
   }
 }
 
@@ -532,9 +432,6 @@ export function convertSourceWorkout(source: SourceWorkout, sourceFile: string):
   const type = inferWorkoutType(structure, source.description)
   const intensity = inferWorkoutIntensity(structure)
 
-  // Generate legacy segments for backward compatibility
-  const segments = convertToLegacySegments(structure)
-
   // Build workout
   const workout: ConvertedWorkout = {
     id: nanoid(10),
@@ -542,7 +439,6 @@ export function convertSourceWorkout(source: SourceWorkout, sourceFile: string):
     type,
     intensity,
     structure,
-    segments,
     base_duration_min: Math.round(durationMin),
     base_tss: tss,
     source_file: sourceFile,

@@ -11,12 +11,7 @@ import {
   libraryWorkoutToScheduleWorkout,
   type LibraryWorkoutParams,
 } from '../apply-workout-overrides'
-import type {
-  TrainingPlanData,
-  WorkoutOverrides,
-  WorkoutSegment,
-} from '@/lib/types/training-plan'
-import type { LibraryWorkoutSegment } from '@/lib/types/workout-library'
+import type { TrainingPlanData, WorkoutOverrides, WorkoutStructure } from '@/lib/types/training-plan'
 
 describe('libraryWorkoutToScheduleWorkout', () => {
   it('should create a workout with basic properties', () => {
@@ -39,12 +34,49 @@ describe('libraryWorkoutToScheduleWorkout', () => {
     expect(result.library_workout_id).toBe('test-workout-id')
   })
 
-  it('should use provided segments instead of creating placeholder', () => {
-    const segments: WorkoutSegment[] = [
-      { type: 'warmup', duration_min: 10, power_low_pct: 50, power_high_pct: 60 },
-      { type: 'interval', duration_min: 12, power_low_pct: 85, power_high_pct: 90, sets: 3 },
-      { type: 'cooldown', duration_min: 5, power_low_pct: 40, power_high_pct: 50 },
-    ]
+  it('should use provided structure instead of creating placeholder', () => {
+    const structure: WorkoutStructure = {
+      primaryIntensityMetric: 'percentOfFtp',
+      primaryLengthMetric: 'duration',
+      structure: [
+        {
+          type: 'step',
+          length: { unit: 'repetition', value: 1 },
+          steps: [
+            {
+              name: 'Warmup',
+              intensityClass: 'warmUp',
+              length: { unit: 'minute', value: 10 },
+              targets: [{ type: 'power', minValue: 50, maxValue: 60, unit: 'percentOfFtp' }],
+            },
+          ],
+        },
+        {
+          type: 'repetition',
+          length: { unit: 'repetition', value: 3 },
+          steps: [
+            {
+              name: 'Tempo',
+              intensityClass: 'active',
+              length: { unit: 'minute', value: 12 },
+              targets: [{ type: 'power', minValue: 85, maxValue: 90, unit: 'percentOfFtp' }],
+            },
+          ],
+        },
+        {
+          type: 'step',
+          length: { unit: 'repetition', value: 1 },
+          steps: [
+            {
+              name: 'Cooldown',
+              intensityClass: 'coolDown',
+              length: { unit: 'minute', value: 5 },
+              targets: [{ type: 'power', minValue: 40, maxValue: 50, unit: 'percentOfFtp' }],
+            },
+          ],
+        },
+      ],
+    }
 
     const params: LibraryWorkoutParams = {
       id: 'interval-workout',
@@ -52,19 +84,19 @@ describe('libraryWorkoutToScheduleWorkout', () => {
       type: 'tempo',
       tss: 80,
       durationMin: 60,
-      segments,
+      structure,
     }
 
     const result = libraryWorkoutToScheduleWorkout(params)
 
-    expect(result.segments).toEqual(segments)
-    expect(result.segments?.length).toBe(3)
-    expect(result.segments?.[0]?.type).toBe('warmup')
-    expect(result.segments?.[1]?.type).toBe('interval')
-    expect(result.segments?.[1]?.sets).toBe(3)
+    expect(result.structure).toEqual(structure)
+    expect(result.structure?.structure?.length).toBe(3)
+    expect(result.structure?.structure?.[0]?.steps[0]?.intensityClass).toBe('warmUp')
+    expect(result.structure?.structure?.[1]?.type).toBe('repetition')
+    expect(result.structure?.structure?.[1]?.length.value).toBe(3)
   })
 
-  it('should create placeholder segment when no segments provided but duration is', () => {
+  it('should create placeholder structure when no structure provided but duration is', () => {
     const params: LibraryWorkoutParams = {
       id: 'simple-workout',
       name: 'Endurance Ride',
@@ -75,9 +107,9 @@ describe('libraryWorkoutToScheduleWorkout', () => {
 
     const result = libraryWorkoutToScheduleWorkout(params)
 
-    expect(result.segments?.length).toBe(1)
-    expect(result.segments?.[0]?.type).toBe('steady')
-    expect(result.segments?.[0]?.duration_min).toBe(90)
+    expect(result.structure?.structure?.length).toBe(1)
+    expect(result.structure?.structure?.[0]?.steps[0]?.intensityClass).toBe('active')
+    expect(result.structure?.structure?.[0]?.steps[0]?.length.value).toBe(90)
   })
 
   it('should handle minimal params (just ID)', () => {
@@ -108,6 +140,55 @@ describe('applyWorkoutOverrides with library workouts', () => {
   }
 
   it('should add library workout from copies with full data', () => {
+    const structure: WorkoutStructure = {
+      primaryIntensityMetric: 'percentOfFtp',
+      primaryLengthMetric: 'duration',
+      structure: [
+        {
+          type: 'step',
+          length: { unit: 'repetition', value: 1 },
+          steps: [
+            {
+              name: 'Warmup',
+              intensityClass: 'warmUp',
+              length: { unit: 'minute', value: 10 },
+              targets: [{ type: 'power', minValue: 50, maxValue: 60, unit: 'percentOfFtp' }],
+            },
+          ],
+        },
+        {
+          type: 'repetition',
+          length: { unit: 'repetition', value: 3 },
+          steps: [
+            {
+              name: 'Tempo Work',
+              intensityClass: 'active',
+              length: { unit: 'minute', value: 12 },
+              targets: [{ type: 'power', minValue: 85, maxValue: 90, unit: 'percentOfFtp' }],
+            },
+            {
+              name: 'Recovery',
+              intensityClass: 'rest',
+              length: { unit: 'minute', value: 5 },
+              targets: [{ type: 'power', minValue: 50, maxValue: 55, unit: 'percentOfFtp' }],
+            },
+          ],
+        },
+        {
+          type: 'step',
+          length: { unit: 'repetition', value: 1 },
+          steps: [
+            {
+              name: 'Cooldown',
+              intensityClass: 'coolDown',
+              length: { unit: 'minute', value: 10 },
+              targets: [{ type: 'power', minValue: 40, maxValue: 50, unit: 'percentOfFtp' }],
+            },
+          ],
+        },
+      ],
+    }
+
     const overrides: WorkoutOverrides = {
       moves: {},
       copies: {
@@ -121,17 +202,7 @@ describe('applyWorkoutOverrides with library workouts', () => {
             tss: 80,
             duration_min: 60,
             description: 'Tempo intervals for threshold work',
-            segments: [
-              { type: 'warmup', duration_min: 10, power_low_pct: 50, power_high_pct: 60 },
-              {
-                type: 'interval',
-                duration_min: 36,
-                sets: 3,
-                work: { duration_min: 12, power_low_pct: 85, power_high_pct: 90 },
-                recovery: { duration_min: 5, power_low_pct: 50, power_high_pct: 55 },
-              },
-              { type: 'cooldown', duration_min: 10, power_low_pct: 40, power_high_pct: 50 },
-            ],
+            structure,
           },
         },
       },
@@ -155,11 +226,13 @@ describe('applyWorkoutOverrides with library workouts', () => {
     expect(libraryWorkout?.modificationSource).toBe('library')
     expect(libraryWorkout?.libraryWorkoutId).toBe('tempo-intervals-id')
 
-    // Check segments are preserved
-    expect(libraryWorkout?.workout.segments?.length).toBe(3)
-    expect(libraryWorkout?.workout.segments?.[0]?.type).toBe('warmup')
-    expect(libraryWorkout?.workout.segments?.[1]?.type).toBe('interval')
-    expect(libraryWorkout?.workout.segments?.[1]?.sets).toBe(3)
+    // Check structure is preserved
+    expect(libraryWorkout?.workout.structure?.structure?.length).toBe(3)
+    expect(libraryWorkout?.workout.structure?.structure?.[0]?.steps[0]?.intensityClass).toBe(
+      'warmUp'
+    )
+    expect(libraryWorkout?.workout.structure?.structure?.[1]?.type).toBe('repetition')
+    expect(libraryWorkout?.workout.structure?.structure?.[1]?.length.value).toBe(3)
   })
 
   it('should use placeholder when library_workout data is missing', () => {
@@ -216,6 +289,55 @@ describe('applyWorkoutOverrides with library workouts', () => {
   })
 
   it('should preserve work/recovery interval structure', () => {
+    const structure: WorkoutStructure = {
+      primaryIntensityMetric: 'percentOfFtp',
+      primaryLengthMetric: 'duration',
+      structure: [
+        {
+          type: 'step',
+          length: { unit: 'repetition', value: 1 },
+          steps: [
+            {
+              name: 'Warmup',
+              intensityClass: 'warmUp',
+              length: { unit: 'minute', value: 15 },
+              targets: [{ type: 'power', minValue: 50, maxValue: 60, unit: 'percentOfFtp' }],
+            },
+          ],
+        },
+        {
+          type: 'repetition',
+          length: { unit: 'repetition', value: 6 },
+          steps: [
+            {
+              name: 'VO2max Work',
+              intensityClass: 'active',
+              length: { unit: 'minute', value: 3 },
+              targets: [{ type: 'power', minValue: 110, maxValue: 120, unit: 'percentOfFtp' }],
+            },
+            {
+              name: 'Recovery',
+              intensityClass: 'rest',
+              length: { unit: 'minute', value: 3 },
+              targets: [{ type: 'power', minValue: 40, maxValue: 50, unit: 'percentOfFtp' }],
+            },
+          ],
+        },
+        {
+          type: 'step',
+          length: { unit: 'repetition', value: 1 },
+          steps: [
+            {
+              name: 'Cooldown',
+              intensityClass: 'coolDown',
+              length: { unit: 'minute', value: 10 },
+              targets: [{ type: 'power', minValue: 40, maxValue: 50, unit: 'percentOfFtp' }],
+            },
+          ],
+        },
+      ],
+    }
+
     const overrides: WorkoutOverrides = {
       moves: {},
       copies: {
@@ -227,25 +349,7 @@ describe('applyWorkoutOverrides with library workouts', () => {
             name: 'VO2max Intervals',
             type: 'vo2max',
             tss: 90,
-            segments: [
-              { type: 'warmup', duration_min: 15 },
-              {
-                type: 'interval',
-                duration_min: 24,
-                sets: 6,
-                work: {
-                  duration_min: 3,
-                  power_low_pct: 110,
-                  power_high_pct: 120,
-                },
-                recovery: {
-                  duration_min: 3,
-                  power_low_pct: 40,
-                  power_high_pct: 50,
-                },
-              },
-              { type: 'cooldown', duration_min: 10 },
-            ],
+            structure,
           },
         },
       },
@@ -256,50 +360,120 @@ describe('applyWorkoutOverrides with library workouts', () => {
     const result = applyWorkoutOverrides(basePlanData, overrides, startDate)
 
     const workouts = result.get('2026-01-10')
-    const intervalSegment = workouts?.[0]?.workout.segments?.[1]
+    const intervalSegment = workouts?.[0]?.workout.structure?.structure?.[1]
 
-    expect(intervalSegment?.sets).toBe(6)
-    expect(intervalSegment?.work?.duration_min).toBe(3)
-    expect(intervalSegment?.work?.power_low_pct).toBe(110)
-    expect(intervalSegment?.work?.power_high_pct).toBe(120)
-    expect(intervalSegment?.recovery?.duration_min).toBe(3)
-    expect(intervalSegment?.recovery?.power_low_pct).toBe(40)
+    expect(intervalSegment?.type).toBe('repetition')
+    expect(intervalSegment?.length.value).toBe(6)
+    expect(intervalSegment?.steps[0]?.length.value).toBe(3)
+    expect(intervalSegment?.steps[0]?.targets[0]?.minValue).toBe(110)
+    expect(intervalSegment?.steps[0]?.targets[0]?.maxValue).toBe(120)
+    expect(intervalSegment?.steps[1]?.length.value).toBe(3)
+    expect(intervalSegment?.steps[1]?.targets[0]?.minValue).toBe(40)
   })
 })
 
-describe('convertLibrarySegmentsToSchedule (via integration)', () => {
+describe('structure conversion (via integration)', () => {
   // This tests the conversion implicitly through the full flow
 
-  it('should correctly map library segment types', () => {
-    // Mock a complete library workout with various segment types
-    const librarySegments: LibraryWorkoutSegment[] = [
-      { type: 'warmup', duration_min: 10, power_low_pct: 50, power_high_pct: 60 },
-      { type: 'tempo', duration_min: 20, power_low_pct: 76, power_high_pct: 90 },
-      { type: 'steady', duration_min: 30, power_low_pct: 65, power_high_pct: 75 },
-      { type: 'interval', duration_min: 15, sets: 5 },
-      { type: 'recovery', duration_min: 5, power_low_pct: 40, power_high_pct: 50 },
-      { type: 'cooldown', duration_min: 10 },
-    ]
+  it('should correctly preserve library workout structure', () => {
+    // Mock a complete library workout with various intensity classes
+    const structure: WorkoutStructure = {
+      primaryIntensityMetric: 'percentOfFtp',
+      primaryLengthMetric: 'duration',
+      structure: [
+        {
+          type: 'step',
+          length: { unit: 'repetition', value: 1 },
+          steps: [
+            {
+              name: 'Warmup',
+              intensityClass: 'warmUp',
+              length: { unit: 'minute', value: 10 },
+              targets: [{ type: 'power', minValue: 50, maxValue: 60, unit: 'percentOfFtp' }],
+            },
+          ],
+        },
+        {
+          type: 'step',
+          length: { unit: 'repetition', value: 1 },
+          steps: [
+            {
+              name: 'Tempo',
+              intensityClass: 'active',
+              length: { unit: 'minute', value: 20 },
+              targets: [{ type: 'power', minValue: 76, maxValue: 90, unit: 'percentOfFtp' }],
+            },
+          ],
+        },
+        {
+          type: 'step',
+          length: { unit: 'repetition', value: 1 },
+          steps: [
+            {
+              name: 'Steady',
+              intensityClass: 'active',
+              length: { unit: 'minute', value: 30 },
+              targets: [{ type: 'power', minValue: 65, maxValue: 75, unit: 'percentOfFtp' }],
+            },
+          ],
+        },
+        {
+          type: 'repetition',
+          length: { unit: 'repetition', value: 5 },
+          steps: [
+            {
+              name: 'Interval',
+              intensityClass: 'active',
+              length: { unit: 'minute', value: 3 },
+              targets: [{ type: 'power', minValue: 100, maxValue: 110, unit: 'percentOfFtp' }],
+            },
+          ],
+        },
+        {
+          type: 'step',
+          length: { unit: 'repetition', value: 1 },
+          steps: [
+            {
+              name: 'Recovery',
+              intensityClass: 'rest',
+              length: { unit: 'minute', value: 5 },
+              targets: [{ type: 'power', minValue: 40, maxValue: 50, unit: 'percentOfFtp' }],
+            },
+          ],
+        },
+        {
+          type: 'step',
+          length: { unit: 'repetition', value: 1 },
+          steps: [
+            {
+              name: 'Cooldown',
+              intensityClass: 'coolDown',
+              length: { unit: 'minute', value: 10 },
+              targets: [{ type: 'power', minValue: 40, maxValue: 50, unit: 'percentOfFtp' }],
+            },
+          ],
+        },
+      ],
+    }
 
-    // When stored as library_workout.segments, they should maintain structure
     const params: LibraryWorkoutParams = {
       id: 'mixed-workout',
       name: 'Mixed Workout',
       type: 'mixed',
       tss: 100,
-      segments: librarySegments as WorkoutSegment[],
+      structure,
     }
 
     const result = libraryWorkoutToScheduleWorkout(params)
 
-    expect(result.segments?.length).toBe(6)
-    expect(result.segments?.map((s) => s.type)).toEqual([
-      'warmup',
-      'tempo',
-      'steady',
-      'interval',
-      'recovery',
-      'cooldown',
+    expect(result.structure?.structure?.length).toBe(6)
+    expect(result.structure?.structure?.map((s) => s.steps[0]?.intensityClass)).toEqual([
+      'warmUp',
+      'active',
+      'active',
+      'active',
+      'rest',
+      'coolDown',
     ])
   })
 })
