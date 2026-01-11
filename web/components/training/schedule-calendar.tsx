@@ -739,6 +739,7 @@ export function ScheduleCalendar({
         type: workout.type,
         tss: workout.base_tss,
         durationMin: workout.base_duration_min,
+        structure: workout.structure,
       }
       // Only include description if it exists (exactOptionalPropertyTypes compliance)
       if (workout.detailed_description) {
