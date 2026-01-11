@@ -85,6 +85,15 @@ class PromptLoader:
         """Get the full path to the prompts directory."""
         return self.prompts_dir
 
+    def get_version(self) -> str:
+        """
+        Get the prompt version string for logging.
+
+        Returns:
+            Version string (e.g., "1.3", "2.0")
+        """
+        return self.version
+
     def exists(self) -> bool:
         """Check if the prompts directory exists."""
         return self.prompts_dir.exists() and self.prompts_dir.is_dir()

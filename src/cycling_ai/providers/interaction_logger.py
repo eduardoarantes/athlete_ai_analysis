@@ -7,18 +7,26 @@ Logs all interactions with LLM providers including:
 - Tool definitions
 - LLM responses
 - Timestamps and metadata
+- Token usage and cost estimation
+- Database storage for analytics
 """
 
 from __future__ import annotations
 
 import json
 import logging
+import os
+import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from cycling_ai.logging_config import session_id_context
 from cycling_ai.providers.base import CompletionResponse, ProviderMessage
+from cycling_ai.providers.cost_estimator import ModelPricing
+from cycling_ai.providers.db_storage import DatabaseStorage
+from cycling_ai.providers.interaction_metrics import InteractionMetrics
+from cycling_ai.providers.token_extractor import TokenExtractor
 from cycling_ai.tools.base import ToolDefinition
 
 # Configure logging
@@ -59,10 +67,21 @@ class InteractionLogger:
         self.session_file = self.log_dir / f"session_{timestamp}.jsonl"
         self.interaction_count = 0
 
+        # Generate unique session ID
+        self.session_id = f"session_{timestamp}_{uuid.uuid4().hex[:8]}"
+
         # Set session ID in logging context for traceability
-        session_id_context.set(timestamp)
+        session_id_context.set(self.session_id)
+
+        # Initialize database storage (gracefully degrades if credentials missing)
+        supabase_url = os.getenv("SUPABASE_URL")
+        supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")  # Need service role for insert
+        self.db_storage = DatabaseStorage(supabase_url, supabase_key)
 
         logger.info(f"LLM interaction logging enabled. Log file: {self.session_file}")
+        logger.info(f"Session ID: {self.session_id}")
+        if self.db_storage.enabled:
+            logger.info("Database logging enabled")
 
     def log_interaction(
         self,
@@ -72,6 +91,13 @@ class InteractionLogger:
         tools: list[ToolDefinition] | None,
         response: CompletionResponse,
         duration_ms: float | None = None,
+        api_latency_ms: float | None = None,
+        user_id: str | None = None,
+        trigger_type: str = "system",
+        triggered_by: str | None = None,
+        prompt_version: str = "default",
+        error_code: str | None = None,
+        retry_count: int = 0,
     ) -> None:
         """
         Log a complete LLM interaction.
@@ -82,20 +108,54 @@ class InteractionLogger:
             messages: Input messages sent to LLM
             tools: Available tools (if any)
             response: LLM response
-            duration_ms: Duration of API call in milliseconds
+            duration_ms: Total duration of operation in milliseconds
+            api_latency_ms: Raw API response time in milliseconds
+            user_id: ID of the user whose data is being analyzed
+            trigger_type: How interaction was initiated (api_request, background_task, tool_call, system)
+            triggered_by: What triggered this interaction (e.g., endpoint path, task name)
+            prompt_version: Version identifier for the prompt template
+            error_code: Error code if the interaction failed
+            retry_count: Number of retries before success
         """
         if not self.enabled:
             return
 
         self.interaction_count += 1
 
-        # Build interaction record
+        # Generate unique request ID for this interaction
+        request_id = f"req_{uuid.uuid4().hex[:12]}"
+
+        # Extract token counts from provider metadata
+        input_tokens, output_tokens = TokenExtractor.extract_tokens(
+            provider_name, response.metadata or {}
+        )
+
+        # Estimate cost
+        estimated_cost = None
+        if input_tokens is not None and output_tokens is not None:
+            estimated_cost = ModelPricing.estimate_cost(
+                provider_name, model, input_tokens, output_tokens
+            )
+
+        # Build interaction record for JSONL (includes prompts/responses)
         interaction = {
             "interaction_id": self.interaction_count,
+            "session_id": self.session_id,
+            "request_id": request_id,
             "timestamp": datetime.now().isoformat(),
             "provider": provider_name,
             "model": model,
+            "prompt_version": prompt_version,
+            "user_id": user_id,
+            "trigger_type": trigger_type,
+            "triggered_by": triggered_by,
             "duration_ms": duration_ms,
+            "api_latency_ms": api_latency_ms,
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "estimated_cost": estimated_cost,
+            "error_code": error_code,
+            "retry_count": retry_count,
             "input": {
                 "messages": [self._format_message(msg) for msg in messages],
                 "tools": [self._format_tool(tool) for tool in (tools or [])],
@@ -113,6 +173,28 @@ class InteractionLogger:
                 f.write(json.dumps(interaction, ensure_ascii=False) + "\n")
         except Exception as e:
             logger.error(f"Failed to write interaction log: {e}")
+
+        # Create metrics for database storage (excludes prompts/responses)
+        metrics = InteractionMetrics(
+            session_id=self.session_id,
+            request_id=request_id,
+            user_id=user_id,
+            provider_name=provider_name,
+            model=model,
+            prompt_version=prompt_version,
+            trigger_type=trigger_type,
+            triggered_by=triggered_by,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            estimated_cost=estimated_cost,
+            duration_ms=duration_ms,
+            api_latency_ms=api_latency_ms,
+            error_code=error_code,
+            retry_count=retry_count,
+        )
+
+        # Store to database
+        self.db_storage.store_interaction(metrics)
 
         # Also log summary to console
         self._log_summary(interaction)
@@ -234,17 +316,30 @@ class InteractionLogger:
 
     def _log_summary(self, interaction: dict[str, Any]) -> None:
         """Log a summary to console."""
-        logger.info(
-            f"[Interaction #{interaction['interaction_id']}] "
-            f"{interaction['provider']} / {interaction['model']} | "
-            f"Messages: {len(interaction['input']['messages'])} | "
-            f"Tools: {len(interaction['input']['tools'])} | "
-            f"Response length: {len(interaction['output']['content']) if interaction['output']['content'] else 0} | "
-            f"Tool calls: {len(interaction['output']['tool_calls']) if interaction['output']['tool_calls'] else 0} | "
-            f"Duration: {interaction['duration_ms']:.0f}ms"
-            if interaction["duration_ms"]
-            else ""
-        )
+        # Build summary parts
+        parts = [
+            f"[Interaction #{interaction['interaction_id']}]",
+            f"{interaction['provider']} / {interaction['model']}",
+        ]
+
+        # Add token and cost info
+        if interaction.get("input_tokens") and interaction.get("output_tokens"):
+            parts.append(
+                f"Tokens: {interaction['input_tokens']} in / {interaction['output_tokens']} out"
+            )
+
+        if interaction.get("estimated_cost") is not None:
+            parts.append(f"Cost: ${interaction['estimated_cost']:.4f}")
+
+        # Add timing info
+        if interaction.get("duration_ms") is not None:
+            parts.append(f"Duration: {interaction['duration_ms']:.0f}ms")
+
+        # Add trigger info
+        if interaction.get("trigger_type"):
+            parts.append(f"Trigger: {interaction['trigger_type']}")
+
+        logger.info(" | ".join(parts))
 
     def get_session_log_path(self) -> Path:
         """Get the path to the current session log file."""
