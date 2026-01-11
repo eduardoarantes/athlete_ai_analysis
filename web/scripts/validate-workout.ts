@@ -467,10 +467,17 @@ function validateWorkoutStructure(input: unknown): ValidationResult {
 // ============================================================================
 
 function formatDuration(minutes: number): string {
+  if (minutes < 1) {
+    return `${Math.round(minutes * 60)}s`
+  }
+
   const hours = Math.floor(minutes / 60)
   const mins = Math.round(minutes % 60)
 
-  if (hours === 0) return `${mins}m`
+  if (hours === 0) {
+    const rounded = Math.round(minutes * 10) / 10
+    return Number.isInteger(rounded) ? `${rounded}m` : `${rounded.toFixed(1)}m`
+  }
   if (mins === 0) return `${hours}h`
   return `${hours}h ${mins}m`
 }
