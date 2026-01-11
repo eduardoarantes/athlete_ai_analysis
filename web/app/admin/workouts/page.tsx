@@ -28,6 +28,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { WorkoutStructureDisplay } from '@/components/workout/workout-structure-display'
 import {
   Search,
   X,
@@ -48,8 +49,7 @@ import type {
 import { INTENSITY_LABELS } from '@/lib/types/workout-library'
 import { getWorkoutIntensityColors } from '@/lib/constants/activity-styles'
 import { PowerProfileSVG } from '@/components/training/power-profile-svg'
-import { getPowerRangeColor } from '@/lib/types/power-zones'
-import { structureToDisplaySegments, hasValidStructure } from '@/lib/utils/workout-structure-helpers'
+import { hasValidStructure } from '@/lib/utils/workout-structure-helpers'
 
 const WORKOUT_TYPES: WorkoutType[] = [
   'endurance',
@@ -66,25 +66,6 @@ const INTENSITIES: WorkoutIntensity[] = ['easy', 'moderate', 'hard', 'very_hard'
 const PHASES: TrainingPhase[] = ['Base', 'Build', 'Peak', 'Recovery', 'Taper', 'Foundation']
 
 const PAGE_SIZE = 20
-
-/**
- * Format duration in minutes to human-readable format
- * - Less than 1 minute: shows in seconds (e.g., "30s")
- * - 1-59 minutes: shows with max 1 decimal (e.g., "5m", "5.5m")
- * - 60+ minutes: shows hours and minutes (e.g., "1h 30m")
- */
-function formatDuration(minutes: number): string {
-  if (minutes < 1) {
-    return `${Math.round(minutes * 60)}s`
-  }
-  if (minutes < 60) {
-    const rounded = Math.round(minutes * 10) / 10
-    return Number.isInteger(rounded) ? `${rounded}m` : `${rounded.toFixed(1)}m`
-  }
-  const hours = Math.floor(minutes / 60)
-  const mins = Math.round(minutes % 60)
-  return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`
-}
 
 type ViewMode = 'table' | 'tiles'
 
@@ -606,123 +587,7 @@ export default function AdminWorkoutsPage() {
                   {hasValidStructure(selectedWorkout.structure) && (
                     <div>
                       <h4 className="font-medium mb-2">Workout Structure</h4>
-                      <div className="space-y-3">
-                        {structureToDisplaySegments(selectedWorkout.structure).map((segment, idx) => {
-                          // Interval set with work/recovery
-                          if (segment.type === 'interval' && segment.sets && segment.work && segment.recovery) {
-                            return (
-                              <div
-                                key={idx}
-                                className="bg-amber-50/50 dark:bg-amber-950/20 border-2 border-dashed border-amber-400 dark:border-amber-600 rounded-lg p-4"
-                              >
-                                <div className="flex items-center gap-2 mb-3">
-                                  <Badge className="bg-amber-500 hover:bg-amber-500 text-white font-bold px-2.5 py-0.5">
-                                    {segment.sets}x
-                                  </Badge>
-                                  <span className="text-sm text-amber-700 dark:text-amber-400">
-                                    Repeat the following set {segment.sets} times:
-                                  </span>
-                                </div>
-                                <div className="space-y-2">
-                                  {/* Work segment */}
-                                  <div className="bg-background rounded-lg overflow-hidden">
-                                    <div
-                                      className="flex items-center gap-4 p-3 border-l-4"
-                                      style={{
-                                        borderLeftColor: getPowerRangeColor(
-                                          segment.work.power_low_pct,
-                                          segment.work.power_high_pct
-                                        ),
-                                      }}
-                                    >
-                                      <div className="font-semibold min-w-[70px]">
-                                        {formatDuration(segment.work.duration_min)}
-                                      </div>
-                                      <div
-                                        className="font-medium"
-                                        style={{
-                                          color: getPowerRangeColor(
-                                            segment.work.power_low_pct,
-                                            segment.work.power_high_pct
-                                          ),
-                                        }}
-                                      >
-                                        {segment.work.power_low_pct}-{segment.work.power_high_pct}%
-                                      </div>
-                                      <div className="text-sm text-muted-foreground">
-                                        {segment.work.description || 'Work'}
-                                      </div>
-                                    </div>
-                                  </div>
-                                  {/* Recovery segment */}
-                                  <div className="bg-background rounded-lg overflow-hidden">
-                                    <div
-                                      className="flex items-center gap-4 p-3 border-l-4"
-                                      style={{
-                                        borderLeftColor: getPowerRangeColor(
-                                          segment.recovery.power_low_pct,
-                                          segment.recovery.power_high_pct
-                                        ),
-                                      }}
-                                    >
-                                      <div className="font-semibold min-w-[70px]">
-                                        {formatDuration(segment.recovery.duration_min)}
-                                      </div>
-                                      <div
-                                        className="font-medium"
-                                        style={{
-                                          color: getPowerRangeColor(
-                                            segment.recovery.power_low_pct,
-                                            segment.recovery.power_high_pct
-                                          ),
-                                        }}
-                                      >
-                                        {segment.recovery.power_low_pct}-{segment.recovery.power_high_pct}%
-                                      </div>
-                                      <div className="text-sm text-muted-foreground">
-                                        {segment.recovery.description || 'Recovery'}
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            )
-                          }
-
-                          // Simple segment (warmup, cooldown, steady, etc.)
-                          return (
-                            <div key={idx} className="bg-muted/30 rounded-lg overflow-hidden">
-                              <div
-                                className="flex items-center gap-4 p-3 border-l-4"
-                                style={{
-                                  borderLeftColor: getPowerRangeColor(
-                                    segment.power_low_pct,
-                                    segment.power_high_pct
-                                  ),
-                                }}
-                              >
-                                <div className="font-semibold min-w-[70px]">
-                                  {formatDuration(segment.duration_min)}
-                                </div>
-                                <div
-                                  className="font-medium"
-                                  style={{
-                                    color: getPowerRangeColor(
-                                      segment.power_low_pct,
-                                      segment.power_high_pct
-                                    ),
-                                  }}
-                                >
-                                  {segment.power_low_pct}-{segment.power_high_pct}%
-                                </div>
-                                <div className="text-sm text-muted-foreground capitalize">
-                                  {segment.description}
-                                </div>
-                              </div>
-                            </div>
-                          )
-                        })}
-                      </div>
+                      <WorkoutStructureDisplay structure={selectedWorkout.structure} />
                     </div>
                   )}
 
