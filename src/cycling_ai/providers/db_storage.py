@@ -41,7 +41,7 @@ class DatabaseStorage:
 
         # Try to initialize Supabase client
         try:
-            from supabase import create_client  # type: ignore[attr-defined]
+            from supabase import create_client  # type: ignore  # Optional dependency
 
             self.client = create_client(supabase_url, supabase_key)
             self.enabled = True
