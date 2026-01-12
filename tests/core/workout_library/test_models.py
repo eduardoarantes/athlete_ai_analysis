@@ -122,27 +122,27 @@ class TestWorkout:
             suitable_phases=["Base", "Build"],
             suitable_weekdays=["Monday", "Wednesday", "Friday"],
             structure=legacy_segments_to_structure([
-                WorkoutSegment(
-                    type="warmup",
-                    duration_min=10.0,
-                    power_low_pct=50,
-                    power_high_pct=60,
-                    description="Warm up",
-                ),
-                WorkoutSegment(
-                    type="steady",
-                    duration_min=60.0,
-                    power_low_pct=65,
-                    power_high_pct=75,
-                    description="Steady endurance",
-                ),
-                WorkoutSegment(
-                    type="cooldown",
-                    duration_min=10.0,
-                    power_low_pct=50,
-                    power_high_pct=60,
-                    description="Cool down",
-                ),
+                {
+                    "type": "warmup",
+                    "duration_min": 10.0,
+                    "power_low_pct": 50,
+                    "power_high_pct": 60,
+                    "description": "Warm up",
+                },
+                {
+                    "type": "steady",
+                    "duration_min": 60.0,
+                    "power_low_pct": 65,
+                    "power_high_pct": 75,
+                    "description": "Steady endurance",
+                },
+                {
+                    "type": "cooldown",
+                    "duration_min": 10.0,
+                    "power_low_pct": 50,
+                    "power_high_pct": 60,
+                    "description": "Cool down",
+                },
             ]),
             base_duration_min=80.0,
             base_tss=65.5,
@@ -395,4 +395,5 @@ class TestWorkoutLibrary:
             "mixed",
         ]
         assert first_workout.structure is not None
-        assert "structure" in first_workout.structure
+        assert hasattr(first_workout.structure, "structure")
+        assert len(first_workout.structure.structure) > 0
