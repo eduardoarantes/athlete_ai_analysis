@@ -88,6 +88,10 @@ export interface WorkoutDetailPopupProps {
   className?: string
   /** Additional content to render (e.g., activity matching) */
   children?: React.ReactNode
+  /** Additional badges to show in header (e.g., admin source badges) */
+  additionalBadges?: React.ReactNode
+  /** Action buttons to show in header (e.g., view JSON) */
+  headerActions?: React.ReactNode
 }
 
 /**
@@ -251,6 +255,8 @@ export function WorkoutDetailPopup({
   asInline = false,
   className,
   children,
+  additionalBadges,
+  headerActions,
 }: WorkoutDetailPopupProps) {
   const config = { ...DEFAULT_SECTIONS, ...sections }
 
@@ -290,6 +296,8 @@ export function WorkoutDetailPopup({
                 )}
               </>
             )}
+            {additionalBadges}
+            {headerActions}
           </div>
           {config.showWeekInfo && (weekNumber || workout.weekday) && (
             <DialogDescription className="text-xs">
