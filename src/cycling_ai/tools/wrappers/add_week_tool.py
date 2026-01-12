@@ -15,8 +15,9 @@ from typing import Any
 from cycling_ai.core.tss import calculate_weekly_tss
 from cycling_ai.core.workout_library.structure_helpers import (
     calculate_structure_duration,
+    extract_power_target,
+    get_main_segment_from_structure,
     has_valid_structure,
-    structure_to_legacy_segments,
 )
 from cycling_ai.tools.base import (
     BaseTool,
@@ -30,49 +31,136 @@ logger = logging.getLogger(__name__)
 
 
 # ============================================================================
-# Helper Functions for Workout Structure Compatibility
+# Helper Functions for WorkoutStructure Validation
 # ============================================================================
 
 
-def _get_workout_segments(workout: dict[str, Any]) -> list[dict[str, Any]]:
+def _validate_workout_structure(workout: dict[str, Any], workout_index: int) -> None:
     """
-    Get workout segments from either structure or legacy segments field.
-
-    For workouts with structure format, converts to legacy segments for validation.
-    For workouts with legacy segments format, returns as-is.
+    Validate a workout has valid structure.
 
     Args:
-        workout: Workout dictionary with either structure or segments
+        workout: Workout dictionary with structure field
+        workout_index: Index of workout in workouts array (for error messages)
 
-    Returns:
-        List of segment dicts in legacy format
+    Raises:
+        ValueError: If structure is invalid or missing required fields
     """
-    # Check if workout has structure field
-    if "structure" in workout and has_valid_structure(workout.get("structure")):
-        # Convert structure to legacy segments for validation
-        return structure_to_legacy_segments(workout["structure"])
+    if "structure" not in workout:
+        raise ValueError(
+            f"Workout {workout_index + 1} missing 'structure' field. "
+            "All workouts must have a WorkoutStructure."
+        )
 
-    # Fall back to legacy segments field
-    return workout.get("segments", [])
+    structure = workout["structure"]
+    if not has_valid_structure(structure):
+        raise ValueError(
+            f"Workout {workout_index + 1} has invalid or empty structure. "
+            "Structure must have at least one segment with steps."
+        )
+
+    # Extract structure data
+    if hasattr(structure, "structure"):
+        segments = structure.structure
+    else:
+        segments = structure.get("structure", [])
+
+    # Validate each segment has valid steps
+    for seg_idx, segment in enumerate(segments):
+        seg_dict = segment if isinstance(segment, dict) else segment.model_dump()
+
+        seg_type = seg_dict.get("type")
+        if not seg_type:
+            raise ValueError(
+                f"Workout {workout_index + 1}, segment {seg_idx + 1} missing 'type' field"
+            )
+
+        if seg_type not in ["step", "repetition"]:
+            raise ValueError(
+                f"Workout {workout_index + 1}, segment {seg_idx + 1} has invalid type '{seg_type}'. "
+                "Must be 'step' or 'repetition'"
+            )
+
+        steps = seg_dict.get("steps", [])
+        if not steps:
+            raise ValueError(
+                f"Workout {workout_index + 1}, segment {seg_idx + 1} has no steps"
+            )
+
+        # Validate each step
+        for step_idx, step in enumerate(steps):
+            step_dict = step if isinstance(step, dict) else step.model_dump()
+
+            if "name" not in step_dict:
+                raise ValueError(
+                    f"Workout {workout_index + 1}, segment {seg_idx + 1}, step {step_idx + 1} missing 'name'"
+                )
+
+            if "intensityClass" not in step_dict:
+                raise ValueError(
+                    f"Workout {workout_index + 1}, segment {seg_idx + 1}, step {step_idx + 1} missing 'intensityClass'"
+                )
+
+            if "length" not in step_dict:
+                raise ValueError(
+                    f"Workout {workout_index + 1}, segment {seg_idx + 1}, step {step_idx + 1} missing 'length'"
+                )
+
+            if "targets" not in step_dict:
+                raise ValueError(
+                    f"Workout {workout_index + 1}, segment {seg_idx + 1}, step {step_idx + 1} missing 'targets'"
+                )
 
 
-def _calculate_workout_duration(workout: dict[str, Any]) -> float:
+def _is_strength_workout_from_structure(workout: dict[str, Any]) -> bool:
     """
-    Calculate total workout duration from either structure or segments.
+    Determine if a workout is a strength workout based on structure.
+
+    Checks workout_type field first, then falls back to checking if all
+    power targets are zero (strength training has no power targets).
 
     Args:
         workout: Workout dictionary
 
     Returns:
-        Total duration in minutes
+        True if strength workout, False if cycling workout
     """
-    # Try structure first
-    if "structure" in workout and has_valid_structure(workout.get("structure")):
-        return calculate_structure_duration(workout["structure"])
+    # Check explicit workout_type field first
+    workout_type = workout.get("workout_type")
+    if workout_type:
+        return workout_type == "strength"
 
-    # Fall back to segments
-    segments = workout.get("segments", [])
-    return sum((seg.get("duration_min") or 0) for seg in segments)
+    # Check description for "strength" keyword
+    if "strength" in workout.get("description", "").lower():
+        return True
+
+    # Check structure - strength workouts have all zero power targets
+    structure = workout.get("structure")
+    if not structure or not has_valid_structure(structure):
+        return False
+
+    if hasattr(structure, "structure"):
+        segments = structure.structure
+    else:
+        segments = structure.get("structure", [])
+
+    # Check if all power targets are zero
+    for segment in segments:
+        seg_dict = segment if isinstance(segment, dict) else segment.model_dump()
+        steps = seg_dict.get("steps", [])
+
+        for step in steps:
+            step_dict = step if isinstance(step, dict) else step.model_dump()
+            targets = step_dict.get("targets", [])
+
+            for target in targets:
+                target_dict = target if isinstance(target, dict) else target.model_dump()
+                if target_dict.get("type") == "power":
+                    max_value = target_dict.get("maxValue", 0)
+                    if max_value > 0:
+                        return False  # Has non-zero power, so it's cycling
+
+    return True  # All power targets are zero, so it's strength
 
 
 # ============================================================================
@@ -149,24 +237,16 @@ def _calculate_week_metrics(
         filtered_workouts = workouts
 
     # Exclude strength workouts from cycling volume calculations
-    # Use explicit workout_type field if available (prevents mis-classification)
     cycling_workouts = []
     for workout in filtered_workouts:
-        workout_type = workout.get("workout_type")
-        if workout_type:
-            # Use explicit type from library
-            is_strength = workout_type == "strength"
-        else:
-            # Fallback: keyword matching (old behavior)
-            segments = _get_workout_segments(workout)
-            is_strength = "strength" in workout.get("description", "").lower() or any(
-                "strength" in seg.get("type", "").lower() for seg in segments
-            )
-        if not is_strength:
+        if not _is_strength_workout_from_structure(workout):
             cycling_workouts.append(workout)
 
-    # Calculate total duration (handle None values from library workouts)
-    total_duration_min = sum(_calculate_workout_duration(workout) for workout in cycling_workouts)
+    # Calculate total duration from structure
+    total_duration_min = sum(
+        calculate_structure_duration(workout.get("structure", {}))
+        for workout in cycling_workouts
+    )
     total_hours = total_duration_min / 60.0
 
     # Calculate TSS
@@ -230,16 +310,14 @@ def _validate_time_budget(
 
 def _is_endurance_workout(workout: dict[str, Any]) -> bool:
     """
-    Identify if a workout is an endurance ride.
+    Identify if a workout is an endurance ride based on structure.
 
     Checks:
     1. Description/name keywords (endurance, z2, easy, base, aerobic)
-    2. Segment types (steady, endurance) AND power < 80% FTP
-    3. At least 50% of segments are endurance type OR
-       At least 70% of duration is in endurance zones
+    2. Power targets - at least 70% of duration has power < 80% FTP
 
     Args:
-        workout: Workout dictionary with segments, description, name
+        workout: Workout dictionary with structure
 
     Returns:
         True if workout is endurance ride
@@ -250,42 +328,50 @@ def _is_endurance_workout(workout: dict[str, Any]) -> bool:
     if any(keyword in description for keyword in keywords):
         return True
 
-    # Analyze segments
-    segments = _get_workout_segments(workout)
-    if not segments:
+    # Analyze structure
+    structure = workout.get("structure")
+    if not structure or not has_valid_structure(structure):
         return False
 
-    endurance_segment_count = 0
-    total_segment_count = len(segments)
-    endurance_duration = 0
-    total_duration = 0
+    if hasattr(structure, "structure"):
+        segments = structure.structure
+    else:
+        segments = structure.get("structure", [])
 
-    for seg in segments:
-        duration = seg.get("duration_min") or 0
-        total_duration += duration
+    endurance_duration = 0.0
+    total_duration = 0.0
 
-        # Check if segment is endurance type with low power
-        seg_type = seg.get("type", "").lower()
-        power_low = seg.get("power_low_pct", 100)
+    from cycling_ai.core.workout_library.structure_helpers import convert_step_length_to_minutes
 
-        # Endurance types: steady, endurance
-        # Power threshold: < 80% FTP
-        is_endurance_type = seg_type in ["steady", "endurance"]
-        is_low_power = power_low < 80
+    for segment in segments:
+        seg_dict = segment if isinstance(segment, dict) else segment.model_dump()
+        repetitions = seg_dict.get("length", {}).get("value", 1)
+        steps = seg_dict.get("steps", [])
 
-        if is_endurance_type and is_low_power:
-            endurance_segment_count += 1
-            endurance_duration += duration
+        for step in steps:
+            step_dict = step if isinstance(step, dict) else step.model_dump()
 
-    # Calculate ratios
-    if total_segment_count == 0 or total_duration == 0:
+            # Calculate step duration
+            length = step_dict.get("length", {})
+            duration = convert_step_length_to_minutes(length) * repetitions
+            total_duration += duration
+
+            # Check power target
+            targets = step_dict.get("targets", [])
+            power_min, power_max = extract_power_target(targets)
+
+            # Endurance zone: < 80% FTP
+            if power_max < 80:
+                endurance_duration += duration
+
+    # Calculate duration ratio
+    if total_duration == 0:
         return False
 
-    segment_ratio = endurance_segment_count / total_segment_count
     duration_ratio = endurance_duration / total_duration
 
-    # Return True if either threshold met
-    return segment_ratio >= 0.5 or duration_ratio >= 0.7
+    # Return True if at least 70% is in endurance zones
+    return duration_ratio >= 0.7
 
 
 def _find_weekend_endurance_rides(workouts: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -316,8 +402,8 @@ def _find_weekend_endurance_rides(workouts: list[dict[str, Any]]) -> list[dict[s
         if not _is_endurance_workout(workout):
             continue
 
-        # Calculate total duration (handle None values)
-        total_duration = _calculate_workout_duration(workout)
+        # Calculate total duration from structure
+        total_duration = calculate_structure_duration(workout.get("structure", {}))
 
         weekend_endurance_rides.append(
             {
@@ -334,177 +420,9 @@ def _find_weekend_endurance_rides(workouts: list[dict[str, Any]]) -> list[dict[s
     return weekend_endurance_rides
 
 
-def _attempt_auto_fix(
-    workouts: list[dict[str, Any]], target_hours: float | None, current_ftp: float, week_number: int
-) -> tuple[list[dict[str, Any]] | None, str]:
-    """
-    Attempt to auto-fix time budget violations by reducing endurance rides.
-
-    NON-DESTRUCTIVE: Returns new list, doesn't modify original.
-
-    Strategy:
-    1. Find longest weekend endurance ride
-    2. Remove warmup/cooldown segments
-    3. Reduce main block by 15-minute intervals (minimum 60 min)
-    4. Stop if total hours <= target_hours
-
-    Args:
-        workouts: Original workout list (NOT modified)
-        target_hours: Target hours to achieve
-        current_ftp: FTP for TSS calculation
-        week_number: Week number for logging
-
-    Returns:
-        (modified_workouts_or_none, log_message)
-        - Returns (None, reason) if fix not possible or not needed
-        - Returns (new_workouts, log) if fix successful
-    """
-    # Check if target exists
-    if not target_hours:
-        return (None, "No target hours specified")
-
-    # Calculate current hours
-    current_hours, _ = _calculate_week_metrics(workouts, current_ftp)
-
-    logger.info(
-        f"Week {week_number}: AUTO-FIX attempting to reduce time from {current_hours:.2f}h to {target_hours:.2f}h"
-    )
-
-    # Check if already under budget
-    if current_hours <= target_hours:
-        logger.info(f"Week {week_number}: Already within budget, no fix needed")
-        return (None, f"Already within budget: {current_hours:.1f}h <= {target_hours:.1f}h")
-
-    # Find weekend endurance rides
-    weekend_rides = _find_weekend_endurance_rides(workouts)
-
-    if not weekend_rides:
-        logger.warning(f"Week {week_number}: No weekend endurance rides found to reduce")
-        return (None, "No weekend endurance rides to reduce")
-
-    # Target the longest weekend ride
-    target_ride = weekend_rides[0]
-    target_index = target_ride["workout_index"]
-    target_weekday = target_ride["weekday"]
-
-    logger.info(f"Week {week_number}: Found {len(weekend_rides)} weekend endurance ride(s)")
-    logger.info(f"Week {week_number}: Targeting longest ride on {target_weekday} ({target_ride['duration_min']} min)")
-
-    # Deep copy workouts (non-destructive)
-    import copy
-
-    workouts_copy = copy.deepcopy(workouts)
-
-    # Get the workout to modify
-    workout_to_modify = workouts_copy[target_index]
-    # Get segments from either structure or legacy format
-    original_segments = _get_workout_segments(workout_to_modify)
-    # For modification, we work with segments directly
-    # If workout had structure, it will be replaced with segments after modification
-
-    # Step 1: Try removing warmup/cooldown
-    logger.info(f"Week {week_number}: Step 1 - Attempting to remove warmup/cooldown segments")
-    modified_segments = []
-    removed_segments = []
-
-    for seg in original_segments:
-        seg_type = seg.get("type", "").lower()
-        if seg_type not in ["warmup", "cooldown"]:
-            modified_segments.append(seg)
-        else:
-            removed_segments.append(f"{seg_type} ({seg.get('duration_min', 0)} min)")
-
-    if removed_segments:
-        logger.info(f"Week {week_number}:   Removed: {', '.join(removed_segments)}")
-    else:
-        logger.info(f"Week {week_number}:   No warmup/cooldown segments to remove")
-
-    # Update segments
-    workout_to_modify["segments"] = modified_segments
-
-    # Check if warmup/cooldown removal is enough
-    test_hours, _ = _calculate_week_metrics(workouts_copy, current_ftp)
-
-    logger.info(f"Week {week_number}:   After warmup/cooldown removal: {test_hours:.2f}h (target: {target_hours:.2f}h)")
-
-    if test_hours <= target_hours:
-        log_msg = (
-            f"Auto-fix successful: Removed warmup/cooldown from {target_weekday} endurance ride. "
-            f"Time reduced: {current_hours:.1f}h → {test_hours:.1f}h (target: {target_hours:.1f}h)"
-        )
-        logger.info(f"Week {week_number}: ✓ {log_msg}")
-        return (workouts_copy, log_msg)
-
-    # Step 2: Reduce main segments by 15-minute intervals
-    logger.info(f"Week {week_number}: Step 2 - Reducing main endurance segments by {15} min intervals (min: {60} min)")
-
-    # Find the longest endurance segment
-    reduction_increment = 15  # minutes
-    min_endurance_duration = 60  # minimum duration
-    max_iterations = 10
-
-    for iteration in range(max_iterations):
-        logger.info(
-            f"Week {week_number}:   Iteration {iteration + 1}/{max_iterations}: "
-            f"Current {test_hours:.2f}h, target {target_hours:.2f}h"
-        )
-        # Find longest endurance segment
-        longest_seg_idx = None
-        longest_duration = 0
-
-        for idx, seg in enumerate(modified_segments):
-            seg_type = seg.get("type", "").lower()
-            power_low = seg.get("power_low_pct") or 100
-            duration = seg.get("duration_min") or 0
-
-            # Endurance segment with low power
-            if seg_type in ["steady", "endurance"] and power_low < 80 and duration > longest_duration:
-                longest_duration = duration
-                longest_seg_idx = idx
-
-        # Check if we can reduce
-        if longest_seg_idx is None:
-            logger.warning(f"Week {week_number}:   No more endurance segments to reduce")
-            break
-
-        if longest_duration - reduction_increment < min_endurance_duration:
-            # Hit minimum duration
-            log_msg = (
-                f"Auto-fix insufficient: Cannot reduce below {min_endurance_duration} min minimum. "
-                f"Current: {test_hours:.1f}h, Target: {target_hours:.1f}h"
-            )
-            logger.warning(f"Week {week_number}: ✗ {log_msg}")
-            return (None, log_msg)
-
-        # Reduce the segment
-        logger.info(
-            f"Week {week_number}:     Reducing segment {longest_seg_idx} "
-            f"from {longest_duration} min to {longest_duration - reduction_increment} min"
-        )
-        modified_segments[longest_seg_idx]["duration_min"] -= reduction_increment
-        workout_to_modify["segments"] = modified_segments
-
-        # Check if we've reached target
-        test_hours, _ = _calculate_week_metrics(workouts_copy, current_ftp)
-
-        if test_hours <= target_hours:
-            reduction_amount = current_hours - test_hours
-            log_msg = (
-                f"Auto-fix successful: Reduced {target_weekday} endurance ride "
-                f"by {reduction_amount * 60:.0f} min. "
-                f"Time reduced: {current_hours:.1f}h → {test_hours:.1f}h "
-                f"(target: {target_hours:.1f}h)"
-            )
-            logger.info(f"Week {week_number}: ✓ {log_msg}")
-            return (workouts_copy, log_msg)
-
-    # Exceeded max iterations
-    logger.warning(
-        f"Week {week_number}: Exceeded {max_iterations} iterations, "
-        f"still at {test_hours:.2f}h (target: {target_hours:.2f}h)"
-    )
-    log_msg = f"Auto-fix insufficient: Exceeded max iterations. Current: {test_hours:.1f}h, Target: {target_hours:.1f}h"
-    return (None, log_msg)
+# _attempt_auto_fix deleted - See Issue #117
+# The workout library should have workouts at appropriate durations instead of
+# modifying workouts after selection. This prevents fragile segment manipulation.
 
 
 def _convert_to_native_types(obj: Any) -> Any:
@@ -536,7 +454,7 @@ class AddWeekDetailsTool(BaseTool):
     """
     Tool for adding weekly workout details (Phase 2 of 2-phase generation).
 
-    Adds detailed workouts with segments for a single week to an existing plan.
+    Adds detailed workouts with structure for a single week to an existing plan.
     Must be called once for each week in the plan.
     """
 
@@ -547,7 +465,7 @@ class AddWeekDetailsTool(BaseTool):
             name="add_week_details",
             description=(
                 "PHASE 2: Add detailed workouts for ONE week to the training plan. "
-                "Specify week_number and provide full workout array with segments. "
+                "Specify week_number and provide full workout array with WorkoutStructure. "
                 "Call this tool ONCE FOR EACH WEEK (e.g., 12 times for 12-week plan). "
                 "Use the plan_id returned by create_plan_overview."
             ),
@@ -578,10 +496,10 @@ class AddWeekDetailsTool(BaseTool):
                     description=(
                         "Array of workout objects for this week. "
                         "ONLY include training days, NOT rest days. "
-                        "Each workout: weekday (Monday-Sunday), description, "
-                        "segments (array with type, duration_min, power_low_pct, "
-                        "power_high_pct, description). "
-                        "Each segment MUST have all required fields."
+                        "Each workout must have: weekday (Monday-Sunday), description, "
+                        "and structure (WorkoutStructure with segments and steps). "
+                        "The structure MUST follow the WorkoutStructure format with "
+                        "primaryIntensityMetric, primaryLengthMetric, and structure array."
                     ),
                     required=True,
                     items={
@@ -589,31 +507,12 @@ class AddWeekDetailsTool(BaseTool):
                         "properties": {
                             "weekday": {"type": "string"},
                             "description": {"type": "string"},
-                            "segments": {
-                                "type": "array",
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "type": {"type": "string"},
-                                        "duration_min": {"type": "integer"},
-                                        "power_low_pct": {"type": "number"},
-                                        "power_high_pct": {"type": "number"},
-                                        "description": {"type": "string"},
-                                    },
-                                },
+                            "structure": {
+                                "type": "object",
+                                "description": "WorkoutStructure with segments and steps",
                             },
                         },
                     },
-                ),
-                ToolParameter(
-                    name="auto_fix",
-                    type="boolean",
-                    description=(
-                        "Enable automatic fixing of time budget violations "
-                        "by reducing endurance rides. "
-                        "Default: true. Set to false for strict validation mode."
-                    ),
-                    required=False,
                 ),
             ],
         )
@@ -728,39 +627,8 @@ class AddWeekDetailsTool(BaseTool):
                         f"Other days are rest days."
                     )
 
-                # Check if this is a strength workout (infer from workout description)
-                workout_segments = _get_workout_segments(workout)
-                is_strength_workout = "strength" in workout.get("description", "").lower() or any(
-                    "strength" in seg.get("type", "").lower() for seg in workout_segments
-                )
-
-                # Validate each segment (skip power zone validation for strength workouts)
-                for j, segment in enumerate(workout_segments):
-                    seg_type = segment.get("type", "")
-
-                    # Interval segments have work/recovery structure, not top-level duration_min
-                    if seg_type == "interval" and "work" in segment:
-                        # Validate interval structure
-                        if "sets" not in segment:
-                            raise ValueError(f"Workout {i + 1}, segment {j + 1} missing required field: 'sets'")
-                        work = segment.get("work", {})
-                        recovery = segment.get("recovery")
-                        if "duration_min" not in work:
-                            raise ValueError(f"Workout {i + 1}, segment {j + 1} work missing 'duration_min'")
-                        if not is_strength_workout and "power_low_pct" not in work:
-                            raise ValueError(f"Workout {i + 1}, segment {j + 1} work missing 'power_low_pct'")
-                        if recovery and "duration_min" not in recovery:
-                            raise ValueError(f"Workout {i + 1}, segment {j + 1} recovery missing 'duration_min'")
-                    else:
-                        # Regular segments (warmup, cooldown, steady, etc.)
-                        if is_strength_workout:
-                            required_fields = ["type", "duration_min", "description"]
-                        else:
-                            required_fields = ["type", "duration_min", "power_low_pct", "description"]
-
-                        for field in required_fields:
-                            if field not in segment:
-                                raise ValueError(f"Workout {i + 1}, segment {j + 1} missing required field: '{field}'")
+                # Validate workout structure
+                _validate_workout_structure(workout, i)
 
             # Validate workout counts match expected workout_types
             if expected_workout_types_by_day:
@@ -785,18 +653,8 @@ class AddWeekDetailsTool(BaseTool):
                     actual_cycling = 0
                     actual_strength = 0
                     for workout in day_workouts:
-                        # Use explicit workout_type field if available (from library workouts)
-                        # Falls back to keyword matching for backward compatibility
-                        workout_type = workout.get("workout_type")
-                        if workout_type:
-                            # Use explicit type from library
-                            is_strength = workout_type == "strength"
-                        else:
-                            # Fallback: keyword matching (old behavior)
-                            workout_segments = _get_workout_segments(workout)
-                            is_strength = "strength" in workout.get("description", "").lower() or any(
-                                "strength" in seg.get("type", "").lower() for seg in workout_segments
-                            )
+                        # Use structure-based strength workout detection
+                        is_strength = _is_strength_workout_from_structure(workout)
                         if is_strength:
                             actual_strength += 1
                         else:
@@ -903,55 +761,15 @@ class AddWeekDetailsTool(BaseTool):
                 logger.warning(f"Week {week_number}: VALIDATION FAILED in all {len(scenario_results)} scenario(s)")
 
             if not valid_scenarios:
-                # All scenarios failed - check if auto-fix is enabled
-                auto_fix_enabled = kwargs.get("auto_fix", True)  # Default: enabled
-
-                if auto_fix_enabled:
-                    logger.info(f"Week {week_number}: Auto-fix is enabled, attempting to fix...")
-
-                    # Try auto-fix for the full workout scenario
-                    modified_workouts, fix_log = _attempt_auto_fix(workouts, target_hours, current_ftp, week_number)
-
-                    if modified_workouts is not None:
-                        logger.info(f"Week {week_number}: Re-validating after auto-fix modifications")
-                        # Re-validate with fixed workouts
-                        total_hours_fixed, actual_tss_fixed = _calculate_week_metrics(modified_workouts, current_ftp)
-                        warnings_fixed, errors_fixed = _validate_time_budget(
-                            total_hours_fixed,
-                            target_hours,
-                            week_number,
-                            is_recovery_week,
-                        )
-
-                        if len(errors_fixed) == 0:
-                            # Auto-fix succeeded!
-                            workouts = modified_workouts
-                            logger.info(f"Week {week_number}: ✓ AUTO-FIX SUCCESSFUL - Week now passes validation")
-                            logger.info(f"Week {week_number}: {fix_log}")
-                            valid_scenarios = [
-                                {
-                                    "name": "auto_fixed",
-                                    "total_hours": total_hours_fixed,
-                                    "actual_tss": actual_tss_fixed,
-                                    "warnings": warnings_fixed,
-                                    "errors": errors_fixed,
-                                    "auto_fixed": True,
-                                    "fix_log": fix_log,
-                                }
-                            ]
-                    else:
-                        logger.info(f"Auto-fix not possible: {fix_log}")
-
-            if not valid_scenarios:
-                # Still failed after auto-fix attempt - raise error with LLM feedback
+                # All scenarios failed - raise error with LLM feedback
                 error_msg = "\n".join(scenario_results[0]["errors"])
                 logger.error(f"Week {week_number} validation failed:\n{error_msg}")
                 raise ValueError(
                     f"Week {week_number} validation failed. "
                     f"Please adjust workouts:\n{error_msg}\n\n"
                     f"Suggestions:\n"
-                    f"- To reduce time: Shorten segment durations or remove recovery segments\n"
-                    f"- To increase time: Add warmup/cooldown or extend main set duration"
+                    f"- To reduce time: Shorten step durations or remove recovery steps\n"
+                    f"- To increase time: Add warmup/cooldown steps or extend main work duration"
                 )
 
             # Use the best valid scenario for final metrics
