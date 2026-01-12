@@ -278,7 +278,7 @@ class TestSelectAndScaleWorkouts:
                 {"weekday": "Friday", "workout_types": ["recovery"]},
                 {"weekday": "Saturday", "workout_types": ["endurance"]},
                 {"weekday": "Sunday", "workout_types": ["recovery"]},
-            ]),
+            ],
         }
 
         # This should select workouts and scale ONLY Saturday endurance to hit 5.2h
@@ -349,7 +349,7 @@ class TestSelectAndScaleWorkouts:
                 {"weekday": "Friday", "workout_types": ["threshold"]},
                 {"weekday": "Saturday", "workout_types": ["endurance"]},
                 {"weekday": "Sunday", "workout_types": ["endurance"]},
-            ]),
+            ],
         }
 
         workouts = library_phase._select_and_scale_workouts(week)
