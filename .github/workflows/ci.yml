@@ -70,6 +70,11 @@ jobs:
           docker run --rm ${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}:${{ github.sha }} \
             pnpm format:check
 
+      - name: Run unit tests
+        run: |
+          docker run --rm ${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}:${{ github.sha }} \
+            pnpm test:unit:run
+
       - name: Run build
         run: |
           docker run --rm ${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}:${{ github.sha }} \
