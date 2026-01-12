@@ -87,8 +87,8 @@ export function WorkoutLibraryCard({
         'group relative flex flex-col rounded-lg border border-l-4 bg-card',
         compact ? 'p-2' : 'p-3',
         borderColor,
-        isDraggable && 'cursor-grab active:cursor-grabbing',
-        onClick && 'hover:bg-accent/50 cursor-pointer transition-colors',
+        onClick && 'hover:bg-accent/50 transition-colors',
+        isDraggable ? 'cursor-grab active:cursor-grabbing' : onClick && 'cursor-pointer',
         className
       )}
       onClick={onClick}

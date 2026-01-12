@@ -12,6 +12,8 @@ import { NoteCard } from './note-card'
 import { NoteDialog } from './note-dialog'
 import { WorkoutDetailModal, type MatchedActivityData } from './workout-detail-modal'
 import { NoteContextMenu } from '@/components/schedule/note-context-menu'
+import { CreatePlanDialog } from './create-plan-dialog'
+import { toast } from 'sonner'
 import type {
   PlanInstance,
   Workout,
@@ -86,6 +88,13 @@ export function ScheduleCalendar({
 
   const [selectedWorkout, setSelectedWorkout] = useState<ScheduledWorkout | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
+
+  // Create plan dialog state
+  const [createPlanDialogOpen, setCreatePlanDialogOpen] = useState(false)
+  const [pendingLibraryWorkout, setPendingLibraryWorkout] = useState<{
+    workout: WorkoutLibraryItem
+    targetDate: string
+  } | null>(null)
 
   // Notes state
   const [notesByDate, setNotesByDate] = useState<Map<string, PlanInstanceNote[]>>(new Map())
@@ -367,10 +376,10 @@ export function ScheduleCalendar({
     if (deletedNote) {
       setNotesByDate((prev) => {
         const newMap = new Map(prev)
-        const notes = newMap.get(deletedNote!.note_date)
+        const notes = newMap.get(deletedNote.note_date)
         if (notes) {
           newMap.set(
-            deletedNote!.note_date,
+            deletedNote.note_date,
             notes.filter((n) => n.id !== noteId)
           )
         }
@@ -704,9 +713,63 @@ export function ScheduleCalendar({
     )
   }
 
+  // Handler for when plan is created from the create plan dialog
+  const handlePlanCreated = async (planInstanceId: string) => {
+    if (!pendingLibraryWorkout) return
+
+    const { workout, targetDate } = pendingLibraryWorkout
+
+    // Add the workout to the newly created plan
+    try {
+      const response = await fetch(`/api/schedule/${planInstanceId}/workouts/add`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          workout_id: workout.id,
+          target_date: targetDate,
+          workout_data: {
+            name: workout.name,
+            type: workout.type,
+            tss: workout.base_tss,
+            duration_min: workout.base_duration_min,
+            description: workout.detailed_description,
+            structure: workout.structure,
+          },
+        }),
+      })
+
+      if (!response.ok) {
+        toast.error('Failed to add workout to plan')
+      } else {
+        toast.success('Plan created and workout added!')
+      }
+    } catch (error) {
+      errorLogger.logError(error as Error, {
+        path: 'schedule-calendar/handlePlanCreated',
+        metadata: { planInstanceId, targetDate },
+      })
+      toast.error('Failed to add workout to plan')
+    } finally {
+      setPendingLibraryWorkout(null)
+    }
+  }
+
   // Handler for adding library workouts via drag-and-drop
   const handleAddLibraryWorkout = async (workout: WorkoutLibraryItem, targetDate: string) => {
+    // Check if target date is in the past
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const targetDateObj = parseLocalDate(targetDate)
+
+    if (targetDateObj < today) {
+      toast.error('Cannot add workouts to past dates')
+      return
+    }
+
+    // If no plan exists, show create plan dialog
     if (!primaryInstanceId) {
+      setPendingLibraryWorkout({ workout, targetDate })
+      setCreatePlanDialogOpen(true)
       return
     }
 
@@ -861,7 +924,10 @@ export function ScheduleCalendar({
           // including structure when library_workout data is stored
           // Only fall back to cache for legacy entries without stored workout data
           let workout = effectiveWorkout.workout
-          if (effectiveWorkout.libraryWorkoutId && !effectiveWorkout.workout.structure?.structure?.length) {
+          if (
+            effectiveWorkout.libraryWorkoutId &&
+            !effectiveWorkout.workout.structure?.structure?.length
+          ) {
             const cachedParams = libraryWorkoutCache.get(effectiveWorkout.libraryWorkoutId)
             if (cachedParams) {
               // Use cached library workout details only when stored data is incomplete
@@ -1156,21 +1222,37 @@ export function ScheduleCalendar({
               </div>
             )
 
-            // In edit mode with single instance, wrap day with droppable and context menu
-            if (canEdit) {
-              return (
-                <CalendarDayContextMenu
-                  key={dateKey}
+            // If sidebar exists (library mode), make days droppable for library workouts
+            // If canEdit is also true, add context menu for full editing
+            if (sidebarContent || canEdit) {
+              const droppableDay = (
+                <DroppableCalendarDay
                   date={dateKey}
                   isEditMode={canEdit}
-                  existingWorkoutsCount={workouts.length}
-                  onAddNote={() => handleAddNote(dateKey)}
+                  allowLibraryDrops={!!sidebarContent}
+                  className="h-full"
                 >
-                  <DroppableCalendarDay date={dateKey} isEditMode={canEdit} className="h-full">
-                    {dayCellContent}
-                  </DroppableCalendarDay>
-                </CalendarDayContextMenu>
+                  {dayCellContent}
+                </DroppableCalendarDay>
               )
+
+              // If in full edit mode, wrap with context menu
+              if (canEdit) {
+                return (
+                  <CalendarDayContextMenu
+                    key={dateKey}
+                    date={dateKey}
+                    isEditMode={canEdit}
+                    existingWorkoutsCount={workouts.length}
+                    onAddNote={() => handleAddNote(dateKey)}
+                  >
+                    {droppableDay}
+                  </CalendarDayContextMenu>
+                )
+              }
+
+              // Library mode only - droppable but no context menu
+              return <div key={dateKey}>{droppableDay}</div>
             }
 
             return (
@@ -1242,31 +1324,53 @@ export function ScheduleCalendar({
           onDeleteError={handleNoteDeleteError}
         />
       )}
+
+      {/* Create Plan Dialog - shown when dropping workout without a plan */}
+      <CreatePlanDialog
+        open={createPlanDialogOpen}
+        onOpenChange={setCreatePlanDialogOpen}
+        onPlanCreated={handlePlanCreated}
+        dropDate={pendingLibraryWorkout?.targetDate}
+      />
     </div>
   )
 
-  // Wrap with DnD and clipboard providers when in edit mode
-  if (canEdit) {
-    return (
-      <ScheduleClipboardProvider instanceId={primaryInstanceId} onPaste={handlePasteWorkout}>
-        <ScheduleDndContext
-          onMoveWorkout={handleMoveWorkout}
-          onAddLibraryWorkout={handleAddLibraryWorkout}
-          onError={handleError}
-          isEditMode={canEdit}
-        >
-          {sidebarContent ? (
-            <div className="flex h-full">
-              {sidebarContent}
-              <div className="flex-1 overflow-auto pl-5">{calendarContent}</div>
-            </div>
-          ) : (
-            calendarContent
-          )}
-        </ScheduleDndContext>
-      </ScheduleClipboardProvider>
+  // Layout with sidebar (with or without DnD depending on edit mode)
+  const layoutWithSidebar = sidebarContent ? (
+    <div className="flex h-full">
+      {sidebarContent}
+      <div className="flex-1 overflow-auto pl-5">{calendarContent}</div>
+    </div>
+  ) : (
+    calendarContent
+  )
+
+  // Wrap with DnD when sidebar is present (for library workout drops)
+  // If canEdit is also true, add clipboard provider for full editing
+  if (sidebarContent) {
+    const dndContent = (
+      <ScheduleDndContext
+        onMoveWorkout={handleMoveWorkout}
+        onAddLibraryWorkout={handleAddLibraryWorkout}
+        onError={handleError}
+        isEditMode={canEdit}
+      >
+        {layoutWithSidebar}
+      </ScheduleDndContext>
     )
+
+    // If in edit mode, also wrap with clipboard provider
+    if (canEdit && primaryInstanceId) {
+      return (
+        <ScheduleClipboardProvider instanceId={primaryInstanceId} onPaste={handlePasteWorkout}>
+          {dndContent}
+        </ScheduleClipboardProvider>
+      )
+    }
+
+    return dndContent
   }
 
-  return calendarContent
+  // No sidebar - just show calendar
+  return layoutWithSidebar
 }
