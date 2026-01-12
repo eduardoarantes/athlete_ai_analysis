@@ -171,8 +171,10 @@ class TestScaleWeekendWorkouts:
 
         scaled = library_phase._scale_weekend_workouts(weekend_workouts, deficit_minutes)
 
-        # Should clamp to minimum of 10 minutes
-        assert scaled[0]["segments"][1]["duration_min"] >= 10
+        # Should clamp to minimum of 10 minutes (check total duration is reasonable)
+        scaled_duration = calculate_structure_duration(scaled[0]["structure"])
+        # After reducing by 60min from 70min base, should be clamped to not go too low
+        assert scaled_duration >= 30  # Total workout shouldn't go below 30min (warmup+steady+cooldown)
 
     def test_scale_respects_maximum_duration(self, library_phase):
         """Test that scaling doesn't extend segment beyond maximum."""
@@ -300,7 +302,7 @@ class TestSelectAndScaleWorkouts:
             if w.get("weekday") not in ["Saturday", "Sunday"]
         ]
         for workout in weekday_workouts:
-            duration = sum(seg["duration_min"] for seg in workout["segments"])
+            duration = calculate_structure_duration(workout.get("structure", {}))
             assert 45 <= duration <= 75, f"Weekday workout {duration}min outside 45-75min range"
 
         # Weekend endurance workouts (Saturday) should be scaled
@@ -313,7 +315,7 @@ class TestSelectAndScaleWorkouts:
             )
         ]
         for workout in weekend_endurance:
-            duration = sum(seg["duration_min"] for seg in workout["segments"])
+            duration = calculate_structure_duration(workout.get("structure", {}))
             # Endurance workouts can scale from 30-180 minutes (after rounding to nearest 10)
             assert 30 <= duration <= 180, f"Weekend endurance {duration}min outside 30-180min range"
 
@@ -327,7 +329,7 @@ class TestSelectAndScaleWorkouts:
             )
         ]
         for workout in weekend_recovery:
-            duration = sum(seg["duration_min"] for seg in workout["segments"])
+            duration = calculate_structure_duration(workout.get("structure", {}))
             # Recovery workouts stay at base duration (typically 30-100 minutes)
             assert 30 <= duration <= 120, f"Weekend recovery {duration}min outside 30-120min range"
 
