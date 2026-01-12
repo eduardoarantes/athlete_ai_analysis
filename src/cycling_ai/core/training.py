@@ -8,6 +8,11 @@ The actual plan design is done by the LLM agent using workout building tools.
 import json
 from typing import Any
 
+from cycling_ai.core.workout_library.structure_helpers import (
+    calculate_structure_duration,
+    has_valid_structure,
+)
+
 from .tss import calculate_weekly_tss, calculate_workout_tss
 from .utils import convert_to_json_serializable
 
@@ -106,80 +111,97 @@ def validate_training_plan(
                         f"Week {week_num}, workout {workout_idx}: Workout scheduled on '{day}' but athlete only available on {available_days}"
                     )
 
-                # Validate workout has segments
-                if "segments" not in workout:
-                    errors.append(f"Week {week_num}, {day}: Workout missing 'segments' field")
+                # Validate workout has either structure (new) or segments (legacy)
+                has_structure = "structure" in workout
+                has_segments = "segments" in workout
+
+                if not has_structure and not has_segments:
+                    errors.append(f"Week {week_num}, {day}: Workout missing 'structure' or 'segments' field")
                     continue
 
-                segments = workout["segments"]
-                if not isinstance(segments, list):
-                    errors.append(f"Week {week_num}, {day}: 'segments' must be a list, got {type(segments).__name__}")
-                    continue
-
-                if len(segments) < 1:
-                    errors.append(f"Week {week_num}, {day}: Workout must have at least one segment")
-                    continue
-
-                # Validate each segment
-                day_minutes: float = 0
-                for seg_idx, segment in enumerate(segments, 1):
-                    # Check segment type
-                    valid_types = {
-                        "warmup",
-                        "interval",
-                        "work",
-                        "recovery",
-                        "cooldown",
-                        "steady",
-                        "tempo",
-                        "strength",
-                    }
-                    seg_type = segment.get("type")
-                    if seg_type not in valid_types:
-                        errors.append(
-                            f"Week {week_num}, {day}, segment {seg_idx}: Invalid type '{seg_type}' (must be one of {valid_types})"
-                        )
-
-                    # Check duration
-                    if "duration_min" not in segment:
-                        errors.append(f"Week {week_num}, {day}, segment {seg_idx}: Missing 'duration_min' field")
-                    elif not isinstance(segment["duration_min"], (int, float)):
-                        errors.append(f"Week {week_num}, {day}, segment {seg_idx}: 'duration_min' must be a number")
-                    else:
-                        day_minutes += segment["duration_min"]
-
-                    # Skip power zone validation for strength segments
-                    is_strength_segment = seg_type == "strength"
-                    if is_strength_segment:
-                        # Strength segments don't need power zones
+                # Prefer structure format over segments
+                if has_structure:
+                    # Validate WorkoutStructure format
+                    structure = workout["structure"]
+                    if not has_valid_structure(structure):
+                        errors.append(f"Week {week_num}, {day}: Workout has invalid or empty structure")
                         continue
 
-                    # Auto-default power_high_pct to power_low_pct if not provided
-                    if "power_low_pct" in segment and "power_high_pct" not in segment:
-                        segment["power_high_pct"] = segment["power_low_pct"]
-
-                    # Check power percentage fields (only for cycling segments)
-                    if "power_low_pct" not in segment:
-                        errors.append(f"Week {week_num}, {day}, segment {seg_idx}: Missing 'power_low_pct' field")
-                    elif not isinstance(segment["power_low_pct"], (int, float)):
-                        errors.append(f"Week {week_num}, {day}, segment {seg_idx}: 'power_low_pct' must be a number")
-                    elif segment["power_low_pct"] < 0:
+                    # Calculate duration from structure
+                    day_minutes = calculate_structure_duration(structure)
+                else:
+                    # Legacy segments validation
+                    segments = workout["segments"]
+                    if not isinstance(segments, list):
                         errors.append(
-                            f"Week {week_num}, {day}, segment {seg_idx}: 'power_low_pct' must be >= 0 (got {segment['power_low_pct']})"
+                            f"Week {week_num}, {day}: 'segments' must be a list, got {type(segments).__name__}"
                         )
+                        continue
 
-                    # Validate power_high_pct >= power_low_pct if present
-                    if "power_high_pct" in segment:
-                        if not isinstance(segment["power_high_pct"], (int, float)):
+                    if len(segments) < 1:
+                        errors.append(f"Week {week_num}, {day}: Workout must have at least one segment")
+                        continue
+
+                    # Validate each segment
+                    day_minutes = 0.0
+                    for seg_idx, segment in enumerate(segments, 1):
+                        # Check segment type
+                        valid_types = {
+                            "warmup",
+                            "interval",
+                            "work",
+                            "recovery",
+                            "cooldown",
+                            "steady",
+                            "tempo",
+                            "strength",
+                        }
+                        seg_type = segment.get("type")
+                        if seg_type not in valid_types:
                             errors.append(
-                                f"Week {week_num}, {day}, segment {seg_idx}: 'power_high_pct' must be a number"
+                                f"Week {week_num}, {day}, segment {seg_idx}: Invalid type '{seg_type}' (must be one of {valid_types})"
                             )
-                        elif segment["power_high_pct"] < 0:
+
+                        # Check duration
+                        if "duration_min" not in segment:
+                            errors.append(f"Week {week_num}, {day}, segment {seg_idx}: Missing 'duration_min' field")
+                        elif not isinstance(segment["duration_min"], (int, float)):
+                            errors.append(f"Week {week_num}, {day}, segment {seg_idx}: 'duration_min' must be a number")
+                        else:
+                            day_minutes += segment["duration_min"]
+
+                        # Skip power zone validation for strength segments
+                        is_strength_segment = seg_type == "strength"
+                        if is_strength_segment:
+                            # Strength segments don't need power zones
+                            continue
+
+                        # Auto-default power_high_pct to power_low_pct if not provided
+                        if "power_low_pct" in segment and "power_high_pct" not in segment:
+                            segment["power_high_pct"] = segment["power_low_pct"]
+
+                        # Check power percentage fields (only for cycling segments)
+                        if "power_low_pct" not in segment:
+                            errors.append(f"Week {week_num}, {day}, segment {seg_idx}: Missing 'power_low_pct' field")
+                        elif not isinstance(segment["power_low_pct"], (int, float)):
+                            errors.append(f"Week {week_num}, {day}, segment {seg_idx}: 'power_low_pct' must be a number")
+                        elif segment["power_low_pct"] < 0:
                             errors.append(
-                                f"Week {week_num}, {day}, segment {seg_idx}: 'power_high_pct' must be >= 0 (got {segment['power_high_pct']})"
+                                f"Week {week_num}, {day}, segment {seg_idx}: 'power_low_pct' must be >= 0 (got {segment['power_low_pct']})"
                             )
-                        elif segment["power_high_pct"] < segment.get("power_low_pct", 0):
-                            errors.append(
+
+                        # Validate power_high_pct >= power_low_pct if present
+                        if "power_high_pct" in segment:
+                            if not isinstance(segment["power_high_pct"], (int, float)):
+                                errors.append(
+                                    f"Week {week_num}, {day}, segment {seg_idx}: 'power_high_pct' must be a number"
+                                )
+                            elif segment["power_high_pct"] < 0:
+                                errors.append(
+                                    f"Week {week_num}, {day}, segment {seg_idx}: 'power_high_pct' must be >= 0 (got {segment['power_high_pct']})"
+                                )
+                            elif segment["power_high_pct"] < segment.get("power_low_pct", 0):
+                                errors.append(
                                 f"Week {week_num}, {day}, segment {seg_idx}: power_high_pct ({segment['power_high_pct']}) must be >= power_low_pct ({segment['power_low_pct']})"
                             )
 
@@ -265,8 +287,13 @@ def finalize_training_plan(
 
         # Calculate TSS for each workout
         for workout in workouts:
-            segments = workout.get("segments", [])
-            workout_tss = calculate_workout_tss(segments, current_ftp)
+            # Check if workout has structure field (new format)
+            if "structure" in workout:
+                workout_tss = calculate_workout_tss(workout["structure"], current_ftp)
+            else:
+                # Legacy: use segments
+                segments = workout.get("segments", [])
+                workout_tss = calculate_workout_tss(segments, current_ftp)
             workout["tss"] = workout_tss  # Add TSS to workout data
 
         # Calculate weekly TSS total
