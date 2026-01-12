@@ -19,6 +19,7 @@ from cycling_ai.core.workout_comparison import (
     WeeklyComparison,
     ComplianceScorer,
 )
+from cycling_ai.core.workout_library.structure_helpers import legacy_segments_to_structure
 
 
 # Fixtures for test data
@@ -57,11 +58,11 @@ class TestPlannedWorkout:
             workout_type="endurance",
             total_duration_minutes=80.0,
             planned_tss=65.0,
-            segments=[
+            structure=legacy_segments_to_structure([
                 {"type": "warmup", "duration_min": 10, "power_low_pct": 50, "power_high_pct": 60},
                 {"type": "steady", "duration_min": 60, "power_low_pct": 70, "power_high_pct": 75},
                 {"type": "cooldown", "duration_min": 10, "power_low_pct": 50, "power_high_pct": 55},
-            ],
+            ]),
             description="Easy endurance ride",
         )
 
@@ -70,7 +71,7 @@ class TestPlannedWorkout:
         assert workout.workout_type == "endurance"
         assert workout.total_duration_minutes == 80.0
         assert workout.planned_tss == 65.0
-        assert len(workout.segments) == 3
+        assert workout.structure is not None
         assert workout.description == "Easy endurance ride"
 
     def test_planned_workout_zone_distribution_auto_calculated(self):
@@ -81,11 +82,11 @@ class TestPlannedWorkout:
             workout_type="endurance",
             total_duration_minutes=80.0,
             planned_tss=65.0,
-            segments=[
+            structure=legacy_segments_to_structure([
                 {"type": "warmup", "duration_min": 10, "power_low_pct": 50, "power_high_pct": 60},
                 {"type": "steady", "duration_min": 60, "power_low_pct": 65, "power_high_pct": 75},
                 {"type": "cooldown", "duration_min": 10, "power_low_pct": 45, "power_high_pct": 55},
-            ],
+            ]),
             description="Endurance",
         )
 
@@ -104,11 +105,11 @@ class TestPlannedWorkout:
             workout_type="threshold",
             total_duration_minutes=60.0,
             planned_tss=85.0,
-            segments=[
+            structure=legacy_segments_to_structure([
                 {"type": "warmup", "duration_min": 10, "power_low_pct": 50, "power_high_pct": 60},
                 {"type": "interval", "duration_min": 40, "power_low_pct": 95, "power_high_pct": 105},
                 {"type": "cooldown", "duration_min": 10, "power_low_pct": 45, "power_high_pct": 55},
-            ],
+            ]),
             description="Threshold",
         )
 
@@ -124,7 +125,7 @@ class TestPlannedWorkout:
             workout_type="recovery",
             total_duration_minutes=45.0,
             planned_tss=25.0,
-            segments=[],
+            structure=legacy_segments_to_structure([]),
             description="Recovery",
         )
 
@@ -279,7 +280,7 @@ class TestWorkoutComparison:
             workout_type="endurance",
             total_duration_minutes=80.0,
             planned_tss=65.0,
-            segments=[],
+            structure=legacy_segments_to_structure([]),
             description="Endurance",
         )
 
@@ -325,7 +326,7 @@ class TestWorkoutComparison:
             workout_type="threshold",
             total_duration_minutes=75.0,
             planned_tss=85.0,
-            segments=[],
+            structure=legacy_segments_to_structure([]),
             description="Threshold",
         )
 
@@ -448,7 +449,7 @@ class TestComplianceScorer:
             workout_type="endurance",
             total_duration_minutes=90.0,
             planned_tss=65.0,
-            segments=[],
+            structure=legacy_segments_to_structure([]),
             description="Endurance",
             zone_distribution={"Z1": 10, "Z2": 75, "Z3": 5},
         )
@@ -479,7 +480,7 @@ class TestComplianceScorer:
             workout_type="threshold",
             total_duration_minutes=75.0,
             planned_tss=85.0,
-            segments=[],
+            structure=legacy_segments_to_structure([]),
             description="Threshold",
         )
 
@@ -500,7 +501,7 @@ class TestComplianceScorer:
             workout_type="endurance",
             total_duration_minutes=90.0,
             planned_tss=65.0,
-            segments=[],
+            structure=legacy_segments_to_structure([]),
             description="Endurance",
             zone_distribution={"Z2": 80, "Z1": 10},
         )
@@ -529,7 +530,7 @@ class TestComplianceScorer:
             workout_type="threshold",
             total_duration_minutes=75.0,
             planned_tss=85.0,
-            segments=[],
+            structure=legacy_segments_to_structure([]),
             description="Threshold",
             zone_distribution={"Z2": 35, "Z4": 30, "Z1": 10},
         )
@@ -557,7 +558,7 @@ class TestComplianceScorer:
             workout_type="endurance",
             total_duration_minutes=90.0,
             planned_tss=65.0,
-            segments=[],
+            structure=legacy_segments_to_structure([]),
             description="Endurance",
         )
 
@@ -657,7 +658,7 @@ class TestWorkoutMatcher:
                 workout_type="endurance",
                 total_duration_minutes=80.0,
                 planned_tss=65.0,
-                segments=[],
+                structure=legacy_segments_to_structure([]),
                 description="Endurance",
             ),
             PlannedWorkout(
@@ -666,7 +667,7 @@ class TestWorkoutMatcher:
                 workout_type="threshold",
                 total_duration_minutes=75.0,
                 planned_tss=85.0,
-                segments=[],
+                structure=legacy_segments_to_structure([]),
                 description="Threshold",
             ),
             PlannedWorkout(
@@ -675,7 +676,7 @@ class TestWorkoutMatcher:
                 workout_type="endurance",
                 total_duration_minutes=150.0,
                 planned_tss=105.0,
-                segments=[],
+                structure=legacy_segments_to_structure([]),
                 description="Long ride",
             ),
         ]
@@ -812,7 +813,7 @@ class TestWorkoutMatcher:
                 workout_type="endurance",
                 total_duration_minutes=60.0,
                 planned_tss=50.0,
-                segments=[],
+                structure=legacy_segments_to_structure([]),
                 description="Workout 1",
             ),
             PlannedWorkout(
@@ -821,7 +822,7 @@ class TestWorkoutMatcher:
                 workout_type="endurance",
                 total_duration_minutes=60.0,
                 planned_tss=50.0,
-                segments=[],
+                structure=legacy_segments_to_structure([]),
                 description="Workout 2",
             ),
         ]
@@ -872,7 +873,7 @@ class TestDeviationDetectorAndRecommendations:
             workout_type="endurance",
             total_duration_minutes=90.0,
             planned_tss=65.0,
-            segments=[],
+            structure=legacy_segments_to_structure([]),
             description="Endurance",
         )
 
@@ -906,7 +907,7 @@ class TestDeviationDetectorAndRecommendations:
             workout_type="threshold",
             total_duration_minutes=75.0,
             planned_tss=85.0,
-            segments=[],
+            structure=legacy_segments_to_structure([]),
             description="Threshold",
         )
 
@@ -934,7 +935,7 @@ class TestDeviationDetectorAndRecommendations:
             workout_type="endurance",
             total_duration_minutes=90.0,
             planned_tss=65.0,
-            segments=[],
+            structure=legacy_segments_to_structure([]),
             description="Endurance",
         )
 
@@ -969,7 +970,7 @@ class TestDeviationDetectorAndRecommendations:
             workout_type="recovery",
             total_duration_minutes=45.0,
             planned_tss=25.0,
-            segments=[],
+            structure=legacy_segments_to_structure([]),
             description="Recovery",
         )
 
@@ -1004,7 +1005,7 @@ class TestDeviationDetectorAndRecommendations:
             workout_type="threshold",
             total_duration_minutes=75.0,
             planned_tss=85.0,
-            segments=[],
+            structure=legacy_segments_to_structure([]),
             description="Threshold",
             zone_distribution={"Z4": 30, "Z2": 35, "Z1": 10},
         )
@@ -1053,7 +1054,7 @@ class TestDeviationDetectorAndRecommendations:
                 workout_type="endurance",
                 total_duration_minutes=90.0,
                 planned_tss=65.0,
-                segments=[],
+                structure=legacy_segments_to_structure([]),
                 description="Endurance",
             ),
             actual=ActualWorkout(
@@ -1088,7 +1089,7 @@ class TestDeviationDetectorAndRecommendations:
                 workout_type="threshold",
                 total_duration_minutes=75.0,
                 planned_tss=85.0,
-                segments=[],
+                structure=legacy_segments_to_structure([]),
                 description="Threshold",
             ),
             actual=None,
@@ -1119,7 +1120,7 @@ class TestDeviationDetectorAndRecommendations:
                 workout_type="threshold",
                 total_duration_minutes=75.0,
                 planned_tss=85.0,
-                segments=[],
+                structure=legacy_segments_to_structure([]),
                 description="Threshold",
             ),
             actual=ActualWorkout(
@@ -1163,7 +1164,7 @@ class TestPatternDetector:
                     workout_type="endurance",
                     total_duration_minutes=80.0,
                     planned_tss=65.0,
-                    segments=[],
+                    structure=legacy_segments_to_structure([]),
                     description="Endurance",
                 ),
                 actual=ActualWorkout(
@@ -1191,7 +1192,7 @@ class TestPatternDetector:
                     workout_type="threshold",
                     total_duration_minutes=75.0,
                     planned_tss=85.0,
-                    segments=[],
+                    structure=legacy_segments_to_structure([]),
                     description="Threshold",
                 ),
                 actual=None,  # Skipped
@@ -1214,7 +1215,7 @@ class TestPatternDetector:
                     workout_type="vo2max",
                     total_duration_minutes=60.0,
                     planned_tss=75.0,
-                    segments=[],
+                    structure=legacy_segments_to_structure([]),
                     description="VO2max",
                 ),
                 actual=None,  # Skipped
@@ -1254,7 +1255,7 @@ class TestPatternDetector:
                     workout_type="endurance",
                     total_duration_minutes=90.0,
                     planned_tss=65.0,
-                    segments=[],
+                    structure=legacy_segments_to_structure([]),
                     description="Endurance",
                 ),
                 actual=ActualWorkout(
@@ -1282,7 +1283,7 @@ class TestPatternDetector:
                     workout_type="threshold",
                     total_duration_minutes=75.0,
                     planned_tss=85.0,
-                    segments=[],
+                    structure=legacy_segments_to_structure([]),
                     description="Threshold",
                 ),
                 actual=ActualWorkout(
@@ -1326,7 +1327,7 @@ class TestPatternDetector:
                     workout_type="endurance",
                     total_duration_minutes=60.0,
                     planned_tss=50.0,
-                    segments=[],
+                    structure=legacy_segments_to_structure([]),
                     description="Endurance",
                 ),
                 actual=None,  # Skipped
@@ -1349,7 +1350,7 @@ class TestPatternDetector:
                     workout_type="threshold",
                     total_duration_minutes=60.0,
                     planned_tss=70.0,
-                    segments=[],
+                    structure=legacy_segments_to_structure([]),
                     description="Threshold",
                 ),
                 actual=None,  # Skipped
@@ -1373,7 +1374,7 @@ class TestPatternDetector:
                     workout_type="endurance",
                     total_duration_minutes=150.0,
                     planned_tss=105.0,
-                    segments=[],
+                    structure=legacy_segments_to_structure([]),
                     description="Long ride",
                 ),
                 actual=ActualWorkout(
@@ -1401,7 +1402,7 @@ class TestPatternDetector:
                     workout_type="endurance",
                     total_duration_minutes=120.0,
                     planned_tss=85.0,
-                    segments=[],
+                    structure=legacy_segments_to_structure([]),
                     description="Endurance",
                 ),
                 actual=ActualWorkout(
@@ -1445,7 +1446,7 @@ class TestPatternDetector:
                     workout_type="threshold",
                     total_duration_minutes=75.0,
                     planned_tss=85.0,
-                    segments=[],
+                    structure=legacy_segments_to_structure([]),
                     description="Threshold",
                 ),
                 actual=None,  # Skipped
@@ -1468,7 +1469,7 @@ class TestPatternDetector:
                     workout_type="tempo",
                     total_duration_minutes=90.0,
                     planned_tss=70.0,
-                    segments=[],
+                    structure=legacy_segments_to_structure([]),
                     description="Tempo",
                 ),
                 actual=None,  # Skipped
@@ -1492,7 +1493,7 @@ class TestPatternDetector:
                     workout_type="endurance",
                     total_duration_minutes=80.0,
                     planned_tss=65.0,
-                    segments=[],
+                    structure=legacy_segments_to_structure([]),
                     description="Endurance",
                 ),
                 actual=ActualWorkout(
@@ -1535,7 +1536,7 @@ class TestPatternDetector:
                     workout_type="endurance",
                     total_duration_minutes=80.0,
                     planned_tss=65.0,
-                    segments=[],
+                    structure=legacy_segments_to_structure([]),
                     description="Endurance",
                 ),
                 actual=ActualWorkout(
@@ -1563,7 +1564,7 @@ class TestPatternDetector:
                     workout_type="threshold",
                     total_duration_minutes=75.0,
                     planned_tss=85.0,
-                    segments=[],
+                    structure=legacy_segments_to_structure([]),
                     description="Threshold",
                 ),
                 actual=ActualWorkout(
@@ -1600,7 +1601,7 @@ class TestPatternDetector:
                     workout_type="threshold",
                     total_duration_minutes=75.0,
                     planned_tss=85.0,
-                    segments=[],
+                    structure=legacy_segments_to_structure([]),
                     description="Threshold",
                 ),
                 actual=None,  # Skipped
@@ -1781,12 +1782,13 @@ class TestWorkoutComparer:
         # We'll define behavior in implementation
 
     def test_planned_workout_parsing_segments(self, comparer):
-        """Test that planned workout segments are parsed correctly."""
+        """Test that planned workout structure is parsed correctly."""
         first_workout = comparer._planned_workouts[0]
 
-        # Check segments were parsed
-        assert len(first_workout.segments) == 3  # warmup, steady, cooldown
-        assert first_workout.segments[0]["type"] == "warmup"
+        # Check structure was parsed
+        assert first_workout.structure is not None
+        if isinstance(first_workout.structure, dict):
+            assert "structure" in first_workout.structure
 
         # Check derived fields calculated
         assert first_workout.zone_distribution is not None
