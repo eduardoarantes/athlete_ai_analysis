@@ -18,52 +18,6 @@ import * as fs from 'fs'
 import * as readline from 'readline'
 
 // ============================================================================
-// Type Definitions (duplicated to avoid build dependencies)
-// ============================================================================
-
-interface StepLength {
-  unit: 'second' | 'minute' | 'hour' | 'meter' | 'kilometer' | 'mile'
-  value: number
-}
-
-interface StepTarget {
-  type: 'power' | 'heartrate' | 'cadence'
-  minValue: number
-  maxValue: number
-  unit?: 'percentOfFtp' | 'watts' | 'bpm' | 'rpm'
-}
-
-interface WorkoutStep {
-  name: string
-  intensityClass: 'warmUp' | 'active' | 'rest' | 'coolDown'
-  length: StepLength
-  openDuration?: boolean
-  targets: StepTarget[]
-}
-
-interface SegmentLength {
-  unit: 'repetition'
-  value: number
-}
-
-interface StructuredWorkoutSegment {
-  type: 'step' | 'repetition'
-  length: SegmentLength
-  steps: WorkoutStep[]
-}
-
-// WorkoutStructure interface for reference (validates input shape)
-interface _WorkoutStructure {
-  primaryIntensityMetric: 'percentOfFtp' | 'watts' | 'heartrate'
-  primaryLengthMetric: 'duration' | 'distance'
-  structure: StructuredWorkoutSegment[]
-  polyline?: [number, number][]
-}
-
-// Export to mark as intentionally defined for documentation
-export type { _WorkoutStructure as WorkoutStructureSchema }
-
-// ============================================================================
 // Validation Result Types
 // ============================================================================
 
@@ -145,7 +99,10 @@ function validateStepLength(
   return { valid: errors.length === 0, errors, minutes }
 }
 
-function validateStepTarget(target: unknown, path: string): { valid: boolean; errors: ValidationError[] } {
+function validateStepTarget(
+  target: unknown,
+  path: string
+): { valid: boolean; errors: ValidationError[] } {
   const errors: ValidationError[] = []
 
   if (!target || typeof target !== 'object') {
@@ -164,15 +121,31 @@ function validateStepTarget(target: unknown, path: string): { valid: boolean; er
   }
 
   if (typeof t.minValue !== 'number') {
-    errors.push({ path: `${path}.minValue`, message: 'minValue must be a number', severity: 'error' })
+    errors.push({
+      path: `${path}.minValue`,
+      message: 'minValue must be a number',
+      severity: 'error',
+    })
   } else if (t.minValue < 0) {
-    errors.push({ path: `${path}.minValue`, message: 'minValue must be non-negative', severity: 'error' })
+    errors.push({
+      path: `${path}.minValue`,
+      message: 'minValue must be non-negative',
+      severity: 'error',
+    })
   }
 
   if (typeof t.maxValue !== 'number') {
-    errors.push({ path: `${path}.maxValue`, message: 'maxValue must be a number', severity: 'error' })
+    errors.push({
+      path: `${path}.maxValue`,
+      message: 'maxValue must be a number',
+      severity: 'error',
+    })
   } else if (t.maxValue < 0) {
-    errors.push({ path: `${path}.maxValue`, message: 'maxValue must be non-negative', severity: 'error' })
+    errors.push({
+      path: `${path}.maxValue`,
+      message: 'maxValue must be non-negative',
+      severity: 'error',
+    })
   }
 
   if (typeof t.minValue === 'number' && typeof t.maxValue === 'number' && t.minValue > t.maxValue) {
@@ -197,7 +170,13 @@ function validateStepTarget(target: unknown, path: string): { valid: boolean; er
 function validateWorkoutStep(
   step: unknown,
   path: string
-): { valid: boolean; errors: ValidationError[]; minutes: number; hasCadence: boolean; hasHR: boolean } {
+): {
+  valid: boolean
+  errors: ValidationError[]
+  minutes: number
+  hasCadence: boolean
+  hasHR: boolean
+} {
   const errors: ValidationError[] = []
   let minutes = 0
   let hasCadence = false
@@ -211,7 +190,11 @@ function validateWorkoutStep(
   const s = step as Record<string, unknown>
 
   if (typeof s.name !== 'string' || s.name.trim() === '') {
-    errors.push({ path: `${path}.name`, message: 'name must be a non-empty string', severity: 'error' })
+    errors.push({
+      path: `${path}.name`,
+      message: 'name must be a non-empty string',
+      severity: 'error',
+    })
   }
 
   if (!s.intensityClass || !VALID_INTENSITY_CLASSES.includes(s.intensityClass as string)) {
@@ -247,7 +230,13 @@ function validateWorkoutStep(
     })
   }
 
-  return { valid: errors.filter((e) => e.severity === 'error').length === 0, errors, minutes, hasCadence, hasHR }
+  return {
+    valid: errors.filter((e) => e.severity === 'error').length === 0,
+    errors,
+    minutes,
+    hasCadence,
+    hasHR,
+  }
 }
 
 function validateStructuredWorkoutSegment(
@@ -309,7 +298,11 @@ function validateStructuredWorkoutSegment(
   if (!Array.isArray(s.steps)) {
     errors.push({ path: `${path}.steps`, message: 'steps must be an array', severity: 'error' })
   } else if (s.steps.length === 0) {
-    errors.push({ path: `${path}.steps`, message: 'steps array cannot be empty', severity: 'error' })
+    errors.push({
+      path: `${path}.steps`,
+      message: 'steps array cannot be empty',
+      severity: 'error',
+    })
   } else {
     const repetitions = ((s.length as Record<string, unknown>)?.value as number) || 1
 
@@ -416,7 +409,11 @@ function validateWorkoutStructure(input: unknown): ValidationResult {
   if (!Array.isArray(structure.structure)) {
     errors.push({ path: 'structure', message: 'structure must be an array', severity: 'error' })
   } else if (structure.structure.length === 0) {
-    errors.push({ path: 'structure', message: 'structure array cannot be empty', severity: 'error' })
+    errors.push({
+      path: 'structure',
+      message: 'structure array cannot be empty',
+      severity: 'error',
+    })
   } else {
     structure.structure.forEach((segment, i) => {
       const segmentResult = validateStructuredWorkoutSegment(segment, `structure[${i}]`)
@@ -467,17 +464,10 @@ function validateWorkoutStructure(input: unknown): ValidationResult {
 // ============================================================================
 
 function formatDuration(minutes: number): string {
-  if (minutes < 1) {
-    return `${Math.round(minutes * 60)}s`
-  }
-
   const hours = Math.floor(minutes / 60)
   const mins = Math.round(minutes % 60)
 
-  if (hours === 0) {
-    const rounded = Math.round(minutes * 10) / 10
-    return Number.isInteger(rounded) ? `${rounded}m` : `${rounded.toFixed(1)}m`
-  }
+  if (hours === 0) return `${mins}m`
   if (mins === 0) return `${hours}h`
   return `${hours}h ${mins}m`
 }
