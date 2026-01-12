@@ -356,7 +356,24 @@ class PromptLoader:
                 workout_json = f"""    {{
       "weekday": "{day}",
       "description": "Long endurance ride",
-      "segments": [{{"type": "steady", "duration_min": {duration}, "power_low_pct": 56, "power_high_pct": 75, "description": "Z2 aerobic base"}}]
+      "structure": {{
+        "primaryIntensityMetric": "percentOfFtp",
+        "primaryLengthMetric": "duration",
+        "structure": [
+          {{
+            "type": "step",
+            "length": {{"unit": "repetition", "value": 1}},
+            "steps": [
+              {{
+                "name": "Z2 aerobic base",
+                "intensityClass": "active",
+                "length": {{"unit": "minute", "value": {duration}}},
+                "targets": [{{"type": "power", "minValue": 56, "maxValue": 75, "unit": "percentOfFtp"}}]
+              }}
+            ]
+          }}
+        ]
+      }}
     }}"""
             elif duration >= 70:  # Interval workout
                 warmup = 15
@@ -368,19 +385,95 @@ class PromptLoader:
                 workout_json = f"""    {{
       "weekday": "{day}",
       "description": "Tempo intervals",
-      "segments": [
-        {{"type": "warmup", "duration_min": {warmup}, "power_low_pct": 50, "power_high_pct": 65, "description": "Easy spin"}},
-        {{"type": "interval", "duration_min": {interval_time}, "power_low_pct": 76, "power_high_pct": 90, "description": "Z3 tempo"}},
-        {{"type": "recovery", "duration_min": {recovery_time}, "power_low_pct": 50, "power_high_pct": 65, "description": "Easy spin"}},
-        {{"type": "interval", "duration_min": {interval_time}, "power_low_pct": 76, "power_high_pct": 90, "description": "Z3 tempo"}},
-        {{"type": "cooldown", "duration_min": {cooldown}, "power_low_pct": 50, "power_high_pct": 60, "description": "Cool down"}}
-      ]
+      "structure": {{
+        "primaryIntensityMetric": "percentOfFtp",
+        "primaryLengthMetric": "duration",
+        "structure": [
+          {{
+            "type": "step",
+            "length": {{"unit": "repetition", "value": 1}},
+            "steps": [
+              {{
+                "name": "Easy spin",
+                "intensityClass": "warmUp",
+                "length": {{"unit": "minute", "value": {warmup}}},
+                "targets": [{{"type": "power", "minValue": 50, "maxValue": 65, "unit": "percentOfFtp"}}]
+              }}
+            ]
+          }},
+          {{
+            "type": "step",
+            "length": {{"unit": "repetition", "value": 1}},
+            "steps": [
+              {{
+                "name": "Z3 tempo",
+                "intensityClass": "active",
+                "length": {{"unit": "minute", "value": {interval_time}}},
+                "targets": [{{"type": "power", "minValue": 76, "maxValue": 90, "unit": "percentOfFtp"}}]
+              }}
+            ]
+          }},
+          {{
+            "type": "step",
+            "length": {{"unit": "repetition", "value": 1}},
+            "steps": [
+              {{
+                "name": "Easy spin",
+                "intensityClass": "rest",
+                "length": {{"unit": "minute", "value": {recovery_time}}},
+                "targets": [{{"type": "power", "minValue": 50, "maxValue": 65, "unit": "percentOfFtp"}}]
+              }}
+            ]
+          }},
+          {{
+            "type": "step",
+            "length": {{"unit": "repetition", "value": 1}},
+            "steps": [
+              {{
+                "name": "Z3 tempo",
+                "intensityClass": "active",
+                "length": {{"unit": "minute", "value": {interval_time}}},
+                "targets": [{{"type": "power", "minValue": 76, "maxValue": 90, "unit": "percentOfFtp"}}]
+              }}
+            ]
+          }},
+          {{
+            "type": "step",
+            "length": {{"unit": "repetition", "value": 1}},
+            "steps": [
+              {{
+                "name": "Cool down",
+                "intensityClass": "coolDown",
+                "length": {{"unit": "minute", "value": {cooldown}}},
+                "targets": [{{"type": "power", "minValue": 50, "maxValue": 60, "unit": "percentOfFtp"}}]
+              }}
+            ]
+          }}
+        ]
+      }}
     }}"""
             else:  # Recovery ride
                 workout_json = f"""    {{
       "weekday": "{day}",
       "description": "Recovery ride",
-      "segments": [{{"type": "steady", "duration_min": {duration}, "power_low_pct": 50, "power_high_pct": 55, "description": "Z1 recovery"}}]
+      "structure": {{
+        "primaryIntensityMetric": "percentOfFtp",
+        "primaryLengthMetric": "duration",
+        "structure": [
+          {{
+            "type": "step",
+            "length": {{"unit": "repetition", "value": 1}},
+            "steps": [
+              {{
+                "name": "Z1 recovery",
+                "intensityClass": "active",
+                "length": {{"unit": "minute", "value": {duration}}},
+                "targets": [{{"type": "power", "minValue": 50, "maxValue": 55, "unit": "percentOfFtp"}}]
+              }}
+            ]
+          }}
+        ]
+      }}
     }}"""
 
             example_workouts_list.append(workout_json)

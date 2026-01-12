@@ -137,43 +137,105 @@ class TrainingPlanTool(BaseTool):
                                             "type": "STRING",
                                             "description": "DEPRECATED: Use 'name' instead. Kept for backward compatibility.",
                                         },
-                                        "segments": {
-                                            "type": "ARRAY",
-                                            "description": "Array of workout segments",
-                                            "items": {
-                                                "type": "OBJECT",
-                                                "properties": {
-                                                    "type": {
-                                                        "type": "STRING",
-                                                        "description": "Segment type (warmup/interval/recovery/cooldown/steady/work/tempo)",
-                                                    },
-                                                    "duration_min": {
-                                                        "type": "INTEGER",
-                                                        "description": "Duration in minutes",
-                                                    },
-                                                    "power_low_pct": {
-                                                        "type": "NUMBER",
-                                                        "description": "Lower power bound as percentage of FTP",
-                                                    },
-                                                    "power_high_pct": {
-                                                        "type": "NUMBER",
-                                                        "description": "Upper power bound as percentage of FTP (optional)",
-                                                    },
-                                                    "description": {
-                                                        "type": "STRING",
-                                                        "description": "Purpose and guidance for this segment",
+                                        "structure": {
+                                            "type": "OBJECT",
+                                            "description": "WorkoutStructure defining the workout format",
+                                            "properties": {
+                                                "primaryIntensityMetric": {
+                                                    "type": "STRING",
+                                                    "description": "Primary intensity metric (always 'percentOfFtp')",
+                                                },
+                                                "primaryLengthMetric": {
+                                                    "type": "STRING",
+                                                    "description": "Primary length metric (always 'duration')",
+                                                },
+                                                "structure": {
+                                                    "type": "ARRAY",
+                                                    "description": "Array of structured workout segments",
+                                                    "items": {
+                                                        "type": "OBJECT",
+                                                        "properties": {
+                                                            "type": {
+                                                                "type": "STRING",
+                                                                "description": "Segment type: 'step' for single execution, 'repetition' for repeated sets",
+                                                            },
+                                                            "length": {
+                                                                "type": "OBJECT",
+                                                                "description": "Number of repetitions",
+                                                                "properties": {
+                                                                    "unit": {
+                                                                        "type": "STRING",
+                                                                        "description": "Always 'repetition'",
+                                                                    },
+                                                                    "value": {
+                                                                        "type": "INTEGER",
+                                                                        "description": "Number of times to repeat (1 for single execution)",
+                                                                    },
+                                                                },
+                                                            },
+                                                            "steps": {
+                                                                "type": "ARRAY",
+                                                                "description": "Steps within this segment",
+                                                                "items": {
+                                                                    "type": "OBJECT",
+                                                                    "properties": {
+                                                                        "name": {
+                                                                            "type": "STRING",
+                                                                            "description": "Step name/description",
+                                                                        },
+                                                                        "intensityClass": {
+                                                                            "type": "STRING",
+                                                                            "description": "Intensity class: warmUp, active, rest, coolDown",
+                                                                        },
+                                                                        "length": {
+                                                                            "type": "OBJECT",
+                                                                            "description": "Step duration",
+                                                                            "properties": {
+                                                                                "unit": {
+                                                                                    "type": "STRING",
+                                                                                    "description": "Time unit: 'second' or 'minute'",
+                                                                                },
+                                                                                "value": {
+                                                                                    "type": "NUMBER",
+                                                                                    "description": "Duration value",
+                                                                                },
+                                                                            },
+                                                                        },
+                                                                        "targets": {
+                                                                            "type": "ARRAY",
+                                                                            "description": "Power targets for this step",
+                                                                            "items": {
+                                                                                "type": "OBJECT",
+                                                                                "properties": {
+                                                                                    "type": {
+                                                                                        "type": "STRING",
+                                                                                        "description": "Always 'power'",
+                                                                                    },
+                                                                                    "minValue": {
+                                                                                        "type": "NUMBER",
+                                                                                        "description": "Minimum power as % of FTP",
+                                                                                    },
+                                                                                    "maxValue": {
+                                                                                        "type": "NUMBER",
+                                                                                        "description": "Maximum power as % of FTP",
+                                                                                    },
+                                                                                    "unit": {
+                                                                                        "type": "STRING",
+                                                                                        "description": "Always 'percentOfFtp'",
+                                                                                    },
+                                                                                },
+                                                                            },
+                                                                        },
+                                                                    },
+                                                                },
+                                                            },
+                                                        },
                                                     },
                                                 },
-                                                "required": [
-                                                    "type",
-                                                    "duration_min",
-                                                    "power_low_pct",
-                                                    "description",
-                                                ],
                                             },
                                         },
                                     },
-                                    "required": ["weekday", "segments"],
+                                    "required": ["weekday", "structure"],
                                     # Note: name and description are optional to support both old and new formats
                                     # Validation will check that at least one is present
                                 },
