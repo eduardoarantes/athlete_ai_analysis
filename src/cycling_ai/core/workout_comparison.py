@@ -19,6 +19,12 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
+from cycling_ai.core.workout_library.structure_helpers import (
+    WorkoutStructure,
+    convert_step_length_to_minutes,
+    extract_power_target,
+)
+
 # =============================================================================
 # Data Models
 # =============================================================================
@@ -32,14 +38,14 @@ class PlannedWorkout:
     Attributes:
         date: Workout date
         weekday: Day name (e.g., "Monday")
-        workout_type: Type derived from segments
+        workout_type: Type derived from structure
             ("endurance", "threshold", "vo2max", "recovery", "tempo")
         total_duration_minutes: Total planned duration
         planned_tss: Planned Training Stress Score
-        segments: Raw segment data from plan
+        structure: WorkoutStructure format (Issue #96)
         description: Workout description
         zone_distribution: Minutes in each power zone (auto-calculated if not provided)
-        target_avg_power_pct: Average target power across segments (auto-calculated if not provided)
+        target_avg_power_pct: Average target power across steps (auto-calculated if not provided)
     """
 
     date: datetime
@@ -47,7 +53,7 @@ class PlannedWorkout:
     workout_type: str
     total_duration_minutes: float
     planned_tss: float
-    segments: list[dict[str, Any]]
+    structure: WorkoutStructure | dict[str, Any] | None
     description: str
 
     zone_distribution: dict[str, float] = field(default_factory=dict)
@@ -62,7 +68,7 @@ class PlannedWorkout:
 
     def _calculate_zone_distribution(self) -> dict[str, float]:
         """
-        Calculate time in each zone from segments.
+        Calculate time in each zone from WorkoutStructure.
 
         Zone mapping (% of FTP):
         - Z1: 0-55%
@@ -76,51 +82,99 @@ class PlannedWorkout:
         """
         zones: dict[str, float] = {}
 
-        for segment in self.segments:
-            duration = segment.get("duration_min", 0)
-            power_low = segment.get("power_low_pct", 0)
-            power_high = segment.get("power_high_pct", power_low)
+        if not self.structure:
+            return zones
 
-            # Use average power for zone classification
-            avg_power = (power_low + power_high) / 2.0
+        # Handle both WorkoutStructure objects and dicts
+        if isinstance(self.structure, dict):
+            segments = self.structure.get("structure", [])
+        else:
+            segments = self.structure.structure
 
-            # Map to zone
-            if avg_power <= 55:
-                zone = "Z1"
-            elif avg_power <= 75:
-                zone = "Z2"
-            elif avg_power <= 90:
-                zone = "Z3"
-            elif avg_power <= 105:
-                zone = "Z4"
+        for segment in segments:
+            if isinstance(segment, dict):
+                repetitions = segment.get("length", {}).get("value", 1)
+                steps = segment.get("steps", [])
             else:
-                zone = "Z5"
+                repetitions = segment.length.value
+                steps = segment.steps
 
-            zones[zone] = zones.get(zone, 0) + duration
+            for step in steps:
+                if isinstance(step, dict):
+                    targets = step.get("targets", [])
+                    length = step.get("length", {})
+                else:
+                    targets = step.targets
+                    length = step.length
+
+                # Extract power target
+                power_min, power_max = extract_power_target(targets)
+                avg_power = (power_min + power_max) / 2.0
+
+                # Calculate duration
+                duration = convert_step_length_to_minutes(length)
+
+                # Map to zone
+                if avg_power <= 55:
+                    zone = "Z1"
+                elif avg_power <= 75:
+                    zone = "Z2"
+                elif avg_power <= 90:
+                    zone = "Z3"
+                elif avg_power <= 105:
+                    zone = "Z4"
+                else:
+                    zone = "Z5"
+
+                zones[zone] = zones.get(zone, 0) + (duration * repetitions)
 
         return zones
 
     def _calculate_avg_power_pct(self) -> float:
         """
-        Calculate weighted average target power across segments.
+        Calculate weighted average target power across structure steps.
 
         Returns:
             Weighted average power as percentage of FTP, rounded to 1 decimal.
         """
-        if not self.segments:
+        if not self.structure:
             return 0.0
+
+        # Handle both WorkoutStructure objects and dicts
+        if isinstance(self.structure, dict):
+            segments = self.structure.get("structure", [])
+        else:
+            segments = self.structure.structure
 
         total_power_weighted = 0.0
         total_duration = 0.0
 
-        for segment in self.segments:
-            duration = segment.get("duration_min", 0)
-            power_low = segment.get("power_low_pct", 0)
-            power_high = segment.get("power_high_pct", power_low)
+        for segment in segments:
+            if isinstance(segment, dict):
+                repetitions = segment.get("length", {}).get("value", 1)
+                steps = segment.get("steps", [])
+            else:
+                repetitions = segment.length.value
+                steps = segment.steps
 
-            avg_power = (power_low + power_high) / 2.0
-            total_power_weighted += avg_power * duration
-            total_duration += duration
+            for step in steps:
+                if isinstance(step, dict):
+                    targets = step.get("targets", [])
+                    length = step.get("length", {})
+                else:
+                    targets = step.targets
+                    length = step.length
+
+                # Extract power target
+                power_min, power_max = extract_power_target(targets)
+                avg_power = (power_min + power_max) / 2.0
+
+                # Calculate duration
+                duration = convert_step_length_to_minutes(length)
+                total_duration_for_step = duration * repetitions
+
+                total_power_weighted += avg_power * total_duration_for_step
+                total_duration += total_duration_for_step
 
         if total_duration == 0:
             return 0.0
@@ -1283,11 +1337,11 @@ class WorkoutComparer:
         return PlannedWorkout(
             date=date,
             weekday=workout_data["weekday"],
-            workout_type=workout_data["workout_type"],
-            total_duration_minutes=float(workout_data["total_duration_minutes"]),
-            planned_tss=float(workout_data["planned_tss"]),
-            segments=workout_data.get("segments", []),
-            description=workout_data.get("description", ""),
+            workout_type=workout_data.get("type", workout_data.get("workout_type", "endurance")),
+            total_duration_minutes=float(workout_data.get("total_duration_minutes", 0)),
+            planned_tss=float(workout_data.get("tss", workout_data.get("planned_tss", 0))),
+            structure=workout_data.get("structure"),
+            description=workout_data.get("detailed_description", workout_data.get("description", "")),
         )
 
     def _load_actual_workouts(self) -> list[ActualWorkout]:
