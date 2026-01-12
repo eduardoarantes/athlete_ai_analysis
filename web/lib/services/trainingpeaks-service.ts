@@ -7,7 +7,7 @@
  * 2. Next.js serverRuntimeConfig (Amplify SSR - embedded at build time)
  *
  * NOTE: After running the migration, regenerate Supabase types:
- * npx supabase gen types typescript --project-id smzefukhxabhjwdxhuhm --schema public > lib/types/database.ts
+ * npx supabase gen types typescript --project-id yqaskiwzyhhovthbvmqq --schema public > lib/types/database.ts
  */
 
 import { createClient } from '@/lib/supabase/server'

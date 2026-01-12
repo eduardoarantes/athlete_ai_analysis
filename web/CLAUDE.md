@@ -509,7 +509,7 @@ npx supabase migration new <name>  # Create migration
 npx supabase db push              # Apply migrations
 
 # Supabase Types (IMPORTANT)
-npx supabase gen types typescript --project-id smzefukhxabhjwdxhuhm --schema public > lib/types/database.ts
+npx supabase gen types typescript --project-id yqaskiwzyhhovthbvmqq --schema public > lib/types/database.ts
 ```
 
 ---
@@ -519,7 +519,7 @@ npx supabase gen types typescript --project-id smzefukhxabhjwdxhuhm --schema pub
 **After adding/modifying database columns, you MUST regenerate Supabase types:**
 
 ```bash
-npx supabase gen types typescript --project-id smzefukhxabhjwdxhuhm --schema public > lib/types/database.ts
+npx supabase gen types typescript --project-id yqaskiwzyhhovthbvmqq --schema public > lib/types/database.ts
 ```
 
 **When to regenerate:**

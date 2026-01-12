@@ -13,7 +13,7 @@ type UntypedSupabaseClient = any
  * Body: { planInstanceId: string }
  *
  * NOTE: After running the migration, regenerate Supabase types:
- * npx supabase gen types typescript --project-id smzefukhxabhjwdxhuhm --schema public > lib/types/database.ts
+ * npx supabase gen types typescript --project-id yqaskiwzyhhovthbvmqq --schema public > lib/types/database.ts
  */
 export async function POST(request: NextRequest) {
   try {
