@@ -225,17 +225,56 @@ export function applyWorkoutOverrides(
     const target = parseWorkoutKey(targetKey)
     if (!target) return
 
-    // Find the original workout
-    const originalWorkout = findOriginalWorkout(
-      planData,
-      startDate,
-      move.original_date,
-      move.original_index
-    )
+    // Build the original location key
+    const originalKey = `${move.original_date}:${move.original_index}`
 
-    if (originalWorkout) {
+    // Check if this is a moved copy (library workout) first
+    const copiedWorkout = normalizedOverrides.copies[originalKey]
+    let workoutToMove: Workout | null = null
+
+    if (copiedWorkout) {
+      // This is a library workout that was moved
+      if (copiedWorkout.source_date.startsWith('library:')) {
+        const libraryWorkoutId =
+          copiedWorkout.library_workout?.library_workout_id ||
+          copiedWorkout.source_date.replace('library:', '')
+
+        const workoutParams: LibraryWorkoutParams = copiedWorkout.library_workout
+          ? {
+              id: libraryWorkoutId,
+              workoutInstanceId: copiedWorkout.library_workout.id,
+              name: copiedWorkout.library_workout.name,
+              type: copiedWorkout.library_workout.type,
+              tss: copiedWorkout.library_workout.tss,
+              durationMin: copiedWorkout.library_workout.duration_min,
+              description: copiedWorkout.library_workout.description,
+              structure: copiedWorkout.library_workout.structure,
+            }
+          : { id: libraryWorkoutId }
+
+        workoutToMove = libraryWorkoutToScheduleWorkout(workoutParams)
+      } else {
+        // Regular copy from original plan
+        workoutToMove = findOriginalWorkout(
+          planData,
+          startDate,
+          copiedWorkout.source_date,
+          copiedWorkout.source_index
+        )
+      }
+    } else {
+      // No copy found, must be from original plan
+      workoutToMove = findOriginalWorkout(
+        planData,
+        startDate,
+        move.original_date,
+        move.original_index
+      )
+    }
+
+    if (workoutToMove) {
       const effectiveWorkout: EffectiveWorkoutInfo = {
-        workout: originalWorkout,
+        workout: workoutToMove,
         originalIndex: target.index,
         isModified: true,
         modificationSource: 'moved',
@@ -262,7 +301,10 @@ export function applyWorkoutOverrides(
     // Check if this is a library workout copy
     if (copy.source_date.startsWith('library:')) {
       // Extract library workout ID from source_date
-      const libraryWorkoutId = copy.source_date.replace('library:', '')
+      // Get library workout ID from library_workout.library_workout_id if available,
+      // otherwise parse from source_date for backward compatibility
+      const libraryWorkoutId =
+        copy.library_workout?.library_workout_id || copy.source_date.replace('library:', '')
 
       // Use stored library workout data if available, otherwise create placeholder
       const workoutParams: LibraryWorkoutParams = copy.library_workout

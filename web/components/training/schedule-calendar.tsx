@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -68,6 +69,7 @@ export function ScheduleCalendar({
   allowEditing = true,
   sidebarContent,
 }: ScheduleCalendarProps) {
+  const router = useRouter()
   const t = useTranslations('schedule')
   const tPlan = useTranslations('trainingPlan')
   const tGoals = useTranslations('goals')
@@ -574,6 +576,16 @@ export function ScheduleCalendar({
           return newMap
         })
         setErrorMessage('Failed to move workout. Please try again.')
+      } else {
+        // Update with actual saved data from server
+        const result = await response.json()
+        if (result.updatedOverrides) {
+          setLocalOverrides((prev) => {
+            const newMap = new Map(prev)
+            newMap.set(instanceId, result.updatedOverrides)
+            return newMap
+          })
+        }
       }
     } catch {
       // Rollback on error
@@ -636,6 +648,16 @@ export function ScheduleCalendar({
           return newMap
         })
         setErrorMessage('Failed to copy workout. Please try again.')
+      } else {
+        // Update with actual saved data from server
+        const result = await response.json()
+        if (result.updatedOverrides) {
+          setLocalOverrides((prev) => {
+            const newMap = new Map(prev)
+            newMap.set(instanceId, result.updatedOverrides)
+            return newMap
+          })
+        }
       }
     } catch {
       // Rollback on error
@@ -683,6 +705,16 @@ export function ScheduleCalendar({
           return newMap
         })
         setErrorMessage('Failed to delete workout. Please try again.')
+      } else {
+        // Update with actual saved data from server
+        const result = await response.json()
+        if (result.updatedOverrides) {
+          setLocalOverrides((prev) => {
+            const newMap = new Map(prev)
+            newMap.set(instanceId, result.updatedOverrides)
+            return newMap
+          })
+        }
       }
     } catch {
       // Rollback on error
@@ -727,14 +759,6 @@ export function ScheduleCalendar({
         body: JSON.stringify({
           workout_id: workout.id,
           target_date: targetDate,
-          workout_data: {
-            name: workout.name,
-            type: workout.type,
-            tss: workout.base_tss,
-            duration_min: workout.base_duration_min,
-            description: workout.detailed_description,
-            structure: workout.structure,
-          },
         }),
       })
 
@@ -742,6 +766,8 @@ export function ScheduleCalendar({
         toast.error('Failed to add workout to plan')
       } else {
         toast.success('Plan created and workout added!')
+        // Refresh to fetch the new plan instance from the server
+        router.refresh()
       }
     } catch (error) {
       errorLogger.logError(error as Error, {
@@ -822,6 +848,7 @@ export function ScheduleCalendar({
           source_index: 0,
           copied_at: new Date().toISOString(),
           library_workout: {
+            library_workout_id: workout.id,
             name: workout.name,
             type: workout.type,
             tss: workout.base_tss,
@@ -833,7 +860,7 @@ export function ScheduleCalendar({
       },
     }))
 
-    // API call - include workout data for persistence
+    // API call - workout data is fetched by the API from Python backend
     try {
       const response = await fetch(`/api/schedule/${primaryInstanceId}/workouts/add`, {
         method: 'POST',
@@ -841,15 +868,6 @@ export function ScheduleCalendar({
         body: JSON.stringify({
           workout_id: workout.id,
           target_date: targetDate,
-          // Include workout data so it persists across page reloads
-          workout_data: {
-            name: workout.name,
-            type: workout.type,
-            tss: workout.base_tss,
-            duration_min: workout.base_duration_min,
-            description: workout.detailed_description,
-            structure: workout.structure,
-          },
         }),
       })
 
@@ -865,6 +883,16 @@ export function ScheduleCalendar({
           return newMap
         })
         setErrorMessage('Failed to add workout. Please try again.')
+      } else {
+        // Update with actual saved data from server
+        const result = await response.json()
+        if (result.updatedOverrides) {
+          setLocalOverrides((prev) => {
+            const newMap = new Map(prev)
+            newMap.set(primaryInstanceId, result.updatedOverrides)
+            return newMap
+          })
+        }
       }
     } catch {
       // Rollback on error
@@ -892,8 +920,6 @@ export function ScheduleCalendar({
     const map = new Map<string, ScheduledWorkout[]>()
 
     instances.forEach((instance) => {
-      if (!instance.plan_data?.weekly_plan) return
-
       const startDate = parseLocalDate(instance.start_date)
 
       // Apply workout overrides to get effective workouts by date (use local overrides for optimistic updates)

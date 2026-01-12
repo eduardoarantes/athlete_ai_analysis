@@ -369,6 +369,8 @@ export interface TrainingPlan {
 export interface LibraryWorkoutData {
   /** Unique identifier for this workout instance (UUID format) */
   id?: string
+  /** Original library workout ID (nanoid from workout library) - for provenance tracking */
+  library_workout_id?: string | undefined
   name: string
   type: string
   tss: number
