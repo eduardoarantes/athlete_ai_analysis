@@ -31,7 +31,7 @@ class TestFindMainSegment:
                 {"type": "warmup", "duration_min": 10},
                 {"type": "steady", "duration_min": 90},
                 {"type": "cooldown", "duration_min": 10},
-            ]
+            ])
         }
 
         main_segment = library_phase._find_main_segment(workout)
@@ -47,7 +47,7 @@ class TestFindMainSegment:
                 {"type": "warmup", "duration_min": 10},
                 {"type": "tempo", "duration_min": 60},
                 {"type": "cooldown", "duration_min": 10},
-            ]
+            ])
         }
 
         main_segment = library_phase._find_main_segment(workout)
@@ -66,7 +66,7 @@ class TestFindMainSegment:
                 {"type": "recovery", "duration_min": 3},
                 {"type": "intervals", "duration_min": 30},  # Longest
                 {"type": "cooldown", "duration_min": 10},
-            ]
+            ])
         }
 
         main_segment = library_phase._find_main_segment(workout)
@@ -82,7 +82,7 @@ class TestFindMainSegment:
                 {"type": "steady", "duration_min": 60, "id": "first"},
                 {"type": "steady", "duration_min": 90, "id": "second"},
                 {"type": "cooldown", "duration_min": 10},
-            ]
+            ])
         }
 
         main_segment = library_phase._find_main_segment(workout)
