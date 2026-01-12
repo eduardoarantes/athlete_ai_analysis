@@ -97,38 +97,8 @@ def workout_to_dict(workout: Workout) -> dict[str, Any]:
     if workout.suitable_weekdays:
         result["suitable_weekdays"] = list(workout.suitable_weekdays)
 
-    if workout.segments:
-        result["segments"] = [
-            {
-                "type": seg.type,
-                "duration_min": seg.duration_min,
-                "power_low_pct": seg.power_low_pct,
-                "power_high_pct": seg.power_high_pct,
-                "description": seg.description,
-                "sets": seg.sets,
-                "work": (
-                    {
-                        "duration_min": seg.work.duration_min,
-                        "power_low_pct": seg.work.power_low_pct,
-                        "power_high_pct": seg.work.power_high_pct,
-                        "description": seg.work.description,
-                    }
-                    if seg.work
-                    else None
-                ),
-                "recovery": (
-                    {
-                        "duration_min": seg.recovery.duration_min,
-                        "power_low_pct": seg.recovery.power_low_pct,
-                        "power_high_pct": seg.recovery.power_high_pct,
-                        "description": seg.recovery.description,
-                    }
-                    if seg.recovery
-                    else None
-                ),
-            }
-            for seg in workout.segments
-        ]
+    # Include WorkoutStructure
+    result["structure"] = workout.structure.model_dump()
 
     if workout.variable_components:
         vc = workout.variable_components

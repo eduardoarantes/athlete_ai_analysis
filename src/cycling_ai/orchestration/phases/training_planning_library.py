@@ -345,7 +345,14 @@ class LibraryBasedTrainingPlanningWeeks:
                 for step in segment.get("steps", []):
                     # Match by name and current duration
                     if step.get("name") == step_info.get("name"):
-                        step["length"]["value"] = new_duration
+                        # Set value based on unit (new_duration is in minutes)
+                        unit = step["length"].get("unit", "minute")
+                        if unit == "second":
+                            step["length"]["value"] = new_duration * 60
+                        elif unit == "hour":
+                            step["length"]["value"] = new_duration / 60
+                        else:  # minute or other
+                            step["length"]["value"] = new_duration
                         break
 
             scaled_workouts.append(workout_copy)
@@ -387,6 +394,18 @@ class LibraryBasedTrainingPlanningWeeks:
                 continue
 
             is_weekend = day["weekday"] in ["Saturday", "Sunday"]
+            is_recovery_week = week.get("phase") == "Recovery"
+
+            # Adjust duration ranges for recovery weeks
+            # Recovery weeks have lower volume, so select shorter base workouts
+            if is_recovery_week:
+                weekend_target = 60
+                weekend_min = 45
+                weekend_max = 90
+            else:
+                weekend_target = 90
+                weekend_min = 90
+                weekend_max = 100
 
             # Process each workout type for this day
             for workout_type in workout_types:
@@ -399,15 +418,16 @@ class LibraryBasedTrainingPlanningWeeks:
                     # Select cycling workout from library
                     logger.info(
                         f"    → Selecting cycling workout: type={workout_type}, "
-                        f"phase={week['phase']}, weekday={day['weekday']}"
+                        f"phase={week['phase']}, weekday={day['weekday']}, "
+                        f"recovery_week={is_recovery_week}"
                     )
                     workout = self.selector.select_workout(
                         target_type=workout_type,
                         target_phase=week["phase"],
                         target_weekday=day["weekday"],
-                        target_duration_min=90 if is_weekend else 60,  # Base target
-                        min_duration_min=90 if is_weekend else 45,
-                        max_duration_min=100 if is_weekend else 75,  # Will scale UP after selection
+                        target_duration_min=weekend_target if is_weekend else 60,
+                        min_duration_min=weekend_min if is_weekend else 45,
+                        max_duration_min=weekend_max if is_weekend else 75,
                         temperature=self.temperature,
                         exclude_ids=current_week_workout_ids,  # Prevent same workout in same week
                     )
