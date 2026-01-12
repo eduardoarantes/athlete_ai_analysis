@@ -81,8 +81,11 @@ class TestWorkoutScoring:
 
     def test_exact_match_high_score(self, selector: WorkoutSelector) -> None:
         """Test exact match gets high score."""
-        # Find a workout to use as baseline
-        workout = selector.library.workouts[0]
+        # Find a workout with all required fields
+        workout = next(
+            w for w in selector.library.workouts
+            if w.suitable_phases and w.suitable_weekdays
+        )
 
         score = selector.score_workout(
             workout=workout,
@@ -100,7 +103,7 @@ class TestWorkoutScoring:
 
     def test_type_mismatch_low_score(self, selector: WorkoutSelector) -> None:
         """Test type mismatch gets low score."""
-        workout = selector.library.workouts[0]
+        workout = next(w for w in selector.library.workouts if w.suitable_phases and w.suitable_weekdays)
 
         # Use a different type (non-compatible)
         # Find a type that is NOT compatible with workout.type
@@ -132,7 +135,7 @@ class TestWorkoutScoring:
 
     def test_variety_penalty(self, selector: WorkoutSelector) -> None:
         """Test variety penalty for recent workouts."""
-        workout = selector.library.workouts[0]
+        workout = next(w for w in selector.library.workouts if w.suitable_phases and w.suitable_weekdays)
 
         score_fresh = selector.score_workout(
             workout=workout,
