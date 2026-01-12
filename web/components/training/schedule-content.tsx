@@ -13,11 +13,11 @@ import { DraggableLibraryWorkout } from '@/components/schedule/dnd/draggable-lib
 import { WorkoutBrowser } from '@/components/plan-builder/workout-browser'
 import { WorkoutLibraryCard } from '@/components/plan-builder/workout-library-card'
 import { useLocalStorage } from '@/lib/hooks/use-local-storage'
-import type { PlanInstance, Workout } from '@/lib/types/training-plan'
+import type { PlanInstance } from '@/lib/types/training-plan'
 import type { WorkoutLibraryItem } from '@/lib/types/workout-library'
 import { parseLocalDate } from '@/lib/utils/date-utils'
 import { formatWithGoalLabels } from '@/lib/utils/format-utils'
-import { WorkoutDetailModal } from './workout-detail-modal'
+import { WorkoutDetailPopup } from '@/components/workout/workout-detail-popup'
 
 const SIDEBAR_STORAGE_KEY = 'schedule-sidebar-collapsed'
 
@@ -66,32 +66,6 @@ export function ScheduleContent({ instances, locale }: ScheduleContentProps) {
     setSelectedLibraryWorkout(workout)
     setLibraryWorkoutModalOpen(true)
   }, [])
-
-  // Convert library workout to schedule workout format for display in modal
-  const libraryWorkoutAsScheduleWorkout = useCallback(
-    (libraryWorkout: WorkoutLibraryItem | null): Workout | null => {
-      if (!libraryWorkout) return null
-
-      const workout: Workout = {
-        weekday: 'Monday', // Placeholder
-        name: libraryWorkout.name,
-        type: libraryWorkout.type,
-        tss: libraryWorkout.base_tss,
-        description: libraryWorkout.detailed_description || `${libraryWorkout.type} workout`,
-        structure: libraryWorkout.structure,
-        source: 'library',
-        library_workout_id: libraryWorkout.id,
-      }
-
-      // Add optional detailed_description if it exists
-      if (libraryWorkout.detailed_description) {
-        workout.detailed_description = libraryWorkout.detailed_description
-      }
-
-      return workout
-    },
-    []
-  )
 
   // Get FTP from first instance for workout display
   const ftp = plansWithFutureContent[0]?.plan_data?.athlete_profile?.ftp || 200
@@ -353,12 +327,20 @@ export function ScheduleContent({ instances, locale }: ScheduleContentProps) {
       )}
 
       {/* Library Workout Detail Modal */}
-      <WorkoutDetailModal
-        workout={libraryWorkoutAsScheduleWorkout(selectedLibraryWorkout)}
-        weekNumber={0}
+      <WorkoutDetailPopup
+        workout={selectedLibraryWorkout}
         ftp={ftp}
         open={libraryWorkoutModalOpen}
         onOpenChange={setLibraryWorkoutModalOpen}
+        sections={{
+          showBadges: true,
+          showStats: true,
+          showDescription: true,
+          showPowerProfile: true,
+          showStructure: true,
+          showWeekInfo: false,
+          showSuitablePhases: true,
+        }}
       />
     </div>
   )
