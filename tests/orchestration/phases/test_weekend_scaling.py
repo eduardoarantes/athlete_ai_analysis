@@ -75,7 +75,11 @@ class TestFindMainSegment:
         assert main_segment["duration_min"] == 30
 
     def test_find_first_steady_when_multiple(self, library_phase):
-        """Test that first steady segment is returned when multiple exist."""
+        """Test that longest segment is returned when multiple have same intensity.
+
+        When power/intensity is equal, prefer the longest segment for scaling
+        (more room to adjust duration).
+        """
         workout = {
             "structure": legacy_segments_to_structure([
                 {"type": "warmup", "duration_min": 10},
@@ -88,7 +92,7 @@ class TestFindMainSegment:
         main_segment = library_phase._find_main_segment(workout)
 
         assert main_segment is not None
-        assert main_segment["duration_min"] == 60  # First steady segment
+        assert main_segment["duration_min"] == 90  # Longest segment with same intensity
 
 
 class TestScaleWeekendWorkouts:

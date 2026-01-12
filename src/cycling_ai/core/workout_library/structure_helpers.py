@@ -210,6 +210,7 @@ def get_main_segment_from_structure(
 
     main_segment = None
     max_intensity = 0.0
+    max_duration = 0.0
 
     for i, segment in enumerate(segments):
         steps = segment.get("steps", [])
@@ -218,14 +219,21 @@ def get_main_segment_from_structure(
             if intensity_class == "active":
                 targets = step.get("targets", [])
                 power_min, power_max = extract_power_target(targets)
-                if power_max > max_intensity:
+                duration_min = convert_step_length_to_minutes(step.get("length", {}))
+
+                # Use duration as tiebreaker when power is equal
+                is_higher_intensity = power_max > max_intensity
+                is_same_intensity_but_longer = (power_max == max_intensity and duration_min > max_duration)
+
+                if is_higher_intensity or is_same_intensity_but_longer:
                     max_intensity = power_max
+                    max_duration = duration_min
                     main_segment = {
                         "segment_index": i,
                         "step": step,
                         "power_low_pct": power_min,
                         "power_high_pct": power_max,
-                        "duration_min": convert_step_length_to_minutes(step.get("length", {})),
+                        "duration_min": duration_min,
                     }
 
     return main_segment
