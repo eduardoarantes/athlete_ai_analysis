@@ -162,13 +162,18 @@ class TestJsonWorkoutParser:
             assert result["intensity"] == "easy"
             assert result["source_format"] == "json"
 
-            # Check segments
-            assert len(result["segments"]) == 1
-            segment = result["segments"][0]
-            assert segment["type"] == "steady"
-            assert segment["duration_min"] == 60  # 3600 seconds = 60 minutes
-            assert segment["power_low_pct"] == 56
-            assert segment["power_high_pct"] == 75
+            # Check structure
+            assert "structure" in result
+            structure = result["structure"]
+            assert "structure" in structure  # WorkoutStructure has structure field
+            assert len(structure["structure"]) == 1
+
+            # Verify structure format (converted from segments)
+            segment = structure["structure"][0]
+            assert segment["type"] == "step"  # Simple steps become "step" type
+            assert len(segment["steps"]) == 1
+            step = segment["steps"][0]
+            assert step["intensityClass"] == "active"
 
             # Check duration and TSS
             assert result["base_duration_min"] == 60
@@ -194,30 +199,34 @@ class TestJsonWorkoutParser:
             assert result["type"] == "vo2max"  # Should infer from description
             assert result["intensity"] == "hard"
 
-            # Check segments (warmup, interval, cooldown)
-            assert len(result["segments"]) == 3
+            # Check structure (warmup, interval, cooldown)
+            assert "structure" in result
+            structure = result["structure"]
+            assert "structure" in structure
+            assert len(structure["structure"]) == 3
 
-            # Warmup
-            warmup = result["segments"][0]
-            assert warmup["type"] == "warmup"
-            assert warmup["duration_min"] == 10  # 600 seconds
+            # Warmup - converted to WorkoutStructure format
+            warmup_segment = structure["structure"][0]
+            assert warmup_segment["type"] == "step"
+            assert len(warmup_segment["steps"]) == 1
+            warmup_step = warmup_segment["steps"][0]
+            assert warmup_step["intensityClass"] == "warmUp"
 
-            # Interval
-            interval = result["segments"][1]
-            assert interval["type"] == "interval"
-            assert interval["sets"] == 5
-            assert interval["work"]["duration_min"] == pytest.approx(0.67, rel=0.1)  # 40s
-            assert interval["work"]["power_low_pct"] == 115
-            assert interval["work"]["power_high_pct"] == 130
-            assert interval["recovery"]["duration_min"] == pytest.approx(
-                0.33, rel=0.1
-            )  # 20s
-            assert interval["recovery"]["power_low_pct"] == 42
+            # Interval - converted to repetition structure
+            interval_segment = structure["structure"][1]
+            assert interval_segment["type"] == "repetition"
+            assert interval_segment["length"]["value"] == 5  # 5 sets
+            assert len(interval_segment["steps"]) == 2  # work + recovery
+            work_step = interval_segment["steps"][0]
+            assert work_step["intensityClass"] == "active"
+            recovery_step = interval_segment["steps"][1]
+            assert recovery_step["intensityClass"] == "rest"
 
             # Cooldown
-            cooldown = result["segments"][2]
-            assert cooldown["type"] == "cooldown"
-            assert cooldown["duration_min"] == 5  # 300 seconds
+            cooldown_segment = structure["structure"][2]
+            assert cooldown_segment["type"] == "step"
+            cooldown_step = cooldown_segment["steps"][0]
+            assert cooldown_step["intensityClass"] == "coolDown"
 
             # Check variable components
             assert result["variable_components"] is not None

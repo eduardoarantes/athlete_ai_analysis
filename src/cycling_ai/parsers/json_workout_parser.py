@@ -14,6 +14,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from cycling_ai.core.workout_library.structure_helpers import legacy_segments_to_structure
+
 
 @dataclass
 class JsonWorkoutParser:
@@ -74,6 +76,9 @@ class JsonWorkoutParser:
         # Identify variable components
         variable_components = self._identify_variable_components(segments)
 
+        # Convert legacy segments to WorkoutStructure format
+        structure = legacy_segments_to_structure(segments)
+
         return {
             "id": workout_id,
             "name": title,
@@ -82,7 +87,7 @@ class JsonWorkoutParser:
             "intensity": intensity,
             "suitable_phases": suitable_phases,
             "suitable_weekdays": suitable_weekdays,
-            "segments": segments,
+            "structure": structure,
             "base_duration_min": base_duration_min,
             "base_tss": base_tss,
             "variable_components": variable_components,
