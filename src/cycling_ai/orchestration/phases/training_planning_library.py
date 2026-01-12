@@ -379,7 +379,7 @@ class LibraryBasedTrainingPlanningWeeks:
 
         weekday_workouts = []
         weekend_workouts = []
-        weekend_endurance_workouts = []  # Track endurance rides separately for scaling
+        weekend_cycling_workouts = []  # Track cycling workouts for scaling (excludes strength)
         current_week_workout_ids: list[str] = []  # Track IDs used in this week (hard constraint)
 
         # Select all workouts (now supporting multiple workout_types per day)
@@ -474,9 +474,10 @@ class LibraryBasedTrainingPlanningWeeks:
 
                 if is_weekend:
                     weekend_workouts.append(workout_dict)
-                    # Only scale endurance cycling workouts
-                    if workout_type == "endurance":
-                        weekend_endurance_workouts.append(workout_dict)
+                    # Scale all cycling workouts (not just endurance)
+                    # Strength workouts are excluded from scaling
+                    if workout_type != "strength" and not is_strength_workout:
+                        weekend_cycling_workouts.append(workout_dict)
                 else:
                     weekday_workouts.append(workout_dict)
 
@@ -499,13 +500,13 @@ class LibraryBasedTrainingPlanningWeeks:
         current_total = weekday_minutes + weekend_minutes_before
         deficit_minutes = target_minutes - current_total
 
-        # Scale ONLY weekend endurance workouts to fill deficit
-        scaled_endurance = self._scale_weekend_workouts(weekend_endurance_workouts, deficit_minutes)
+        # Scale all weekend cycling workouts to fill deficit
+        scaled_cycling = self._scale_weekend_workouts(weekend_cycling_workouts, deficit_minutes)
 
-        # Replace endurance workouts in weekend_workouts with scaled versions
-        # Build final list: weekday + non-endurance weekend + scaled endurance weekend
-        non_endurance_weekend = [w for w in weekend_workouts if w not in weekend_endurance_workouts]
-        all_workouts = weekday_workouts + non_endurance_weekend + scaled_endurance
+        # Replace cycling workouts in weekend_workouts with scaled versions
+        # Build final list: weekday + non-cycling weekend (strength) + scaled cycling weekend
+        non_cycling_weekend = [w for w in weekend_workouts if w not in weekend_cycling_workouts]
+        all_workouts = weekday_workouts + non_cycling_weekend + scaled_cycling
 
         # Log for debugging (cycling time only, strength excluded from budget)
         actual_cycling_minutes = sum(
