@@ -1,7 +1,8 @@
 """
 Workout builder tool wrapper.
 
-Allows LLM to create structured workouts with segments (warm-up, intervals, recovery, cool-down).
+Allows LLM to create structured workouts with warm-up, intervals, recovery, and cool-down.
+Outputs workouts in WorkoutStructure format.
 """
 
 from __future__ import annotations
@@ -106,8 +107,9 @@ class WorkoutBuilderTool(BaseTool):
                 "type": "object",
                 "format": "json",
                 "description": (
-                    "Structured workout object containing: weekday, description, total_duration_min, "
-                    "work_time_min (interval segments only), and segments (array of segment details)."
+                    "Structured workout object containing: weekday, name, detailed_description, "
+                    "total_duration_min, work_time_min (interval time only), and structure "
+                    "(WorkoutStructure format with segments and steps)."
                 ),
             },
             version="1.0.0",

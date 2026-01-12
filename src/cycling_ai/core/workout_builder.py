@@ -6,6 +6,8 @@ Generates detailed workout structures with warm-up, main sets, and cool-down.
 
 from typing import Any
 
+from cycling_ai.core.workout_library.structure_helpers import legacy_segments_to_structure
+
 from .power_zones import get_workout_power_targets
 from .tss import calculate_workout_tss
 
@@ -138,8 +140,12 @@ class Workout:
             ftp: Optional FTP to include TSS calculation
 
         Returns:
-            Dictionary representation of workout
+            Dictionary representation of workout with WorkoutStructure format
         """
+        # Convert internal segments to legacy format, then to WorkoutStructure
+        legacy_segments = [s.to_dict() for s in self.segments]
+        structure = legacy_segments_to_structure(legacy_segments)
+
         result = {
             "weekday": self.weekday,
             "name": self.name,
@@ -147,7 +153,7 @@ class Workout:
             "description": self.name,  # Backward compatibility: alias to name
             "total_duration_min": self.total_duration(),
             "work_time_min": self.work_time(),
-            "segments": [s.to_dict() for s in self.segments],
+            "structure": structure,
         }
 
         if ftp is not None:
