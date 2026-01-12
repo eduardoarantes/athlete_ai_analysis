@@ -212,12 +212,21 @@ export function calculateStructureDuration(structure: WorkoutStructure): number 
 }
 
 // =========================================================================
-// Legacy WorkoutSegment Type (current format, will be migrated)
+// Legacy WorkoutSegment Type (Issue #96/97 - Deprecated)
 // =========================================================================
 
 /**
- * Current workout segment format - will be migrated to StructuredWorkoutSegment
+ * @deprecated Legacy workout segment format - use StructuredWorkoutSegment instead (Issue #96/97)
+ * This interface is kept for backward compatibility with old data but should not be used in new code.
+ * All new workouts use WorkoutStructure with StructuredWorkoutSegment[] instead.
+ *
+ * Migration status:
+ * - ✅ UI components: Fully migrated to WorkoutStructure
+ * - ✅ Data files: All workouts use WorkoutStructure format
+ * - ⚠️  Some helper types keep this for backward compatibility with stored overrides
+ *
  * @see StructuredWorkoutSegment for the new multi-step interval format
+ * @see WorkoutStructure for the complete workout structure format
  */
 export interface WorkoutSegment {
   type: 'warmup' | 'interval' | 'recovery' | 'cooldown' | 'steady' | 'work' | 'tempo'

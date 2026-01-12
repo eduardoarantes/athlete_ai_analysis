@@ -61,12 +61,14 @@ export type Weekday =
   | 'Sunday'
 
 /**
- * Segment types within a workout
+ * @deprecated Legacy segment types - use WorkoutStructure instead (Issue #96/97)
+ * Kept for backward compatibility only. Will be removed in future version.
  */
 export type SegmentType = 'warmup' | 'interval' | 'recovery' | 'cooldown' | 'steady' | 'tempo'
 
 /**
- * Work or recovery part of an interval set
+ * @deprecated Legacy interval part - use WorkoutStep instead (Issue #96/97)
+ * Kept for backward compatibility only. Will be removed in future version.
  */
 export interface IntervalPart {
   duration_min: number
@@ -76,10 +78,9 @@ export interface IntervalPart {
 }
 
 /**
- * A segment within a workout
- * Can be either:
- * - Simple segment (warmup, cooldown, steady) with direct duration/power
- * - Interval set with work/recovery parts repeated for N sets
+ * @deprecated Legacy workout segment format - use StructuredWorkoutSegment instead (Issue #96/97)
+ * This interface is no longer used in the application. Use WorkoutStructure for all new code.
+ * Kept for backward compatibility only. Will be removed in future version.
  */
 export interface LibraryWorkoutSegment {
   type: SegmentType
