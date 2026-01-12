@@ -78,7 +78,7 @@ export function WorkoutDetailModal({
       sections={{
         showBadges: true,
         showStats: true,
-        showDescription: true,
+        showDescription: false,
         showPowerProfile: true,
         showStructure: true,
         showWeekInfo: true,
