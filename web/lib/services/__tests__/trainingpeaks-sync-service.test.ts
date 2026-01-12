@@ -20,7 +20,7 @@ vi.mock('@/lib/services/trainingpeaks-service', () => ({
 
 // Import after mocks
 import { TrainingPeaksSyncService } from '../trainingpeaks-sync-service'
-import type { Workout, WorkoutSegment } from '@/lib/types/training-plan'
+import type { Workout } from '@/lib/types/training-plan'
 
 // Test data factories
 const createMockWorkout = (overrides: Partial<Workout> = {}): Workout => ({
@@ -30,45 +30,60 @@ const createMockWorkout = (overrides: Partial<Workout> = {}): Workout => ({
   description: 'Build aerobic endurance',
   detailed_description: 'Detailed workout description',
   tss: 75,
-  segments: [
-    {
-      type: 'warmup',
-      duration_min: 10,
-      power_low_pct: 50,
-      power_high_pct: 65,
-      description: 'Easy warmup',
-    },
-    {
-      type: 'work',
-      duration_min: 20,
-      power_low_pct: 88,
-      power_high_pct: 94,
-      description: 'Sweet spot effort',
-    },
-    {
-      type: 'recovery',
-      duration_min: 5,
-      power_low_pct: 40,
-      power_high_pct: 50,
-      description: 'Recovery spin',
-    },
-    {
-      type: 'cooldown',
-      duration_min: 10,
-      power_low_pct: 40,
-      power_high_pct: 55,
-      description: 'Easy cooldown',
-    },
-  ],
-  ...overrides,
-})
-
-const createMockSegment = (overrides: Partial<WorkoutSegment> = {}): WorkoutSegment => ({
-  type: 'steady',
-  duration_min: 30,
-  power_low_pct: 65,
-  power_high_pct: 75,
-  description: 'Steady endurance',
+  structure: {
+    primaryIntensityMetric: 'percentOfFtp',
+    primaryLengthMetric: 'duration',
+    structure: [
+      {
+        type: 'step',
+        length: { unit: 'repetition', value: 1 },
+        steps: [
+          {
+            name: 'Easy warmup',
+            intensityClass: 'warmUp',
+            length: { unit: 'minute', value: 10 },
+            targets: [{ type: 'power', minValue: 50, maxValue: 65, unit: 'percentOfFtp' }],
+          },
+        ],
+      },
+      {
+        type: 'step',
+        length: { unit: 'repetition', value: 1 },
+        steps: [
+          {
+            name: 'Sweet spot effort',
+            intensityClass: 'active',
+            length: { unit: 'minute', value: 20 },
+            targets: [{ type: 'power', minValue: 88, maxValue: 94, unit: 'percentOfFtp' }],
+          },
+        ],
+      },
+      {
+        type: 'step',
+        length: { unit: 'repetition', value: 1 },
+        steps: [
+          {
+            name: 'Recovery spin',
+            intensityClass: 'rest',
+            length: { unit: 'minute', value: 5 },
+            targets: [{ type: 'power', minValue: 40, maxValue: 50, unit: 'percentOfFtp' }],
+          },
+        ],
+      },
+      {
+        type: 'step',
+        length: { unit: 'repetition', value: 1 },
+        steps: [
+          {
+            name: 'Easy cooldown',
+            intensityClass: 'coolDown',
+            length: { unit: 'minute', value: 10 },
+            targets: [{ type: 'power', minValue: 40, maxValue: 55, unit: 'percentOfFtp' }],
+          },
+        ],
+      },
+    ],
+  },
   ...overrides,
 })
 
@@ -93,31 +108,107 @@ describe('TrainingPeaksSyncService', () => {
       expect(parsed.Steps[0].Length).toEqual({ Unit: 'Second', Value: 600 })
     })
 
-    it('returns empty string for workout without segments', () => {
-      const { segments: _segments, ...workoutWithoutSegments } = createMockWorkout()
-      const workout: Workout = workoutWithoutSegments
+    it('returns empty string for workout without structure', () => {
+      const { structure: _structure, ...workoutWithoutStructure } = createMockWorkout()
+      const workout: Workout = workoutWithoutStructure
       const result = service.convertWorkoutToTPStructure(workout)
 
       expect(result).toBe('')
     })
 
-    it('returns empty string for workout with empty segments array', () => {
-      const workout = createMockWorkout({ segments: [] })
-      const result = service.convertWorkoutToTPStructure(workout)
-
-      expect(result).toBe('')
-    })
-
-    it('correctly maps segment types to IntensityClass', () => {
+    it('returns empty string for workout with empty structure', () => {
       const workout = createMockWorkout({
-        segments: [
-          createMockSegment({ type: 'warmup' }),
-          createMockSegment({ type: 'cooldown' }),
-          createMockSegment({ type: 'recovery' }),
-          createMockSegment({ type: 'steady' }),
-          createMockSegment({ type: 'tempo' }),
-          createMockSegment({ type: 'work' }),
-        ],
+        structure: {
+          primaryIntensityMetric: 'percentOfFtp',
+          primaryLengthMetric: 'duration',
+          structure: [],
+        },
+      })
+      const result = service.convertWorkoutToTPStructure(workout)
+
+      expect(result).toBe('')
+    })
+
+    it('correctly maps intensity classes to TrainingPeaks IntensityClass', () => {
+      const workout = createMockWorkout({
+        structure: {
+          primaryIntensityMetric: 'percentOfFtp',
+          primaryLengthMetric: 'duration',
+          structure: [
+            {
+              type: 'step',
+              length: { unit: 'repetition', value: 1 },
+              steps: [
+                {
+                  name: 'Warmup',
+                  intensityClass: 'warmUp',
+                  length: { unit: 'minute', value: 10 },
+                  targets: [{ type: 'power', minValue: 50, maxValue: 65, unit: 'percentOfFtp' }],
+                },
+              ],
+            },
+            {
+              type: 'step',
+              length: { unit: 'repetition', value: 1 },
+              steps: [
+                {
+                  name: 'Cooldown',
+                  intensityClass: 'coolDown',
+                  length: { unit: 'minute', value: 10 },
+                  targets: [{ type: 'power', minValue: 40, maxValue: 55, unit: 'percentOfFtp' }],
+                },
+              ],
+            },
+            {
+              type: 'step',
+              length: { unit: 'repetition', value: 1 },
+              steps: [
+                {
+                  name: 'Recovery',
+                  intensityClass: 'rest',
+                  length: { unit: 'minute', value: 5 },
+                  targets: [{ type: 'power', minValue: 40, maxValue: 50, unit: 'percentOfFtp' }],
+                },
+              ],
+            },
+            {
+              type: 'step',
+              length: { unit: 'repetition', value: 1 },
+              steps: [
+                {
+                  name: 'Endurance',
+                  intensityClass: 'active',
+                  length: { unit: 'minute', value: 30 },
+                  targets: [{ type: 'power', minValue: 65, maxValue: 75, unit: 'percentOfFtp' }],
+                },
+              ],
+            },
+            {
+              type: 'step',
+              length: { unit: 'repetition', value: 1 },
+              steps: [
+                {
+                  name: 'Tempo',
+                  intensityClass: 'active',
+                  length: { unit: 'minute', value: 20 },
+                  targets: [{ type: 'power', minValue: 76, maxValue: 90, unit: 'percentOfFtp' }],
+                },
+              ],
+            },
+            {
+              type: 'step',
+              length: { unit: 'repetition', value: 1 },
+              steps: [
+                {
+                  name: 'Threshold',
+                  intensityClass: 'active',
+                  length: { unit: 'minute', value: 20 },
+                  targets: [{ type: 'power', minValue: 91, maxValue: 105, unit: 'percentOfFtp' }],
+                },
+              ],
+            },
+          ],
+        },
       })
 
       const result = JSON.parse(service.convertWorkoutToTPStructure(workout))
@@ -132,9 +223,24 @@ describe('TrainingPeaksSyncService', () => {
 
     it('maps high-intensity intervals to VO2 Max', () => {
       const workout = createMockWorkout({
-        segments: [
-          createMockSegment({ type: 'interval', power_low_pct: 110, power_high_pct: 120 }),
-        ],
+        structure: {
+          primaryIntensityMetric: 'percentOfFtp',
+          primaryLengthMetric: 'duration',
+          structure: [
+            {
+              type: 'step',
+              length: { unit: 'repetition', value: 1 },
+              steps: [
+                {
+                  name: 'VO2 Max Interval',
+                  intensityClass: 'active',
+                  length: { unit: 'minute', value: 5 },
+                  targets: [{ type: 'power', minValue: 110, maxValue: 120, unit: 'percentOfFtp' }],
+                },
+              ],
+            },
+          ],
+        },
       })
 
       const result = JSON.parse(service.convertWorkoutToTPStructure(workout))
@@ -144,7 +250,24 @@ describe('TrainingPeaksSyncService', () => {
 
     it('maps lower-intensity intervals to Threshold', () => {
       const workout = createMockWorkout({
-        segments: [createMockSegment({ type: 'interval', power_low_pct: 95, power_high_pct: 100 })],
+        structure: {
+          primaryIntensityMetric: 'percentOfFtp',
+          primaryLengthMetric: 'duration',
+          structure: [
+            {
+              type: 'step',
+              length: { unit: 'repetition', value: 1 },
+              steps: [
+                {
+                  name: 'Threshold',
+                  intensityClass: 'active',
+                  length: { unit: 'minute', value: 20 },
+                  targets: [{ type: 'power', minValue: 95, maxValue: 100, unit: 'percentOfFtp' }],
+                },
+              ],
+            },
+          ],
+        },
       })
 
       const result = JSON.parse(service.convertWorkoutToTPStructure(workout))
@@ -154,7 +277,24 @@ describe('TrainingPeaksSyncService', () => {
 
     it('includes intensity target when power percentages are defined', () => {
       const workout = createMockWorkout({
-        segments: [createMockSegment({ power_low_pct: 70, power_high_pct: 80 })],
+        structure: {
+          primaryIntensityMetric: 'percentOfFtp',
+          primaryLengthMetric: 'duration',
+          structure: [
+            {
+              type: 'step',
+              length: { unit: 'repetition', value: 1 },
+              steps: [
+                {
+                  name: 'Endurance',
+                  intensityClass: 'active',
+                  length: { unit: 'minute', value: 30 },
+                  targets: [{ type: 'power', minValue: 70, maxValue: 80, unit: 'percentOfFtp' }],
+                },
+              ],
+            },
+          ],
+        },
       })
 
       const result = JSON.parse(service.convertWorkoutToTPStructure(workout))
@@ -183,13 +323,50 @@ describe('TrainingPeaksSyncService', () => {
       expect(result.Structure).toBeDefined()
     })
 
-    it('calculates total time from segments', () => {
+    it('calculates total time from structure', () => {
       const workout = createMockWorkout({
-        segments: [
-          createMockSegment({ duration_min: 15 }),
-          createMockSegment({ duration_min: 30 }),
-          createMockSegment({ duration_min: 15 }),
-        ],
+        structure: {
+          primaryIntensityMetric: 'percentOfFtp',
+          primaryLengthMetric: 'duration',
+          structure: [
+            {
+              type: 'step',
+              length: { unit: 'repetition', value: 1 },
+              steps: [
+                {
+                  name: 'Warmup',
+                  intensityClass: 'warmUp',
+                  length: { unit: 'minute', value: 15 },
+                  targets: [{ type: 'power', minValue: 50, maxValue: 65, unit: 'percentOfFtp' }],
+                },
+              ],
+            },
+            {
+              type: 'step',
+              length: { unit: 'repetition', value: 1 },
+              steps: [
+                {
+                  name: 'Main Set',
+                  intensityClass: 'active',
+                  length: { unit: 'minute', value: 30 },
+                  targets: [{ type: 'power', minValue: 70, maxValue: 85, unit: 'percentOfFtp' }],
+                },
+              ],
+            },
+            {
+              type: 'step',
+              length: { unit: 'repetition', value: 1 },
+              steps: [
+                {
+                  name: 'Cooldown',
+                  intensityClass: 'coolDown',
+                  length: { unit: 'minute', value: 15 },
+                  targets: [{ type: 'power', minValue: 40, maxValue: 55, unit: 'percentOfFtp' }],
+                },
+              ],
+            },
+          ],
+        },
       })
 
       const result = service.convertWorkoutToTPRequest(workout, '2025-01-06', 'athlete-123')
@@ -213,8 +390,14 @@ describe('TrainingPeaksSyncService', () => {
       expect(result.Description).toBe('Short description')
     })
 
-    it('does not include Structure when workout has no segments', () => {
-      const workout = createMockWorkout({ segments: [] })
+    it('does not include Structure when workout has no structure', () => {
+      const workout = createMockWorkout({
+        structure: {
+          primaryIntensityMetric: 'percentOfFtp',
+          primaryLengthMetric: 'duration',
+          structure: [],
+        },
+      })
       const result = service.convertWorkoutToTPRequest(workout, '2025-01-06', 'athlete-123')
 
       expect(result.Structure).toBeUndefined()

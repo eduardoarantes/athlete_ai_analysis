@@ -17,7 +17,6 @@ import type {
   Workout,
   WorkoutOverrides,
   PlanInstanceNote,
-  WorkoutSegment,
 } from '@/lib/types/training-plan'
 import type { WorkoutLibraryItem } from '@/lib/types/workout-library'
 import { parseLocalDate, formatDateString } from '@/lib/utils/date-utils'
@@ -50,24 +49,8 @@ interface ScheduleCalendarProps {
 
 const DAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-/**
- * Convert library workout segments to schedule workout segments
- * Ensures duration_min has a default value (required in WorkoutSegment)
- */
-function convertLibrarySegmentsToSchedule(
-  librarySegments: WorkoutLibraryItem['segments']
-): WorkoutSegment[] {
-  return librarySegments.map((segment) => ({
-    type: segment.type,
-    duration_min: segment.duration_min ?? 0,
-    power_low_pct: segment.power_low_pct,
-    power_high_pct: segment.power_high_pct,
-    description: segment.description,
-    sets: segment.sets,
-    work: segment.work,
-    recovery: segment.recovery,
-  }))
-}
+// Removed: convertLibrarySegmentsToSchedule - segments are no longer used
+// Library workouts now use the structure field directly
 
 interface ScheduledWorkout {
   workout: Workout
@@ -756,6 +739,7 @@ export function ScheduleCalendar({
         type: workout.type,
         tss: workout.base_tss,
         durationMin: workout.base_duration_min,
+        structure: workout.structure,
       }
       // Only include description if it exists (exactOptionalPropertyTypes compliance)
       if (workout.detailed_description) {
@@ -764,9 +748,6 @@ export function ScheduleCalendar({
       newCache.set(workout.id, cacheEntry)
       return newCache
     })
-
-    // Convert library segments to schedule format
-    const scheduleSegments = convertLibrarySegmentsToSchedule(workout.segments)
 
     // Optimistic update - include library_workout data for proper rendering
     applyOptimisticOverride(primaryInstanceId, (current) => ({
@@ -783,7 +764,7 @@ export function ScheduleCalendar({
             tss: workout.base_tss,
             duration_min: workout.base_duration_min,
             description: workout.detailed_description,
-            segments: scheduleSegments,
+            structure: workout.structure,
           },
         },
       },
@@ -804,7 +785,7 @@ export function ScheduleCalendar({
             tss: workout.base_tss,
             duration_min: workout.base_duration_min,
             description: workout.detailed_description,
-            segments: scheduleSegments,
+            structure: workout.structure,
           },
         }),
       })
@@ -877,10 +858,10 @@ export function ScheduleCalendar({
         const existing = map.get(dateKey) || []
         workouts.forEach((effectiveWorkout) => {
           // Use the workout from applyWorkoutOverrides - it already has full data
-          // including segments when library_workout data is stored
+          // including structure when library_workout data is stored
           // Only fall back to cache for legacy entries without stored workout data
           let workout = effectiveWorkout.workout
-          if (effectiveWorkout.libraryWorkoutId && !effectiveWorkout.workout.segments?.length) {
+          if (effectiveWorkout.libraryWorkoutId && !effectiveWorkout.workout.structure?.structure?.length) {
             const cachedParams = libraryWorkoutCache.get(effectiveWorkout.libraryWorkoutId)
             if (cachedParams) {
               // Use cached library workout details only when stored data is incomplete

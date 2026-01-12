@@ -21,6 +21,8 @@ from typing import Any
 
 import fitdecode
 
+from cycling_ai.core.workout_library.structure_helpers import legacy_segments_to_structure
+
 
 class FitIntensity(Enum):
     """FIT intensity types (mapped from FIT SDK)."""
@@ -262,6 +264,9 @@ class ParsedWorkout:
         workout_type = self._infer_workout_type()
         intensity = self._infer_intensity()
 
+        # Convert legacy segments to structure format
+        structure = legacy_segments_to_structure(self.segments)
+
         return {
             "id": workout_id,
             "name": self.metadata.name,
@@ -270,7 +275,7 @@ class ParsedWorkout:
             "intensity": intensity,
             "suitable_phases": self._get_suitable_phases(intensity),
             "suitable_weekdays": ["Tuesday", "Wednesday", "Thursday"],
-            "segments": self.segments,
+            "structure": structure,
             "base_duration_min": self.base_duration_min,
             "base_tss": self.base_tss,
             "variable_components": self._detect_variable_components(),

@@ -12,6 +12,7 @@ from cycling_ai.core.workout_library.models import (
     WorkoutSegment,
     VariableComponents,
 )
+from cycling_ai.core.workout_library.structure_helpers import legacy_segments_to_structure
 
 
 class TestWorkoutSegment:
@@ -120,7 +121,7 @@ class TestWorkout:
             intensity="easy",
             suitable_phases=["Base", "Build"],
             suitable_weekdays=["Monday", "Wednesday", "Friday"],
-            segments=[
+            structure=legacy_segments_to_structure([
                 WorkoutSegment(
                     type="warmup",
                     duration_min=10.0,
@@ -142,7 +143,7 @@ class TestWorkout:
                     power_high_pct=60,
                     description="Cool down",
                 ),
-            ],
+            ]),
             base_duration_min=80.0,
             base_tss=65.5,
             variable_components=None,
@@ -152,7 +153,7 @@ class TestWorkout:
 
         assert workout.id == "test_workout_1"
         assert workout.type == "endurance"
-        assert len(workout.segments) == 3
+        assert workout.structure is not None
         assert workout.base_duration_min == 80.0
 
     def test_all_workout_types(self) -> None:
@@ -168,7 +169,7 @@ class TestWorkout:
                 intensity="moderate",
                 suitable_phases=["Base"],
                 suitable_weekdays=["Monday"],
-                segments=[],
+                structure=legacy_segments_to_structure([]),
                 base_duration_min=60.0,
                 base_tss=50.0,
                 source_file="test.json",
@@ -189,7 +190,7 @@ class TestWorkout:
                 intensity=intensity,
                 suitable_phases=["Base"],
                 suitable_weekdays=["Monday"],
-                segments=[],
+                structure=legacy_segments_to_structure([]),
                 base_duration_min=60.0,
                 base_tss=50.0,
                 source_file="test.json",
@@ -210,7 +211,7 @@ class TestWorkout:
                 intensity="moderate",
                 suitable_phases=[phase],
                 suitable_weekdays=["Monday"],
-                segments=[],
+                structure=legacy_segments_to_structure([]),
                 base_duration_min=60.0,
                 base_tss=50.0,
                 source_file="test.json",
@@ -239,7 +240,7 @@ class TestWorkout:
                 intensity="moderate",
                 suitable_phases=["Base"],
                 suitable_weekdays=[weekday],
-                segments=[],
+                structure=legacy_segments_to_structure([]),
                 base_duration_min=60.0,
                 base_tss=50.0,
                 source_file="test.json",
@@ -257,7 +258,7 @@ class TestWorkout:
             intensity="moderate",
             suitable_phases=["Base"],
             suitable_weekdays=["Monday"],
-            segments=[],
+            structure=legacy_segments_to_structure([]),
             base_duration_min=60.0,
             base_tss=50.0,
             source_file="test.json",
@@ -276,7 +277,7 @@ class TestWorkout:
             intensity="moderate",
             suitable_phases=["Base"],
             suitable_weekdays=["Monday"],
-            segments=[],
+            structure=legacy_segments_to_structure([]),
             base_duration_min=60.0,
             base_tss=50.0,
             variable_components=VariableComponents(
@@ -300,7 +301,7 @@ class TestWorkout:
                 intensity="moderate",
                 suitable_phases=["Base"],
                 suitable_weekdays=["Monday"],
-                segments=[],
+                structure=legacy_segments_to_structure([]),
                 base_duration_min=60.0,
                 base_tss=50.0,
                 source_file="test.json",
@@ -327,7 +328,7 @@ class TestWorkoutLibrary:
                     intensity="easy",
                     suitable_phases=["Base"],
                     suitable_weekdays=["Monday"],
-                    segments=[],
+                    structure=legacy_segments_to_structure([]),
                     base_duration_min=60.0,
                     base_tss=50.0,
                     source_file="test.json",
@@ -341,7 +342,7 @@ class TestWorkoutLibrary:
                     intensity="moderate",
                     suitable_phases=["Build"],
                     suitable_weekdays=["Wednesday"],
-                    segments=[],
+                    structure=legacy_segments_to_structure([]),
                     base_duration_min=75.0,
                     base_tss=80.0,
                     source_file="test.json",
@@ -393,4 +394,5 @@ class TestWorkoutLibrary:
             "recovery",
             "mixed",
         ]
-        assert len(first_workout.segments) > 0
+        assert first_workout.structure is not None
+        assert "structure" in first_workout.structure

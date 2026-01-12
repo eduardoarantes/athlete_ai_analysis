@@ -33,16 +33,13 @@ import {
 } from '@/components/ui/select'
 import {
   type Workout,
-  type WorkoutSegment,
-  type WorkoutStructure,
   formatDuration,
   calculateWorkoutDuration,
-  convertStepLengthToMinutes,
-  extractPowerTarget,
   hasValidStructure,
 } from '@/lib/types/training-plan'
-import { PowerProfileSVG, type WorkoutSegmentInput } from './power-profile-svg'
-import { getPowerRangeColor } from '@/lib/types/power-zones'
+import { getStructureWorkTime } from '@/lib/utils/workout-structure-helpers'
+import { PowerProfileSVG } from './power-profile-svg'
+import { WorkoutStructureDisplay } from '@/components/workout/workout-structure-display'
 
 export interface MatchedActivityData {
   id: string // strava_activities.id
@@ -82,169 +79,6 @@ interface WorkoutDetailModalProps {
   workoutIndex?: number | undefined
   matchedActivity?: MatchedActivityData | null | undefined
   onMatchChange?: () => void
-}
-
-interface ExpandedSegment {
-  type: string
-  duration_min: number
-  power_low_pct: number
-  power_high_pct: number
-  description?: string | undefined
-}
-
-interface GroupedSegment {
-  type: 'repeat' | 'single'
-  repeat_count?: number
-  segments?: ExpandedSegment[]
-  segment?: ExpandedSegment
-}
-
-/**
- * Group WorkoutStructure into display-friendly format (Issue #96)
- */
-function groupStructure(structure: WorkoutStructure): GroupedSegment[] {
-  const grouped: GroupedSegment[] = []
-
-  for (const segment of structure.structure) {
-    const repetitions = segment.length.value
-
-    if (segment.type === 'repetition' && repetitions > 1) {
-      // Multi-step interval - create repeat group
-      const expandedSteps: ExpandedSegment[] = segment.steps.map((step) => {
-        const powerTarget = extractPowerTarget(step.targets)
-        return {
-          type: step.intensityClass,
-          duration_min: convertStepLengthToMinutes(step.length),
-          power_low_pct: powerTarget.minValue,
-          power_high_pct: powerTarget.maxValue,
-          description: step.name,
-        }
-      })
-
-      grouped.push({
-        type: 'repeat',
-        repeat_count: repetitions,
-        segments: expandedSteps,
-      })
-    } else {
-      // Single step or single repetition - add as individual segments
-      for (let rep = 0; rep < repetitions; rep++) {
-        for (const step of segment.steps) {
-          const powerTarget = extractPowerTarget(step.targets)
-          grouped.push({
-            type: 'single',
-            segment: {
-              type: step.intensityClass,
-              duration_min: convertStepLengthToMinutes(step.length),
-              power_low_pct: powerTarget.minValue,
-              power_high_pct: powerTarget.maxValue,
-              description: step.name,
-            },
-          })
-        }
-      }
-    }
-  }
-
-  return grouped
-}
-
-/**
- * Group legacy WorkoutSegments into display-friendly format
- */
-function groupSegments(segments: WorkoutSegment[]): GroupedSegment[] {
-  const grouped: GroupedSegment[] = []
-
-  segments.forEach((segment) => {
-    if (segment.sets != null && segment.work && segment.recovery) {
-      const workSeg: ExpandedSegment = {
-        type: 'work',
-        duration_min: segment.work.duration_min,
-        power_low_pct: segment.work.power_low_pct,
-        power_high_pct: segment.work.power_high_pct,
-        description: segment.description,
-      }
-      const recoverySeg: ExpandedSegment = {
-        type: 'recovery',
-        duration_min: segment.recovery.duration_min,
-        power_low_pct: segment.recovery.power_low_pct,
-        power_high_pct: segment.recovery.power_high_pct,
-      }
-      grouped.push({
-        type: 'repeat',
-        repeat_count: segment.sets,
-        segments: [workSeg, recoverySeg],
-      })
-    } else {
-      grouped.push({
-        type: 'single',
-        segment: {
-          type: segment.type,
-          duration_min: segment.duration_min,
-          power_low_pct: segment.power_low_pct ?? 50,
-          power_high_pct: segment.power_high_pct ?? 60,
-          description: segment.description,
-        },
-      })
-    }
-  })
-
-  return grouped
-}
-
-/**
- * Get grouped segments from either structure or legacy segments
- */
-function getGroupedSegments(workout: Workout): GroupedSegment[] {
-  // Prefer new structure format
-  if (hasValidStructure(workout.structure)) {
-    return groupStructure(workout.structure)
-  }
-  // Fall back to legacy segments
-  if (workout.segments && workout.segments.length > 0) {
-    return groupSegments(workout.segments)
-  }
-  return []
-}
-
-/**
- * Convert WorkoutSegment[] to WorkoutSegmentInput[] for PowerProfileSVG
- * WorkoutSegment is a more specific type that satisfies WorkoutSegmentInput
- */
-function toSegmentInput(segments: WorkoutSegment[] | undefined): WorkoutSegmentInput[] | undefined {
-  if (!segments) return undefined
-  // WorkoutSegment is compatible with WorkoutSegmentInput - explicit mapping for type safety
-  return segments.map((seg) => ({
-    type: seg.type,
-    duration_min: seg.duration_min,
-    power_low_pct: seg.power_low_pct,
-    power_high_pct: seg.power_high_pct,
-    description: seg.description,
-    sets: seg.sets,
-    work: seg.work,
-    recovery: seg.recovery,
-  }))
-}
-
-function formatPowerRange(ftp: number, lowPct: number, highPct: number): string {
-  const lowWatts = Math.round((lowPct / 100) * ftp)
-  const highWatts = Math.round((highPct / 100) * ftp)
-
-  if (lowPct === highPct) {
-    return `${lowWatts}W (${lowPct}%)`
-  }
-  return `${lowWatts}-${highWatts}W (${lowPct}-${highPct}%)`
-}
-
-function formatSegmentDuration(durationMin: number): string {
-  if (durationMin >= 60) {
-    const hours = Math.floor(durationMin / 60)
-    const mins = durationMin % 60
-    return `${hours}h${mins > 0 ? mins + 'm' : ''}`
-  } else if (durationMin < 1) {
-    return `${Math.round(durationMin * 60)}s`
-  }
-  return `${durationMin} min`
 }
 
 export function WorkoutDetailModal({
@@ -376,19 +210,7 @@ export function WorkoutDetailModal({
   if (!workout) return null
 
   const totalDuration = calculateWorkoutDuration(workout)
-  const workTime =
-    workout.segments?.reduce((sum, seg) => {
-      if (seg.type !== 'warmup' && seg.type !== 'cooldown' && seg.type !== 'recovery') {
-        let duration = seg.duration_min || 0
-        if (seg.sets && seg.work) {
-          duration = seg.work.duration_min * seg.sets
-        }
-        return sum + duration
-      }
-      return sum
-    }, 0) || 0
-
-  const groupedSegments = getGroupedSegments(workout)
+  const workTime = workout.structure ? getStructureWorkTime(workout.structure) : 0
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -446,7 +268,7 @@ export function WorkoutDetailModal({
                 <CardTitle className="text-sm font-medium">{t('workoutDescription')}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground leading-relaxed">
+                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
                   {workout.detailed_description || workout.description}
                 </p>
               </CardContent>
@@ -454,17 +276,13 @@ export function WorkoutDetailModal({
           )}
 
           {/* Power Profile Visualization */}
-          {(workout.structure?.structure?.length || (workout.segments && workout.segments.length > 0)) && (
+          {workout.structure?.structure?.length && (
             <Card className="gap-1 py-3">
               <CardHeader className="pb-0">
                 <CardTitle className="text-sm font-medium">{t('powerProfile')}</CardTitle>
               </CardHeader>
               <CardContent>
-                <PowerProfileSVG
-                  segments={toSegmentInput(workout.segments)}
-                  structure={workout.structure}
-                  ftp={ftp}
-                />
+                <PowerProfileSVG structure={workout.structure} ftp={ftp} />
               </CardContent>
             </Card>
           )}
@@ -613,247 +431,13 @@ export function WorkoutDetailModal({
           )}
 
           {/* Workout Structure */}
-          {groupedSegments.length > 0 && (
+          {hasValidStructure(workout.structure) && (
             <Card className="gap-1 py-3">
               <CardHeader className="pb-0">
                 <CardTitle className="text-sm font-medium">{t('workoutStructure')}</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                {groupedSegments.map((group, index) => {
-                  if (group.type === 'repeat' && group.segments) {
-                    // Repeat group with dashed amber border
-                    return (
-                      <div
-                        key={index}
-                        className="bg-amber-50/50 dark:bg-amber-950/20 border-2 border-dashed border-amber-400 dark:border-amber-600 rounded-lg p-4"
-                      >
-                        {/* Repeat header */}
-                        <div className="flex items-center gap-2 mb-3">
-                          <Badge className="bg-amber-500 hover:bg-amber-500 text-white font-bold px-2.5 py-0.5">
-                            {group.repeat_count}x
-                          </Badge>
-                          <span className="text-sm text-amber-700 dark:text-amber-400">
-                            {t('repeatSet', { count: group.repeat_count ?? 0 })}
-                          </span>
-                        </div>
-                        {/* Segments within repeat */}
-                        <div className="space-y-2">
-                          {group.segments.map((seg, segIndex) => (
-                            <div
-                              key={segIndex}
-                              className="bg-background rounded-lg overflow-hidden"
-                            >
-                              <div
-                                className="flex items-center gap-4 p-3 border-l-4"
-                                style={{
-                                  borderLeftColor: getPowerRangeColor(
-                                    seg.power_low_pct ?? 50,
-                                    seg.power_high_pct ?? 60
-                                  ),
-                                }}
-                              >
-                                <div className="font-semibold min-w-[70px]">
-                                  {formatSegmentDuration(seg.duration_min)}
-                                </div>
-                                <div
-                                  className="font-medium"
-                                  style={{
-                                    color: getPowerRangeColor(
-                                      seg.power_low_pct ?? 50,
-                                      seg.power_high_pct ?? 60
-                                    ),
-                                  }}
-                                >
-                                  {formatPowerRange(ftp, seg.power_low_pct, seg.power_high_pct)}
-                                </div>
-                                <div className="text-sm text-muted-foreground capitalize">
-                                  {seg.description || seg.type}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )
-                  }
-
-                  // Single segment row
-                  const seg = group.segment!
-                  return (
-                    <div key={index} className="bg-muted/30 rounded-lg overflow-hidden">
-                      <div
-                        className="flex items-center gap-4 p-3 border-l-4"
-                        style={{
-                          borderLeftColor: getPowerRangeColor(
-                            seg.power_low_pct ?? 50,
-                            seg.power_high_pct ?? 60
-                          ),
-                        }}
-                      >
-                        <div className="font-semibold min-w-[70px]">
-                          {formatSegmentDuration(seg.duration_min)}
-                        </div>
-                        <div
-                          className="font-medium"
-                          style={{
-                            color: getPowerRangeColor(
-                              seg.power_low_pct ?? 50,
-                              seg.power_high_pct ?? 60
-                            ),
-                          }}
-                        >
-                          {formatPowerRange(ftp, seg.power_low_pct, seg.power_high_pct)}
-                        </div>
-                        <div className="text-sm text-muted-foreground capitalize">
-                          {seg.description || seg.type}
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Matched Activity Section */}
-          {planInstanceId && workoutDate && (
-            <Card className="gap-1 py-3">
-              <CardHeader className="pb-0">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Activity className="h-4 w-4" />
-                  Completed Activity
-                </CardTitle>
-              </CardHeader>
               <CardContent>
-                {matchedActivity ? (
-                  <div className="space-y-3">
-                    {/* Matched Activity Info */}
-                    <div className="flex items-start gap-3 p-3 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg">
-                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-green-900 dark:text-green-100">
-                          {matchedActivity.name}
-                        </div>
-                        <div className="text-sm text-green-700 dark:text-green-300 mt-1">
-                          <span className="capitalize">
-                            {(matchedActivity.sport_type || 'Unknown').replace('_', ' ')}
-                          </span>
-                          {matchedActivity.tss != null && (
-                            <span className="ml-2">• {Math.round(matchedActivity.tss)} TSS</span>
-                          )}
-                          {matchedActivity.average_watts != null && (
-                            <span className="ml-2">
-                              • {Math.round(matchedActivity.average_watts)}W avg
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-xs text-green-600 dark:text-green-400 mt-1">
-                          {new Date(matchedActivity.start_date).toLocaleDateString()} •{' '}
-                          <span className="capitalize">{matchedActivity.match_type} match</span>
-                        </div>
-                      </div>
-                    </div>
-                    {/* Action Buttons */}
-                    <div className="flex gap-2">
-                      <Button variant="default" size="sm" asChild className="flex-1">
-                        <Link href={`/compliance/${matchedActivity.match_id}`}>
-                          <BarChart3 className="h-4 w-4 mr-2" />
-                          View Compliance
-                        </Link>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleUnmatch}
-                        disabled={isUnmatching}
-                      >
-                        {isUnmatching ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Unlink className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                ) : showActivitySelector ? (
-                  <div className="space-y-3">
-                    {loadingActivities ? (
-                      <div className="flex items-center justify-center py-4">
-                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                        <span className="ml-2 text-sm text-muted-foreground">
-                          Loading activities...
-                        </span>
-                      </div>
-                    ) : availableActivities.length === 0 ? (
-                      <div className="text-sm text-muted-foreground text-center py-4">
-                        No unmatched activities found within ±3 days of this workout
-                      </div>
-                    ) : (
-                      <>
-                        <Select value={selectedActivityId} onValueChange={setSelectedActivityId}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select an activity to match" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {availableActivities.map((activity) => (
-                              <SelectItem key={activity.id} value={activity.id}>
-                                <div className="flex flex-col">
-                                  <span className="font-medium">{activity.name}</span>
-                                  <span className="text-xs text-muted-foreground">
-                                    {new Date(activity.start_date).toLocaleDateString()} •{' '}
-                                    {(activity.type || 'Unknown').replace('_', ' ')}
-                                    {activity.tss != null && ` • ${Math.round(activity.tss)} TSS`}
-                                  </span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setShowActivitySelector(false)
-                              setSelectedActivityId('')
-                            }}
-                            className="flex-1"
-                          >
-                            Cancel
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={handleMatch}
-                            disabled={!selectedActivityId || isMatching}
-                            className="flex-1"
-                          >
-                            {isMatching ? (
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            ) : (
-                              <Link2 className="h-4 w-4 mr-2" />
-                            )}
-                            Match
-                          </Button>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    <div className="text-sm text-muted-foreground text-center py-2">
-                      No activity matched to this workout yet
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowActivitySelector(true)}
-                      className="w-full"
-                    >
-                      <Link2 className="h-4 w-4 mr-2" />
-                      Match Activity
-                    </Button>
-                  </div>
-                )}
+                <WorkoutStructureDisplay structure={workout.structure} />
               </CardContent>
             </Card>
           )}

@@ -11,10 +11,12 @@
 
 import { Clock, Zap, GripVertical, Plus, ChevronDown, ChevronUp } from 'lucide-react'
 import { useState } from 'react'
-import type { WorkoutLibraryItem, LibraryWorkoutSegment } from '@/lib/types/workout-library'
+import type { WorkoutLibraryItem } from '@/lib/types/workout-library'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { getWorkoutBorderColor, getIntensityBadgeColors } from '@/lib/constants/activity-styles'
+import { formatDuration } from '@/lib/types/training-plan'
+import { WorkoutStructureDisplay } from '@/components/workout/workout-structure-display'
 
 /**
  * Format workout type for display
@@ -45,30 +47,6 @@ function formatIntensity(intensity: string): string {
   return labels[intensity] ?? intensity
 }
 
-/**
- * Format duration in minutes to human-readable format
- */
-function formatDuration(minutes: number): string {
-  if (minutes < 60) {
-    return `${minutes}m`
-  }
-  const hours = Math.floor(minutes / 60)
-  const mins = minutes % 60
-  return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`
-}
-
-/**
- * Format zone for segment display
- */
-function formatZone(segment: LibraryWorkoutSegment): string {
-  if (segment.power_low_pct && segment.power_high_pct) {
-    if (segment.power_low_pct === segment.power_high_pct) {
-      return `${segment.power_low_pct}%`
-    }
-    return `${segment.power_low_pct}-${segment.power_high_pct}%`
-  }
-  return ''
-}
 
 /**
  * Props for WorkoutLibraryCard
@@ -101,7 +79,7 @@ export function WorkoutLibraryCard({
   const borderColor = getWorkoutBorderColor(workout.type)
   const intensityColor = getIntensityBadgeColors(workout.intensity)
 
-  const hasSegments = workout.segments && workout.segments.length > 0
+  const hasStructure = workout.structure?.structure && workout.structure.structure.length > 0
   const hasDescription = workout.detailed_description && workout.detailed_description.trim() !== ''
 
   return (
@@ -189,7 +167,7 @@ export function WorkoutLibraryCard({
       </div>
 
       {/* Expandable details - hidden in compact mode */}
-      {!compact && (hasDescription || hasSegments) && (
+      {!compact && (hasDescription || hasStructure) && (
         <>
           <Button
             variant="ghost"
@@ -219,29 +197,10 @@ export function WorkoutLibraryCard({
                 <p className="text-xs text-muted-foreground">{workout.detailed_description}</p>
               )}
 
-              {hasSegments && (
+              {hasStructure && (
                 <div className="space-y-1">
-                  <span className="text-xs font-medium">Segments:</span>
-                  <div className="grid gap-1">
-                    {workout.segments!.map((segment, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between text-xs bg-muted/50 rounded px-2 py-1"
-                      >
-                        <span className="flex items-center gap-2">
-                          <span className="font-medium">
-                            {formatDuration(segment.duration_min ?? 0)}
-                          </span>
-                          <span className="text-muted-foreground">
-                            {segment.description || segment.type}
-                          </span>
-                        </span>
-                        <span className="font-mono text-muted-foreground">
-                          {formatZone(segment)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                  <span className="text-xs font-medium">Structure:</span>
+                  <WorkoutStructureDisplay structure={workout.structure} />
                 </div>
               )}
             </div>

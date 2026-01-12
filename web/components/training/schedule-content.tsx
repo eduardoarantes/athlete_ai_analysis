@@ -72,41 +72,13 @@ export function ScheduleContent({ instances, locale }: ScheduleContentProps) {
     (libraryWorkout: WorkoutLibraryItem | null): Workout | null => {
       if (!libraryWorkout) return null
 
-      // Map library segments to workout segments (handle exactOptionalPropertyTypes)
-      const segments = libraryWorkout.segments.map((seg) => {
-        // Build segment with required fields
-        const segment: {
-          type: 'warmup' | 'interval' | 'recovery' | 'cooldown' | 'steady' | 'work' | 'tempo'
-          duration_min: number
-          power_low_pct?: number
-          power_high_pct?: number
-          description?: string
-          sets?: number
-          work?: { duration_min: number; power_low_pct: number; power_high_pct: number }
-          recovery?: { duration_min: number; power_low_pct: number; power_high_pct: number }
-        } = {
-          type: seg.type,
-          duration_min: seg.duration_min ?? 0,
-        }
-
-        // Add optional fields only if they exist
-        if (seg.power_low_pct !== undefined) segment.power_low_pct = seg.power_low_pct
-        if (seg.power_high_pct !== undefined) segment.power_high_pct = seg.power_high_pct
-        if (seg.description !== undefined) segment.description = seg.description
-        if (seg.sets !== undefined) segment.sets = seg.sets
-        if (seg.work !== undefined) segment.work = seg.work
-        if (seg.recovery !== undefined) segment.recovery = seg.recovery
-
-        return segment
-      })
-
       const workout: Workout = {
         weekday: 'Monday', // Placeholder
         name: libraryWorkout.name,
         type: libraryWorkout.type,
         tss: libraryWorkout.base_tss,
         description: libraryWorkout.detailed_description || `${libraryWorkout.type} workout`,
-        segments,
+        structure: libraryWorkout.structure,
         source: 'library',
         library_workout_id: libraryWorkout.id,
       }

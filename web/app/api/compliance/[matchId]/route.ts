@@ -24,8 +24,9 @@ import {
   getWorkoutFromOverrides,
   getWorkoutFromPlan,
 } from '@/lib/utils/workout-overrides-helpers'
-import type { WorkoutOverrides, TrainingPlanData, WorkoutSegment } from '@/lib/types/training-plan'
+import type { WorkoutOverrides, TrainingPlanData } from '@/lib/types/training-plan'
 import type { Json } from '@/lib/types/database'
+import { hasValidStructure } from '@/lib/types/training-plan'
 
 interface PlanInstanceRow {
   id: string
@@ -253,13 +254,11 @@ export async function GET(
       )
     }
 
-    // Get workout segments
-    const segments: WorkoutSegment[] = workout.segments || []
-
-    if (segments.length === 0) {
+    // Check if workout has valid structure
+    if (!hasValidStructure(workout.structure)) {
       return NextResponse.json(
         {
-          error: 'Workout has no segments defined for compliance analysis',
+          error: 'Workout has no structure defined for compliance analysis',
           workout_name: workout.name,
           workout_type: workout.type,
           has_library_id: !!workout.library_workout_id,
@@ -312,7 +311,7 @@ export async function GET(
     }
 
     // Run compliance analysis
-    const analysis = analyzeWorkoutCompliance(segments, powerStream, ftp)
+    const analysis = analyzeWorkoutCompliance(undefined, powerStream, ftp, workout.structure)
 
     // Store analysis to database
     let savedAnalysisId: string | null = null
@@ -400,7 +399,7 @@ export async function GET(
         athlete_ftp: ftp,
         athlete_lthr: lthr,
         power_stream_length: powerStream.length,
-        planned_segments: segments.length,
+        planned_segments: analysis.overall.segments_total,
         has_heartrate: !!streams.heartrate?.data?.length,
         cached: false,
         analysis_id: savedAnalysisId,

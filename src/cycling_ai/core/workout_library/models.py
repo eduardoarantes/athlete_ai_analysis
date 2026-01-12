@@ -4,19 +4,29 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+from cycling_ai.core.workout_library.structure_helpers import WorkoutStructure
+
 
 class IntervalPart(BaseModel):
-    """Work or recovery part of an interval set."""
+    """
+    Work or recovery part of an interval set.
+
+    DEPRECATED: Legacy format. Use WorkoutStructure instead.
+    Kept for backward compatibility during migration.
+    """
 
     duration_min: float
-    power_low_pct: int
-    power_high_pct: int
+    power_low_pct: float
+    power_high_pct: float
     description: str
 
 
 class WorkoutSegment(BaseModel):
     """
     A segment within a workout.
+
+    DEPRECATED: Legacy format. Use WorkoutStructure instead.
+    Kept for backward compatibility during migration.
 
     Can be either:
     - Simple segment (warmup, cooldown, steady, recovery) with direct duration/power
@@ -27,8 +37,8 @@ class WorkoutSegment(BaseModel):
 
     # For simple segments (warmup, cooldown, steady, recovery)
     duration_min: float | None = None
-    power_low_pct: int | None = None
-    power_high_pct: int | None = None
+    power_low_pct: float | None = None
+    power_high_pct: float | None = None
     description: str | None = None
 
     # For interval sets
@@ -61,12 +71,13 @@ class Workout(BaseModel):
     suitable_weekdays: (
         list[Literal["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]] | None
     ) = None  # Optional
-    segments: list[WorkoutSegment]
+    structure: WorkoutStructure  # Multi-step interval support (Issue #96)
     base_duration_min: float
     base_tss: float
     variable_components: VariableComponents | None = None
     source_file: str | None = None  # Optional for new workouts
     source_format: str | None = None  # Optional for new workouts
+    signature: str | None = None  # SHA-256 hash for duplicate detection (Issue #97)
 
 
 class WorkoutLibrary(BaseModel):

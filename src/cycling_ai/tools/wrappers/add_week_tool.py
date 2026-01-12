@@ -659,10 +659,10 @@ class AddWeekDetailsTool(BaseTool):
                     raise ValueError(f"Workout {i + 1} missing 'weekday' field")
                 if "description" not in workout:
                     raise ValueError(f"Workout {i + 1} missing 'description' field")
-                if "segments" not in workout or not workout["segments"]:
+                if "structure" not in workout or not workout["structure"]:
                     raise ValueError(
-                        f"Workout {i + 1} missing 'segments' array or array is empty. "
-                        f"Each workout must have at least one segment."
+                        f"Workout {i + 1} missing 'structure' field or structure is empty. "
+                        f"Each workout must have a valid WorkoutStructure."
                     )
 
                 # Validate workout is on designated training day

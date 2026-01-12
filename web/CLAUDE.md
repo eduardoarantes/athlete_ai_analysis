@@ -366,6 +366,62 @@ function MyComponent() {
 
 ---
 
+## Workout Structure Display Component
+
+**IMPORTANT:** When displaying workout structure anywhere in the application, **always use the `WorkoutStructureDisplay` component**. Never implement custom rendering logic.
+
+**Location:** `@/components/workout/workout-structure-display`
+
+**Purpose:** Provides consistent, reusable visualization of `WorkoutStructure` format with proper support for:
+- Single steps (warmup, cooldown, steady state)
+- 2-step intervals (work + recovery)
+- Multi-step intervals (3+ steps like Z3→Z5→Z2)
+
+### Usage
+
+```typescript
+import { WorkoutStructureDisplay } from '@/components/workout/workout-structure-display'
+import type { WorkoutStructure } from '@/lib/types/training-plan'
+
+function MyWorkoutComponent({ workout }: { workout: Workout }) {
+  if (!workout.structure) {
+    return <div>No structure available</div>
+  }
+
+  return (
+    <div>
+      <h3>Workout Details</h3>
+      <WorkoutStructureDisplay structure={workout.structure} />
+    </div>
+  )
+}
+```
+
+### Features
+
+- **Automatic Grouping:** Repetition blocks are automatically displayed with amber-bordered boxes and repetition count badges
+- **Power Zone Colors:** Steps are color-coded by power intensity (recovery → endurance → tempo → threshold → VO2 Max)
+- **Duration Display:** Shows duration for each step and total duration for repetition blocks
+- **Dark Mode Support:** Fully styled for both light and dark modes
+- **Responsive:** Works on all screen sizes
+
+### Key Principle
+
+**Never implement custom workout structure rendering.** The component handles all edge cases and provides consistent styling across the application.
+
+**Examples of correct usage:**
+- ✅ Admin workouts page
+- ✅ Workout detail modal
+- ✅ Plan builder workout cards
+
+**Examples of incorrect usage:**
+- ❌ Custom `map()` loops over structure.structure
+- ❌ Manual power zone color calculations
+- ❌ Custom repetition grouping logic
+- ❌ Using `structureToDisplaySegments()` for rendering (legacy helper, use only if you need flattened data for non-display purposes)
+
+---
+
 ## Activity & Workout Styles Library
 
 Use the shared styles library for consistent activity and workout styling across the application.

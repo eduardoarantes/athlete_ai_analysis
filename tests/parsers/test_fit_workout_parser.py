@@ -416,7 +416,8 @@ class TestParsedWorkout:
         assert library_format["name"] == "Threshold workout"
         assert library_format["type"] == "threshold"
         assert library_format["intensity"] == "hard"
-        assert library_format["segments"] == segments
+        assert "structure" in library_format
+        assert library_format["structure"] is not None
         assert library_format["base_duration_min"] == 55
         assert library_format["base_tss"] == 85
         assert "suitable_phases" in library_format
@@ -753,7 +754,7 @@ class TestFitWorkoutParser:
         library_format = workout.to_library_format()
         assert "id" in library_format
         assert library_format["name"] == "Minute Monster (Power)"
-        assert "segments" in library_format
+        assert "structure" in library_format
         assert "base_tss" in library_format
 
     def test_parse_complete_workout_vo2max_booster(self, parser, sample_fit_dir):
@@ -799,4 +800,4 @@ class TestFitWorkoutParser:
             library_format = workout.to_library_format()
             assert "id" in library_format
             assert "name" in library_format
-            assert "segments" in library_format
+            assert "structure" in library_format

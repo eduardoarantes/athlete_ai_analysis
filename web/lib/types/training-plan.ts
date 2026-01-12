@@ -212,12 +212,21 @@ export function calculateStructureDuration(structure: WorkoutStructure): number 
 }
 
 // =========================================================================
-// Legacy WorkoutSegment Type (current format, will be migrated)
+// Legacy WorkoutSegment Type (Issue #96/97 - Deprecated)
 // =========================================================================
 
 /**
- * Current workout segment format - will be migrated to StructuredWorkoutSegment
+ * @deprecated Legacy workout segment format - use StructuredWorkoutSegment instead (Issue #96/97)
+ * This interface is kept for backward compatibility with old data but should not be used in new code.
+ * All new workouts use WorkoutStructure with StructuredWorkoutSegment[] instead.
+ *
+ * Migration status:
+ * - ✅ UI components: Fully migrated to WorkoutStructure
+ * - ✅ Data files: All workouts use WorkoutStructure format
+ * - ⚠️  Some helper types keep this for backward compatibility with stored overrides
+ *
  * @see StructuredWorkoutSegment for the new multi-step interval format
+ * @see WorkoutStructure for the complete workout structure format
  */
 export interface WorkoutSegment {
   type: 'warmup' | 'interval' | 'recovery' | 'cooldown' | 'steady' | 'work' | 'tempo'
@@ -260,10 +269,8 @@ export interface Workout {
     | 'rest'
     | string
   tss?: number
-  /** NEW: Full workout structure with multi-step interval support (Issue #96) */
+  /** Full workout structure with multi-step interval support (Issue #96) */
   structure?: WorkoutStructure
-  /** Current segment format - will be migrated to structure */
-  segments?: WorkoutSegment[]
   /** Source of the workout: 'library' for pre-defined workouts, 'llm' for AI-generated */
   source?: 'library' | 'llm'
   /** ID of the workout in the library - NanoID format (only present when source='library') */
@@ -348,6 +355,8 @@ export interface TrainingPlan {
   /** Source metadata tracking how the plan was generated */
   metadata: PlanSourceMetadata | null
   status: 'draft' | 'active' | 'completed' | 'archived' | null
+  /** Source of plan creation: 'custom_builder', 'ai', 'imported', etc. */
+  created_from?: string | null
   created_at: string
   updated_at: string
   /** @deprecated Will be removed after migration - use PlanInstance.start_date instead */
@@ -365,10 +374,8 @@ export interface LibraryWorkoutData {
   tss: number
   duration_min?: number | undefined
   description?: string | undefined
-  /** NEW: Full workout structure with multi-step interval support (Issue #96) */
+  /** Full workout structure with multi-step interval support (Issue #96) */
   structure?: WorkoutStructure | undefined
-  /** Current segment format - will be migrated to structure */
-  segments?: WorkoutSegment[] | undefined
 }
 
 /**
@@ -545,13 +552,23 @@ export function formatFileSize(bytes: number): string {
 
 /**
  * Format duration in minutes to human-readable string
+ * - Less than 1 minute: shows in seconds (e.g., "30s")
+ * - 1-59 minutes: shows with max 1 decimal (e.g., "5m", "5.5m")
+ * - 60+ minutes: shows hours and minutes (e.g., "1h 30m")
  */
 export function formatDuration(totalMinutes: number): string {
+  if (totalMinutes < 1) {
+    // Less than 1 minute - show in seconds
+    return `${Math.round(totalMinutes * 60)}s`
+  }
+
   const hours = Math.floor(totalMinutes / 60)
   const minutes = Math.round(totalMinutes % 60)
 
   if (hours === 0) {
-    return `${minutes}m`
+    // Less than an hour - show with max 1 decimal if needed
+    const rounded = Math.round(totalMinutes * 10) / 10
+    return Number.isInteger(rounded) ? `${rounded}m` : `${rounded.toFixed(1)}m`
   }
   if (minutes === 0) {
     return `${hours}h`
@@ -560,29 +577,11 @@ export function formatDuration(totalMinutes: number): string {
 }
 
 /**
- * Calculate total duration of a workout from its structure or legacy segments
- * NEW: Supports WorkoutStructure with multi-step intervals (Issue #96)
+ * Calculate total duration of a workout from its structure
  */
 export function calculateWorkoutDuration(workout: Workout): number {
-  // NEW: Handle WorkoutStructure format
   if (workout.structure?.structure) {
     return calculateStructureDuration(workout.structure)
   }
-
-  // Legacy format handling
-  if (!workout.segments || workout.segments.length === 0) {
-    return 0
-  }
-
-  return workout.segments.reduce((total, segment) => {
-    let segmentDuration = segment.duration_min || 0
-
-    // Handle interval sets
-    if (segment.sets && segment.work && segment.recovery) {
-      const setDuration = (segment.work.duration_min + segment.recovery.duration_min) * segment.sets
-      segmentDuration += setDuration
-    }
-
-    return total + segmentDuration
-  }, 0)
+  return 0
 }

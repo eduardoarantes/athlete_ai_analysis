@@ -26,6 +26,11 @@ from typing import Any
 from cycling_ai.core.workout_library.loader import WorkoutLibraryLoader
 from cycling_ai.core.workout_library.models import Workout
 from cycling_ai.core.workout_library.selector import WorkoutSelector
+from cycling_ai.core.workout_library.structure_helpers import (
+    calculate_structure_duration,
+    create_strength_structure,
+    get_main_segment_from_structure,
+)
 from cycling_ai.tools.wrappers.add_week_tool import AddWeekDetailsTool
 
 logger = logging.getLogger(__name__)
@@ -199,20 +204,14 @@ class LibraryBasedTrainingPlanningWeeks:
             "workout_type": "strength",  # Explicit type for validation
             "source": "library",  # Strength workouts are pre-defined templates
             "library_workout_id": "strength_default",
-            "segments": [
-                {
-                    "type": "strength",
-                    "duration_min": 30,
-                    "description": "Strength training session",
-                }
-            ],
+            "structure": create_strength_structure(duration_min=45),
         }
 
     def _is_strength_workout(self, workout: dict[str, Any]) -> bool:
         """
         Check if workout is a strength workout.
 
-        Uses explicit workout_type field if available (from library workouts).
+        Uses explicit workout_type field (preferred for library workouts).
         Falls back to keyword matching for backward compatibility.
 
         Args:
@@ -226,13 +225,9 @@ class LibraryBasedTrainingPlanningWeeks:
         if workout_type:
             return bool(workout_type == "strength")
 
-        # Fallback: keyword matching (old behavior)
+        # Fallback: keyword matching (old behavior for custom plans)
         description = workout.get("description", "").lower()
-        if "strength" in description:
-            return True
-
-        segments = workout.get("segments", [])
-        return any("strength" in seg.get("type", "").lower() for seg in segments)
+        return "strength" in description
 
     def _load_weekly_overview(self, plan_id: str) -> list[dict[str, Any]]:
         """
@@ -271,36 +266,24 @@ class LibraryBasedTrainingPlanningWeeks:
         weekly_overview: list[dict[str, Any]] = data["weekly_overview"]
         return weekly_overview
 
-    def _find_main_segment(self, workout: dict[str, Any]) -> dict[str, Any]:
+    def _find_main_segment(self, workout: dict[str, Any]) -> dict[str, Any] | None:
         """
-        Find the main segment to extend (steady/endurance or longest).
+        Find the main workout segment (highest intensity active segment).
 
-        Priority:
-        1. First 'steady' segment (Z2 endurance)
-        2. First 'tempo' segment
-        3. Longest segment
+        Used for duration adjustments and workout scaling with WorkoutStructure format.
 
         Args:
-            workout: Workout dictionary with segments
+            workout: Workout dictionary with structure
 
         Returns:
-            The main segment dictionary (mutable reference)
+            Dict with segment info (segment_index, step, power_low_pct, power_high_pct, duration_min)
+            or None if no suitable segment found
         """
-        segments: list[dict[str, Any]] = workout.get("segments", [])
+        structure = workout.get("structure")
+        if not structure:
+            return None
 
-        # Try to find steady segment
-        for seg in segments:
-            if seg.get("type") == "steady":
-                return seg
-
-        # Try tempo
-        for seg in segments:
-            if seg.get("type") == "tempo":
-                return seg
-
-        # Fallback: longest segment
-        result: dict[str, Any] = max(segments, key=lambda s: s.get("duration_min", 0))
-        return result
+        return get_main_segment_from_structure(structure)
 
     def _scale_weekend_workouts(
         self,
@@ -311,6 +294,7 @@ class LibraryBasedTrainingPlanningWeeks:
         Scale weekend endurance rides to fill time deficit.
 
         Rounds to nearest 10 minutes for practical scheduling.
+        Works with WorkoutStructure format.
 
         Args:
             weekend_workouts: Weekend endurance workout objects
@@ -330,17 +314,39 @@ class LibraryBasedTrainingPlanningWeeks:
             # Clone workout (don't modify library)
             workout_copy = json.loads(json.dumps(workout))
 
-            # Find main segment (steady segment for endurance rides)
-            main_segment = self._find_main_segment(workout_copy)
+            # Find main segment (highest intensity active step)
+            main_segment_info = self._find_main_segment(workout_copy)
 
-            # Extend/shrink
-            new_duration = main_segment["duration_min"] + extension_per_workout
+            if not main_segment_info:
+                # No main segment found, return as-is
+                scaled_workouts.append(workout_copy)
+                continue
+
+            # Extract step to modify
+            segment_index = main_segment_info["segment_index"]
+            step_info = main_segment_info["step"]
+            current_duration = main_segment_info["duration_min"]
+
+            # Calculate new duration
+            new_duration = current_duration + extension_per_workout
 
             # Clamp to reasonable bounds
-            new_duration = max(10, min(new_duration, 150))  # 10-150min for segment
+            new_duration = max(10, min(new_duration, 150))  # 10-150min for step
 
             # Round to nearest 10 minutes for practical scheduling
-            main_segment["duration_min"] = round(new_duration / 10) * 10
+            new_duration = round(new_duration / 10) * 10
+
+            # Update the step duration in the structure
+            structure = workout_copy.get("structure", {})
+            segments = structure.get("structure", [])
+            if segment_index < len(segments):
+                segment = segments[segment_index]
+                # Find and update the step
+                for step in segment.get("steps", []):
+                    # Match by name and current duration
+                    if step.get("name") == step_info.get("name"):
+                        step["length"]["value"] = new_duration
+                        break
 
             scaled_workouts.append(workout_copy)
 
@@ -416,9 +422,10 @@ class LibraryBasedTrainingPlanningWeeks:
                             f"day {day['weekday']}, type {workout_type}, phase {week['phase']}"
                         )
 
+                    duration = calculate_structure_duration(workout.structure) if workout.structure else 0
                     logger.info(
                         f"    ✓ Selected workout: {workout.name} (id={workout.id}, "
-                        f"duration={sum(s.duration_min or 0 for s in workout.segments):.0f}min)"
+                        f"duration={duration:.0f}min)"
                     )
 
                     # Update trackers immediately after selection
@@ -435,28 +442,6 @@ class LibraryBasedTrainingPlanningWeeks:
                     # Track workout source for debugging/admin purposes
                     workout_dict["source"] = "library"
                     workout_dict["library_workout_id"] = workout.id
-
-                    # Ensure all segments have duration_min calculated (for interval sets)
-                    for segment in workout_dict.get("segments", []):
-                        if segment.get("duration_min") is None:
-                            if segment.get("sets") and segment.get("work") and segment.get("recovery"):
-                                # Calculate duration for interval sets
-                                work_duration = segment["work"].get("duration_min", 0) or 0
-                                recovery_duration = segment["recovery"].get("duration_min", 0) or 0
-                                segment["duration_min"] = segment["sets"] * (work_duration + recovery_duration)
-                            else:
-                                # Fallback: set to 0 if we can't calculate
-                                segment["duration_min"] = 0
-
-                        # Copy power zones from work interval if missing (for interval segments)
-                        if segment.get("power_low_pct") is None and segment.get("work"):
-                            segment["power_low_pct"] = segment["work"].get("power_low_pct", 50)
-                            if segment.get("power_high_pct") is None:
-                                segment["power_high_pct"] = segment["work"].get("power_high_pct", 60)
-
-                        # Ensure description exists
-                        if not segment.get("description"):
-                            segment["description"] = f"{segment['type'].title()} segment"
 
                 # Add workout to appropriate list
                 workout_category = "weekend" if is_weekend else "weekday"
@@ -478,13 +463,13 @@ class LibraryBasedTrainingPlanningWeeks:
         # Calculate current durations (EXCLUDE strength workouts from time budget)
         # Per design: strength workouts don't count toward weekly cycling hours
         weekday_minutes = sum(
-            sum(seg["duration_min"] for seg in w["segments"])
+            calculate_structure_duration(w.get("structure", {}))
             for w in weekday_workouts
             if not self._is_strength_workout(w)
         )
 
         weekend_minutes_before = sum(
-            sum(seg["duration_min"] for seg in w["segments"])
+            calculate_structure_duration(w.get("structure", {}))
             for w in weekend_workouts
             if not self._is_strength_workout(w)
         )
@@ -504,10 +489,14 @@ class LibraryBasedTrainingPlanningWeeks:
 
         # Log for debugging (cycling time only, strength excluded from budget)
         actual_cycling_minutes = sum(
-            sum(seg["duration_min"] for seg in w["segments"]) for w in all_workouts if not self._is_strength_workout(w)
+            calculate_structure_duration(w.get("structure", {}))
+            for w in all_workouts
+            if not self._is_strength_workout(w)
         )
         actual_strength_minutes = sum(
-            sum(seg["duration_min"] for seg in w["segments"]) for w in all_workouts if self._is_strength_workout(w)
+            calculate_structure_duration(w.get("structure", {}))
+            for w in all_workouts
+            if self._is_strength_workout(w)
         )
         actual_total_minutes = actual_cycling_minutes + actual_strength_minutes
 
@@ -526,7 +515,7 @@ class LibraryBasedTrainingPlanningWeeks:
         # Debug: Log each workout being returned
         logger.info(f"Returning {len(all_workouts)} workouts to add_week_tool:")
         for i, w in enumerate(all_workouts):
-            workout_dur = sum(seg.get("duration_min", 0) for seg in w.get("segments", []))
+            workout_dur = calculate_structure_duration(w.get("structure", {}))
             is_strength = self._is_strength_workout(w)
             logger.info(
                 f"  [{i + 1}] {w.get('weekday')}: {w.get('description', 'N/A')[:40]} "
