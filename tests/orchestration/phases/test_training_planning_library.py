@@ -8,6 +8,7 @@ import pytest
 
 from cycling_ai.core.workout_library.loader import WorkoutLibraryLoader
 from cycling_ai.core.workout_library.models import Workout
+from cycling_ai.core.workout_library.structure_helpers import legacy_segments_to_structure
 from cycling_ai.orchestration.phases.training_planning_library import (
     LibraryBasedTrainingPlanningWeeks,
 )
@@ -25,7 +26,7 @@ def mock_workout() -> Workout:
         intensity="easy",
         suitable_phases=["Base", "Build"],
         suitable_weekdays=["Monday", "Wednesday", "Friday"],
-        segments=[
+        structure=legacy_segments_to_structure([
             {
                 "type": "warmup",
                 "duration_min": 10,
@@ -47,7 +48,7 @@ def mock_workout() -> Workout:
                 "power_high_pct": 60,
                 "description": "Easy cooldown",
             },
-        ],
+        ]),
         base_duration_min=65,
         base_tss=65,
         variable_components=None,
@@ -422,5 +423,5 @@ class TestLibraryBasedTrainingPlanningWeeks:
             for workout in workouts:
                 assert "name" in workout
                 assert "type" in workout
-                assert "segments" in workout
+                assert "structure" in workout
                 assert "base_tss" in workout
