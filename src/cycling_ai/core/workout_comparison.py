@@ -1326,13 +1326,23 @@ class WorkoutComparer:
         """
         Parse a single planned workout from JSON data.
 
+        Handles both new structure format and legacy segments format.
+
         Args:
             workout_data: Workout dictionary from training plan JSON
 
         Returns:
             PlannedWorkout object
         """
+        from cycling_ai.core.workout_library.structure_helpers import legacy_segments_to_structure
+
         date = datetime.strptime(workout_data["date"], "%Y-%m-%d")
+
+        # Get structure - convert from legacy segments if needed
+        structure = workout_data.get("structure")
+        if structure is None and "segments" in workout_data:
+            # Convert legacy segments format to WorkoutStructure
+            structure = legacy_segments_to_structure(workout_data["segments"])
 
         return PlannedWorkout(
             date=date,
@@ -1340,7 +1350,7 @@ class WorkoutComparer:
             workout_type=workout_data.get("type", workout_data.get("workout_type", "endurance")),
             total_duration_minutes=float(workout_data.get("total_duration_minutes", 0)),
             planned_tss=float(workout_data.get("tss", workout_data.get("planned_tss", 0))),
-            structure=workout_data.get("structure"),
+            structure=structure,
             description=workout_data.get("detailed_description", workout_data.get("description", "")),
         )
 

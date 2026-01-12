@@ -441,8 +441,8 @@ def legacy_segments_to_structure(segments: list[dict[str, Any]]) -> dict[str, An
     for segment in segments:
         seg_type = segment.get("type", "steady")
 
-        if seg_type == "interval":
-            # Multi-step interval (work + recovery)
+        if seg_type == "interval" and "work" in segment:
+            # Multi-step interval (work + recovery) - proper format with work/recovery fields
             sets = segment.get("sets", 1)
             work = segment.get("work", {})
             recovery = segment.get("recovery")
