@@ -3,11 +3,60 @@
 import pytest
 
 from cycling_ai.core.workout_library.loader import WorkoutLibraryLoader
-from cycling_ai.core.workout_library.models import Workout, WorkoutLibrary
+from cycling_ai.core.workout_library.models import (
+    VariableComponents,
+    Workout,
+    WorkoutLibrary,
+)
 from cycling_ai.core.workout_library.selector import (
     VarietyTracker,
     WorkoutSelector,
 )
+from cycling_ai.core.workout_library.structure_helpers import (
+    legacy_segments_to_structure,
+)
+
+
+# =============================================================================
+# Test Fixtures
+# =============================================================================
+
+
+def create_mock_workout(
+    workout_id: str,
+    workout_type: str = "endurance",
+    intensity: str = "moderate",
+    suitable_phases: list[str] | None = None,
+    suitable_weekdays: list[str] | None = None,
+    base_duration_min: float = 60.0,
+    base_tss: float = 50.0,
+    variable_components: VariableComponents | None = None,
+) -> Workout:
+    """Create a mock workout for testing."""
+    if suitable_phases is None:
+        suitable_phases = ["Base", "Build"]
+    if suitable_weekdays is None:
+        suitable_weekdays = ["Monday", "Wednesday", "Friday"]
+
+    return Workout(
+        id=workout_id,
+        name=f"Test {workout_type.capitalize()} Workout",
+        detailed_description=f"A test {workout_type} workout",
+        type=workout_type,
+        intensity=intensity,
+        suitable_phases=suitable_phases,
+        suitable_weekdays=suitable_weekdays,
+        structure=legacy_segments_to_structure([
+            {"type": "warmup", "duration_min": 10, "power_low_pct": 50, "power_high_pct": 60, "description": "Warmup"},
+            {"type": "steady", "duration_min": 40, "power_low_pct": 65, "power_high_pct": 75, "description": "Main"},
+            {"type": "cooldown", "duration_min": 10, "power_low_pct": 50, "power_high_pct": 60, "description": "Cooldown"},
+        ]),
+        base_duration_min=base_duration_min,
+        base_tss=base_tss,
+        variable_components=variable_components,
+        source_file="test_fixture",
+        source_format="mock",
+    )
 
 
 # =============================================================================
@@ -79,13 +128,22 @@ class TestWorkoutScoring:
         library = loader.load_library()
         return WorkoutSelector(library)
 
-    def test_exact_match_high_score(self, selector: WorkoutSelector) -> None:
-        """Test exact match gets high score."""
-        # Find a workout with all required fields
-        workout = next(
-            w for w in selector.library.workouts
-            if w.suitable_phases and w.suitable_weekdays
+    @pytest.fixture
+    def mock_workout(self) -> Workout:
+        """Create a mock workout with all fields populated for testing."""
+        return create_mock_workout(
+            workout_id="test_workout_1",
+            workout_type="endurance",
+            intensity="moderate",
+            suitable_phases=["Base", "Build"],
+            suitable_weekdays=["Monday", "Wednesday", "Friday"],
+            base_duration_min=60.0,
+            base_tss=50.0,
         )
+
+    def test_exact_match_high_score(self, selector: WorkoutSelector, mock_workout: Workout) -> None:
+        """Test exact match gets high score."""
+        workout = mock_workout
 
         score = selector.score_workout(
             workout=workout,
@@ -101,9 +159,9 @@ class TestWorkoutScoring:
         # Exact match should score close to 100
         assert score >= 95
 
-    def test_type_mismatch_low_score(self, selector: WorkoutSelector) -> None:
+    def test_type_mismatch_low_score(self, selector: WorkoutSelector, mock_workout: Workout) -> None:
         """Test type mismatch gets low score."""
-        workout = next(w for w in selector.library.workouts if w.suitable_phases and w.suitable_weekdays)
+        workout = mock_workout
 
         # Use a different type (non-compatible)
         # Find a type that is NOT compatible with workout.type
@@ -133,9 +191,9 @@ class TestWorkoutScoring:
         # Max: phase (25) + weekday (15) + duration (15) + variety (5) = 60
         assert score < 65
 
-    def test_variety_penalty(self, selector: WorkoutSelector) -> None:
+    def test_variety_penalty(self, selector: WorkoutSelector, mock_workout: Workout) -> None:
         """Test variety penalty for recent workouts."""
-        workout = next(w for w in selector.library.workouts if w.suitable_phases and w.suitable_weekdays)
+        workout = mock_workout
 
         score_fresh = selector.score_workout(
             workout=workout,
@@ -164,9 +222,12 @@ class TestWorkoutScoring:
 
     def test_compatible_type_partial_credit(self, selector: WorkoutSelector) -> None:
         """Test compatible types get partial credit."""
-        # Find an endurance workout
-        endurance_workout = next(
-            w for w in selector.library.workouts if w.type == "endurance"
+        # Create an endurance workout for testing
+        endurance_workout = create_mock_workout(
+            workout_id="test_endurance",
+            workout_type="endurance",
+            suitable_phases=["Base"],
+            suitable_weekdays=["Monday"],
         )
 
         # Request recovery (compatible with endurance)
@@ -276,13 +337,41 @@ class TestTSSAdjustment:
         library = loader.load_library()
         return WorkoutSelector(library)
 
-    def test_no_adjustment_within_tolerance(self, selector: WorkoutSelector) -> None:
-        """Test no adjustment when within tolerance."""
-        # Find workout with variable components
-        workout = next(
-            w for w in selector.library.workouts
-            if w.variable_components is not None
+    @pytest.fixture
+    def workout_with_duration_vc(self) -> Workout:
+        """Create a workout with duration variable component."""
+        return create_mock_workout(
+            workout_id="test_duration_vc",
+            base_duration_min=60.0,
+            base_tss=50.0,
+            variable_components=VariableComponents(
+                adjustable_field="duration",
+                min_value=30.0,
+                max_value=90.0,
+            ),
         )
+
+    @pytest.fixture
+    def workout_with_sets_vc(self) -> Workout:
+        """Create a workout with sets variable component."""
+        return create_mock_workout(
+            workout_id="test_sets_vc",
+            base_duration_min=60.0,
+            base_tss=50.0,
+            variable_components=VariableComponents(
+                adjustable_field="sets",
+                min_value=3.0,
+                max_value=8.0,
+                tss_per_unit=10.0,
+                duration_per_unit_min=12.0,
+            ),
+        )
+
+    def test_no_adjustment_within_tolerance(
+        self, selector: WorkoutSelector, workout_with_duration_vc: Workout
+    ) -> None:
+        """Test no adjustment when within tolerance."""
+        workout = workout_with_duration_vc
 
         target_tss = workout.base_tss * 1.05  # 5% over (within 15% tolerance)
 
@@ -296,14 +385,11 @@ class TestTSSAdjustment:
         assert adjusted.base_tss == workout.base_tss
         assert adjusted.base_duration_min == workout.base_duration_min
 
-    def test_adjustment_with_sets(self, selector: WorkoutSelector) -> None:
+    def test_adjustment_with_sets(
+        self, selector: WorkoutSelector, workout_with_sets_vc: Workout
+    ) -> None:
         """Test adjustment using sets variable component."""
-        # Find workout with adjustable sets
-        workout = next(
-            w for w in selector.library.workouts
-            if w.variable_components is not None
-            and w.variable_components.adjustable_field == "sets"
-        )
+        workout = workout_with_sets_vc
 
         target_tss = workout.base_tss * 1.3  # 30% over (requires adjustment)
 
@@ -317,14 +403,11 @@ class TestTSSAdjustment:
         assert adjusted.base_tss > workout.base_tss
         assert adjusted.base_duration_min > workout.base_duration_min
 
-    def test_adjustment_with_duration(self, selector: WorkoutSelector) -> None:
+    def test_adjustment_with_duration(
+        self, selector: WorkoutSelector, workout_with_duration_vc: Workout
+    ) -> None:
         """Test adjustment using duration variable component."""
-        # Find workout with adjustable duration
-        workout = next(
-            w for w in selector.library.workouts
-            if w.variable_components is not None
-            and w.variable_components.adjustable_field == "duration"
-        )
+        workout = workout_with_duration_vc
 
         target_tss = workout.base_tss * 0.7  # 30% under (requires adjustment)
 
@@ -338,12 +421,11 @@ class TestTSSAdjustment:
         assert adjusted.base_tss < workout.base_tss
         assert adjusted.base_duration_min < workout.base_duration_min
 
-    def test_adjustment_respects_bounds(self, selector: WorkoutSelector) -> None:
+    def test_adjustment_respects_bounds(
+        self, selector: WorkoutSelector, workout_with_duration_vc: Workout
+    ) -> None:
         """Test adjustment respects min/max bounds."""
-        workout = next(
-            w for w in selector.library.workouts
-            if w.variable_components is not None
-        )
+        workout = workout_with_duration_vc
 
         # Request TSS way above max possible
         target_tss = workout.base_tss * 10.0

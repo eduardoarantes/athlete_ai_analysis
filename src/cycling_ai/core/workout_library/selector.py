@@ -315,9 +315,9 @@ class WorkoutSelector:
 
     def _get_current_value(self, workout: Workout) -> float:
         """
-        Get current value of adjustable field.
+        Get current value of adjustable field from workout structure.
 
-        For 'sets': Find interval segment and return its sets count
+        For 'sets': Find repetition segment and return its repetition count
         For 'duration': Find main work segment and return its duration
 
         Args:
@@ -329,27 +329,37 @@ class WorkoutSelector:
         if workout.variable_components is None:
             return 0.0
 
+        if workout.structure is None:
+            return 0.0
+
         adjustable_field = workout.variable_components.adjustable_field
 
+        # Get structure data as dict if it's a Pydantic model
+        if hasattr(workout.structure, "structure"):
+            segments = workout.structure.structure
+        else:
+            segments = workout.structure.get("structure", [])
+
         if adjustable_field == "sets":
-            # Find interval segment
-            for segment in workout.segments:
-                if segment.type == "interval" and segment.sets is not None:
-                    return float(segment.sets)
+            # Find repetition segment (intervals with work/recovery)
+            for segment in segments:
+                seg_dict = segment if isinstance(segment, dict) else segment.model_dump()
+                if seg_dict.get("type") == "repetition":
+                    length = seg_dict.get("length", {})
+                    if isinstance(length, dict):
+                        return float(length.get("value", 0))
+                    else:
+                        return float(length.value)
             return 0.0
 
         elif adjustable_field == "duration":
-            # Find main work segment (longest steady/interval segment)
-            max_duration = 0.0
-            for segment in workout.segments:
-                if segment.type in ["steady", "interval"]:
-                    if segment.duration_min is not None:
-                        max_duration = max(max_duration, segment.duration_min)
-                    elif segment.sets and segment.work:
-                        # Interval total duration
-                        total = segment.sets * segment.work.duration_min
-                        max_duration = max(max_duration, total)
-            return max_duration
+            # Find main work segment (highest intensity active step)
+            from cycling_ai.core.workout_library.structure_helpers import get_main_segment_from_structure
+
+            main_segment = get_main_segment_from_structure(workout.structure)
+            if main_segment:
+                return main_segment["duration_min"]
+            return 0.0
 
         return 0.0
 
