@@ -189,44 +189,6 @@ def extract_power_target(
     return default_min, default_max
 
 
-def get_structure_work_time(structure: WorkoutStructure | dict[str, Any]) -> float:
-    """
-    Get total work time (excluding warmup/cooldown) from structure.
-
-    Args:
-        structure: WorkoutStructure object or dict representation
-
-    Returns:
-        Work time in minutes
-    """
-    if isinstance(structure, dict):
-        segments = structure.get("structure", [])
-    else:
-        segments = structure.structure
-
-    work_time = 0.0
-    for segment in segments:
-        if isinstance(segment, dict):
-            repetitions = segment.get("length", {}).get("value", 1)
-            steps = segment.get("steps", [])
-        else:
-            repetitions = segment.length.value
-            steps = segment.steps
-
-        for step in steps:
-            if isinstance(step, dict):
-                intensity_class = step.get("intensityClass", "active")
-                length = step.get("length", {"unit": "minute", "value": 0})
-            else:
-                intensity_class = step.intensityClass
-                length = step.length
-
-            if intensity_class == "active":
-                work_time += convert_step_length_to_minutes(length) * repetitions
-
-    return work_time
-
-
 def get_main_segment_from_structure(
     structure: WorkoutStructure | dict[str, Any],
 ) -> dict[str, Any] | None:
@@ -269,43 +231,6 @@ def get_main_segment_from_structure(
     return main_segment
 
 
-def create_placeholder_structure(duration_min: float) -> dict[str, Any]:
-    """
-    Create a placeholder structure for workouts without detailed structure.
-
-    Args:
-        duration_min: Duration in minutes
-
-    Returns:
-        WorkoutStructure dict
-    """
-    return {
-        "primaryIntensityMetric": "percentOfFtp",
-        "primaryLengthMetric": "duration",
-        "structure": [
-            {
-                "type": "step",
-                "length": {"unit": "repetition", "value": 1},
-                "steps": [
-                    {
-                        "name": "Workout",
-                        "intensityClass": "active",
-                        "length": {"unit": "minute", "value": duration_min},
-                        "targets": [
-                            {
-                                "type": "power",
-                                "minValue": 50,
-                                "maxValue": 75,
-                                "unit": "percentOfFtp",
-                            }
-                        ],
-                    }
-                ],
-            }
-        ],
-    }
-
-
 def create_strength_structure(duration_min: float = 45) -> dict[str, Any]:
     """
     Create a structure for strength/gym workouts.
@@ -341,87 +266,6 @@ def create_strength_structure(duration_min: float = 45) -> dict[str, Any]:
             }
         ],
     }
-
-
-def structure_to_legacy_segments(structure: WorkoutStructure | dict[str, Any]) -> list[dict[str, Any]]:
-    """
-    Convert WorkoutStructure to legacy segments format.
-
-    This is useful for backwards compatibility during migration.
-    Note: Multi-step intervals (3+ steps) are simplified to 2-step format.
-
-    Args:
-        structure: WorkoutStructure object or dict representation
-
-    Returns:
-        List of segment dicts in legacy format
-    """
-    if isinstance(structure, dict):
-        segments = structure.get("structure", [])
-    else:
-        segments = [s.model_dump() for s in structure.structure]
-
-    legacy_segments: list[dict[str, Any]] = []
-
-    for segment in segments:
-        steps = segment.get("steps", [])
-        repetitions = segment.get("length", {}).get("value", 1)
-
-        if len(steps) == 1:
-            # Single step - warmup, cooldown, steady
-            step = steps[0]
-            intensity_class = step.get("intensityClass", "active")
-            power_min, power_max = extract_power_target(step.get("targets", []))
-            duration = convert_step_length_to_minutes(step.get("length", {}))
-
-            # Map intensityClass to segment type
-            if intensity_class == "warmUp":
-                seg_type = "warmup"
-            elif intensity_class == "coolDown":
-                seg_type = "cooldown"
-            elif intensity_class == "rest":
-                seg_type = "recovery"
-            else:
-                seg_type = "steady"
-
-            legacy_segments.append(
-                {
-                    "type": seg_type,
-                    "duration_min": duration,
-                    "power_low_pct": power_min,
-                    "power_high_pct": power_max,
-                    "description": step.get("name", ""),
-                }
-            )
-
-        elif len(steps) >= 2:
-            # Multi-step interval - convert to work/recovery format
-            work_step = steps[0]
-            recovery_step = steps[1] if len(steps) > 1 else steps[0]
-
-            work_power_min, work_power_max = extract_power_target(work_step.get("targets", []))
-            rec_power_min, rec_power_max = extract_power_target(recovery_step.get("targets", []))
-
-            legacy_segments.append(
-                {
-                    "type": "interval",
-                    "sets": repetitions,
-                    "work": {
-                        "duration_min": convert_step_length_to_minutes(work_step.get("length", {})),
-                        "power_low_pct": work_power_min,
-                        "power_high_pct": work_power_max,
-                        "description": work_step.get("name", "Work"),
-                    },
-                    "recovery": {
-                        "duration_min": convert_step_length_to_minutes(recovery_step.get("length", {})),
-                        "power_low_pct": rec_power_min,
-                        "power_high_pct": rec_power_max,
-                        "description": recovery_step.get("name", "Recovery"),
-                    },
-                }
-            )
-
-    return legacy_segments
 
 
 def legacy_segments_to_structure(segments: list[dict[str, Any]]) -> dict[str, Any]:
