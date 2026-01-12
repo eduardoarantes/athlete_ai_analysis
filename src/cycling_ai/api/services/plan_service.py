@@ -135,29 +135,69 @@ class PlanService:
                             "develops mitochondrial density. "
                             "Execution: Ride at conversational pace, focus on smooth pedaling."
                         ),
-                        "segments": [
-                            {
-                                "type": "warmup",
-                                "duration_min": 10,
-                                "power_low_pct": 50.0,
-                                "power_high_pct": 60.0,
-                                "description": "Easy warmup",
-                            },
-                            {
-                                "type": "steady",
-                                "duration_min": 60,
-                                "power_low_pct": 65.0,
-                                "power_high_pct": 75.0,
-                                "description": "Steady endurance effort",
-                            },
-                            {
-                                "type": "cooldown",
-                                "duration_min": 10,
-                                "power_low_pct": 50.0,
-                                "power_high_pct": 60.0,
-                                "description": "Easy cooldown",
-                            },
-                        ],
+                        "structure": {
+                            "primaryIntensityMetric": "percentOfFtp",
+                            "primaryLengthMetric": "duration",
+                            "structure": [
+                                {
+                                    "type": "step",
+                                    "length": {"unit": "repetition", "value": 1},
+                                    "steps": [
+                                        {
+                                            "name": "Warmup",
+                                            "intensityClass": "warmUp",
+                                            "length": {"unit": "minute", "value": 10},
+                                            "targets": [
+                                                {
+                                                    "type": "power",
+                                                    "minValue": 50.0,
+                                                    "maxValue": 60.0,
+                                                    "unit": "percentOfFtp",
+                                                }
+                                            ],
+                                        }
+                                    ],
+                                },
+                                {
+                                    "type": "step",
+                                    "length": {"unit": "repetition", "value": 1},
+                                    "steps": [
+                                        {
+                                            "name": "Steady endurance effort",
+                                            "intensityClass": "active",
+                                            "length": {"unit": "minute", "value": 60},
+                                            "targets": [
+                                                {
+                                                    "type": "power",
+                                                    "minValue": 65.0,
+                                                    "maxValue": 75.0,
+                                                    "unit": "percentOfFtp",
+                                                }
+                                            ],
+                                        }
+                                    ],
+                                },
+                                {
+                                    "type": "step",
+                                    "length": {"unit": "repetition", "value": 1},
+                                    "steps": [
+                                        {
+                                            "name": "Cooldown",
+                                            "intensityClass": "coolDown",
+                                            "length": {"unit": "minute", "value": 10},
+                                            "targets": [
+                                                {
+                                                    "type": "power",
+                                                    "minValue": 50.0,
+                                                    "maxValue": 60.0,
+                                                    "unit": "percentOfFtp",
+                                                }
+                                            ],
+                                        }
+                                    ],
+                                },
+                            ],
+                        },
                     }
                 ],
                 "weekly_focus": f"{phase} phase development",

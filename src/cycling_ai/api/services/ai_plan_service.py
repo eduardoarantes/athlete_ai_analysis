@@ -545,7 +545,6 @@ STRICT OUTPUT RULES:
 - No trailing commas
 - Keep descriptions SHORT (under 50 words each)
 - Limit to 3-4 workouts per week
-- Limit to 2-3 segments per workout
 
 Required JSON Schema:
 {
@@ -574,15 +573,24 @@ Required JSON Schema:
           "type": "<string: endurance|tempo|sweet_spot|threshold|vo2max|recovery|rest>",
           "description": "<string: detailed workout description>",
           "tss": <integer>,
-          "segments": [
-            {
-              "type": "<string: warmup|interval|recovery|cooldown|steady>",
-              "duration_min": <integer>,
-              "power_low_pct": <number: 0-150>,
-              "power_high_pct": <number: 0-150>,
-              "description": "<string>"
-            }
-          ]
+          "structure": {
+            "primaryIntensityMetric": "percentOfFtp",
+            "primaryLengthMetric": "duration",
+            "structure": [
+              {
+                "type": "<string: step|repetition>",
+                "length": {"unit": "repetition", "value": <integer>},
+                "steps": [
+                  {
+                    "name": "<string>",
+                    "intensityClass": "<string: warmUp|active|rest|coolDown>",
+                    "length": {"unit": "<string: second|minute>", "value": <number>},
+                    "targets": [{"type": "power", "minValue": <number>, "maxValue": <number>, "unit": "percentOfFtp"}]
+                  }
+                ]
+              }
+            ]
+          }
         }
       ]
     }
