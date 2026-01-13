@@ -6,12 +6,7 @@
  * npx supabase gen types typescript --project-id yqaskiwzyhhovthbvmqq --schema public > lib/types/database.ts
  */
 
-import type {
-  PlanInstance,
-  Workout,
-  WorkoutStructure,
-  StepTarget,
-} from '@/lib/types/training-plan'
+import type { PlanInstance, Workout, WorkoutStructure, StepTarget } from '@/lib/types/training-plan'
 import { convertStepLengthToSeconds, calculateStructureDuration } from '@/lib/types/training-plan'
 import type { TPWorkoutCreateRequest, TPWorkoutResponse } from './trainingpeaks-service'
 import { TrainingPeaksService } from './trainingpeaks-service'

@@ -36,6 +36,7 @@ export function StepTwo({ initialData, onSubmit }: StepTwoProps) {
       ftp: null,
       maxHr: null,
       restingHr: null,
+      lthr: null,
       weightKg: null,
       unitsSystem: 'metric',
     },
@@ -132,6 +133,94 @@ export function StepTwo({ initialData, onSubmit }: StepTwoProps) {
                 <Input
                   type="number"
                   placeholder={t('maxHrPlaceholder')}
+                  className="max-w-[200px]"
+                  {...field}
+                  value={field.value ?? ''}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    field.onChange(value === '' ? null : parseInt(value, 10))
+                  }}
+                />
+              </FormControl>
+              {fieldState.error?.message && (
+                <p className="text-sm font-medium text-destructive mt-2">
+                  {fieldState.error.message}
+                </p>
+              )}
+            </FormItem>
+          )}
+        />
+
+        {/* Resting HR */}
+        <FormField
+          control={form.control}
+          name="restingHr"
+          render={({ field, fieldState }) => (
+            <FormItem>
+              <div className="flex items-center gap-2">
+                <FormLabel>Resting Heart Rate (Optional)</FormLabel>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-xs">
+                        Your heart rate when fully rested, typically measured first thing in the
+                        morning
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <FormControl>
+                <Input
+                  type="number"
+                  placeholder="e.g., 60"
+                  className="max-w-[200px]"
+                  {...field}
+                  value={field.value ?? ''}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    field.onChange(value === '' ? null : parseInt(value, 10))
+                  }}
+                />
+              </FormControl>
+              {fieldState.error?.message && (
+                <p className="text-sm font-medium text-destructive mt-2">
+                  {fieldState.error.message}
+                </p>
+              )}
+            </FormItem>
+          )}
+        />
+
+        {/* LTHR */}
+        <FormField
+          control={form.control}
+          name="lthr"
+          render={({ field, fieldState }) => (
+            <FormItem>
+              <div className="flex items-center gap-2">
+                <FormLabel>Lactate Threshold Heart Rate (Optional)</FormLabel>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-xs">
+                        Your heart rate at lactate threshold, typically found during a 20-30 minute
+                        sustained effort
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <FormControl>
+                <Input
+                  type="number"
+                  placeholder="e.g., 165"
                   className="max-w-[200px]"
                   {...field}
                   value={field.value ?? ''}

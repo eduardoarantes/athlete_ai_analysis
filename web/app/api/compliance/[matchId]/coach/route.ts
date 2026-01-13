@@ -14,10 +14,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { invokePythonApi } from '@/lib/services/lambda-client'
 import { errorLogger } from '@/lib/monitoring/error-logger'
-import { getWorkoutFromOverrides, getWorkoutFromPlan } from '@/lib/utils/workout-overrides-helpers'
+import { getWorkoutByDateAndIndex } from '@/lib/utils/workout-helpers'
 import type { WorkoutComplianceAnalysis } from '@/lib/services/compliance-analysis-service'
-import type { WorkoutOverrides, TrainingPlanData, Workout } from '@/lib/types/training-plan'
+import type { TrainingPlanData, Workout } from '@/lib/types/training-plan'
 import type { Json } from '@/lib/types/database'
+import { assertWorkoutComplianceAnalysis } from '@/lib/types/type-guards'
 
 // ============================================================================
 // Types
@@ -68,7 +69,6 @@ interface MatchRow {
 interface PlanInstanceRow {
   plan_data: TrainingPlanData
   start_date: string
-  workout_overrides?: WorkoutOverrides | null
 }
 
 // ============================================================================
@@ -237,26 +237,22 @@ export async function POST(
       return NextResponse.json({ error: 'Plan instance not found' }, { status: 404 })
     }
 
-    // Check overrides first (for library workouts), then plan_data
-    const workout =
-      getWorkoutFromOverrides(
-        planInstance.workout_overrides,
-        match.workout_date,
-        match.workout_index
-      ) ||
-      getWorkoutFromPlan(
-        planInstance.plan_data,
-        planInstance.start_date,
-        match.workout_date,
-        match.workout_index
-      )
+    // Get workout from plan_data by scheduled_date
+    const workout = getWorkoutByDateAndIndex(
+      planInstance.plan_data,
+      match.workout_date,
+      match.workout_index
+    )
 
     if (!workout) {
       return NextResponse.json({ error: 'Workout not found in plan' }, { status: 404 })
     }
 
-    // Transform analysis for Python API
-    const analysis = existingAnalysis.analysis_data as unknown as WorkoutComplianceAnalysis
+    // Transform analysis for Python API (validate structure)
+    const analysis = assertWorkoutComplianceAnalysis(
+      existingAnalysis.analysis_data,
+      'compliance/coach'
+    )
     const requestBody = transformAnalysisForPythonApi(
       analysis,
       workout,

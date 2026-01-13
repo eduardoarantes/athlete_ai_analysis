@@ -1,16 +1,10 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "13.0.5"
+    PostgrestVersion: '13.0.5'
   }
   public: {
     Tables: {
@@ -77,11 +71,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "athlete_profiles_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: 'athlete_profiles_user_id_fkey'
+            columns: ['user_id']
             isOneToOne: true
-            referencedRelation: "admin_user_view"
-            referencedColumns: ["user_id"]
+            referencedRelation: 'admin_user_view'
+            referencedColumns: ['user_id']
           },
         ]
       }
@@ -109,11 +103,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "coach_chat_sessions_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: 'coach_chat_sessions_user_id_fkey'
+            columns: ['user_id']
             isOneToOne: false
-            referencedRelation: "admin_user_view"
-            referencedColumns: ["user_id"]
+            referencedRelation: 'admin_user_view'
+            referencedColumns: ['user_id']
           },
         ]
       }
@@ -153,11 +147,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "custom_plan_weeks_plan_id_fkey"
-            columns: ["plan_id"]
+            foreignKeyName: 'custom_plan_weeks_plan_id_fkey'
+            columns: ['plan_id']
             isOneToOne: false
-            referencedRelation: "training_plans"
-            referencedColumns: ["id"]
+            referencedRelation: 'training_plans'
+            referencedColumns: ['id']
           },
         ]
       }
@@ -200,18 +194,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "plan_generation_jobs_plan_id_fkey"
-            columns: ["plan_id"]
+            foreignKeyName: 'plan_generation_jobs_plan_id_fkey'
+            columns: ['plan_id']
             isOneToOne: false
-            referencedRelation: "training_plans"
-            referencedColumns: ["id"]
+            referencedRelation: 'training_plans'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "plan_generation_jobs_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: 'plan_generation_jobs_user_id_fkey'
+            columns: ['user_id']
             isOneToOne: false
-            referencedRelation: "admin_user_view"
-            referencedColumns: ["user_id"]
+            referencedRelation: 'admin_user_view'
+            referencedColumns: ['user_id']
           },
         ]
       }
@@ -260,18 +254,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "plan_instance_notes_plan_instance_id_fkey"
-            columns: ["plan_instance_id"]
+            foreignKeyName: 'plan_instance_notes_plan_instance_id_fkey'
+            columns: ['plan_instance_id']
             isOneToOne: false
-            referencedRelation: "plan_instances"
-            referencedColumns: ["id"]
+            referencedRelation: 'plan_instances'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "plan_instance_notes_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: 'plan_instance_notes_user_id_fkey'
+            columns: ['user_id']
             isOneToOne: false
-            referencedRelation: "admin_user_view"
-            referencedColumns: ["user_id"]
+            referencedRelation: 'admin_user_view'
+            referencedColumns: ['user_id']
           },
         ]
       }
@@ -280,6 +274,7 @@ export type Database = {
           created_at: string | null
           end_date: string
           id: string
+          instance_type: string | null
           name: string
           plan_data: Json
           start_date: string
@@ -288,12 +283,12 @@ export type Database = {
           updated_at: string | null
           user_id: string
           weeks_total: number
-          workout_overrides: Json | null
         }
         Insert: {
           created_at?: string | null
           end_date: string
           id?: string
+          instance_type?: string | null
           name: string
           plan_data: Json
           start_date: string
@@ -302,12 +297,12 @@ export type Database = {
           updated_at?: string | null
           user_id: string
           weeks_total: number
-          workout_overrides?: Json | null
         }
         Update: {
           created_at?: string | null
           end_date?: string
           id?: string
+          instance_type?: string | null
           name?: string
           plan_data?: Json
           start_date?: string
@@ -316,22 +311,21 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           weeks_total?: number
-          workout_overrides?: Json | null
         }
         Relationships: [
           {
-            foreignKeyName: "plan_instances_template_id_fkey"
-            columns: ["template_id"]
+            foreignKeyName: 'plan_instances_template_id_fkey'
+            columns: ['template_id']
             isOneToOne: false
-            referencedRelation: "training_plans"
-            referencedColumns: ["id"]
+            referencedRelation: 'training_plans'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "plan_instances_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: 'plan_instances_user_id_fkey'
+            columns: ['user_id']
             isOneToOne: false
-            referencedRelation: "admin_user_view"
-            referencedColumns: ["user_id"]
+            referencedRelation: 'admin_user_view'
+            referencedColumns: ['user_id']
           },
         ]
       }
@@ -380,11 +374,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "reports_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: 'reports_user_id_fkey'
+            columns: ['user_id']
             isOneToOne: false
-            referencedRelation: "admin_user_view"
-            referencedColumns: ["user_id"]
+            referencedRelation: 'admin_user_view'
+            referencedColumns: ['user_id']
           },
         ]
       }
@@ -463,11 +457,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "strava_activities_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: 'strava_activities_user_id_fkey'
+            columns: ['user_id']
             isOneToOne: false
-            referencedRelation: "admin_user_view"
-            referencedColumns: ["user_id"]
+            referencedRelation: 'admin_user_view'
+            referencedColumns: ['user_id']
           },
         ]
       }
@@ -516,11 +510,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "strava_connections_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: 'strava_connections_user_id_fkey'
+            columns: ['user_id']
             isOneToOne: true
-            referencedRelation: "admin_user_view"
-            referencedColumns: ["user_id"]
+            referencedRelation: 'admin_user_view'
+            referencedColumns: ['user_id']
           },
         ]
       }
@@ -649,8 +643,8 @@ export type Database = {
           payload: Json
           result: Json | null
           started_at: string | null
-          status: Database["public"]["Enums"]["job_status"]
-          type: Database["public"]["Enums"]["job_type"]
+          status: Database['public']['Enums']['job_status']
+          type: Database['public']['Enums']['job_type']
           updated_at: string
           user_id: string
         }
@@ -664,8 +658,8 @@ export type Database = {
           payload?: Json
           result?: Json | null
           started_at?: string | null
-          status?: Database["public"]["Enums"]["job_status"]
-          type?: Database["public"]["Enums"]["job_type"]
+          status?: Database['public']['Enums']['job_status']
+          type?: Database['public']['Enums']['job_type']
           updated_at?: string
           user_id: string
         }
@@ -679,18 +673,18 @@ export type Database = {
           payload?: Json
           result?: Json | null
           started_at?: string | null
-          status?: Database["public"]["Enums"]["job_status"]
-          type?: Database["public"]["Enums"]["job_type"]
+          status?: Database['public']['Enums']['job_status']
+          type?: Database['public']['Enums']['job_type']
           updated_at?: string
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "sync_jobs_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: 'sync_jobs_user_id_fkey'
+            columns: ['user_id']
             isOneToOne: false
-            referencedRelation: "admin_user_view"
-            referencedColumns: ["user_id"]
+            referencedRelation: 'admin_user_view'
+            referencedColumns: ['user_id']
           },
         ]
       }
@@ -745,11 +739,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "training_plans_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: 'training_plans_user_id_fkey'
+            columns: ['user_id']
             isOneToOne: false
-            referencedRelation: "admin_user_view"
-            referencedColumns: ["user_id"]
+            referencedRelation: 'admin_user_view'
+            referencedColumns: ['user_id']
           },
         ]
       }
@@ -792,11 +786,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "trainingpeaks_connections_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: 'trainingpeaks_connections_user_id_fkey'
+            columns: ['user_id']
             isOneToOne: true
-            referencedRelation: "admin_user_view"
-            referencedColumns: ["user_id"]
+            referencedRelation: 'admin_user_view'
+            referencedColumns: ['user_id']
           },
         ]
       }
@@ -845,18 +839,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "trainingpeaks_workout_syncs_plan_instance_id_fkey"
-            columns: ["plan_instance_id"]
+            foreignKeyName: 'trainingpeaks_workout_syncs_plan_instance_id_fkey'
+            columns: ['plan_instance_id']
             isOneToOne: false
-            referencedRelation: "plan_instances"
-            referencedColumns: ["id"]
+            referencedRelation: 'plan_instances'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "trainingpeaks_workout_syncs_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: 'trainingpeaks_workout_syncs_user_id_fkey'
+            columns: ['user_id']
             isOneToOne: false
-            referencedRelation: "admin_user_view"
-            referencedColumns: ["user_id"]
+            referencedRelation: 'admin_user_view'
+            referencedColumns: ['user_id']
           },
         ]
       }
@@ -902,25 +896,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "user_subscriptions_plan_id_fkey"
-            columns: ["plan_id"]
+            foreignKeyName: 'user_subscriptions_plan_id_fkey'
+            columns: ['plan_id']
             isOneToOne: false
-            referencedRelation: "admin_user_view"
-            referencedColumns: ["subscription_plan_id"]
+            referencedRelation: 'admin_user_view'
+            referencedColumns: ['subscription_plan_id']
           },
           {
-            foreignKeyName: "user_subscriptions_plan_id_fkey"
-            columns: ["plan_id"]
+            foreignKeyName: 'user_subscriptions_plan_id_fkey'
+            columns: ['plan_id']
             isOneToOne: false
-            referencedRelation: "subscription_plans"
-            referencedColumns: ["id"]
+            referencedRelation: 'subscription_plans'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "user_subscriptions_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: 'user_subscriptions_user_id_fkey'
+            columns: ['user_id']
             isOneToOne: true
-            referencedRelation: "admin_user_view"
-            referencedColumns: ["user_id"]
+            referencedRelation: 'admin_user_view'
+            referencedColumns: ['user_id']
           },
         ]
       }
@@ -954,11 +948,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "wizard_sessions_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: 'wizard_sessions_user_id_fkey'
+            columns: ['user_id']
             isOneToOne: false
-            referencedRelation: "admin_user_view"
-            referencedColumns: ["user_id"]
+            referencedRelation: 'admin_user_view'
+            referencedColumns: ['user_id']
           },
         ]
       }
@@ -973,6 +967,7 @@ export type Database = {
           updated_at: string | null
           user_id: string
           workout_date: string
+          workout_id: string | null
           workout_index: number
         }
         Insert: {
@@ -985,6 +980,7 @@ export type Database = {
           updated_at?: string | null
           user_id: string
           workout_date: string
+          workout_id?: string | null
           workout_index?: number
         }
         Update: {
@@ -997,29 +993,30 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           workout_date?: string
+          workout_id?: string | null
           workout_index?: number
         }
         Relationships: [
           {
-            foreignKeyName: "workout_activity_matches_plan_instance_id_fkey"
-            columns: ["plan_instance_id"]
+            foreignKeyName: 'workout_activity_matches_plan_instance_id_fkey'
+            columns: ['plan_instance_id']
             isOneToOne: false
-            referencedRelation: "plan_instances"
-            referencedColumns: ["id"]
+            referencedRelation: 'plan_instances'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "workout_activity_matches_strava_activity_id_fkey"
-            columns: ["strava_activity_id"]
+            foreignKeyName: 'workout_activity_matches_strava_activity_id_fkey'
+            columns: ['strava_activity_id']
             isOneToOne: true
-            referencedRelation: "strava_activities"
-            referencedColumns: ["id"]
+            referencedRelation: 'strava_activities'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "workout_activity_matches_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: 'workout_activity_matches_user_id_fkey'
+            columns: ['user_id']
             isOneToOne: false
-            referencedRelation: "admin_user_view"
-            referencedColumns: ["user_id"]
+            referencedRelation: 'admin_user_view'
+            referencedColumns: ['user_id']
           },
         ]
       }
@@ -1098,18 +1095,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "workout_compliance_analyses_match_id_fkey"
-            columns: ["match_id"]
+            foreignKeyName: 'workout_compliance_analyses_match_id_fkey'
+            columns: ['match_id']
             isOneToOne: false
-            referencedRelation: "workout_activity_matches"
-            referencedColumns: ["id"]
+            referencedRelation: 'workout_activity_matches'
+            referencedColumns: ['id']
           },
           {
-            foreignKeyName: "workout_compliance_analyses_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: 'workout_compliance_analyses_user_id_fkey'
+            columns: ['user_id']
             isOneToOne: false
-            referencedRelation: "admin_user_view"
-            referencedColumns: ["user_id"]
+            referencedRelation: 'admin_user_view'
+            referencedColumns: ['user_id']
           },
         ]
       }
@@ -1254,8 +1251,8 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
-      job_status: "pending" | "running" | "completed" | "failed"
-      job_type: "strava_sync"
+      job_status: 'pending' | 'running' | 'completed' | 'failed'
+      job_type: 'strava_sync'
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1263,33 +1260,31 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    ? (DefaultSchema['Tables'] & DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -1298,23 +1293,23 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
+    | keyof DefaultSchema['Tables']
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -1323,23 +1318,23 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
+    | keyof DefaultSchema['Tables']
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -1348,43 +1343,43 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
+    | keyof DefaultSchema['Enums']
     | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
+    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
+    | keyof DefaultSchema['CompositeTypes']
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
+    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {
   public: {
     Enums: {
-      job_status: ["pending", "running", "completed", "failed"],
-      job_type: ["strava_sync"],
+      job_status: ['pending', 'running', 'completed', 'failed'],
+      job_type: ['strava_sync'],
     },
   },
 } as const

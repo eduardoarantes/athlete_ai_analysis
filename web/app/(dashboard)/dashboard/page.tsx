@@ -15,7 +15,11 @@ import {
   type UpcomingWorkoutData,
 } from '@/components/dashboard/upcoming-workouts'
 import { asPlanInstances } from '@/lib/types/type-guards'
-import { type PlanInstance, type Workout, calculateWorkoutDuration } from '@/lib/types/training-plan'
+import {
+  type PlanInstance,
+  type Workout,
+  calculateWorkoutDuration,
+} from '@/lib/types/training-plan'
 import { User, Zap, Heart, Scale, TrendingUp } from 'lucide-react'
 import { PowerZonesHoverCard } from '@/components/profile/power-zones-hover-card'
 import { HeartZonesHoverCard } from '@/components/profile/heart-zones-hover-card'

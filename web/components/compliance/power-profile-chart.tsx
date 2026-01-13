@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useCallback, useRef } from 'react'
 import type { SegmentAnalysis } from '@/lib/services/compliance-analysis-service'
-import { downsamplePowerStream } from '@/lib/utils/workout-overrides-helpers'
+import { downsamplePowerStream } from '@/lib/utils/workout-helpers'
 
 // ============================================================================
 // Types

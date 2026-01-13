@@ -58,11 +58,7 @@ export function CollapsibleSidebar({
         title={isCollapsed ? 'Open workout library' : 'Close workout library'}
         data-testid="sidebar-toggle"
       >
-        {isCollapsed ? (
-          <Dumbbell className="h-4 w-4" />
-        ) : (
-          <PanelLeftClose className="h-4 w-4" />
-        )}
+        {isCollapsed ? <Dumbbell className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
       </Button>
 
       {/* Content - hidden when collapsed */}

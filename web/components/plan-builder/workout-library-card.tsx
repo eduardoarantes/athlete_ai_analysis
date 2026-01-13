@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { getWorkoutBorderColor, getIntensityBadgeColors } from '@/lib/constants/activity-styles'
 import { formatDuration } from '@/lib/types/training-plan'
-import { WorkoutStructureDisplay } from '@/components/workout/workout-structure-display'
+import { WorkoutDetailPopup } from '@/components/workout/workout-detail-popup'
 
 /**
  * Format workout type for display
@@ -46,7 +46,6 @@ function formatIntensity(intensity: string): string {
   }
   return labels[intensity] ?? intensity
 }
-
 
 /**
  * Props for WorkoutLibraryCard
@@ -88,8 +87,8 @@ export function WorkoutLibraryCard({
         'group relative flex flex-col rounded-lg border border-l-4 bg-card',
         compact ? 'p-2' : 'p-3',
         borderColor,
-        isDraggable && 'cursor-grab active:cursor-grabbing',
-        onClick && 'hover:bg-accent/50 cursor-pointer transition-colors',
+        onClick && 'hover:bg-accent/50 transition-colors',
+        isDraggable ? 'cursor-grab active:cursor-grabbing' : onClick && 'cursor-pointer',
         className
       )}
       onClick={onClick}
@@ -192,17 +191,20 @@ export function WorkoutLibraryCard({
           </Button>
 
           {isExpanded && (
-            <div className="mt-2 pt-2 border-t border-border/50 space-y-2">
-              {hasDescription && (
-                <p className="text-xs text-muted-foreground">{workout.detailed_description}</p>
-              )}
-
-              {hasStructure && (
-                <div className="space-y-1">
-                  <span className="text-xs font-medium">Structure:</span>
-                  <WorkoutStructureDisplay structure={workout.structure} />
-                </div>
-              )}
+            <div className="mt-2 pt-2 border-t border-border/50">
+              <WorkoutDetailPopup
+                workout={workout}
+                asInline
+                sections={{
+                  showBadges: false,
+                  showStats: false,
+                  showDescription: true,
+                  showPowerProfile: false,
+                  showStructure: true,
+                  showWeekInfo: false,
+                  showSuitablePhases: false,
+                }}
+              />
             </div>
           )}
         </>

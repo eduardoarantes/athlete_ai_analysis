@@ -13,11 +13,11 @@ import { DraggableLibraryWorkout } from '@/components/schedule/dnd/draggable-lib
 import { WorkoutBrowser } from '@/components/plan-builder/workout-browser'
 import { WorkoutLibraryCard } from '@/components/plan-builder/workout-library-card'
 import { useLocalStorage } from '@/lib/hooks/use-local-storage'
-import type { PlanInstance, Workout } from '@/lib/types/training-plan'
+import type { PlanInstance } from '@/lib/types/training-plan'
 import type { WorkoutLibraryItem } from '@/lib/types/workout-library'
 import { parseLocalDate } from '@/lib/utils/date-utils'
 import { formatWithGoalLabels } from '@/lib/utils/format-utils'
-import { WorkoutDetailModal } from './workout-detail-modal'
+import { WorkoutDetailPopup } from '@/components/workout/workout-detail-popup'
 
 const SIDEBAR_STORAGE_KEY = 'schedule-sidebar-collapsed'
 
@@ -44,13 +44,8 @@ export function ScheduleContent({ instances, locale }: ScheduleContentProps) {
     return endDate >= today
   })
 
-  // Only show calendar if there are plans with future content
-  const hasCalendarContent = plansWithFutureContent.length > 0
-
-  // Default to list view if no calendar content
-  const [viewMode, setViewMode] = useState<'calendar' | 'list'>(
-    hasCalendarContent ? 'calendar' : 'list'
-  )
+  // Always default to calendar view
+  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar')
 
   // State for library workout detail popup
   const [selectedLibraryWorkout, setSelectedLibraryWorkout] = useState<WorkoutLibraryItem | null>(
@@ -67,44 +62,21 @@ export function ScheduleContent({ instances, locale }: ScheduleContentProps) {
     setLibraryWorkoutModalOpen(true)
   }, [])
 
-  // Convert library workout to schedule workout format for display in modal
-  const libraryWorkoutAsScheduleWorkout = useCallback(
-    (libraryWorkout: WorkoutLibraryItem | null): Workout | null => {
-      if (!libraryWorkout) return null
-
-      const workout: Workout = {
-        weekday: 'Monday', // Placeholder
-        name: libraryWorkout.name,
-        type: libraryWorkout.type,
-        tss: libraryWorkout.base_tss,
-        description: libraryWorkout.detailed_description || `${libraryWorkout.type} workout`,
-        structure: libraryWorkout.structure,
-        source: 'library',
-        library_workout_id: libraryWorkout.id,
-      }
-
-      // Add optional detailed_description if it exists
-      if (libraryWorkout.detailed_description) {
-        workout.detailed_description = libraryWorkout.detailed_description
-      }
-
-      return workout
-    },
-    []
-  )
-
   // Get FTP from first instance for workout display
   const ftp = plansWithFutureContent[0]?.plan_data?.athlete_profile?.ftp || 200
 
-  // Get single instance ID for sidebar (only show sidebar for single instance)
+  // Get single instance ID for sidebar (only enable drag-and-drop for single instance)
+  // But always show the sidebar for browsing workouts
   const singleInstance = plansWithFutureContent.length === 1 ? plansWithFutureContent[0] : null
 
-  // Custom render for workout cards - wrap with schedule DnD
+  // Custom render for workout cards - always enable drag-and-drop
+  // If no plan exists, we'll prompt user to create one on drop
   const renderWorkoutCard = useCallback(
     (workout: WorkoutLibraryItem) => {
-      if (!singleInstance) return null
+      // Use a placeholder instance ID if none exists (will be handled on drop)
+      const instanceId = singleInstance?.id || 'placeholder'
       return (
-        <DraggableLibraryWorkout key={workout.id} workout={workout} instanceId={singleInstance.id}>
+        <DraggableLibraryWorkout key={workout.id} workout={workout} instanceId={instanceId}>
           <WorkoutLibraryCard
             workout={workout}
             onClick={() => handleLibraryWorkoutSelect(workout)}
@@ -117,9 +89,8 @@ export function ScheduleContent({ instances, locale }: ScheduleContentProps) {
     [singleInstance, handleLibraryWorkoutSelect]
   )
 
-  // Create sidebar content for single instance edit mode
+  // Always show sidebar for workout browsing
   const sidebarContent = useMemo(() => {
-    if (!singleInstance) return undefined
     return (
       <CollapsibleSidebar
         isCollapsed={isSidebarCollapsed}
@@ -135,13 +106,7 @@ export function ScheduleContent({ instances, locale }: ScheduleContentProps) {
         />
       </CollapsibleSidebar>
     )
-  }, [
-    singleInstance,
-    isSidebarCollapsed,
-    setIsSidebarCollapsed,
-    handleLibraryWorkoutSelect,
-    renderWorkoutCard,
-  ])
+  }, [isSidebarCollapsed, setIsSidebarCollapsed, handleLibraryWorkoutSelect, renderWorkoutCard])
 
   const getStatusVariant = (status: string) => {
     switch (status) {
@@ -255,59 +220,55 @@ export function ScheduleContent({ instances, locale }: ScheduleContentProps) {
     )
   }
 
-  // Empty state
-  if (instances.length === 0) {
-    return (
-      <Card>
-        <CardContent className="py-12 text-center">
-          <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2">{t('noScheduledPlans')}</h2>
-          <p className="text-muted-foreground mb-4">{t('noScheduledPlansDescription')}</p>
-          <Button asChild>
-            <Link href="/training-plans">
-              <Plus className="h-4 w-4 mr-2" />
-              {t('browseTemplates')}
-            </Link>
-          </Button>
-        </CardContent>
-      </Card>
-    )
-  }
-
   return (
     <div className="space-y-6">
       {/* View Toggle */}
-      {hasCalendarContent && (
-        <div className="flex justify-end">
-          <div className="flex gap-1 p-1 bg-muted rounded-lg">
-            <Button
-              variant={viewMode === 'calendar' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('calendar')}
-            >
-              <LayoutGrid className="h-4 w-4 mr-2" />
-              {t('calendarView')}
-            </Button>
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('list')}
-            >
-              <List className="h-4 w-4 mr-2" />
-              {t('listView')}
-            </Button>
-          </div>
+      <div className="flex justify-end">
+        <div className="flex gap-1 p-1 bg-muted rounded-lg">
+          <Button
+            variant={viewMode === 'calendar' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setViewMode('calendar')}
+          >
+            <LayoutGrid className="h-4 w-4 mr-2" />
+            {t('calendarView')}
+          </Button>
+          <Button
+            variant={viewMode === 'list' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setViewMode('list')}
+          >
+            <List className="h-4 w-4 mr-2" />
+            {t('listView')}
+          </Button>
         </div>
-      )}
+      </div>
 
       {/* Calendar View */}
-      {viewMode === 'calendar' && hasCalendarContent && (
+      {viewMode === 'calendar' && (
         <ScheduleCalendar instances={plansWithFutureContent} sidebarContent={sidebarContent} />
       )}
 
       {/* List View */}
-      {(viewMode === 'list' || !hasCalendarContent) && (
+      {viewMode === 'list' && (
         <>
+          {/* Empty state for list view */}
+          {instances.length === 0 && (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h2 className="text-xl font-semibold mb-2">{t('noScheduledPlans')}</h2>
+                <p className="text-muted-foreground mb-4">{t('noScheduledPlansDescription')}</p>
+                <Button asChild>
+                  <Link href="/training-plans">
+                    <Plus className="h-4 w-4 mr-2" />
+                    {t('browseTemplates')}
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Active Plans */}
           {activeInstances.length > 0 && (
             <div className="space-y-4">
@@ -353,12 +314,20 @@ export function ScheduleContent({ instances, locale }: ScheduleContentProps) {
       )}
 
       {/* Library Workout Detail Modal */}
-      <WorkoutDetailModal
-        workout={libraryWorkoutAsScheduleWorkout(selectedLibraryWorkout)}
-        weekNumber={0}
+      <WorkoutDetailPopup
+        workout={selectedLibraryWorkout}
         ftp={ftp}
         open={libraryWorkoutModalOpen}
         onOpenChange={setLibraryWorkoutModalOpen}
+        sections={{
+          showBadges: true,
+          showStats: true,
+          showDescription: true,
+          showPowerProfile: true,
+          showStructure: true,
+          showWeekInfo: false,
+          showSuitablePhases: true,
+        }}
       />
     </div>
   )

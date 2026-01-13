@@ -84,6 +84,22 @@ export async function GET(request: Request) {
       },
     })
 
+    // Check if user has a profile
+    const { data: profile } = await supabase
+      .from('athlete_profiles')
+      .select('id')
+      .eq('user_id', userId!)
+      .single()
+
+    // If no profile exists, redirect to onboarding
+    if (!profile) {
+      errorLogger.logInfo('New user without profile, redirecting to onboarding', {
+        userId,
+        path: '/auth/callback',
+      })
+      return NextResponse.redirect(new URL('/onboarding', requestUrl.origin))
+    }
+
     // Determine redirect destination
     const redirectPath = getSafeRedirectPath(next)
 

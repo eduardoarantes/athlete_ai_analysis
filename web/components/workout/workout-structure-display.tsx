@@ -8,7 +8,11 @@
  */
 
 import { Badge } from '@/components/ui/badge'
-import type { WorkoutStructure, StructuredWorkoutSegment, WorkoutStep } from '@/lib/types/training-plan'
+import type {
+  WorkoutStructure,
+  StructuredWorkoutSegment,
+  WorkoutStep,
+} from '@/lib/types/training-plan'
 import { convertStepLengthToMinutes, extractPowerTarget } from '@/lib/types/training-plan'
 
 interface WorkoutStructureDisplayProps {
@@ -46,7 +50,13 @@ function getPowerRangeColor(powerLowPct: number, powerHighPct: number): string {
 /**
  * Display a single workout step (used within segments)
  */
-function WorkoutStepDisplay({ step, showBorder = true }: { step: WorkoutStep; showBorder?: boolean }) {
+function WorkoutStepDisplay({
+  step,
+  showBorder = true,
+}: {
+  step: WorkoutStep
+  showBorder?: boolean
+}) {
   const duration = convertStepLengthToMinutes(step.length)
   const power = extractPowerTarget(step.targets)
   const color = getPowerRangeColor(power.minValue, power.maxValue)
@@ -110,7 +120,8 @@ function SegmentDisplay({ segment }: { segment: StructuredWorkoutSegment }) {
       </div>
       <div className="mt-3 pt-3 border-t border-amber-200 dark:border-amber-800">
         <div className="text-xs text-muted-foreground">
-          Total: {formatDuration(
+          Total:{' '}
+          {formatDuration(
             segment.steps.reduce((sum, step) => sum + convertStepLengthToMinutes(step.length), 0) *
               repetitions
           )}
@@ -123,7 +134,10 @@ function SegmentDisplay({ segment }: { segment: StructuredWorkoutSegment }) {
 /**
  * Main component: Display full workout structure
  */
-export function WorkoutStructureDisplay({ structure, className = '' }: WorkoutStructureDisplayProps) {
+export function WorkoutStructureDisplay({
+  structure,
+  className = '',
+}: WorkoutStructureDisplayProps) {
   if (!structure?.structure || structure.structure.length === 0) {
     return (
       <div className={`text-sm text-muted-foreground ${className}`}>

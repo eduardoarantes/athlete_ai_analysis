@@ -312,7 +312,10 @@ function hasHighIntensityIntervals(structure: WorkoutStructure): boolean {
 /**
  * Infer workout type from structure and optional description.
  */
-export function inferWorkoutType(structure: WorkoutStructure, description: string | null): WorkoutType {
+export function inferWorkoutType(
+  structure: WorkoutStructure,
+  description: string | null
+): WorkoutType {
   const desc = (description || '').toLowerCase()
 
   // Check description keywords first
@@ -595,7 +598,8 @@ Defaults:
   // Remove flags from args
   const positionalArgs = args.filter((a) => !a.startsWith('--'))
 
-  const sourceDir = positionalArgs[0] || '/Users/eduardo/Documents/projects/fit-crawler/workout_library'
+  const sourceDir =
+    positionalArgs[0] || '/Users/eduardo/Documents/projects/fit-crawler/workout_library'
   const outputFile =
     positionalArgs[1] || path.resolve(__dirname, '..', '..', 'data', 'workout_library.json')
 

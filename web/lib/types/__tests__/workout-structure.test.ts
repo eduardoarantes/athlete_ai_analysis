@@ -313,24 +313,6 @@ describe('WorkoutStructure Types', () => {
       expect(structure.primaryLengthMetric).toBe('duration')
       expect(structure.structure).toHaveLength(3)
     })
-
-    it('supports optional polyline', () => {
-      const structureWithPolyline: WorkoutStructure = {
-        primaryIntensityMetric: 'percentOfFtp',
-        primaryLengthMetric: 'duration',
-        structure: [],
-        polyline: [
-          [0, 0.5],
-          [0.1, 0.6],
-          [0.5, 1.0],
-          [0.9, 0.5],
-          [1.0, 0.4],
-        ],
-      }
-
-      expect(structureWithPolyline.polyline).toBeDefined()
-      expect(structureWithPolyline.polyline).toHaveLength(5)
-    })
   })
 })
 

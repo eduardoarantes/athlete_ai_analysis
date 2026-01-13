@@ -462,12 +462,7 @@ export function WorkoutBrowser({
 
             {/* Load More button */}
             {hasMore && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full mt-2"
-                onClick={loadMore}
-              >
+              <Button variant="outline" size="sm" className="w-full mt-2" onClick={loadMore}>
                 Load more ({workouts.length - displayedCount} remaining)
               </Button>
             )}

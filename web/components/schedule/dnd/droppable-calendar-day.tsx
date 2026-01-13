@@ -18,12 +18,14 @@ interface DroppableCalendarDayProps extends React.HTMLAttributes<HTMLDivElement>
   children: ReactNode
   date: string // YYYY-MM-DD
   isEditMode: boolean
+  allowLibraryDrops?: boolean // Allow drops even when not in full edit mode (for library workouts)
 }
 
 export function DroppableCalendarDay({
   children,
   date,
   isEditMode,
+  allowLibraryDrops = false,
   className = '',
   ...props
 }: DroppableCalendarDayProps) {
@@ -41,13 +43,15 @@ export function DroppableCalendarDay({
   const { isOver, setNodeRef, active } = useDroppable({
     id: droppableId,
     data: dropData,
-    disabled: !isEditMode || isPast,
+    // Enable drops if in edit mode OR if library drops are allowed (for creating plans)
+    disabled: (!isEditMode && !allowLibraryDrops) || isPast,
   })
 
   // Determine visual state
   const isDragging = !!active
-  const isValidDrop = isOver && !isPast && isEditMode
-  const isInvalidDrop = isOver && isPast && isEditMode
+  const isDropEnabled = isEditMode || allowLibraryDrops
+  const isValidDrop = isOver && !isPast && isDropEnabled
+  const isInvalidDrop = isOver && isPast
 
   // Check if this is a library workout being dragged
   const activeData = active?.data.current as ScheduleDragData | undefined
@@ -66,13 +70,17 @@ export function DroppableCalendarDay({
     // Invalid drop target (hovering over past date)
     isInvalidDrop && 'ring-2 ring-destructive ring-inset bg-destructive/10',
     // Potential drop zone (dragging but not over)
-    isDragging && !isOver && !isPast && isEditMode && 'ring-1 ring-dashed ring-muted-foreground/30',
+    isDragging &&
+      !isOver &&
+      !isPast &&
+      isDropEnabled &&
+      'ring-1 ring-dashed ring-muted-foreground/30',
   ]
     .filter(Boolean)
     .join(' ')
 
-  // If not in edit mode, just render children without drop functionality
-  if (!isEditMode) {
+  // If not in edit mode and library drops not allowed, just render children without drop functionality
+  if (!isEditMode && !allowLibraryDrops) {
     return (
       <div className={className} {...props}>
         {children}

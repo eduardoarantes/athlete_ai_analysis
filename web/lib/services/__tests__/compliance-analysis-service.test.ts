@@ -423,7 +423,12 @@ describe('Segment Flattening', () => {
                   intensityClass: 'warmUp' as const,
                   length: { unit: 'minute' as const, value: 15 },
                   targets: [
-                    { type: 'power' as const, minValue: 56, maxValue: 66, unit: 'percentOfFtp' as const },
+                    {
+                      type: 'power' as const,
+                      minValue: 56,
+                      maxValue: 66,
+                      unit: 'percentOfFtp' as const,
+                    },
                   ],
                 },
               ],
@@ -458,7 +463,12 @@ describe('Segment Flattening', () => {
                   intensityClass: 'active' as const,
                   length: { unit: 'minute' as const, value: 4 },
                   targets: [
-                    { type: 'power' as const, minValue: 100, maxValue: 105, unit: 'percentOfFtp' as const },
+                    {
+                      type: 'power' as const,
+                      minValue: 100,
+                      maxValue: 105,
+                      unit: 'percentOfFtp' as const,
+                    },
                   ],
                 },
                 {
@@ -466,7 +476,12 @@ describe('Segment Flattening', () => {
                   intensityClass: 'rest' as const,
                   length: { unit: 'minute' as const, value: 4 },
                   targets: [
-                    { type: 'power' as const, minValue: 50, maxValue: 60, unit: 'percentOfFtp' as const },
+                    {
+                      type: 'power' as const,
+                      minValue: 50,
+                      maxValue: 60,
+                      unit: 'percentOfFtp' as const,
+                    },
                   ],
                 },
               ],
@@ -498,7 +513,12 @@ describe('Segment Flattening', () => {
                   intensityClass: 'active' as const,
                   length: { unit: 'second' as const, value: 90 },
                   targets: [
-                    { type: 'power' as const, minValue: 84, maxValue: 90, unit: 'percentOfFtp' as const },
+                    {
+                      type: 'power' as const,
+                      minValue: 84,
+                      maxValue: 90,
+                      unit: 'percentOfFtp' as const,
+                    },
                   ],
                 },
                 {
@@ -506,7 +526,12 @@ describe('Segment Flattening', () => {
                   intensityClass: 'active' as const,
                   length: { unit: 'second' as const, value: 30 },
                   targets: [
-                    { type: 'power' as const, minValue: 105, maxValue: 110, unit: 'percentOfFtp' as const },
+                    {
+                      type: 'power' as const,
+                      minValue: 105,
+                      maxValue: 110,
+                      unit: 'percentOfFtp' as const,
+                    },
                   ],
                 },
                 {
@@ -514,7 +539,12 @@ describe('Segment Flattening', () => {
                   intensityClass: 'rest' as const,
                   length: { unit: 'minute' as const, value: 1 },
                   targets: [
-                    { type: 'power' as const, minValue: 56, maxValue: 65, unit: 'percentOfFtp' as const },
+                    {
+                      type: 'power' as const,
+                      minValue: 56,
+                      maxValue: 65,
+                      unit: 'percentOfFtp' as const,
+                    },
                   ],
                 },
               ],
@@ -550,7 +580,12 @@ describe('Segment Flattening', () => {
                   intensityClass: 'warmUp' as const,
                   length: { unit: 'minute' as const, value: 20 },
                   targets: [
-                    { type: 'power' as const, minValue: 40, maxValue: 50, unit: 'percentOfFtp' as const },
+                    {
+                      type: 'power' as const,
+                      minValue: 40,
+                      maxValue: 50,
+                      unit: 'percentOfFtp' as const,
+                    },
                   ],
                 },
               ],
@@ -1941,7 +1976,12 @@ describe('Multi-Step Interval Tests (Issue #96)', () => {
         MULTI_STEP_ABOVE_BELOW_THRESHOLD,
         FTP
       )
-      const result = analyzeWorkoutCompliance(undefined, powerStream, FTP, MULTI_STEP_ABOVE_BELOW_THRESHOLD)
+      const result = analyzeWorkoutCompliance(
+        undefined,
+        powerStream,
+        FTP,
+        MULTI_STEP_ABOVE_BELOW_THRESHOLD
+      )
 
       expect(result.overall.score).toBeGreaterThanOrEqual(0)
       expect(result.overall.score).toBeLessThanOrEqual(100)
@@ -1952,7 +1992,12 @@ describe('Multi-Step Interval Tests (Issue #96)', () => {
 
     it('analyzes Billat 30/30/30 workout (short intervals)', () => {
       const powerStream = generateSimulatedPowerStreamFromStructure(MULTI_STEP_BILLAT_30_30_30, FTP)
-      const result = analyzeWorkoutCompliance(undefined, powerStream, FTP, MULTI_STEP_BILLAT_30_30_30)
+      const result = analyzeWorkoutCompliance(
+        undefined,
+        powerStream,
+        FTP,
+        MULTI_STEP_BILLAT_30_30_30
+      )
 
       expect(result.overall.score).toBeGreaterThanOrEqual(0)
       expect(result.overall.score).toBeLessThanOrEqual(100)
@@ -1963,7 +2008,12 @@ describe('Multi-Step Interval Tests (Issue #96)', () => {
 
     it('analyzes 4-Step Pyramid workout', () => {
       const powerStream = generateSimulatedPowerStreamFromStructure(MULTI_STEP_4_STEP_PYRAMID, FTP)
-      const result = analyzeWorkoutCompliance(undefined, powerStream, FTP, MULTI_STEP_4_STEP_PYRAMID)
+      const result = analyzeWorkoutCompliance(
+        undefined,
+        powerStream,
+        FTP,
+        MULTI_STEP_4_STEP_PYRAMID
+      )
 
       expect(result.overall.score).toBeGreaterThanOrEqual(0)
       expect(result.overall.score).toBeLessThanOrEqual(100)
@@ -1972,7 +2022,12 @@ describe('Multi-Step Interval Tests (Issue #96)', () => {
 
     it('analyzes workout with cadence targets', () => {
       const powerStream = generateSimulatedPowerStreamFromStructure(MULTI_STEP_CADENCE_DRILLS, FTP)
-      const result = analyzeWorkoutCompliance(undefined, powerStream, FTP, MULTI_STEP_CADENCE_DRILLS)
+      const result = analyzeWorkoutCompliance(
+        undefined,
+        powerStream,
+        FTP,
+        MULTI_STEP_CADENCE_DRILLS
+      )
 
       // Compliance analysis should still work even though cadence targets exist
       expect(result.overall.score).toBeGreaterThanOrEqual(0)

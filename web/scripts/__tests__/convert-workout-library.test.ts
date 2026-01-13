@@ -395,7 +395,14 @@ describe('generateSignature', () => {
               name: 'Warm up',
               intensityClass: 'warmUp' as const,
               length: { unit: 'second' as const, value: 300 },
-              targets: [{ type: 'power' as const, minValue: 45, maxValue: 55, unit: 'percentOfFtp' as const }],
+              targets: [
+                {
+                  type: 'power' as const,
+                  minValue: 45,
+                  maxValue: 55,
+                  unit: 'percentOfFtp' as const,
+                },
+              ],
             },
           ],
         },
@@ -422,7 +429,14 @@ describe('generateSignature', () => {
               name: 'Warm up',
               intensityClass: 'warmUp' as const,
               length: { unit: 'second' as const, value: 300 },
-              targets: [{ type: 'power' as const, minValue: 45, maxValue: 55, unit: 'percentOfFtp' as const }],
+              targets: [
+                {
+                  type: 'power' as const,
+                  minValue: 45,
+                  maxValue: 55,
+                  unit: 'percentOfFtp' as const,
+                },
+              ],
             },
           ],
         },
@@ -441,7 +455,14 @@ describe('generateSignature', () => {
               name: 'Warm up',
               intensityClass: 'warmUp' as const,
               length: { unit: 'second' as const, value: 600 }, // Different duration
-              targets: [{ type: 'power' as const, minValue: 45, maxValue: 55, unit: 'percentOfFtp' as const }],
+              targets: [
+                {
+                  type: 'power' as const,
+                  minValue: 45,
+                  maxValue: 55,
+                  unit: 'percentOfFtp' as const,
+                },
+              ],
             },
           ],
         },
@@ -467,7 +488,14 @@ describe('generateSignature', () => {
               name: 'Warm up',
               intensityClass: 'warmUp' as const,
               length: { unit: 'second' as const, value: 300 },
-              targets: [{ type: 'power' as const, minValue: 45, maxValue: 55, unit: 'percentOfFtp' as const }],
+              targets: [
+                {
+                  type: 'power' as const,
+                  minValue: 45,
+                  maxValue: 55,
+                  unit: 'percentOfFtp' as const,
+                },
+              ],
             },
           ],
         },
@@ -486,7 +514,14 @@ describe('generateSignature', () => {
               name: 'Different Name', // Different name
               intensityClass: 'warmUp' as const,
               length: { unit: 'second' as const, value: 300 },
-              targets: [{ type: 'power' as const, minValue: 45, maxValue: 55, unit: 'percentOfFtp' as const }],
+              targets: [
+                {
+                  type: 'power' as const,
+                  minValue: 45,
+                  maxValue: 55,
+                  unit: 'percentOfFtp' as const,
+                },
+              ],
             },
           ],
         },
@@ -514,7 +549,11 @@ describe('deduplicateWorkouts', () => {
         detailed_description: 'Short description',
         signature: 'abc123',
         source_file: 'file1.json',
-        structure: { primaryIntensityMetric: 'percentOfFtp' as const, primaryLengthMetric: 'duration' as const, structure: [] },
+        structure: {
+          primaryIntensityMetric: 'percentOfFtp' as const,
+          primaryLengthMetric: 'duration' as const,
+          structure: [],
+        },
         segments: [],
         type: 'endurance' as const,
         intensity: 'moderate' as const,
@@ -527,7 +566,11 @@ describe('deduplicateWorkouts', () => {
         detailed_description: 'This is a longer description that should be preferred',
         signature: 'abc123', // Same signature
         source_file: 'file2.json',
-        structure: { primaryIntensityMetric: 'percentOfFtp' as const, primaryLengthMetric: 'duration' as const, structure: [] },
+        structure: {
+          primaryIntensityMetric: 'percentOfFtp' as const,
+          primaryLengthMetric: 'duration' as const,
+          structure: [],
+        },
         segments: [],
         type: 'endurance' as const,
         intensity: 'moderate' as const,
@@ -540,7 +583,11 @@ describe('deduplicateWorkouts', () => {
         detailed_description: 'Different workout',
         signature: 'def456', // Different signature
         source_file: 'file3.json',
-        structure: { primaryIntensityMetric: 'percentOfFtp' as const, primaryLengthMetric: 'duration' as const, structure: [] },
+        structure: {
+          primaryIntensityMetric: 'percentOfFtp' as const,
+          primaryLengthMetric: 'duration' as const,
+          structure: [],
+        },
         segments: [],
         type: 'threshold' as const,
         intensity: 'hard' as const,
@@ -555,7 +602,9 @@ describe('deduplicateWorkouts', () => {
     expect(result.duplicates).toHaveLength(1)
     // Should keep the one with longer description
     const keptWorkout = result.workouts.find((w) => w.signature === 'abc123')
-    expect(keptWorkout?.detailed_description).toBe('This is a longer description that should be preferred')
+    expect(keptWorkout?.detailed_description).toBe(
+      'This is a longer description that should be preferred'
+    )
   })
 
   it('handles empty array', () => {
@@ -571,7 +620,11 @@ describe('deduplicateWorkouts', () => {
         name: 'Workout A',
         signature: 'abc123',
         source_file: 'file1.json',
-        structure: { primaryIntensityMetric: 'percentOfFtp' as const, primaryLengthMetric: 'duration' as const, structure: [] },
+        structure: {
+          primaryIntensityMetric: 'percentOfFtp' as const,
+          primaryLengthMetric: 'duration' as const,
+          structure: [],
+        },
         segments: [],
         type: 'endurance' as const,
         intensity: 'moderate' as const,
@@ -583,7 +636,11 @@ describe('deduplicateWorkouts', () => {
         name: 'Workout B',
         signature: 'def456',
         source_file: 'file2.json',
-        structure: { primaryIntensityMetric: 'percentOfFtp' as const, primaryLengthMetric: 'duration' as const, structure: [] },
+        structure: {
+          primaryIntensityMetric: 'percentOfFtp' as const,
+          primaryLengthMetric: 'duration' as const,
+          structure: [],
+        },
         segments: [],
         type: 'threshold' as const,
         intensity: 'hard' as const,
@@ -617,7 +674,14 @@ describe('calculateTSS', () => {
               name: 'Steady',
               intensityClass: 'active' as const,
               length: { unit: 'second' as const, value: 3600 },
-              targets: [{ type: 'power' as const, minValue: 70, maxValue: 70, unit: 'percentOfFtp' as const }],
+              targets: [
+                {
+                  type: 'power' as const,
+                  minValue: 70,
+                  maxValue: 70,
+                  unit: 'percentOfFtp' as const,
+                },
+              ],
             },
           ],
         },
@@ -645,13 +709,27 @@ describe('calculateTSS', () => {
               name: 'Work',
               intensityClass: 'active' as const,
               length: { unit: 'second' as const, value: 180 },
-              targets: [{ type: 'power' as const, minValue: 105, maxValue: 105, unit: 'percentOfFtp' as const }],
+              targets: [
+                {
+                  type: 'power' as const,
+                  minValue: 105,
+                  maxValue: 105,
+                  unit: 'percentOfFtp' as const,
+                },
+              ],
             },
             {
               name: 'Rest',
               intensityClass: 'rest' as const,
               length: { unit: 'second' as const, value: 120 },
-              targets: [{ type: 'power' as const, minValue: 55, maxValue: 55, unit: 'percentOfFtp' as const }],
+              targets: [
+                {
+                  type: 'power' as const,
+                  minValue: 55,
+                  maxValue: 55,
+                  unit: 'percentOfFtp' as const,
+                },
+              ],
             },
           ],
         },
@@ -682,7 +760,14 @@ describe('inferWorkoutType', () => {
               name: 'Easy',
               intensityClass: 'active' as const,
               length: { unit: 'second' as const, value: 3600 },
-              targets: [{ type: 'power' as const, minValue: 45, maxValue: 55, unit: 'percentOfFtp' as const }],
+              targets: [
+                {
+                  type: 'power' as const,
+                  minValue: 45,
+                  maxValue: 55,
+                  unit: 'percentOfFtp' as const,
+                },
+              ],
             },
           ],
         },
@@ -706,7 +791,14 @@ describe('inferWorkoutType', () => {
               name: 'Endurance',
               intensityClass: 'active' as const,
               length: { unit: 'second' as const, value: 7200 },
-              targets: [{ type: 'power' as const, minValue: 65, maxValue: 70, unit: 'percentOfFtp' as const }],
+              targets: [
+                {
+                  type: 'power' as const,
+                  minValue: 65,
+                  maxValue: 70,
+                  unit: 'percentOfFtp' as const,
+                },
+              ],
             },
           ],
         },
@@ -730,7 +822,14 @@ describe('inferWorkoutType', () => {
               name: 'Tempo',
               intensityClass: 'active' as const,
               length: { unit: 'second' as const, value: 3600 },
-              targets: [{ type: 'power' as const, minValue: 80, maxValue: 85, unit: 'percentOfFtp' as const }],
+              targets: [
+                {
+                  type: 'power' as const,
+                  minValue: 80,
+                  maxValue: 85,
+                  unit: 'percentOfFtp' as const,
+                },
+              ],
             },
           ],
         },
@@ -754,7 +853,14 @@ describe('inferWorkoutType', () => {
               name: 'Threshold',
               intensityClass: 'active' as const,
               length: { unit: 'second' as const, value: 1200 },
-              targets: [{ type: 'power' as const, minValue: 90, maxValue: 95, unit: 'percentOfFtp' as const }],
+              targets: [
+                {
+                  type: 'power' as const,
+                  minValue: 90,
+                  maxValue: 95,
+                  unit: 'percentOfFtp' as const,
+                },
+              ],
             },
           ],
         },
@@ -778,13 +884,27 @@ describe('inferWorkoutType', () => {
               name: 'VO2max',
               intensityClass: 'active' as const,
               length: { unit: 'second' as const, value: 180 },
-              targets: [{ type: 'power' as const, minValue: 110, maxValue: 120, unit: 'percentOfFtp' as const }],
+              targets: [
+                {
+                  type: 'power' as const,
+                  minValue: 110,
+                  maxValue: 120,
+                  unit: 'percentOfFtp' as const,
+                },
+              ],
             },
             {
               name: 'Recovery',
               intensityClass: 'rest' as const,
               length: { unit: 'second' as const, value: 180 },
-              targets: [{ type: 'power' as const, minValue: 50, maxValue: 55, unit: 'percentOfFtp' as const }],
+              targets: [
+                {
+                  type: 'power' as const,
+                  minValue: 50,
+                  maxValue: 55,
+                  unit: 'percentOfFtp' as const,
+                },
+              ],
             },
           ],
         },
@@ -807,7 +927,14 @@ describe('inferWorkoutType', () => {
               name: 'Main',
               intensityClass: 'active' as const,
               length: { unit: 'second' as const, value: 3600 },
-              targets: [{ type: 'power' as const, minValue: 70, maxValue: 75, unit: 'percentOfFtp' as const }],
+              targets: [
+                {
+                  type: 'power' as const,
+                  minValue: 70,
+                  maxValue: 75,
+                  unit: 'percentOfFtp' as const,
+                },
+              ],
             },
           ],
         },
@@ -837,7 +964,14 @@ describe('inferWorkoutIntensity', () => {
               name: 'Recovery',
               intensityClass: 'active' as const,
               length: { unit: 'second' as const, value: 3600 },
-              targets: [{ type: 'power' as const, minValue: 45, maxValue: 55, unit: 'percentOfFtp' as const }],
+              targets: [
+                {
+                  type: 'power' as const,
+                  minValue: 45,
+                  maxValue: 55,
+                  unit: 'percentOfFtp' as const,
+                },
+              ],
             },
           ],
         },
@@ -860,7 +994,14 @@ describe('inferWorkoutIntensity', () => {
               name: 'Endurance',
               intensityClass: 'active' as const,
               length: { unit: 'second' as const, value: 3600 },
-              targets: [{ type: 'power' as const, minValue: 65, maxValue: 75, unit: 'percentOfFtp' as const }],
+              targets: [
+                {
+                  type: 'power' as const,
+                  minValue: 65,
+                  maxValue: 75,
+                  unit: 'percentOfFtp' as const,
+                },
+              ],
             },
           ],
         },
@@ -884,7 +1025,14 @@ describe('inferWorkoutIntensity', () => {
               intensityClass: 'active' as const,
               length: { unit: 'second' as const, value: 1200 },
               // Threshold zone typically 88-94%, average 91% should be 'hard'
-              targets: [{ type: 'power' as const, minValue: 88, maxValue: 94, unit: 'percentOfFtp' as const }],
+              targets: [
+                {
+                  type: 'power' as const,
+                  minValue: 88,
+                  maxValue: 94,
+                  unit: 'percentOfFtp' as const,
+                },
+              ],
             },
           ],
         },
@@ -907,13 +1055,27 @@ describe('inferWorkoutIntensity', () => {
               name: 'VO2max',
               intensityClass: 'active' as const,
               length: { unit: 'second' as const, value: 180 },
-              targets: [{ type: 'power' as const, minValue: 115, maxValue: 125, unit: 'percentOfFtp' as const }],
+              targets: [
+                {
+                  type: 'power' as const,
+                  minValue: 115,
+                  maxValue: 125,
+                  unit: 'percentOfFtp' as const,
+                },
+              ],
             },
             {
               name: 'Recovery',
               intensityClass: 'rest' as const,
               length: { unit: 'second' as const, value: 180 },
-              targets: [{ type: 'power' as const, minValue: 50, maxValue: 55, unit: 'percentOfFtp' as const }],
+              targets: [
+                {
+                  type: 'power' as const,
+                  minValue: 50,
+                  maxValue: 55,
+                  unit: 'percentOfFtp' as const,
+                },
+              ],
             },
           ],
         },

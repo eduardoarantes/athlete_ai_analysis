@@ -14,7 +14,12 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import { convertStepLengthToMinutes } from '../lib/types/training-plan'
-import type { WorkoutStructure, StructuredWorkoutSegment, WorkoutStep, StepTarget } from '../lib/types/training-plan'
+import type {
+  WorkoutStructure,
+  StructuredWorkoutSegment,
+  WorkoutStep,
+  StepTarget,
+} from '../lib/types/training-plan'
 
 // ============================================================================
 // Types
@@ -104,7 +109,11 @@ function validateStepTarget(
   }
 
   if (typeof target.minValue !== 'number') {
-    errors.push({ path: `${path}.minValue`, message: 'minValue must be a number', severity: 'error' })
+    errors.push({
+      path: `${path}.minValue`,
+      message: 'minValue must be a number',
+      severity: 'error',
+    })
   } else if (target.minValue < 0) {
     errors.push({
       path: `${path}.minValue`,
@@ -114,7 +123,11 @@ function validateStepTarget(
   }
 
   if (typeof target.maxValue !== 'number') {
-    errors.push({ path: `${path}.maxValue`, message: 'maxValue must be a number', severity: 'error' })
+    errors.push({
+      path: `${path}.maxValue`,
+      message: 'maxValue must be a number',
+      severity: 'error',
+    })
   } else if (target.maxValue < 0) {
     errors.push({
       path: `${path}.maxValue`,
@@ -277,7 +290,11 @@ function validateStructuredWorkoutSegment(
   if (!Array.isArray(segment.steps)) {
     errors.push({ path: `${path}.steps`, message: 'steps must be an array', severity: 'error' })
   } else if (segment.steps.length === 0) {
-    errors.push({ path: `${path}.steps`, message: 'steps array cannot be empty', severity: 'error' })
+    errors.push({
+      path: `${path}.steps`,
+      message: 'steps array cannot be empty',
+      severity: 'error',
+    })
   } else {
     const repetitions = segment.length?.value || 1
 
@@ -354,7 +371,11 @@ function validateWorkoutStructure(structure: WorkoutStructure): {
   if (!Array.isArray(structure.structure)) {
     errors.push({ path: 'structure', message: 'structure must be an array', severity: 'error' })
   } else if (structure.structure.length === 0) {
-    errors.push({ path: 'structure', message: 'structure array cannot be empty', severity: 'error' })
+    errors.push({
+      path: 'structure',
+      message: 'structure array cannot be empty',
+      severity: 'error',
+    })
   } else {
     structure.structure.forEach((segment, i) => {
       const segmentResult = validateStructuredWorkoutSegment(segment, `structure[${i}]`)

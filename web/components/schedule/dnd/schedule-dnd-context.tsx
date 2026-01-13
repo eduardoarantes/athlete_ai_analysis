@@ -45,7 +45,7 @@ export function ScheduleDndContext({
   onMoveWorkout,
   onAddLibraryWorkout,
   onError,
-  isEditMode,
+  isEditMode: _isEditMode,
 }: ScheduleDndContextProps) {
   // Track active drag item - can be either scheduled workout or library workout
   const [activeItem, setActiveItem] = useState<ScheduleDragData | null>(null)
@@ -171,11 +171,8 @@ export function ScheduleDndContext({
     setOverId(null)
   }
 
-  // Don't enable DnD if not in edit mode
-  if (!isEditMode) {
-    return <>{children}</>
-  }
-
+  // Always enable DnD context to support library workout dragging
+  // The isEditMode flag is used internally to control what operations are allowed
   return (
     <DndContext
       sensors={sensors}
