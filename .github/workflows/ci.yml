@@ -165,7 +165,7 @@ jobs:
       - name: Validate Playwright version sync
         run: |
           DOCKERFILE_VERSION=$(grep 'FROM mcr.microsoft.com/playwright:v' docker/web-e2e.Dockerfile | sed -n 's/.*:v\([0-9.]*\).*/\1/p')
-          PACKAGE_VERSION=$(grep '@playwright/test' web/package.json | sed -n 's/.*"\^*\([0-9.]*\).*/\1/p')
+          PACKAGE_VERSION=$(grep '@playwright/test' web/package.json | sed -n 's/.*: *"\^*\([0-9.]*\)".*/\1/p')
           echo "Dockerfile Playwright version: $DOCKERFILE_VERSION"
           echo "package.json @playwright/test version: $PACKAGE_VERSION"
           if [ "$DOCKERFILE_VERSION" != "$PACKAGE_VERSION" ]; then
