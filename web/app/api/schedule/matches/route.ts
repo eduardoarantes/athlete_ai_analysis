@@ -98,7 +98,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     const service = await WorkoutMatchService.create()
-    await service.unmatchWorkoutById(planInstanceId, workoutId)
+    await service.unmatchWorkout(planInstanceId, workoutId)
 
     return NextResponse.json({ success: true })
   } catch (error) {

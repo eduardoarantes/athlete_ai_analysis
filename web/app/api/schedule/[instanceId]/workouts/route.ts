@@ -124,8 +124,8 @@ async function hasMatchedActivity(instanceId: string, workoutId: string): Promis
  * Request body:
  * {
  *   action: 'move' | 'copy',
- *   source: { date: 'YYYY-MM-DD', index: number },
- *   target: { date: 'YYYY-MM-DD', index: number }
+ *   source: { workout_id: string },
+ *   target: { date: 'YYYY-MM-DD' }
  * }
  *
  * Constraints:
@@ -333,8 +333,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams): Prom
  *
  * Request body:
  * {
- *   date: 'YYYY-MM-DD',
- *   index: number
+ *   workout_id: string
  * }
  *
  * Constraints:

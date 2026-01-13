@@ -34,8 +34,6 @@ export interface WorkoutMatch {
   plan_instance_id: string
   /** Unique workout identifier (UUID format) - primary key for matches */
   workout_id: string
-  workout_date: string
-  workout_index: number
   strava_activity_id: string
   match_type: 'auto' | 'manual'
   match_score: number | null
@@ -63,8 +61,6 @@ export interface WorkoutMatchInput {
   plan_instance_id: string
   /** Unique workout identifier (UUID format) - required */
   workout_id: string
-  workout_date: string
-  workout_index: number
   strava_activity_id: string
   match_type: 'auto' | 'manual'
   match_score?: number
@@ -72,8 +68,6 @@ export interface WorkoutMatchInput {
 
 export interface AutoMatchResult {
   workout_id: string
-  workout_date: string
-  workout_index: number
   activity: {
     id: string
     name: string
@@ -316,8 +310,6 @@ export class WorkoutMatchService {
       user_id: this.userId,
       plan_instance_id: input.plan_instance_id,
       workout_id: input.workout_id,
-      workout_date: input.workout_date,
-      workout_index: input.workout_index,
       strava_activity_id: input.strava_activity_id,
       match_type: input.match_type,
       match_score: input.match_score ?? null,
@@ -543,8 +535,6 @@ export class WorkoutMatchService {
       if (best && best.score >= 50) {
         suggestions.push({
           workout_id: workout.id,
-          workout_date: workout.scheduled_date,
-          workout_index: 0,
           activity: {
             id: best.activity.id,
             name: best.activity.name,
@@ -577,8 +567,6 @@ export class WorkoutMatchService {
         await this.matchWorkout({
           plan_instance_id: planInstanceId,
           workout_id: suggestion.workout_id,
-          workout_date: suggestion.workout_date,
-          workout_index: suggestion.workout_index,
           strava_activity_id: suggestion.activity.id,
           match_type: 'auto',
           match_score: suggestion.score,

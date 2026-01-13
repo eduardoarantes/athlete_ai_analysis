@@ -868,7 +868,6 @@ export function ScheduleCalendar({
                     key={dateKey}
                     date={dateKey}
                     isEditMode={canEdit}
-                    existingWorkoutsCount={workouts.length}
                     onAddNote={() => handleAddNote(dateKey)}
                   >
                     {droppableDay}
@@ -919,7 +918,6 @@ export function ScheduleCalendar({
         isAdmin={isAdmin}
         planInstanceId={selectedWorkout?.instance.id}
         workoutDate={selectedWorkout ? formatDateString(selectedWorkout.date) : undefined}
-        workoutIndex={selectedWorkout?.index}
         matchedActivity={
           selectedWorkout
             ? // Try workout.id key first (new format), fall back to date:index (legacy)

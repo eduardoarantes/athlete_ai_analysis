@@ -29,8 +29,6 @@ import type { Json } from '@/lib/types/database'
 interface AnalyzeRequest {
   // Option 1: Direct specification
   plan_instance_id?: string
-  workout_date?: string
-  workout_index?: number
   strava_activity_id?: string
 
   // Option 2: From match record
@@ -74,8 +72,6 @@ export async function POST(request: NextRequest) {
     }
 
     let planInstanceId: string
-    let workoutDate: string
-    let workoutIndex: number
     let workoutId: string | null = null
     let stravaActivityId: string
     let matchId: string | null = body.match_id || null
@@ -85,7 +81,7 @@ export async function POST(request: NextRequest) {
       // Fetch from match record
       const { data: match, error: matchError } = await supabase
         .from('workout_activity_matches')
-        .select('id, plan_instance_id, workout_id, workout_date, workout_index, strava_activity_id')
+        .select('id, plan_instance_id, workout_id, strava_activity_id')
         .eq('id', body.match_id)
         .single()
 
@@ -96,42 +92,15 @@ export async function POST(request: NextRequest) {
       matchId = match.id
       planInstanceId = match.plan_instance_id
       workoutId = match.workout_id
-      workoutDate = match.workout_date
-      workoutIndex = match.workout_index
       stravaActivityId = match.strava_activity_id
     } else {
-      // Use direct parameters
-      if (!body.plan_instance_id || !body.workout_date || !body.strava_activity_id) {
-        return NextResponse.json(
-          {
-            error:
-              'Either match_id or (plan_instance_id, workout_date, strava_activity_id) required',
-          },
-          { status: 400 }
-        )
-      }
-
-      planInstanceId = body.plan_instance_id
-      workoutDate = body.workout_date
-      workoutIndex = body.workout_index ?? 0
-      stravaActivityId = body.strava_activity_id
-
-      // Try to find existing match or create one if saving
-      if (shouldSave) {
-        const { data: existingMatch } = await supabase
-          .from('workout_activity_matches')
-          .select('id')
-          .eq('plan_instance_id', planInstanceId)
-          .eq('workout_date', workoutDate)
-          .eq('workout_index', workoutIndex)
-          .single()
-
-        if (existingMatch) {
-          matchId = existingMatch.id
-        }
-        // Note: We don't create a new match here - that should be done separately
-        // The match record links a specific workout slot to an activity
-      }
+      // Direct specification is no longer supported - must use match_id
+      return NextResponse.json(
+        {
+          error: 'match_id is required. Direct workout specification is no longer supported.',
+        },
+        { status: 400 }
+      )
     }
 
     // Fetch plan instance
@@ -150,7 +119,7 @@ export async function POST(request: NextRequest) {
     if (!workoutId) {
       errorLogger.logWarning('Analysis request missing workout_id', {
         userId: user.id,
-        metadata: { workoutDate, workoutIndex },
+        metadata: { matchId },
       })
       return NextResponse.json(
         { error: 'workout_id is required. Legacy date+index lookups are no longer supported.' },
@@ -288,8 +257,7 @@ export async function POST(request: NextRequest) {
       userId: user.id,
       metadata: {
         planInstanceId,
-        workoutDate,
-        workoutIndex,
+        workoutId,
         activityId: stravaActivityId,
         workoutName: workout.name,
         overallScore: analysis.overall.score,
@@ -304,7 +272,6 @@ export async function POST(request: NextRequest) {
       context: {
         workout_name: workout.name,
         workout_type: workout.type,
-        workout_date: workoutDate,
         workout_tss: workout.tss,
         activity_id: stravaActivityId,
         athlete_ftp: ftp,
