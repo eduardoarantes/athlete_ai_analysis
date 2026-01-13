@@ -163,6 +163,7 @@ export interface WorkoutComplianceAnalysis {
     algorithm_version: string
     power_data_quality: 'good' | 'partial' | 'missing'
     adaptive_parameters: AdaptiveParameters
+    detection_strategy?: 'global' | 'per-segment'
   }
 }
 
@@ -228,6 +229,37 @@ export function getTargetZone(powerLowPct: number, powerHighPct: number): number
 // ============================================================================
 // Adaptive Parameters
 // ============================================================================
+
+/**
+ * Get adaptive parameters for a specific segment based on its duration
+ * Used for per-segment detection in mixed-duration workouts (Issue #98)
+ */
+export function getSegmentAdaptiveParameters(segment: PlannedSegment): AdaptiveParameters {
+  const duration = segment.duration_sec
+
+  if (duration >= 300) {
+    // Long segments (≥5 min): conservative detection
+    return {
+      smoothingWindowSec: 30,
+      minSegmentDurationSec: 60,
+      boundaryStabilitySec: 30,
+    }
+  } else if (duration >= 60) {
+    // Medium segments (1-5 min): moderate detection
+    return {
+      smoothingWindowSec: 15,
+      minSegmentDurationSec: 20,
+      boundaryStabilitySec: 15,
+    }
+  } else {
+    // Short segments (<1 min): sensitive detection
+    return {
+      smoothingWindowSec: 5,
+      minSegmentDurationSec: 10,
+      boundaryStabilitySec: 5,
+    }
+  }
+}
 
 /**
  * Calculate adaptive parameters based on the shortest planned segment
@@ -920,16 +952,32 @@ export function analyzeWorkoutCompliance(
   // Step 2: Flatten planned segments (structure takes precedence)
   const flattenedSegments = flattenWorkoutSegments(plannedSegments, ftp, structure)
 
-  // Step 3: Calculate adaptive parameters
+  // Step 3: Determine detection strategy based on segment duration variance (Issue #98)
+  let detectionStrategy: 'global' | 'per-segment' = 'global'
+  if (flattenedSegments.length > 0) {
+    const durations = flattenedSegments.map((s) => s.duration_sec)
+    const minDuration = Math.min(...durations)
+    const maxDuration = Math.max(...durations)
+    const durationRatio = maxDuration / minDuration
+
+    // If max/min ratio > 10, use per-segment approach (e.g., 15min warmup + 10s sprints)
+    if (durationRatio > 10) {
+      detectionStrategy = 'per-segment'
+    }
+  }
+
+  // Step 4: Calculate adaptive parameters
+  // For global strategy, use existing logic based on shortest segment
+  // For per-segment strategy, we'll use segment-specific params during matching
   const adaptiveParams = calculateAdaptiveParameters(flattenedSegments)
 
-  // Step 4: Smooth power stream
+  // Step 5: Smooth power stream
   const smoothedPower = smoothPowerStream(powerStream, adaptiveParams.smoothingWindowSec)
 
-  // Step 5: Detect effort blocks
+  // Step 6: Detect effort blocks
   const detectedBlocks = detectEffortBlocks(smoothedPower, zones, adaptiveParams)
 
-  // Step 6: Match segments to blocks
+  // Step 7: Match segments to blocks
   const matches = matchSegments(flattenedSegments, detectedBlocks)
 
   // Step 7: Analyze each segment
@@ -1046,9 +1094,10 @@ export function analyzeWorkoutCompliance(
     overall,
     segments: segmentAnalyses,
     metadata: {
-      algorithm_version: '1.0.0',
+      algorithm_version: '1.1.0',
       power_data_quality: powerDataQuality,
       adaptive_parameters: adaptiveParams,
+      detection_strategy: detectionStrategy,
     },
   }
 }

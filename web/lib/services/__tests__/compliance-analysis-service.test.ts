@@ -12,6 +12,7 @@ import {
   calculateHRZones,
   getTargetZone,
   calculateAdaptiveParameters,
+  getSegmentAdaptiveParameters,
   flattenWorkoutSegments,
   smoothPowerStream,
   classifyPowerToZone,
@@ -158,6 +159,62 @@ describe('Zone Calculations', () => {
 // ============================================================================
 
 describe('Adaptive Parameters', () => {
+  describe('getSegmentAdaptiveParameters', () => {
+    it('returns conservative parameters for long segments (≥300s)', () => {
+      const segment: PlannedSegment = {
+        index: 0,
+        name: 'Long Warmup',
+        type: 'warmup',
+        duration_sec: 900, // 15 minutes
+        power_low: 125,
+        power_high: 150,
+        target_zone: 2,
+      }
+
+      const params = getSegmentAdaptiveParameters(segment)
+
+      expect(params.smoothingWindowSec).toBe(30)
+      expect(params.minSegmentDurationSec).toBe(60)
+      expect(params.boundaryStabilitySec).toBe(30)
+    })
+
+    it('returns moderate parameters for medium segments (60-300s)', () => {
+      const segment: PlannedSegment = {
+        index: 0,
+        name: 'Medium Interval',
+        type: 'work',
+        duration_sec: 180, // 3 minutes
+        power_low: 220,
+        power_high: 240,
+        target_zone: 4,
+      }
+
+      const params = getSegmentAdaptiveParameters(segment)
+
+      expect(params.smoothingWindowSec).toBe(15)
+      expect(params.minSegmentDurationSec).toBe(20)
+      expect(params.boundaryStabilitySec).toBe(15)
+    })
+
+    it('returns sensitive parameters for short segments (<60s)', () => {
+      const segment: PlannedSegment = {
+        index: 0,
+        name: 'Sprint',
+        type: 'work',
+        duration_sec: 30,
+        power_low: 300,
+        power_high: 400,
+        target_zone: 5,
+      }
+
+      const params = getSegmentAdaptiveParameters(segment)
+
+      expect(params.smoothingWindowSec).toBe(5)
+      expect(params.minSegmentDurationSec).toBe(10)
+      expect(params.boundaryStabilitySec).toBe(5)
+    })
+  })
+
   describe('calculateAdaptiveParameters', () => {
     it('returns default parameters for empty segments', () => {
       const params = calculateAdaptiveParameters([])
@@ -1368,6 +1425,80 @@ describe('Compliance Scoring', () => {
 describe('analyzeWorkoutCompliance', () => {
   const FTP = 250
 
+  describe('Mixed-duration workout detection (Issue #98)', () => {
+    it('detects 15-min warmup correctly when followed by short intervals', () => {
+      // Create a mixed-duration workout: 15-min warmup + 5x (10s sprint + 50s recovery)
+
+      // Generate simulated power stream that matches the workout
+      const warmupPower = Array(900).fill(140) // 15 min at Z2
+      const intervalsPower: number[] = []
+      for (let i = 0; i < 5; i++) {
+        intervalsPower.push(...Array(10).fill(350)) // 10s sprint
+        intervalsPower.push(...Array(50).fill(110)) // 50s recovery
+      }
+      const powerStream = [...warmupPower, ...intervalsPower]
+
+      const result = analyzeWorkoutCompliance(undefined, powerStream, FTP, {
+        primaryIntensityMetric: 'percentOfFtp' as const,
+        primaryLengthMetric: 'duration' as const,
+        structure: [
+          {
+            type: 'step' as const,
+            length: { unit: 'repetition' as const, value: 1 },
+            steps: [{
+              name: 'Warmup',
+              intensityClass: 'warmUp' as const,
+              length: { unit: 'second' as const, value: 900 },
+              targets: [{ type: 'power' as const, minValue: 50, maxValue: 60, unit: 'percentOfFtp' as const }]
+            }]
+          },
+          {
+            type: 'repetition' as const,
+            length: { unit: 'repetition' as const, value: 5 },
+            steps: [
+              {
+                name: 'Sprint',
+                intensityClass: 'active' as const,
+                length: { unit: 'second' as const, value: 10 },
+                targets: [{ type: 'power' as const, minValue: 120, maxValue: 160, unit: 'percentOfFtp' as const }]
+              },
+              {
+                name: 'Recovery',
+                intensityClass: 'rest' as const,
+                length: { unit: 'second' as const, value: 50 },
+                targets: [{ type: 'power' as const, minValue: 40, maxValue: 50, unit: 'percentOfFtp' as const }]
+              }
+            ]
+          }
+        ]
+      })
+
+      // CRITICAL: Warmup should be detected as ~900 seconds, not 15 seconds
+      const warmupSegment = result.segments[0]!
+      expect(warmupSegment.actual_duration_sec).toBeGreaterThan(800) // At least 800s (allowing 10% tolerance)
+      expect(warmupSegment.actual_duration_sec).toBeLessThan(1000) // At most 1000s
+      expect(warmupSegment.scores.duration_compliance).toBeGreaterThan(85) // >85/100
+
+      // Short intervals should still be detected
+      const firstSprint = result.segments[1]!
+      expect(firstSprint.actual_duration_sec).toBeGreaterThan(5)
+      expect(firstSprint.actual_duration_sec).toBeLessThan(20)
+
+      // Metadata should indicate per-segment strategy
+      expect(result.metadata.detection_strategy).toBe('per-segment')
+      expect(result.metadata.algorithm_version).toBe('1.1.0')
+    })
+
+    it('uses global strategy for uniform-duration workouts (backward compatible)', () => {
+      const powerStream = generatePerfectExecutionStream(SIMPLE_SWEET_SPOT_SEGMENTS, FTP)
+      const result = analyzeWorkoutCompliance(SIMPLE_SWEET_SPOT_SEGMENTS, powerStream, FTP)
+
+      // Should use global strategy for uniform workouts
+      expect(result.metadata.detection_strategy).toBe('global')
+      expect(result.metadata.algorithm_version).toBe('1.1.0')
+    })
+  })
+
   it('analyzes simple sweet spot workout', () => {
     const powerStream = generatePerfectExecutionStream(SIMPLE_SWEET_SPOT_SEGMENTS, FTP)
     const result = analyzeWorkoutCompliance(SIMPLE_SWEET_SPOT_SEGMENTS, powerStream, FTP)
@@ -1375,7 +1506,7 @@ describe('analyzeWorkoutCompliance', () => {
     // Simulated power may not perfectly match detection algorithm expectations
     // Focus on structure and metadata being correct
     expect(result.segments.length).toBe(5) // warmup, ss1, recovery, ss2, cooldown
-    expect(result.metadata.algorithm_version).toBe('1.0.0')
+    expect(result.metadata.algorithm_version).toBe('1.1.0')
     expect(result.metadata.power_data_quality).toBe('good')
     expect(result.overall.segments_total).toBe(5)
     expect(['A', 'B', 'C', 'D', 'F']).toContain(result.overall.grade)
