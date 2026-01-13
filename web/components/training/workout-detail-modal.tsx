@@ -23,7 +23,6 @@ export interface WorkoutDetailModalProps {
   isAdmin?: boolean
   planInstanceId?: string | undefined
   workoutDate?: string | undefined
-  workoutIndex?: number | undefined
   matchedActivity?: MatchedActivityData | null | undefined
   onMatchChange?: () => void
 }
@@ -40,7 +39,6 @@ export function WorkoutDetailModal({
   isAdmin = false,
   planInstanceId,
   workoutDate,
-  workoutIndex = 0,
   matchedActivity,
   onMatchChange,
 }: WorkoutDetailModalProps) {
@@ -88,12 +86,11 @@ export function WorkoutDetailModal({
       headerActions={adminActions}
     >
       {/* Activity matching section */}
-      {planInstanceId && workoutDate && (
+      {planInstanceId && workoutDate && workout?.id && (
         <ActivityMatchingSection
           planInstanceId={planInstanceId}
           workoutDate={workoutDate}
-          workoutId={workout?.id}
-          workoutIndex={workoutIndex}
+          workoutId={workout.id}
           matchedActivity={matchedActivity}
           onMatchChange={onMatchChange}
         />
