@@ -62,7 +62,8 @@ async function autoMatchActivity(
   activityTss: number | null
 ): Promise<void> {
   try {
-    const dateOnly = activityDate.split('T')[0]!
+    const dateOnly = activityDate.split('T')[0]
+    if (!dateOnly) return // Invalid date format
 
     // Get user's active plan instances
     const { data: instances } = await supabase
@@ -84,7 +85,8 @@ async function autoMatchActivity(
         weekly_plan?: Array<{
           week_number: number
           workouts?: Array<{
-            weekday: string
+            id?: string
+            scheduled_date?: string
             tss?: number
             type?: string
           }>
@@ -93,55 +95,29 @@ async function autoMatchActivity(
 
       if (!planData?.weekly_plan) continue
 
-      const startDate = new Date(instance.start_date)
-
-      // Find workouts scheduled for this date
+      // Find workouts scheduled for this date using scheduled_date field
       for (const week of planData.weekly_plan) {
         if (!week.workouts) continue
 
-        for (let workoutIdx = 0; workoutIdx < week.workouts.length; workoutIdx++) {
-          const workout = week.workouts[workoutIdx]!
-
-          // Calculate workout date
-          const daysOfWeek = [
-            'Sunday',
-            'Monday',
-            'Tuesday',
-            'Wednesday',
-            'Thursday',
-            'Friday',
-            'Saturday',
-          ]
-          const dayIndex = daysOfWeek.findIndex(
-            (d) => d.toLowerCase() === workout.weekday.toLowerCase()
-          )
-          if (dayIndex === -1) continue
-
-          const startDayOfWeek = startDate.getDay()
-          const daysToMonday = startDayOfWeek === 0 ? -6 : 1 - startDayOfWeek
-          const weekOneMonday = new Date(startDate)
-          weekOneMonday.setDate(startDate.getDate() + daysToMonday)
-
-          const adjustedDayIndex = dayIndex === 0 ? 6 : dayIndex - 1
-          const workoutDate = new Date(weekOneMonday)
-          workoutDate.setDate(
-            weekOneMonday.getDate() + (week.week_number - 1) * 7 + adjustedDayIndex
-          )
-
-          const workoutDateStr = workoutDate.toISOString().split('T')[0]
+        for (const workout of week.workouts) {
+          // Skip workouts without scheduled_date (legacy data)
+          if (!workout.scheduled_date) continue
 
           // Check if this workout is on the same day as the activity
-          if (workoutDateStr !== dateOnly) continue
+          if (workout.scheduled_date !== dateOnly) continue
 
-          // Check if workout is already matched
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const { data: existingMatch } = await (supabase as any)
-            .from('workout_activity_matches')
-            .select('id')
-            .eq('plan_instance_id', instance.id)
-            .eq('workout_date', dateOnly)
-            .eq('workout_index', workoutIdx)
-            .single()
+          // Check if workout is already matched (by workout_id if available, otherwise by date+index)
+          let existingMatch
+          if (workout.id) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { data } = await (supabase as any)
+              .from('workout_activity_matches')
+              .select('id')
+              .eq('plan_instance_id', instance.id)
+              .eq('workout_id', workout.id)
+              .single()
+            existingMatch = data
+          }
 
           if (existingMatch) continue // Already matched
 
@@ -165,27 +141,38 @@ async function autoMatchActivity(
 
           // Only match if score is high enough
           if (score >= 50) {
+            // Build match data with workout_id if available
+            const matchData: Record<string, unknown> = {
+              user_id: userId,
+              plan_instance_id: instance.id,
+              workout_date: dateOnly,
+              workout_index: 0, // Default for backwards compatibility
+              strava_activity_id: activityId,
+              match_type: 'auto',
+              match_score: score,
+            }
+
+            if (workout.id) {
+              matchData.workout_id = workout.id
+            }
+
+            // Use appropriate conflict resolution based on whether we have workout_id
+            const conflictColumns = workout.id
+              ? 'plan_instance_id,workout_id'
+              : 'plan_instance_id,workout_date,workout_index'
+
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            await (supabase as any).from('workout_activity_matches').upsert(
-              {
-                user_id: userId,
-                plan_instance_id: instance.id,
-                workout_date: dateOnly,
-                workout_index: workoutIdx,
-                strava_activity_id: activityId,
-                match_type: 'auto',
-                match_score: score,
-              },
-              { onConflict: 'plan_instance_id,workout_date,workout_index' }
-            )
+            await (supabase as any)
+              .from('workout_activity_matches')
+              .upsert(matchData, { onConflict: conflictColumns })
 
             errorLogger.logInfo('Auto-matched activity to workout', {
               userId,
               metadata: {
                 activityId,
                 planInstanceId: instance.id,
+                workoutId: workout.id,
                 workoutDate: dateOnly,
-                workoutIndex: workoutIdx,
                 score,
               },
             })

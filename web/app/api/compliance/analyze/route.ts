@@ -21,7 +21,8 @@ import { createClient } from '@/lib/supabase/server'
 import { StravaService } from '@/lib/services/strava-service'
 import { analyzeWorkoutCompliance } from '@/lib/services/compliance-analysis-service'
 import { errorLogger } from '@/lib/monitoring/error-logger'
-import type { TrainingPlanData, Workout } from '@/lib/types/training-plan'
+import { getWorkoutById, getWorkoutByDateAndIndex } from '@/lib/utils/workout-helpers'
+import type { TrainingPlanData } from '@/lib/types/training-plan'
 import { hasValidStructure } from '@/lib/types/training-plan'
 import type { Json } from '@/lib/types/database'
 
@@ -56,48 +57,6 @@ interface AnalyzeRequestWithSave extends AnalyzeRequest {
   save?: boolean
 }
 
-/**
- * Get workout from plan instance for a specific date and index
- */
-function getWorkoutFromPlan(
-  planData: TrainingPlanData,
-  startDate: string,
-  targetDate: string,
-  workoutIndex: number
-): Workout | null {
-  // Calculate which week this date falls in
-  const start = new Date(startDate)
-  const target = new Date(targetDate)
-  const diffDays = Math.floor((target.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
-  const weekNumber = Math.floor(diffDays / 7) + 1
-  const dayOfWeek = target.getDay() // 0 = Sunday
-
-  // Map day of week to weekday name
-  const weekdayMap: Record<number, string> = {
-    0: 'Sunday',
-    1: 'Monday',
-    2: 'Tuesday',
-    3: 'Wednesday',
-    4: 'Thursday',
-    5: 'Friday',
-    6: 'Saturday',
-  }
-  const targetWeekday = weekdayMap[dayOfWeek]
-
-  // Find the week
-  const week = planData.weekly_plan?.find((w) => w.week_number === weekNumber)
-  if (!week) {
-    return null
-  }
-
-  // Find workouts for this day
-  const dayWorkouts = week.workouts.filter(
-    (w) => w.weekday?.toLowerCase() === targetWeekday?.toLowerCase()
-  )
-
-  return dayWorkouts[workoutIndex] || null
-}
-
 export async function POST(request: NextRequest) {
   try {
     const body: AnalyzeRequestWithSave = await request.json()
@@ -117,6 +76,7 @@ export async function POST(request: NextRequest) {
     let planInstanceId: string
     let workoutDate: string
     let workoutIndex: number
+    let workoutId: string | null = null
     let stravaActivityId: string
     let matchId: string | null = body.match_id || null
 
@@ -125,7 +85,7 @@ export async function POST(request: NextRequest) {
       // Fetch from match record
       const { data: match, error: matchError } = await supabase
         .from('workout_activity_matches')
-        .select('id, plan_instance_id, workout_date, workout_index, strava_activity_id')
+        .select('id, plan_instance_id, workout_id, workout_date, workout_index, strava_activity_id')
         .eq('id', body.match_id)
         .single()
 
@@ -135,6 +95,7 @@ export async function POST(request: NextRequest) {
 
       matchId = match.id
       planInstanceId = match.plan_instance_id
+      workoutId = match.workout_id
       workoutDate = match.workout_date
       workoutIndex = match.workout_index
       stravaActivityId = match.strava_activity_id
@@ -185,19 +146,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Plan instance not found' }, { status: 404 })
     }
 
-    // Get workout from plan
-    const workout = getWorkoutFromPlan(
-      planInstance.plan_data,
-      planInstance.start_date,
-      workoutDate,
-      workoutIndex
-    )
+    // Get workout from plan by workout_id (preferred) or date+index (legacy fallback)
+    const workout = workoutId
+      ? getWorkoutById(planInstance.plan_data, workoutId)
+      : getWorkoutByDateAndIndex(planInstance.plan_data, workoutDate, workoutIndex)
 
     if (!workout) {
-      return NextResponse.json(
-        { error: `No workout found for date ${workoutDate} index ${workoutIndex}` },
-        { status: 404 }
-      )
+      const identifier = workoutId ? `ID ${workoutId}` : `date ${workoutDate} index ${workoutIndex}`
+      return NextResponse.json({ error: `No workout found for ${identifier}` }, { status: 404 })
     }
 
     // Check if workout has valid structure
