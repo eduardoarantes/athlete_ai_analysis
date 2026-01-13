@@ -122,7 +122,7 @@ export function ScheduleCalendar({
     if (!instance.plan_data?.weekly_plan) return workouts
 
     // Get effective workouts by date (reads directly from plan_data)
-    const effectiveWorkouts = applyWorkoutOverrides(instance.plan_data, instance.start_date)
+    const effectiveWorkouts = applyWorkoutOverrides(instance.plan_data)
 
     effectiveWorkouts.forEach((dateWorkouts, dateKey) => {
       dateWorkouts.forEach((effectiveWorkout) => {
@@ -558,7 +558,7 @@ export function ScheduleCalendar({
       const startDate = parseLocalDate(instance.start_date)
 
       // Get effective workouts by date (reads directly from plan_data)
-      const effectiveWorkouts = applyWorkoutOverrides(instance.plan_data, instance.start_date)
+      const effectiveWorkouts = applyWorkoutOverrides(instance.plan_data)
 
       // Convert effective workouts to ScheduledWorkout format
       effectiveWorkouts.forEach((workouts, dateKey) => {
