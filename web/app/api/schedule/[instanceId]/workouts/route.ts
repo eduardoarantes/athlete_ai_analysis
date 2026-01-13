@@ -94,20 +94,6 @@ function validateTargetDate(targetDate: string): { valid: boolean; error?: strin
 }
 
 /**
- * Validate that the source workout is not in the past (for moves only)
- */
-function validateSourceDateForMove(sourceDate: string): { valid: boolean; error?: string } {
-  const source = parseISO(sourceDate)
-  const today = startOfDay(new Date())
-
-  if (source < today) {
-    return { valid: false, error: 'Cannot move workouts from past dates' }
-  }
-
-  return { valid: true }
-}
-
-/**
  * Check if a workout has a matched activity (blocks move, not copy)
  */
 async function hasMatchedActivity(instanceId: string, workoutId: string): Promise<boolean> {
@@ -188,14 +174,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams): Prom
       return NextResponse.json({ error: targetValidation.error }, { status: 400 })
     }
 
-    // For moves, validate source date and check for matches
+    // For moves, check if workout has a matched activity
     if (action === 'move') {
-      const sourceValidation = validateSourceDateForMove(source.date)
-      if (!sourceValidation.valid) {
-        return NextResponse.json({ error: sourceValidation.error }, { status: 400 })
-      }
-
-      const hasMatch = await hasMatchedActivity(instanceId, source.date, source.index)
+      const hasMatch = await hasMatchedActivity(instanceId, source.workout_id)
       if (hasMatch) {
         return NextResponse.json(
           { error: 'Cannot move a workout with a matched activity. Use copy instead.' },
@@ -218,7 +199,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams): Prom
     // Validate plan_data structure
     const planData = assertTrainingPlanData(instance.plan_data, 'schedule/workouts')
 
-    // Find the source workout by scheduled_date
+    // Find the source workout by workout_id
     let foundWorkout: Workout | null = null
     let sourceWeekIndex: number | null = null
     let sourceWorkoutIndex: number | null = null
@@ -232,7 +213,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams): Prom
           const workout = week.workouts[workoutIdx]
           if (!workout) continue
 
-          if (workout.scheduled_date === source.date) {
+          if (workout.id === source.workout_id) {
             foundWorkout = workout
             sourceWeekIndex = weekIdx
             sourceWorkoutIndex = workoutIdx
@@ -244,7 +225,19 @@ export async function PATCH(request: NextRequest, { params }: RouteParams): Prom
     }
 
     if (!foundWorkout || sourceWeekIndex === null || sourceWorkoutIndex === null) {
-      return NextResponse.json({ error: 'Workout not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: `Workout not found with ID ${source.workout_id}` },
+        { status: 404 }
+      )
+    }
+
+    // For moves, validate that source workout is not in the past
+    if (action === 'move' && foundWorkout.scheduled_date) {
+      const sourceDate = parseISO(foundWorkout.scheduled_date)
+      const today = startOfDay(new Date())
+      if (sourceDate < today) {
+        return NextResponse.json({ error: 'Cannot move workouts from past dates' }, { status: 400 })
+      }
     }
 
     // Calculate target week number
@@ -317,7 +310,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams): Prom
       metadata: {
         instanceId,
         workoutName: foundWorkout.name,
-        sourceDate: source.date,
+        workoutId: source.workout_id,
         targetDate: target.date,
       },
     })
@@ -373,18 +366,12 @@ export async function DELETE(request: NextRequest, { params }: RouteParams): Pro
       )
     }
 
-    const { date, index } = validation.data
+    const { workout_id } = validation.data
 
     // Validate access
     const accessResult = await validateAccess(instanceId, user.id)
     if (!accessResult.valid) {
       return NextResponse.json({ error: accessResult.error }, { status: 403 })
-    }
-
-    // Validate date (must be current or future)
-    const dateValidation = validateTargetDate(date)
-    if (!dateValidation.valid) {
-      return NextResponse.json({ error: 'Cannot delete workouts from past dates' }, { status: 400 })
     }
 
     // Fetch the plan instance
@@ -401,10 +388,10 @@ export async function DELETE(request: NextRequest, { params }: RouteParams): Pro
     // Validate plan_data structure
     const planData = assertTrainingPlanData(instance.plan_data, 'schedule/workouts')
 
-    // Find and remove the workout by scheduled_date
+    // Find and remove the workout by workout_id
     let removed = false
     let removedWorkoutName = ''
-    let removedWorkoutId: string | null = null
+    let removedWorkoutDate = ''
 
     if (planData.weekly_plan) {
       for (let weekIdx = 0; weekIdx < planData.weekly_plan.length; weekIdx++) {
@@ -415,9 +402,21 @@ export async function DELETE(request: NextRequest, { params }: RouteParams): Pro
           const workout = week.workouts[workoutIdx]
           if (!workout) continue
 
-          if (workout.scheduled_date === date) {
+          if (workout.id === workout_id) {
+            // Validate that workout is not in the past
+            if (workout.scheduled_date) {
+              const workoutDate = parseISO(workout.scheduled_date)
+              const today = startOfDay(new Date())
+              if (workoutDate < today) {
+                return NextResponse.json(
+                  { error: 'Cannot delete workouts from past dates' },
+                  { status: 400 }
+                )
+              }
+              removedWorkoutDate = workout.scheduled_date
+            }
+
             removedWorkoutName = workout.name
-            removedWorkoutId = workout.id || null
             week.workouts.splice(workoutIdx, 1)
             week.week_tss = week.workouts.reduce((sum, w) => sum + (w.tss || 0), 0)
             removed = true
@@ -429,7 +428,10 @@ export async function DELETE(request: NextRequest, { params }: RouteParams): Pro
     }
 
     if (!removed) {
-      return NextResponse.json({ error: 'Workout not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: `Workout not found with ID ${workout_id}` },
+        { status: 404 }
+      )
     }
 
     // Save updated plan_data to database
@@ -445,34 +447,24 @@ export async function DELETE(request: NextRequest, { params }: RouteParams): Pro
       errorLogger.logError(new Error(`Failed to delete workout: ${updateError.message}`), {
         userId: user.id,
         path: `/api/schedule/${instanceId}/workouts`,
-        metadata: { instanceId, date, index },
+        metadata: { instanceId, workout_id, workoutDate: removedWorkoutDate },
       })
       return NextResponse.json({ error: 'Failed to delete workout' }, { status: 500 })
     }
 
     // Delete any associated match from workout_activity_matches
-    // Use workout_id if available (preferred), otherwise fall back to date+index
-    let matchDeleteQuery = supabase
+    const { error: matchDeleteError } = await supabase
       .from('workout_activity_matches')
       .delete()
       .eq('plan_instance_id', instanceId)
-
-    if (removedWorkoutId) {
-      matchDeleteQuery = matchDeleteQuery.eq('workout_id', removedWorkoutId)
-    } else {
-      matchDeleteQuery = matchDeleteQuery.eq('workout_date', date).eq('workout_index', index)
-    }
-
-    const { error: matchDeleteError } = await matchDeleteQuery
+      .eq('workout_id', workout_id)
 
     if (matchDeleteError) {
       // Log but don't fail the delete operation
       errorLogger.logWarning('Failed to delete workout match', {
         metadata: {
           instanceId,
-          workoutId: removedWorkoutId,
-          date,
-          index,
+          workoutId: workout_id,
           error: matchDeleteError.message,
         },
       })
@@ -483,7 +475,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams): Pro
       metadata: {
         instanceId,
         workoutName: removedWorkoutName,
-        date,
+        workoutDate: removedWorkoutDate,
       },
     })
 
