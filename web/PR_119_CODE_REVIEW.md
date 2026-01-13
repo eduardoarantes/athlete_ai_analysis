@@ -316,11 +316,18 @@ Using Supabase client (parameterized queries)
 - [ ] **Add data migration verification**:
   - Run `scripts/verify-scheduled-date.ts` in production
   - Ensure 100% of workouts have `scheduled_date`
-  - Estimated time: 30 minutes
+  - Optional: For peace of mind before final cleanup
 
-- [ ] **Add type guards** instead of `as` casts in API routes
-  - Locations: Multiple API routes
-  - Estimated time: 1 hour
+- [x] **Add type guards** instead of `as` casts in API routes
+  - ✅ Created assertTrainingPlanData() type guard function
+  - ✅ Created isWorkoutPlacementArray() validation function
+  - ✅ Created assertWorkoutComplianceAnalysis() validation function
+  - ✅ Updated schedule/[instanceId]/workouts routes
+  - ✅ Updated schedule/[instanceId]/workouts/add route
+  - ✅ Updated compliance/[matchId] routes (GET and coach POST)
+  - ✅ Updated custom-plans routes with validation
+  - ✅ Removed unused type imports
+  - Completed: 2026-01-13
 
 ### High Priority ⚠️
 
