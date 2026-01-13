@@ -8,6 +8,7 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
@@ -135,3 +136,115 @@ jobs:
         run: |
           docker run --rm ${{ env.REGISTRY }}/${{ env.PYTHON_IMAGE_NAME }}:${{ github.sha }} \
             ruff check src/cycling_ai
+
+  web-e2e-tests:
+    name: Web E2E Tests (Docker + Playwright)
+    runs-on: ubuntu-latest
+    # Run E2E tests on main branch and PRs to main
+    if: github.ref == 'refs/heads/main' || (github.event_name == 'pull_request' && github.base_ref == 'main')
+    permissions:
+      contents: read
+      packages: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Validate Playwright version matches between Dockerfile and package.json
+      - name: Validate Playwright version sync
+        run: |
+          DOCKERFILE_VERSION=$(grep 'FROM mcr.microsoft.com/playwright:v' docker/web-e2e.Dockerfile | sed -n 's/.*:v\([0-9.]*\).*/\1/p')
+          PACKAGE_VERSION=$(grep '@playwright/test' web/package.json | sed -n 's/.*"\^*\([0-9.]*\).*/\1/p')
+          echo "Dockerfile Playwright version: $DOCKERFILE_VERSION"
+          echo "package.json @playwright/test version: $PACKAGE_VERSION"
+          if [ "$DOCKERFILE_VERSION" != "$PACKAGE_VERSION" ]; then
+            echo "::error::Playwright version mismatch! Dockerfile: $DOCKERFILE_VERSION, package.json: $PACKAGE_VERSION"
+            echo "::error::Please update docker/web-e2e.Dockerfile to match package.json"
+            exit 1
+          fi
+
+      # Generate a cache key based on pnpm-lock.yaml
+      - name: Generate cache key
+        id: cache-key
+        run: echo "key=e2e-deps-${{ hashFiles('web/pnpm-lock.yaml') }}" >> $GITHUB_OUTPUT
+
+      - name: Build and cache E2E test image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/web-e2e.Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}-e2e:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}-e2e:${{ steps.cache-key.outputs.key }}
+            ${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}-e2e:latest
+          cache-from: |
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}-e2e:${{ steps.cache-key.outputs.key }}
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}-e2e:latest
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}-e2e:latest,mode=max
+
+      - name: Run Playwright E2E tests
+        id: playwright-tests
+        continue-on-error: true
+        run: |
+          # Create directories for test results
+          mkdir -p web/playwright-report web/test-results
+
+          # Run tests with security hardening
+          docker run --rm \
+            --security-opt=no-new-privileges:true \
+            --cap-drop=ALL \
+            -v ${{ github.workspace }}/web/playwright-report:/app/playwright-report \
+            -v ${{ github.workspace }}/web/test-results:/app/test-results \
+            ${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}-e2e:${{ github.sha }} \
+            pnpm test
+
+      - name: Upload Playwright HTML Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ github.sha }}
+          path: web/playwright-report/
+          retention-days: 30
+
+      - name: Upload Test Results (traces, screenshots)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results-${{ github.sha }}
+          path: web/test-results/
+          retention-days: 30
+
+      - name: Comment PR with test results
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const testsPassed = '${{ steps.playwright-tests.outcome }}' === 'success';
+            const reportUrl = `https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}`;
+
+            const comment = testsPassed
+              ? `✅ **Playwright E2E Tests Passed**\n\n[View full report](${reportUrl})`
+              : `❌ **Playwright E2E Tests Failed**\n\n[View full report and artifacts](${reportUrl})`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      - name: Fail workflow if tests failed
+        if: steps.playwright-tests.outcome != 'success'
+        run: exit 1
