@@ -95,6 +95,94 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create profile' }, { status: 500 })
     }
 
+    // Create MANUAL_WORKOUTS plan for this user
+    // This is a special plan that serves as a container for manually added workouts
+    // It is never shown in the UI and can overlap with other plans
+    console.log('[DEBUG] Starting MANUAL_WORKOUTS plan creation for user:', user.id)
+    const today = new Date().toISOString().split('T')[0]!
+    const tenYearsLater = new Date()
+    tenYearsLater.setFullYear(tenYearsLater.getFullYear() + 10)
+    const endDate = tenYearsLater.toISOString().split('T')[0]!
+    console.log('[DEBUG] Dates - today:', today, 'endDate:', endDate)
+
+    const planData = {
+      athlete_profile: {
+        ftp: profileData.ftp,
+        weight_kg: profileData.weightKg,
+      },
+      plan_metadata: {
+        total_weeks: 520, // 10 years
+        current_ftp: profileData.ftp,
+        target_ftp: profileData.ftp,
+        type: 'manual_workouts',
+      },
+      weekly_plan: [], // Workouts will be added here as user drops them
+    }
+
+    // Create training plan template
+    console.log('[DEBUG] Creating training plan template...')
+    const { data: template, error: templateError } = await supabase
+      .from('training_plans')
+      .insert({
+        user_id: user.id,
+        name: 'MANUAL_WORKOUTS',
+        description:
+          'System-generated plan for manually added workouts. This plan is never shown in the UI and serves as a container for ad-hoc workout additions.',
+        weeks_total: 520,
+        plan_data: planData,
+        metadata: { type: 'manual_workouts', hidden: true },
+        status: 'active',
+        goal: '',
+        created_from: 'system',
+      })
+      .select()
+      .single()
+
+    if (templateError) {
+      console.error('[DEBUG] Failed to create training plan template:', templateError)
+      errorLogger.logError(
+        new Error(`Failed to create MANUAL_WORKOUTS plan: ${templateError.message}`),
+        {
+          userId: user.id,
+          path: '/api/profile/create',
+        }
+      )
+      // Don't fail profile creation if manual plan fails - user can still use the app
+    } else {
+      console.log('[DEBUG] Training plan template created:', template.id)
+      // Create plan instance
+      console.log('[DEBUG] Creating plan instance...')
+      const { error: instanceError } = await supabase.from('plan_instances').insert({
+        template_id: template.id,
+        user_id: user.id,
+        name: 'MANUAL_WORKOUTS',
+        start_date: today,
+        end_date: endDate,
+        weeks_total: 520,
+        plan_data: planData,
+        instance_type: 'manual_workouts',
+        status: 'active',
+      })
+
+      if (instanceError) {
+        console.error('[DEBUG] Failed to create plan instance:', instanceError)
+        errorLogger.logError(
+          new Error(`Failed to create MANUAL_WORKOUTS instance: ${instanceError.message}`),
+          {
+            userId: user.id,
+            path: '/api/profile/create',
+          }
+        )
+        // Don't fail profile creation if instance creation fails
+      } else {
+        console.log('[DEBUG] ✅ MANUAL_WORKOUTS plan instance created successfully!')
+        errorLogger.logInfo('MANUAL_WORKOUTS plan created', {
+          userId: user.id,
+          path: '/api/profile/create',
+        })
+      }
+    }
+
     return NextResponse.json({ profile }, { status: 201 })
   } catch (error) {
     errorLogger.logError(error as Error, {
