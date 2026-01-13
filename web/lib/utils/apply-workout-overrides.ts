@@ -8,6 +8,7 @@
 
 import { addDays } from 'date-fns'
 import { parseLocalDate, formatDateString } from '@/lib/utils/date-utils'
+import { getDayOffsetInWeek } from '@/lib/constants/weekdays'
 import type {
   TrainingPlanData,
   Workout,
@@ -105,33 +106,6 @@ export function libraryWorkoutToScheduleWorkout(params: LibraryWorkoutParams | s
   return workout
 }
 
-// Map weekday names to standard JavaScript day indices (0 = Sunday, 6 = Saturday)
-const WEEKDAY_TO_JS_DAY: Record<string, number> = {
-  Sunday: 0,
-  Monday: 1,
-  Tuesday: 2,
-  Wednesday: 3,
-  Thursday: 4,
-  Friday: 5,
-  Saturday: 6,
-}
-
-/**
- * Calculate day offset from week start based on weekday and start date
- * Week offset calculation assumes each week starts on the same day as the plan start date
- */
-function getDayOffsetInWeek(weekdayName: string, startDate: Date): number {
-  const startDayOfWeek = startDate.getDay() // 0 = Sunday, 6 = Saturday
-  const targetDayOfWeek = WEEKDAY_TO_JS_DAY[weekdayName] ?? startDayOfWeek
-
-  // Calculate offset from start day, wrapping around the week if needed
-  let offset = targetDayOfWeek - startDayOfWeek
-  if (offset < 0) {
-    offset += 7 // Wrap to next week
-  }
-  return offset
-}
-
 function createWorkoutKey(date: string, index: number): string {
   return `${date}:${index}`
 }
@@ -164,7 +138,7 @@ function findOriginalWorkout(
       const workout = week.workouts[i]
       if (!workout) continue
 
-      const dayOffset = getDayOffsetInWeek(workout.weekday, startDate)
+      const dayOffset = getDayOffsetInWeek(workout.weekday as any, startDate.getDay())
       const workoutDate = addDays(startDate, weekStartOffset + dayOffset)
       const dateKey = formatDateString(workoutDate)
 
@@ -206,7 +180,7 @@ export function applyWorkoutOverrides(
       const weekStartOffset = (week.week_number - 1) * 7
 
       week.workouts.forEach((workout: Workout, workoutIndex: number) => {
-        const dayOffset = getDayOffsetInWeek(workout.weekday, instanceStartDate)
+        const dayOffset = getDayOffsetInWeek(workout.weekday as any, instanceStartDate.getDay())
         const workoutDate = addDays(instanceStartDate, weekStartOffset + dayOffset)
         const dateKey = formatDateString(workoutDate)
         const fullKey = createWorkoutKey(dateKey, workoutIndex)

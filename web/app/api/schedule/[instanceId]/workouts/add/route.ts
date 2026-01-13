@@ -14,6 +14,7 @@ import { invokePythonApi } from '@/lib/services/lambda-client'
 import { z } from 'zod'
 import { differenceInDays } from 'date-fns'
 import { parseLocalDate } from '@/lib/utils/date-utils'
+import { getWeekdayName as getWeekdayNameFromIndex } from '@/lib/constants/weekdays'
 import type { WorkoutLibraryItem } from '@/lib/types/workout-library'
 import type { TrainingPlanData, Workout } from '@/lib/types/training-plan'
 
@@ -26,8 +27,6 @@ interface RouteParams {
   params: Promise<{ instanceId: string }>
 }
 
-const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-
 /**
  * Calculate week number from plan start date and target date
  */
@@ -39,11 +38,11 @@ function calculateWeekNumber(startDate: string, targetDate: string): number {
 }
 
 /**
- * Get weekday name from date
+ * Get weekday name from date string
  */
 function getWeekdayName(dateString: string): string {
   const date = parseLocalDate(dateString)
-  return WEEKDAY_NAMES[date.getDay()]!
+  return getWeekdayNameFromIndex(date.getDay())
 }
 
 export async function POST(request: NextRequest, { params }: RouteParams): Promise<NextResponse> {
