@@ -283,7 +283,6 @@ export type Database = {
           updated_at: string | null
           user_id: string
           weeks_total: number
-          workout_overrides: Json | null
         }
         Insert: {
           created_at?: string | null
@@ -298,7 +297,6 @@ export type Database = {
           updated_at?: string | null
           user_id: string
           weeks_total: number
-          workout_overrides?: Json | null
         }
         Update: {
           created_at?: string | null
@@ -313,7 +311,6 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           weeks_total?: number
-          workout_overrides?: Json | null
         }
         Relationships: [
           {
