@@ -14,7 +14,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { invokePythonApi } from '@/lib/services/lambda-client'
 import { errorLogger } from '@/lib/monitoring/error-logger'
-import { getWorkoutById, getWorkoutByDateAndIndex } from '@/lib/utils/workout-helpers'
+import { getWorkoutById } from '@/lib/utils/workout-helpers'
 import type { WorkoutComplianceAnalysis } from '@/lib/services/compliance-analysis-service'
 import type { TrainingPlanData, Workout } from '@/lib/types/training-plan'
 import type { Json } from '@/lib/types/database'
@@ -240,17 +240,23 @@ export async function POST(
       return NextResponse.json({ error: 'Plan instance not found' }, { status: 404 })
     }
 
-    // Get workout from plan_data by workout_id (preferred) or date+index (legacy fallback)
-    const workout = match.workout_id
-      ? getWorkoutById(planInstance.plan_data, match.workout_id)
-      : getWorkoutByDateAndIndex(planInstance.plan_data, match.workout_date, match.workout_index)
+    // Require workout_id for lookup
+    if (!match.workout_id) {
+      errorLogger.logWarning('Match missing workout_id', {
+        userId: user.id,
+        metadata: { matchId, workoutDate: match.workout_date },
+      })
+      return NextResponse.json(
+        { error: 'Legacy match without workout_id. Please re-match this workout.' },
+        { status: 400 }
+      )
+    }
+
+    const workout = getWorkoutById(planInstance.plan_data, match.workout_id)
 
     if (!workout) {
-      const identifier = match.workout_id
-        ? `ID ${match.workout_id}`
-        : `date ${match.workout_date} index ${match.workout_index}`
       return NextResponse.json(
-        { error: `Workout not found in plan for ${identifier}` },
+        { error: `Workout not found in plan for ID ${match.workout_id}` },
         { status: 404 }
       )
     }

@@ -86,36 +86,3 @@ export function getWorkoutByDate(planData: TrainingPlanData, targetDate: string)
 
   return null
 }
-
-/**
- * Get workout from plan_data by scheduled_date and workout index.
- *
- * When multiple workouts exist on the same date, this function finds
- * the specific workout by its index in the date's workout list.
- *
- * @param planData - The training plan data
- * @param targetDate - Target date in YYYY-MM-DD format
- * @param workoutIndex - Index of the workout on that date (0-based)
- * @returns The workout if found, null otherwise
- */
-export function getWorkoutByDateAndIndex(
-  planData: TrainingPlanData,
-  targetDate: string,
-  workoutIndex: number
-): Workout | null {
-  if (!planData.weekly_plan) return null
-
-  // Collect all workouts for the target date
-  const dateWorkouts: Workout[] = []
-
-  for (const week of planData.weekly_plan) {
-    for (const workout of week.workouts) {
-      if (workout.scheduled_date === targetDate) {
-        dateWorkouts.push(workout)
-      }
-    }
-  }
-
-  // Return the workout at the specified index
-  return dateWorkouts[workoutIndex] || null
-}
