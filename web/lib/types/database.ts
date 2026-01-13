@@ -1,6 +1,11 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: '13.0.5'
+  }
   public: {
     Tables: {
       athlete_profiles: {
@@ -150,74 +155,6 @@ export type Database = {
           },
         ]
       }
-      llm_interactions: {
-        Row: {
-          api_latency_ms: number | null
-          duration_ms: number | null
-          error_code: string | null
-          estimated_cost: number | null
-          id: string
-          input_tokens: number | null
-          model: string
-          output_tokens: number | null
-          prompt_version: string
-          provider_name: string
-          request_id: string
-          retry_count: number | null
-          session_id: string
-          timestamp: string
-          trigger_type: string
-          triggered_by: string | null
-          user_id: string | null
-        }
-        Insert: {
-          api_latency_ms?: number | null
-          duration_ms?: number | null
-          error_code?: string | null
-          estimated_cost?: number | null
-          id?: string
-          input_tokens?: number | null
-          model: string
-          output_tokens?: number | null
-          prompt_version: string
-          provider_name: string
-          request_id: string
-          retry_count?: number | null
-          session_id: string
-          timestamp?: string
-          trigger_type: string
-          triggered_by?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          api_latency_ms?: number | null
-          duration_ms?: number | null
-          error_code?: string | null
-          estimated_cost?: number | null
-          id?: string
-          input_tokens?: number | null
-          model?: string
-          output_tokens?: number | null
-          prompt_version?: string
-          provider_name?: string
-          request_id?: string
-          retry_count?: number | null
-          session_id?: string
-          timestamp?: string
-          trigger_type?: string
-          triggered_by?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'llm_interactions_user_id_fkey'
-            columns: ['user_id']
-            isOneToOne: false
-            referencedRelation: 'admin_user_view'
-            referencedColumns: ['user_id']
-          },
-        ]
-      }
       plan_generation_jobs: {
         Row: {
           created_at: string | null
@@ -337,6 +274,7 @@ export type Database = {
           created_at: string | null
           end_date: string
           id: string
+          instance_type: string | null
           name: string
           plan_data: Json
           start_date: string
@@ -351,6 +289,7 @@ export type Database = {
           created_at?: string | null
           end_date: string
           id?: string
+          instance_type?: string | null
           name: string
           plan_data: Json
           start_date: string
@@ -365,6 +304,7 @@ export type Database = {
           created_at?: string | null
           end_date?: string
           id?: string
+          instance_type?: string | null
           name?: string
           plan_data?: Json
           start_date?: string
