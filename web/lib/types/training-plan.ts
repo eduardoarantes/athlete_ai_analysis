@@ -66,8 +66,6 @@ export interface WorkoutStructure {
   primaryIntensityMetric: 'percentOfFtp' | 'watts' | 'heartrate'
   primaryLengthMetric: 'duration' | 'distance'
   structure: StructuredWorkoutSegment[]
-  /** Polyline for simplified visualization [[time, intensity], ...] normalized 0-1 */
-  polyline?: [number, number][]
 }
 
 // =========================================================================
@@ -255,6 +253,12 @@ export interface Workout {
   /** Unique identifier for this workout instance (UUID format) */
   id?: string
   weekday: string
+  /**
+   * Direct scheduled date for this workout (YYYY-MM-DD format)
+   * Eliminates need to calculate from week_number + weekday + start_date
+   * @since v2.0 - Added for direct date tracking
+   */
+  scheduled_date?: string
   name: string
   description?: string
   detailed_description?: string
@@ -426,6 +430,8 @@ export interface PlanInstance {
   workout_overrides: WorkoutOverrides | null
   /** Instance status */
   status: 'scheduled' | 'active' | 'completed' | 'cancelled'
+  /** Instance type: standard or manual_workouts */
+  instance_type?: string | null
   created_at: string
   updated_at: string
 }

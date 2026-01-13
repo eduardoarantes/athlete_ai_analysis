@@ -19,12 +19,8 @@ import {
   type WorkoutComplianceAnalysis,
 } from '@/lib/services/compliance-analysis-service'
 import { errorLogger } from '@/lib/monitoring/error-logger'
-import {
-  downsamplePowerStream,
-  getWorkoutFromOverrides,
-  getWorkoutFromPlan,
-} from '@/lib/utils/workout-overrides-helpers'
-import type { WorkoutOverrides, TrainingPlanData } from '@/lib/types/training-plan'
+import { downsamplePowerStream, getWorkoutByDateAndIndex } from '@/lib/utils/workout-helpers'
+import type { TrainingPlanData } from '@/lib/types/training-plan'
 import type { Json } from '@/lib/types/database'
 import { hasValidStructure } from '@/lib/types/training-plan'
 
@@ -33,7 +29,6 @@ interface PlanInstanceRow {
   user_id: string
   plan_data: TrainingPlanData
   start_date: string
-  workout_overrides?: WorkoutOverrides | null
 }
 
 interface ProfileRow {
@@ -123,12 +118,11 @@ export async function GET(
           .single<StoredAnalysisRow>(),
         supabase
           .from('plan_instances')
-          .select('plan_data, start_date, workout_overrides')
+          .select('plan_data, start_date')
           .eq('id', match.plan_instance_id)
           .single<{
             plan_data: TrainingPlanData
             start_date: string
-            workout_overrides?: WorkoutOverrides | null
           }>(),
       ])
 
@@ -147,19 +141,12 @@ export async function GET(
         }
 
         if (planInstance) {
-          // Check overrides first (for library workouts), then plan_data
-          const workout =
-            getWorkoutFromOverrides(
-              planInstance.workout_overrides,
-              match.workout_date,
-              match.workout_index
-            ) ||
-            getWorkoutFromPlan(
-              planInstance.plan_data,
-              planInstance.start_date,
-              match.workout_date,
-              match.workout_index
-            )
+          // Get workout from plan_data by scheduled_date
+          const workout = getWorkoutByDateAndIndex(
+            planInstance.plan_data,
+            match.workout_date,
+            match.workout_index
+          )
           if (workout) {
             workoutContext = {
               workout_name: workout.name,
@@ -233,19 +220,12 @@ export async function GET(
       return NextResponse.json({ error: 'Plan instance not found' }, { status: 404 })
     }
 
-    // Get workout - check overrides first (for library workouts), then plan_data
-    const workout =
-      getWorkoutFromOverrides(
-        planInstance.workout_overrides,
-        match.workout_date,
-        match.workout_index
-      ) ||
-      getWorkoutFromPlan(
-        planInstance.plan_data,
-        planInstance.start_date,
-        match.workout_date,
-        match.workout_index
-      )
+    // Get workout from plan_data by scheduled_date
+    const workout = getWorkoutByDateAndIndex(
+      planInstance.plan_data,
+      match.workout_date,
+      match.workout_index
+    )
 
     if (!workout) {
       return NextResponse.json(

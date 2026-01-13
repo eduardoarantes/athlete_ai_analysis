@@ -427,23 +427,6 @@ function validateWorkoutStructure(input: unknown): ValidationResult {
     })
   }
 
-  // Validate polyline if present
-  if (structure.polyline !== undefined) {
-    if (!Array.isArray(structure.polyline)) {
-      errors.push({ path: 'polyline', message: 'polyline must be an array', severity: 'error' })
-    } else {
-      structure.polyline.forEach((point, i) => {
-        if (!Array.isArray(point) || point.length !== 2) {
-          errors.push({
-            path: `polyline[${i}]`,
-            message: 'Each polyline point must be [time, intensity]',
-            severity: 'error',
-          })
-        }
-      })
-    }
-  }
-
   return {
     valid: errors.filter((e) => e.severity === 'error').length === 0,
     errors: errors.filter((e) => e.severity === 'error'),

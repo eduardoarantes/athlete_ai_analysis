@@ -7,27 +7,17 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { ChevronLeft, ChevronRight, Calendar, Undo2, AlertCircle, Loader2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Calendar, AlertCircle } from 'lucide-react'
 import { WorkoutCard } from './workout-card'
 import { NoteCard } from './note-card'
 import { NoteDialog } from './note-dialog'
 import { WorkoutDetailModal, type MatchedActivityData } from './workout-detail-modal'
 import { NoteContextMenu } from '@/components/schedule/note-context-menu'
-import { CreatePlanDialog } from './create-plan-dialog'
 import { toast } from 'sonner'
-import type {
-  PlanInstance,
-  Workout,
-  WorkoutOverrides,
-  PlanInstanceNote,
-} from '@/lib/types/training-plan'
+import type { PlanInstance, Workout, PlanInstanceNote } from '@/lib/types/training-plan'
 import type { WorkoutLibraryItem } from '@/lib/types/workout-library'
 import { parseLocalDate, formatDateString } from '@/lib/utils/date-utils'
-import {
-  applyWorkoutOverrides,
-  libraryWorkoutToScheduleWorkout,
-  type LibraryWorkoutParams,
-} from '@/lib/utils/apply-workout-overrides'
+import { applyWorkoutOverrides } from '@/lib/utils/apply-workout-overrides'
 import { formatWithGoalLabels } from '@/lib/utils/format-utils'
 import {
   ScheduleDndContext,
@@ -40,7 +30,6 @@ import {
   CalendarDayContextMenu,
 } from '@/components/schedule'
 import { errorLogger } from '@/lib/monitoring/error-logger'
-import { LIBRARY_WORKOUT_BASE_INDEX } from '@/lib/utils/workout-overrides-helpers'
 
 interface ScheduleCalendarProps {
   instances: PlanInstance[]
@@ -91,13 +80,6 @@ export function ScheduleCalendar({
   const [selectedWorkout, setSelectedWorkout] = useState<ScheduledWorkout | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
 
-  // Create plan dialog state
-  const [createPlanDialogOpen, setCreatePlanDialogOpen] = useState(false)
-  const [pendingLibraryWorkout, setPendingLibraryWorkout] = useState<{
-    workout: WorkoutLibraryItem
-    targetDate: string
-  } | null>(null)
-
   // Notes state
   const [notesByDate, setNotesByDate] = useState<Map<string, PlanInstanceNote[]>>(new Map())
   const [noteDialogOpen, setNoteDialogOpen] = useState(false)
@@ -106,85 +88,56 @@ export function ScheduleCalendar({
   const [selectedNote, setSelectedNote] = useState<PlanInstanceNote | undefined>(undefined)
 
   // Edit state
-  const [isUndoing, setIsUndoing] = useState(false)
   // Error message for user feedback
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  // Undo stack for reverting changes
-  const [undoStack, setUndoStack] = useState<WorkoutOverrides[]>([])
 
-  // Editing is enabled by default for single instances
-  const primaryInstanceId = instances.length === 1 ? instances[0]?.id : null
-  const canEdit = allowEditing && instances.length === 1 && !!primaryInstanceId
+  // Find MANUAL_WORKOUTS instance (always exists for each user)
+  const manualWorkoutsInstance = instances.find((i) => i.instance_type === 'manual_workouts')
 
-  // Local overrides state for optimistic updates (instanceId -> overrides)
-  const [localOverrides, setLocalOverrides] = useState<Map<string, WorkoutOverrides>>(() => {
-    const map = new Map<string, WorkoutOverrides>()
-    instances.forEach((instance) => {
-      if (instance.workout_overrides) {
-        map.set(instance.id, instance.workout_overrides)
-      }
-    })
-    return map
-  })
+  // Find non-manual instances (real training plans)
+  const realInstances = instances.filter((i) => i.instance_type !== 'manual_workouts')
 
-  // Helper to get effective overrides (local state takes precedence)
-  const getEffectiveOverrides = useCallback(
-    (instanceId: string): WorkoutOverrides | null => {
-      return (
-        localOverrides.get(instanceId) ||
-        instances.find((i) => i.id === instanceId)?.workout_overrides ||
-        null
-      )
-    },
-    [localOverrides, instances]
-  )
+  // Primary instance for editing:
+  // - If only 1 real plan exists, use it
+  // - Otherwise, use MANUAL_WORKOUTS (for adding workouts without a plan)
+  const primaryInstanceId =
+    realInstances.length === 1 ? realInstances[0]?.id : manualWorkoutsInstance?.id || null
+
+  const canEdit = allowEditing && !!primaryInstanceId
 
   // Matches state: Map of "instanceId:workoutId" (or legacy "instanceId:date:index") -> MatchedActivityData
   const [matchesMap, setMatchesMap] = useState<Map<string, MatchedActivityData>>(new Map())
   const [matchesRefreshKey, setMatchesRefreshKey] = useState(0)
   const autoMatchedRef = useRef<Set<string>>(new Set())
 
-  // Library workout details cache: Map of libraryWorkoutId -> workout params
-  // This allows us to display full workout info for library workouts added in this session
-  const [libraryWorkoutCache, setLibraryWorkoutCache] = useState<Map<string, LibraryWorkoutParams>>(
-    new Map()
-  )
-
   // Ref to prevent duplicate drops (race condition protection)
   const libraryDropInProgressRef = useRef<Set<string>>(new Set())
 
-  // Build workouts list for auto-matching (with overrides applied)
-  const buildWorkoutsList = useCallback(
-    (instance: PlanInstance) => {
-      const workouts: Array<{ date: string; index: number; tss?: number; type?: string }> = []
+  // Build workouts list for auto-matching
+  const buildWorkoutsList = useCallback((instance: PlanInstance) => {
+    const workouts: Array<{ date: string; index: number; tss?: number; type?: string }> = []
 
-      if (!instance.plan_data?.weekly_plan) return workouts
+    if (!instance.plan_data?.weekly_plan) return workouts
 
-      // Apply workout overrides to get effective workouts by date (use local overrides for optimistic updates)
-      const effectiveWorkouts = applyWorkoutOverrides(
-        instance.plan_data,
-        getEffectiveOverrides(instance.id),
-        instance.start_date
-      )
+    // Get effective workouts by date (reads directly from plan_data)
+    const effectiveWorkouts = applyWorkoutOverrides(instance.plan_data, instance.start_date)
 
-      effectiveWorkouts.forEach((dateWorkouts, dateKey) => {
-        dateWorkouts.forEach((effectiveWorkout) => {
-          const workoutEntry: { date: string; index: number; tss?: number; type?: string } = {
-            date: dateKey,
-            index: effectiveWorkout.originalIndex,
-          }
-          if (effectiveWorkout.workout.tss !== undefined)
-            workoutEntry.tss = effectiveWorkout.workout.tss
-          if (effectiveWorkout.workout.type !== undefined)
-            workoutEntry.type = effectiveWorkout.workout.type
-          workouts.push(workoutEntry)
-        })
+    effectiveWorkouts.forEach((dateWorkouts, dateKey) => {
+      dateWorkouts.forEach((effectiveWorkout) => {
+        const workoutEntry: { date: string; index: number; tss?: number; type?: string } = {
+          date: dateKey,
+          index: effectiveWorkout.originalIndex,
+        }
+        if (effectiveWorkout.workout.tss !== undefined)
+          workoutEntry.tss = effectiveWorkout.workout.tss
+        if (effectiveWorkout.workout.type !== undefined)
+          workoutEntry.type = effectiveWorkout.workout.type
+        workouts.push(workoutEntry)
       })
+    })
 
-      return workouts
-    },
-    [getEffectiveOverrides]
-  )
+    return workouts
+  }, [])
 
   // Fetch matches and run auto-matching
   useEffect(() => {
@@ -425,179 +378,34 @@ export function ScheduleCalendar({
     setTimeout(() => setErrorMessage(null), 5000)
   }, [])
 
-  // Helper to apply optimistic override update (also pushes to undo stack)
-  const applyOptimisticOverride = useCallback(
-    (instanceId: string, updateFn: (current: WorkoutOverrides) => WorkoutOverrides) => {
-      setLocalOverrides((prev) => {
-        const newMap = new Map(prev)
-        const current = prev.get(instanceId) || { moves: {}, copies: {}, deleted: [] }
-
-        // Push current state to undo stack before applying change
-        setUndoStack((stack) => [...stack, { ...current }])
-
-        const updated = updateFn(current)
-        newMap.set(instanceId, updated)
-        return newMap
-      })
-    },
-    []
-  )
-
-  // Undo the last change
-  const handleUndo = useCallback(async () => {
-    if (undoStack.length === 0 || !primaryInstanceId || isUndoing) return
-
-    const previousState = undoStack[undoStack.length - 1]
-    if (!previousState) return
-
-    // Save current state for potential rollback
-    const currentState = localOverrides.get(primaryInstanceId)
-
-    // Optimistically update UI
-    setIsUndoing(true)
-    setErrorMessage(null)
-    setUndoStack((stack) => stack.slice(0, -1))
-    setLocalOverrides((prev) => {
-      const newMap = new Map(prev)
-      newMap.set(primaryInstanceId, previousState)
-      return newMap
-    })
-
-    // Sync with server
-    try {
-      const response = await fetch(`/api/schedule/${primaryInstanceId}/workouts`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ overrides: previousState }),
-      })
-
-      if (!response.ok) {
-        // Rollback on failure
-        setUndoStack((stack) => [...stack, previousState])
-        if (currentState) {
-          setLocalOverrides((prev) => {
-            const newMap = new Map(prev)
-            newMap.set(primaryInstanceId, currentState)
-            return newMap
-          })
-        }
-        setErrorMessage('Failed to undo. Please try again.')
-      }
-    } catch {
-      // Rollback on error
-      setUndoStack((stack) => [...stack, previousState])
-      if (currentState) {
-        setLocalOverrides((prev) => {
-          const newMap = new Map(prev)
-          newMap.set(primaryInstanceId, currentState)
-          return newMap
-        })
-      }
-      setErrorMessage('Failed to undo. Please try again.')
-    } finally {
-      setIsUndoing(false)
-    }
-  }, [undoStack, primaryInstanceId, localOverrides, isUndoing])
-
   // Schedule editing handlers with optimistic updates
   const handleMoveWorkout = async (
     instanceId: string,
     source: { date: string; index: number },
     target: { date: string; index: number }
   ) => {
-    // Save previous state for rollback
-    const previousOverrides = localOverrides.get(instanceId)
-    const currentOverrides = previousOverrides || { moves: {}, copies: {}, deleted: [] }
-
-    // Check if source is itself a moved workout (need to trace back to original)
-    const sourceKey = `${source.date}:${source.index}`
-    const existingMove = currentOverrides.moves[sourceKey]
-
-    // Determine the TRUE original location
-    const originalSource = existingMove
-      ? { date: existingMove.original_date, index: existingMove.original_index }
-      : source
-
-    const targetKey = `${target.date}:${target.index}`
-
-    applyOptimisticOverride(instanceId, (current) => {
-      if (existingMove) {
-        // This workout was already moved here from somewhere else
-        // Update to point to the ORIGINAL source, and remove the intermediate move
-        const { [sourceKey]: _removed, ...remainingMoves } = current.moves
-        return {
-          ...current,
-          moves: {
-            ...remainingMoves,
-            [targetKey]: {
-              original_date: existingMove.original_date,
-              original_index: existingMove.original_index,
-              moved_at: new Date().toISOString(),
-            },
-          },
-        }
-      }
-
-      // Normal move - source is from original plan
-      return {
-        ...current,
-        moves: {
-          ...current.moves,
-          [targetKey]: {
-            original_date: source.date,
-            original_index: source.index,
-            moved_at: new Date().toISOString(),
-          },
-        },
-      }
-    })
-
-    // Make API call in background - send the TRUE original source
+    // Make API call to move workout
     try {
       const response = await fetch(`/api/schedule/${instanceId}/workouts`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'move',
-          source: { date: originalSource.date, index: originalSource.index },
+          source: { date: source.date, index: source.index },
           target: { date: target.date, index: target.index },
         }),
       })
 
       if (!response.ok) {
-        // Rollback on error
-        setLocalOverrides((prev) => {
-          const newMap = new Map(prev)
-          if (previousOverrides) {
-            newMap.set(instanceId, previousOverrides)
-          } else {
-            newMap.delete(instanceId)
-          }
-          return newMap
-        })
-        setErrorMessage('Failed to move workout. Please try again.')
-      } else {
-        // Update with actual saved data from server
-        const result = await response.json()
-        if (result.updatedOverrides) {
-          setLocalOverrides((prev) => {
-            const newMap = new Map(prev)
-            newMap.set(instanceId, result.updatedOverrides)
-            return newMap
-          })
-        }
+        const error = await response.json()
+        setErrorMessage(error.error || 'Failed to move workout. Please try again.')
+        return
       }
-    } catch {
-      // Rollback on error
-      setLocalOverrides((prev) => {
-        const newMap = new Map(prev)
-        if (previousOverrides) {
-          newMap.set(instanceId, previousOverrides)
-        } else {
-          newMap.delete(instanceId)
-        }
-        return newMap
-      })
+
+      // Refetch plan data to get updated workouts with new scheduled_date
+      router.refresh()
+    } catch (error) {
+      console.error('Error moving workout:', error)
       setErrorMessage('Failed to move workout. Please try again.')
     }
   }
@@ -607,24 +415,7 @@ export function ScheduleCalendar({
     source: { date: string; index: number },
     target: { date: string; index: number }
   ) => {
-    // Save previous state for rollback
-    const previousOverrides = localOverrides.get(instanceId)
-
-    // Apply optimistic update
-    const targetKey = `${target.date}:${target.index}`
-    applyOptimisticOverride(instanceId, (current) => ({
-      ...current,
-      copies: {
-        ...current.copies,
-        [targetKey]: {
-          source_date: source.date,
-          source_index: source.index,
-          copied_at: new Date().toISOString(),
-        },
-      },
-    }))
-
-    // Make API call in background
+    // Make API call to copy workout
     try {
       const response = await fetch(`/api/schedule/${instanceId}/workouts`, {
         method: 'PATCH',
@@ -637,55 +428,21 @@ export function ScheduleCalendar({
       })
 
       if (!response.ok) {
-        // Rollback on error
-        setLocalOverrides((prev) => {
-          const newMap = new Map(prev)
-          if (previousOverrides) {
-            newMap.set(instanceId, previousOverrides)
-          } else {
-            newMap.delete(instanceId)
-          }
-          return newMap
-        })
-        setErrorMessage('Failed to copy workout. Please try again.')
-      } else {
-        // Update with actual saved data from server
-        const result = await response.json()
-        if (result.updatedOverrides) {
-          setLocalOverrides((prev) => {
-            const newMap = new Map(prev)
-            newMap.set(instanceId, result.updatedOverrides)
-            return newMap
-          })
-        }
+        const error = await response.json()
+        setErrorMessage(error.error || 'Failed to copy workout. Please try again.')
+        return
       }
-    } catch {
-      // Rollback on error
-      setLocalOverrides((prev) => {
-        const newMap = new Map(prev)
-        if (previousOverrides) {
-          newMap.set(instanceId, previousOverrides)
-        } else {
-          newMap.delete(instanceId)
-        }
-        return newMap
-      })
+
+      // Refetch plan data to get updated workouts
+      router.refresh()
+    } catch (error) {
+      console.error('Error copying workout:', error)
       setErrorMessage('Failed to copy workout. Please try again.')
     }
   }
 
   const handleDeleteWorkout = async (instanceId: string, date: string, index: number) => {
-    // Save previous state for rollback
-    const previousOverrides = localOverrides.get(instanceId)
-
-    // Apply optimistic update
-    const deleteKey = `${date}:${index}`
-    applyOptimisticOverride(instanceId, (current) => ({
-      ...current,
-      deleted: [...current.deleted, deleteKey],
-    }))
-
-    // Make API call in background
+    // Make API call to delete workout
     try {
       const response = await fetch(`/api/schedule/${instanceId}/workouts`, {
         method: 'DELETE',
@@ -694,39 +451,15 @@ export function ScheduleCalendar({
       })
 
       if (!response.ok) {
-        // Rollback on error
-        setLocalOverrides((prev) => {
-          const newMap = new Map(prev)
-          if (previousOverrides) {
-            newMap.set(instanceId, previousOverrides)
-          } else {
-            newMap.delete(instanceId)
-          }
-          return newMap
-        })
-        setErrorMessage('Failed to delete workout. Please try again.')
-      } else {
-        // Update with actual saved data from server
-        const result = await response.json()
-        if (result.updatedOverrides) {
-          setLocalOverrides((prev) => {
-            const newMap = new Map(prev)
-            newMap.set(instanceId, result.updatedOverrides)
-            return newMap
-          })
-        }
+        const error = await response.json()
+        setErrorMessage(error.error || 'Failed to delete workout. Please try again.')
+        return
       }
-    } catch {
-      // Rollback on error
-      setLocalOverrides((prev) => {
-        const newMap = new Map(prev)
-        if (previousOverrides) {
-          newMap.set(instanceId, previousOverrides)
-        } else {
-          newMap.delete(instanceId)
-        }
-        return newMap
-      })
+
+      // Refetch plan data to get updated workouts
+      router.refresh()
+    } catch (error) {
+      console.error('Error deleting workout:', error)
       setErrorMessage('Failed to delete workout. Please try again.')
     }
   }
@@ -745,41 +478,6 @@ export function ScheduleCalendar({
     )
   }
 
-  // Handler for when plan is created from the create plan dialog
-  const handlePlanCreated = async (planInstanceId: string) => {
-    if (!pendingLibraryWorkout) return
-
-    const { workout, targetDate } = pendingLibraryWorkout
-
-    // Add the workout to the newly created plan
-    try {
-      const response = await fetch(`/api/schedule/${planInstanceId}/workouts/add`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          workout_id: workout.id,
-          target_date: targetDate,
-        }),
-      })
-
-      if (!response.ok) {
-        toast.error('Failed to add workout to plan')
-      } else {
-        toast.success('Plan created and workout added!')
-        // Refresh to fetch the new plan instance from the server
-        router.refresh()
-      }
-    } catch (error) {
-      errorLogger.logError(error as Error, {
-        path: 'schedule-calendar/handlePlanCreated',
-        metadata: { planInstanceId, targetDate },
-      })
-      toast.error('Failed to add workout to plan')
-    } finally {
-      setPendingLibraryWorkout(null)
-    }
-  }
-
   // Handler for adding library workouts via drag-and-drop
   const handleAddLibraryWorkout = async (workout: WorkoutLibraryItem, targetDate: string) => {
     // Check if target date is in the past
@@ -792,10 +490,9 @@ export function ScheduleCalendar({
       return
     }
 
-    // If no plan exists, show create plan dialog
+    // Ensure we have a primary instance (should always have MANUAL_WORKOUTS)
     if (!primaryInstanceId) {
-      setPendingLibraryWorkout({ workout, targetDate })
-      setCreatePlanDialogOpen(true)
+      toast.error('No plan available. Please refresh the page.')
       return
     }
 
@@ -806,61 +503,7 @@ export function ScheduleCalendar({
     }
     libraryDropInProgressRef.current.add(dropKey)
 
-    // Save previous state for rollback
-    const previousOverrides = localOverrides.get(primaryInstanceId)
-
-    // Calculate next index for the library workout (use high indices to avoid conflicts)
-    const existingWorkouts = workoutsByDate.get(targetDate) || []
-    const existingLibraryIndices = existingWorkouts
-      .map((sw) => sw.index ?? 0)
-      .filter((idx) => idx >= LIBRARY_WORKOUT_BASE_INDEX)
-    const nextIndex =
-      existingLibraryIndices.length > 0
-        ? Math.max(...existingLibraryIndices) + 1
-        : LIBRARY_WORKOUT_BASE_INDEX
-
-    // Cache library workout details for proper rendering
-    setLibraryWorkoutCache((prev) => {
-      const newCache = new Map(prev)
-      const cacheEntry: LibraryWorkoutParams = {
-        id: workout.id,
-        name: workout.name,
-        type: workout.type,
-        tss: workout.base_tss,
-        durationMin: workout.base_duration_min,
-        structure: workout.structure,
-      }
-      // Only include description if it exists (exactOptionalPropertyTypes compliance)
-      if (workout.detailed_description) {
-        cacheEntry.description = workout.detailed_description
-      }
-      newCache.set(workout.id, cacheEntry)
-      return newCache
-    })
-
-    // Optimistic update - include library_workout data for proper rendering
-    applyOptimisticOverride(primaryInstanceId, (current) => ({
-      ...current,
-      copies: {
-        ...current.copies,
-        [`${targetDate}:${nextIndex}`]: {
-          source_date: `library:${workout.id}`,
-          source_index: 0,
-          copied_at: new Date().toISOString(),
-          library_workout: {
-            library_workout_id: workout.id,
-            name: workout.name,
-            type: workout.type,
-            tss: workout.base_tss,
-            duration_min: workout.base_duration_min,
-            description: workout.detailed_description,
-            structure: workout.structure,
-          },
-        },
-      },
-    }))
-
-    // API call - workout data is fetched by the API from Python backend
+    // API call - workout is added directly to plan_data.weekly_plan
     try {
       const response = await fetch(`/api/schedule/${primaryInstanceId}/workouts/add`, {
         method: 'POST',
@@ -872,40 +515,19 @@ export function ScheduleCalendar({
       })
 
       if (!response.ok) {
-        // Rollback on error
-        setLocalOverrides((prev) => {
-          const newMap = new Map(prev)
-          if (previousOverrides) {
-            newMap.set(primaryInstanceId, previousOverrides)
-          } else {
-            newMap.delete(primaryInstanceId)
-          }
-          return newMap
-        })
-        setErrorMessage('Failed to add workout. Please try again.')
+        const error = await response.json()
+        toast.error(error.error || 'Failed to add workout')
       } else {
-        // Update with actual saved data from server
-        const result = await response.json()
-        if (result.updatedOverrides) {
-          setLocalOverrides((prev) => {
-            const newMap = new Map(prev)
-            newMap.set(primaryInstanceId, result.updatedOverrides)
-            return newMap
-          })
-        }
+        toast.success('Workout added successfully!')
+        // Refresh to show the new workout
+        router.refresh()
       }
-    } catch {
-      // Rollback on error
-      setLocalOverrides((prev) => {
-        const newMap = new Map(prev)
-        if (previousOverrides) {
-          newMap.set(primaryInstanceId, previousOverrides)
-        } else {
-          newMap.delete(primaryInstanceId)
-        }
-        return newMap
+    } catch (error) {
+      errorLogger.logError(error as Error, {
+        path: 'schedule-calendar/handleAddLibraryWorkout',
+        metadata: { workoutId: workout.id, targetDate },
       })
-      setErrorMessage('Failed to add workout. Please try again.')
+      toast.error('Failed to add workout. Please try again.')
     } finally {
       // Clear the drop-in-progress flag
       libraryDropInProgressRef.current.delete(dropKey)
@@ -915,20 +537,15 @@ export function ScheduleCalendar({
   // Get FTP from first instance's athlete profile
   const ftp = instances[0]?.plan_data?.athlete_profile?.ftp || 200
 
-  // Build a map of date -> workouts from all instances (with overrides applied)
+  // Build a map of date -> workouts from all instances
   const workoutsByDate = useMemo(() => {
     const map = new Map<string, ScheduledWorkout[]>()
 
     instances.forEach((instance) => {
       const startDate = parseLocalDate(instance.start_date)
 
-      // Apply workout overrides to get effective workouts by date (use local overrides for optimistic updates)
-      const overrides = localOverrides.get(instance.id) || instance.workout_overrides
-      const effectiveWorkouts = applyWorkoutOverrides(
-        instance.plan_data,
-        overrides,
-        instance.start_date
-      )
+      // Get effective workouts by date (reads directly from plan_data)
+      const effectiveWorkouts = applyWorkoutOverrides(instance.plan_data, instance.start_date)
 
       // Convert effective workouts to ScheduledWorkout format
       effectiveWorkouts.forEach((workouts, dateKey) => {
@@ -947,22 +564,8 @@ export function ScheduleCalendar({
         const existing = map.get(dateKey) || []
         workouts.forEach((effectiveWorkout) => {
           // Use the workout from applyWorkoutOverrides - it already has full data
-          // including structure when library_workout data is stored
-          // Only fall back to cache for legacy entries without stored workout data
-          let workout = effectiveWorkout.workout
-          if (
-            effectiveWorkout.libraryWorkoutId &&
-            !effectiveWorkout.workout.structure?.structure?.length
-          ) {
-            const cachedParams = libraryWorkoutCache.get(effectiveWorkout.libraryWorkoutId)
-            if (cachedParams) {
-              // Use cached library workout details only when stored data is incomplete
-              workout = libraryWorkoutToScheduleWorkout(cachedParams)
-            }
-          }
-
           existing.push({
-            workout,
+            workout: effectiveWorkout.workout,
             instance,
             weekNumber,
             date: workoutDate,
@@ -974,7 +577,7 @@ export function ScheduleCalendar({
     })
 
     return map
-  }, [instances, localOverrides, libraryWorkoutCache])
+  }, [instances])
 
   // Get calendar grid for current month
   const calendarDays = useMemo(() => {
@@ -1040,17 +643,6 @@ export function ScheduleCalendar({
           <h2 className="text-xl font-bold">{monthName}</h2>
         </div>
         <div className="flex gap-2">
-          {/* Undo button - only show when there are changes to undo */}
-          {canEdit && undoStack.length > 0 && (
-            <Button onClick={handleUndo} variant="outline" size="sm" disabled={isUndoing}>
-              {isUndoing ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Undo2 className="h-4 w-4 mr-2" />
-              )}
-              {t('undo')}
-            </Button>
-          )}
           <Button onClick={goToToday} variant="outline" size="sm">
             <Calendar className="h-4 w-4 mr-2" />
             {t('today')}
@@ -1350,14 +942,6 @@ export function ScheduleCalendar({
           onDeleteError={handleNoteDeleteError}
         />
       )}
-
-      {/* Create Plan Dialog - shown when dropping workout without a plan */}
-      <CreatePlanDialog
-        open={createPlanDialogOpen}
-        onOpenChange={setCreatePlanDialogOpen}
-        onPlanCreated={handlePlanCreated}
-        dropDate={pendingLibraryWorkout?.targetDate}
-      />
     </div>
   )
 

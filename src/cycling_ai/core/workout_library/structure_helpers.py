@@ -69,7 +69,6 @@ class WorkoutStructure(BaseModel):
     primaryIntensityMetric: Literal["percentOfFtp", "watts", "heartrate"]
     primaryLengthMetric: Literal["duration", "distance"]
     structure: list[StructuredWorkoutSegment]
-    polyline: list[tuple[float, float]] | None = None
 
 
 # =============================================================================
