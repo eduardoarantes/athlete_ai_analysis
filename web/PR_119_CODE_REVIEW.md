@@ -345,9 +345,12 @@ Using Supabase client (parameterized queries)
 
 ### Medium Priority 📝
 
-- [ ] **Create migration** to drop `workout_overrides` column
-  - After verification that all data is migrated
-  - Estimated time: 30 minutes
+- [x] **Create migration** to drop `workout_overrides` column
+  - ✅ Created migration to drop idx_plan_instances_has_overrides index
+  - ✅ Created migration to drop workout_overrides column from plan_instances
+  - ✅ Applied migration to remote database successfully
+  - ✅ Regenerated Supabase TypeScript types
+  - Completed: 2026-01-13
 
 - [x] **Replace legacy date calculation** with migration to backfill `scheduled_date`
   - ✅ Removed legacy fallback code entirely (not in production yet)
