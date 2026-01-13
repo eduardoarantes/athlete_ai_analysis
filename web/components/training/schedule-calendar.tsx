@@ -90,6 +90,8 @@ export function ScheduleCalendar({
   // Edit state
   // Error message for user feedback
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  // Loading state for workout operations
+  const [isOperationLoading, setIsOperationLoading] = useState(false)
 
   // Find MANUAL_WORKOUTS instance (always exists for each user)
   const manualWorkoutsInstance = instances.find((i) => i.instance_type === 'manual_workouts')
@@ -378,13 +380,14 @@ export function ScheduleCalendar({
     setTimeout(() => setErrorMessage(null), 5000)
   }, [])
 
-  // Schedule editing handlers with optimistic updates
+  // Schedule editing handlers with loading states
   const handleMoveWorkout = async (
     instanceId: string,
     source: { date: string; index: number },
     target: { date: string; index: number }
   ) => {
     // Make API call to move workout
+    setIsOperationLoading(true)
     try {
       const response = await fetch(`/api/schedule/${instanceId}/workouts`, {
         method: 'PATCH',
@@ -407,6 +410,8 @@ export function ScheduleCalendar({
     } catch (error) {
       console.error('Error moving workout:', error)
       setErrorMessage('Failed to move workout. Please try again.')
+    } finally {
+      setIsOperationLoading(false)
     }
   }
 
@@ -416,6 +421,7 @@ export function ScheduleCalendar({
     target: { date: string; index: number }
   ) => {
     // Make API call to copy workout
+    setIsOperationLoading(true)
     try {
       const response = await fetch(`/api/schedule/${instanceId}/workouts`, {
         method: 'PATCH',
@@ -438,11 +444,14 @@ export function ScheduleCalendar({
     } catch (error) {
       console.error('Error copying workout:', error)
       setErrorMessage('Failed to copy workout. Please try again.')
+    } finally {
+      setIsOperationLoading(false)
     }
   }
 
   const handleDeleteWorkout = async (instanceId: string, date: string, index: number) => {
     // Make API call to delete workout
+    setIsOperationLoading(true)
     try {
       const response = await fetch(`/api/schedule/${instanceId}/workouts`, {
         method: 'DELETE',
@@ -461,6 +470,8 @@ export function ScheduleCalendar({
     } catch (error) {
       console.error('Error deleting workout:', error)
       setErrorMessage('Failed to delete workout. Please try again.')
+    } finally {
+      setIsOperationLoading(false)
     }
   }
 
@@ -504,6 +515,7 @@ export function ScheduleCalendar({
     libraryDropInProgressRef.current.add(dropKey)
 
     // API call - workout is added directly to plan_data.weekly_plan
+    setIsOperationLoading(true)
     try {
       const response = await fetch(`/api/schedule/${primaryInstanceId}/workouts/add`, {
         method: 'POST',
@@ -531,6 +543,7 @@ export function ScheduleCalendar({
     } finally {
       // Clear the drop-in-progress flag
       libraryDropInProgressRef.current.delete(dropKey)
+      setIsOperationLoading(false)
     }
   }
 
@@ -660,6 +673,16 @@ export function ScheduleCalendar({
           </Button>
         </div>
       </div>
+
+      {/* Loading State */}
+      {isOperationLoading && (
+        <Alert className="mb-4 border-blue-200 bg-blue-50 text-blue-900">
+          <div className="flex items-center gap-2">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+            <AlertDescription>Processing workout operation...</AlertDescription>
+          </div>
+        </Alert>
+      )}
 
       {/* Error Message */}
       {errorMessage && (
