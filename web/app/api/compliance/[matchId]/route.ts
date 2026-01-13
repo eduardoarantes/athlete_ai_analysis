@@ -77,7 +77,7 @@ export async function GET(
       .from('workout_activity_matches')
       .select(
         `
-        id, plan_instance_id, workout_id, workout_date, workout_index, strava_activity_id, user_id,
+        id, plan_instance_id, workout_id, strava_activity_id, user_id,
         strava_activities (
           strava_activity_id
         )
@@ -143,7 +143,7 @@ export async function GET(
           if (!match.workout_id) {
             errorLogger.logWarning('Match missing workout_id', {
               userId: user.id,
-              metadata: { matchId, workoutDate: match.workout_date },
+              metadata: { matchId },
             })
             // Skip this match - it's legacy data without workout_id
             return NextResponse.json(
@@ -205,7 +205,6 @@ export async function GET(
           context: {
             match_id: matchId,
             ...workoutContext,
-            workout_date: match.workout_date,
             activity_id: stravaActivityNumericId,
             athlete_ftp: cachedAnalysis.athlete_ftp,
             athlete_lthr: cachedAnalysis.athlete_lthr,
@@ -234,7 +233,7 @@ export async function GET(
     if (!match.workout_id) {
       errorLogger.logWarning('Match missing workout_id', {
         userId: user.id,
-        metadata: { matchId, workoutDate: match.workout_date },
+        metadata: { matchId },
       })
       return NextResponse.json(
         { error: 'Legacy match without workout_id. Please re-match this workout.' },
@@ -390,7 +389,6 @@ export async function GET(
         workout_name: workout.name,
         workout_type: workout.type,
         workout_description: workout.description,
-        workout_date: match.workout_date,
         workout_tss: workout.tss,
         activity_id: stravaActivityNumericId,
         athlete_ftp: ftp,

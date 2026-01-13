@@ -61,8 +61,6 @@ interface MatchRow {
   id: string
   plan_instance_id: string
   workout_id: string | null
-  workout_date: string
-  workout_index: number
   strava_activity_id: string
   user_id: string
 }
@@ -82,14 +80,12 @@ interface PlanInstanceRow {
 function transformAnalysisForPythonApi(
   analysis: WorkoutComplianceAnalysis,
   workout: Workout,
-  workoutDate: string,
   athleteFtp: number,
   athleteLthr: number | null
 ): Record<string, unknown> {
   return {
     workout_name: workout.name,
     workout_type: workout.type || 'unknown',
-    workout_date: workoutDate,
     workout_description: workout.description || null,
     athlete_ftp: athleteFtp,
     athlete_lthr: athleteLthr,
@@ -174,9 +170,7 @@ export async function POST(
     // Fetch match record
     const { data: match, error: matchError } = await supabase
       .from('workout_activity_matches')
-      .select(
-        'id, plan_instance_id, workout_id, workout_date, workout_index, strava_activity_id, user_id'
-      )
+      .select('id, plan_instance_id, workout_id, strava_activity_id, user_id')
       .eq('id', matchId)
       .single<MatchRow>()
 
@@ -244,7 +238,7 @@ export async function POST(
     if (!match.workout_id) {
       errorLogger.logWarning('Match missing workout_id', {
         userId: user.id,
-        metadata: { matchId, workoutDate: match.workout_date },
+        metadata: { matchId },
       })
       return NextResponse.json(
         { error: 'Legacy match without workout_id. Please re-match this workout.' },
@@ -269,7 +263,6 @@ export async function POST(
     const requestBody = transformAnalysisForPythonApi(
       analysis,
       workout,
-      match.workout_date,
       existingAnalysis.athlete_ftp,
       existingAnalysis.athlete_lthr
     )
@@ -413,8 +406,7 @@ export async function GET(
         overall_score,
         overall_grade,
         workout_activity_matches!inner (
-          user_id,
-          workout_date
+          user_id
         )
       `
       )

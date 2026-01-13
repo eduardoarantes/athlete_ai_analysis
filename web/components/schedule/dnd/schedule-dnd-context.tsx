@@ -30,11 +30,7 @@ import type { WorkoutLibraryItem } from '@/lib/types/workout-library'
 
 interface ScheduleDndContextProps {
   children: ReactNode
-  onMoveWorkout: (
-    instanceId: string,
-    source: { date: string; index: number },
-    target: { date: string; index: number }
-  ) => Promise<void>
+  onMoveWorkout: (instanceId: string, workoutId: string, targetDate: string) => Promise<void>
   onAddLibraryWorkout?: (workout: WorkoutLibraryItem, targetDate: string) => Promise<void>
   onError?: (message: string) => void
   isEditMode: boolean
@@ -143,22 +139,26 @@ export function ScheduleDndContext({
         return
       }
 
-      // Target index is a placeholder - server appends to end of day's workouts
-      const targetIndex = 0
+      // Validate workout has an ID (required for move operation)
+      if (!sourceData.workout.id) {
+        errorLogger.logError(new Error('Workout missing ID'), {
+          path: 'schedule-dnd-context',
+          metadata: { workoutName: sourceData.workout.name },
+        })
+        onError?.('Workout data is invalid. Please refresh and try again.')
+        return
+      }
 
       try {
-        await onMoveWorkout(
-          sourceData.instanceId,
-          { date: sourceData.date, index: sourceData.index },
-          { date: dropTarget.date, index: targetIndex }
-        )
+        await onMoveWorkout(sourceData.instanceId, sourceData.workout.id, dropTarget.date)
       } catch (error) {
         errorLogger.logError(error as Error, {
           path: 'schedule-dnd-context',
           metadata: {
             action: 'move',
-            source: { date: sourceData.date, index: sourceData.index },
-            target: { date: dropTarget.date, index: targetIndex },
+            workoutId: sourceData.workout.id,
+            sourceDate: sourceData.date,
+            targetDate: dropTarget.date,
           },
         })
         onError?.('Failed to move workout. Please try again.')
