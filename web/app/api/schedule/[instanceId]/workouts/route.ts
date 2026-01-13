@@ -20,19 +20,19 @@ import { assertTrainingPlanData } from '@/lib/types/type-guards'
 
 // Validation schemas
 const workoutLocationSchema = z.object({
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD format'),
-  index: z.number().int().min(0),
+  workout_id: z.string().min(1, 'workout_id is required'),
 })
 
 const moveOrCopyRequestSchema = z.object({
   action: z.enum(['move', 'copy']),
   source: workoutLocationSchema,
-  target: workoutLocationSchema,
+  target: z.object({
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Target date must be YYYY-MM-DD format'),
+  }),
 })
 
 const deleteRequestSchema = z.object({
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD format'),
-  index: z.number().int().min(0),
+  workout_id: z.string().min(1, 'workout_id is required'),
 })
 
 interface RouteParams {
@@ -110,24 +110,19 @@ function validateSourceDateForMove(sourceDate: string): { valid: boolean; error?
 /**
  * Check if a workout has a matched activity (blocks move, not copy)
  */
-async function hasMatchedActivity(
-  instanceId: string,
-  date: string,
-  index: number
-): Promise<boolean> {
+async function hasMatchedActivity(instanceId: string, workoutId: string): Promise<boolean> {
   const supabase = await createClient()
 
   const { data, error } = await supabase
     .from('workout_activity_matches')
     .select('id')
     .eq('plan_instance_id', instanceId)
-    .eq('workout_date', date)
-    .eq('workout_index', index)
+    .eq('workout_id', workoutId)
     .maybeSingle()
 
   if (error) {
     errorLogger.logWarning('Error checking workout match', {
-      metadata: { instanceId, date, index, error: error.message },
+      metadata: { instanceId, workoutId, error: error.message },
     })
     return false
   }

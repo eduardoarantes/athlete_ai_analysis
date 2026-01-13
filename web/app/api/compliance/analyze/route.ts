@@ -21,7 +21,7 @@ import { createClient } from '@/lib/supabase/server'
 import { StravaService } from '@/lib/services/strava-service'
 import { analyzeWorkoutCompliance } from '@/lib/services/compliance-analysis-service'
 import { errorLogger } from '@/lib/monitoring/error-logger'
-import { getWorkoutById, getWorkoutByDateAndIndex } from '@/lib/utils/workout-helpers'
+import { getWorkoutById } from '@/lib/utils/workout-helpers'
 import type { TrainingPlanData } from '@/lib/types/training-plan'
 import { hasValidStructure } from '@/lib/types/training-plan'
 import type { Json } from '@/lib/types/database'
@@ -146,14 +146,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Plan instance not found' }, { status: 404 })
     }
 
-    // Get workout from plan by workout_id (preferred) or date+index (legacy fallback)
-    const workout = workoutId
-      ? getWorkoutById(planInstance.plan_data, workoutId)
-      : getWorkoutByDateAndIndex(planInstance.plan_data, workoutDate, workoutIndex)
+    // Require workout_id for lookup
+    if (!workoutId) {
+      errorLogger.logWarning('Analysis request missing workout_id', {
+        userId: user.id,
+        metadata: { workoutDate, workoutIndex },
+      })
+      return NextResponse.json(
+        { error: 'workout_id is required. Legacy date+index lookups are no longer supported.' },
+        { status: 400 }
+      )
+    }
+
+    const workout = getWorkoutById(planInstance.plan_data, workoutId)
 
     if (!workout) {
-      const identifier = workoutId ? `ID ${workoutId}` : `date ${workoutDate} index ${workoutIndex}`
-      return NextResponse.json({ error: `No workout found for ${identifier}` }, { status: 404 })
+      return NextResponse.json({ error: `No workout found for ID ${workoutId}` }, { status: 404 })
     }
 
     // Check if workout has valid structure
