@@ -98,12 +98,16 @@ export async function POST(request: NextRequest) {
     // Create MANUAL_WORKOUTS plan for this user
     // This is a special plan that serves as a container for manually added workouts
     // It is never shown in the UI and can overlap with other plans
-    console.log('[DEBUG] Starting MANUAL_WORKOUTS plan creation for user:', user.id)
     const today = new Date().toISOString().split('T')[0]!
     const tenYearsLater = new Date()
     tenYearsLater.setFullYear(tenYearsLater.getFullYear() + 10)
     const endDate = tenYearsLater.toISOString().split('T')[0]!
-    console.log('[DEBUG] Dates - today:', today, 'endDate:', endDate)
+
+    errorLogger.logInfo('Starting MANUAL_WORKOUTS plan creation', {
+      userId: user.id,
+      path: '/api/profile/create',
+      metadata: { startDate: today, endDate: endDate },
+    })
 
     const planData = {
       athlete_profile: {
@@ -120,7 +124,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Create training plan template
-    console.log('[DEBUG] Creating training plan template...')
+    errorLogger.logInfo('Creating MANUAL_WORKOUTS training plan template', {
+      userId: user.id,
+      path: '/api/profile/create',
+    })
+
     const { data: template, error: templateError } = await supabase
       .from('training_plans')
       .insert({
@@ -139,19 +147,28 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (templateError) {
-      console.error('[DEBUG] Failed to create training plan template:', templateError)
       errorLogger.logError(
         new Error(`Failed to create MANUAL_WORKOUTS plan: ${templateError.message}`),
         {
           userId: user.id,
           path: '/api/profile/create',
+          metadata: { templateError: templateError.message },
         }
       )
       // Don't fail profile creation if manual plan fails - user can still use the app
     } else {
-      console.log('[DEBUG] Training plan template created:', template.id)
+      errorLogger.logInfo('MANUAL_WORKOUTS training plan template created', {
+        userId: user.id,
+        path: '/api/profile/create',
+        metadata: { templateId: template.id },
+      })
+
       // Create plan instance
-      console.log('[DEBUG] Creating plan instance...')
+      errorLogger.logInfo('Creating MANUAL_WORKOUTS plan instance', {
+        userId: user.id,
+        path: '/api/profile/create',
+      })
+
       const { error: instanceError } = await supabase.from('plan_instances').insert({
         template_id: template.id,
         user_id: user.id,
@@ -165,18 +182,17 @@ export async function POST(request: NextRequest) {
       })
 
       if (instanceError) {
-        console.error('[DEBUG] Failed to create plan instance:', instanceError)
         errorLogger.logError(
           new Error(`Failed to create MANUAL_WORKOUTS instance: ${instanceError.message}`),
           {
             userId: user.id,
             path: '/api/profile/create',
+            metadata: { instanceError: instanceError.message },
           }
         )
         // Don't fail profile creation if instance creation fails
       } else {
-        console.log('[DEBUG] ✅ MANUAL_WORKOUTS plan instance created successfully!')
-        errorLogger.logInfo('MANUAL_WORKOUTS plan created', {
+        errorLogger.logInfo('MANUAL_WORKOUTS plan instance created successfully', {
           userId: user.id,
           path: '/api/profile/create',
         })
