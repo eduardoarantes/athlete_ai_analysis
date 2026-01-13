@@ -6,7 +6,8 @@
  * Also handles library workout copies (source_date starts with "library:")
  */
 
-import { addDays, parseISO, format } from 'date-fns'
+import { addDays } from 'date-fns'
+import { parseLocalDate, formatDateString } from '@/lib/utils/date-utils'
 import type {
   TrainingPlanData,
   Workout,
@@ -135,7 +136,7 @@ function findOriginalWorkout(
   targetDate: string,
   targetIndex: number
 ): Workout | null {
-  const startDate = parseISO(instanceStartDate)
+  const startDate = parseLocalDate(instanceStartDate)
 
   if (!planData.weekly_plan) return null
 
@@ -148,7 +149,7 @@ function findOriginalWorkout(
 
       const dayIndex = DAY_TO_INDEX[workout.weekday] ?? 0
       const workoutDate = addDays(startDate, weekStartOffset + dayIndex)
-      const dateKey = format(workoutDate, 'yyyy-MM-dd')
+      const dateKey = formatDateString(workoutDate)
 
       if (dateKey === targetDate && i === targetIndex) {
         return workout
@@ -173,7 +174,7 @@ export function applyWorkoutOverrides(
   startDate: string
 ): Map<string, EffectiveWorkoutInfo[]> {
   const result = new Map<string, EffectiveWorkoutInfo[]>()
-  const instanceStartDate = parseISO(startDate)
+  const instanceStartDate = parseLocalDate(startDate)
 
   // Normalize overrides
   const normalizedOverrides: WorkoutOverrides = {
@@ -190,7 +191,7 @@ export function applyWorkoutOverrides(
       week.workouts.forEach((workout: Workout, workoutIndex: number) => {
         const dayIndex = DAY_TO_INDEX[workout.weekday] ?? 0
         const workoutDate = addDays(instanceStartDate, weekStartOffset + dayIndex)
-        const dateKey = format(workoutDate, 'yyyy-MM-dd')
+        const dateKey = formatDateString(workoutDate)
         const fullKey = createWorkoutKey(dateKey, workoutIndex)
 
         // Skip if deleted
