@@ -4,6 +4,9 @@
 # Uses Playwright image with pre-installed browsers
 # Build and cache this image for CI E2E tests
 #
+# IMPORTANT: Keep Playwright version in sync with web/package.json @playwright/test
+# CI will validate version match and fail if they differ
+#
 # Usage:
 #   docker build -f docker/web-e2e.Dockerfile -t cycling-ai-web-e2e .
 #   docker run --rm cycling-ai-web-e2e pnpm test

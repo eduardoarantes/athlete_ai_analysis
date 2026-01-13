@@ -8,6 +8,7 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
@@ -139,11 +140,12 @@ jobs:
   web-e2e-tests:
     name: Web E2E Tests (Docker + Playwright)
     runs-on: ubuntu-latest
-    # Only run E2E tests on main branch to keep feature branch CI fast
-    if: github.ref == 'refs/heads/main'
+    # Run E2E tests on main branch and PRs to main
+    if: github.ref == 'refs/heads/main' || (github.event_name == 'pull_request' && github.base_ref == 'main')
     permissions:
       contents: read
       packages: write
+      pull-requests: write
 
     steps:
       - name: Checkout code
@@ -158,6 +160,19 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Validate Playwright version matches between Dockerfile and package.json
+      - name: Validate Playwright version sync
+        run: |
+          DOCKERFILE_VERSION=$(grep 'FROM mcr.microsoft.com/playwright:v' docker/web-e2e.Dockerfile | sed -n 's/.*:v\([0-9.]*\).*/\1/p')
+          PACKAGE_VERSION=$(grep '@playwright/test' web/package.json | sed -n 's/.*"\^*\([0-9.]*\).*/\1/p')
+          echo "Dockerfile Playwright version: $DOCKERFILE_VERSION"
+          echo "package.json @playwright/test version: $PACKAGE_VERSION"
+          if [ "$DOCKERFILE_VERSION" != "$PACKAGE_VERSION" ]; then
+            echo "::error::Playwright version mismatch! Dockerfile: $DOCKERFILE_VERSION, package.json: $PACKAGE_VERSION"
+            echo "::error::Please update docker/web-e2e.Dockerfile to match package.json"
+            exit 1
+          fi
 
       # Generate a cache key based on pnpm-lock.yaml
       - name: Generate cache key
@@ -177,20 +192,23 @@ jobs:
           cache-from: |
             type=registry,ref=${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}-e2e:${{ steps.cache-key.outputs.key }}
             type=registry,ref=${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}-e2e:latest
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}-e2e:latest,mode=max
 
       - name: Run Playwright E2E tests
         id: playwright-tests
         continue-on-error: true
         run: |
           # Create directories for test results
-          mkdir -p playwright-report test-results
+          mkdir -p web/playwright-report web/test-results
 
-          # Run tests and capture exit code
+          # Run tests with security hardening
           docker run --rm \
+            --security-opt=no-new-privileges:true \
+            --cap-drop=ALL \
             -v ${{ github.workspace }}/web/playwright-report:/app/playwright-report \
             -v ${{ github.workspace }}/web/test-results:/app/test-results \
             ${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}-e2e:${{ github.sha }} \
-            pnpm test || echo "exit_code=$?" >> $GITHUB_OUTPUT
+            pnpm test
 
       - name: Upload Playwright HTML Report
         if: always()
@@ -213,7 +231,6 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const fs = require('fs');
             const testsPassed = '${{ steps.playwright-tests.outcome }}' === 'success';
             const reportUrl = `https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}`;
 
