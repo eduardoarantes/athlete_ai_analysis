@@ -33,10 +33,8 @@ export interface WorkoutMatch {
   user_id: string
   plan_instance_id: string
   /** Unique workout identifier (UUID format) - primary key for matches */
-  workout_id: string | null
-  /** @deprecated Use workout_id instead - kept for backwards compatibility */
+  workout_id: string
   workout_date: string
-  /** @deprecated Use workout_id instead - kept for backwards compatibility */
   workout_index: number
   strava_activity_id: string
   match_type: 'auto' | 'manual'
@@ -63,18 +61,17 @@ export interface MatchedActivity {
 
 export interface WorkoutMatchInput {
   plan_instance_id: string
-  /** Unique workout identifier (UUID format) - preferred identifier */
-  workout_id?: string
-  /** @deprecated Use workout_id - kept for backwards compatibility during migration */
-  workout_date?: string
-  /** @deprecated Use workout_id - kept for backwards compatibility during migration */
-  workout_index?: number
+  /** Unique workout identifier (UUID format) - required */
+  workout_id: string
+  workout_date: string
+  workout_index: number
   strava_activity_id: string
   match_type: 'auto' | 'manual'
   match_score?: number
 }
 
 export interface AutoMatchResult {
+  workout_id: string
   workout_date: string
   workout_index: number
   activity: {
@@ -158,6 +155,7 @@ export class WorkoutMatchService {
 
   /**
    * Get all matches for a plan instance
+   * Returns a map keyed by workout_id
    * Note: Uses type assertion because workout_activity_matches table types are not yet generated
    */
   async getMatchesForInstance(planInstanceId: string): Promise<Map<string, MatchedActivity>> {
@@ -168,8 +166,6 @@ export class WorkoutMatchService {
         `
         id,
         workout_id,
-        workout_date,
-        workout_index,
         match_type,
         match_score,
         strava_activities (
@@ -188,19 +184,18 @@ export class WorkoutMatchService {
       )
       .eq('plan_instance_id', planInstanceId)
       .eq('user_id', this.userId)
+      .not('workout_id', 'is', null)
 
     if (error) {
       throw new Error(`Failed to get matches: ${error.message}`)
     }
 
-    // Build map keyed by workout_id (preferred) or "date:index" (legacy fallback)
+    // Build map keyed by workout_id
     const matchMap = new Map<string, MatchedActivity>()
 
     for (const match of (data || []) as Array<{
       id: string
-      workout_id: string | null
-      workout_date: string
-      workout_index: number
+      workout_id: string
       match_type: string
       match_score: number | null
       strava_activities: {
@@ -218,10 +213,8 @@ export class WorkoutMatchService {
     }>) {
       const activity = match.strava_activities
 
-      if (activity) {
-        // Use workout_id as key if available, otherwise fall back to date:index
-        const key = match.workout_id || `${match.workout_date}:${match.workout_index}`
-        matchMap.set(key, {
+      if (activity && match.workout_id) {
+        matchMap.set(match.workout_id, {
           ...activity,
           match_id: match.id,
           match_type: match.match_type as 'auto' | 'manual',
@@ -235,6 +228,7 @@ export class WorkoutMatchService {
 
   /**
    * Get all matches for multiple plan instances (for calendar view)
+   * Returns a map keyed by "instanceId:workoutId"
    * Note: Uses type assertion because workout_activity_matches table types are not yet generated
    */
   async getMatchesForInstances(planInstanceIds: string[]): Promise<Map<string, MatchedActivity>> {
@@ -250,8 +244,6 @@ export class WorkoutMatchService {
         id,
         plan_instance_id,
         workout_id,
-        workout_date,
-        workout_index,
         match_type,
         match_score,
         strava_activities (
@@ -270,20 +262,19 @@ export class WorkoutMatchService {
       )
       .in('plan_instance_id', planInstanceIds)
       .eq('user_id', this.userId)
+      .not('workout_id', 'is', null)
 
     if (error) {
       throw new Error(`Failed to get matches: ${error.message}`)
     }
 
-    // Build map keyed by "instanceId:workoutId" or "instanceId:date:index" (legacy)
+    // Build map keyed by "instanceId:workoutId"
     const matchMap = new Map<string, MatchedActivity>()
 
     for (const match of (data || []) as Array<{
       id: string
       plan_instance_id: string
-      workout_id: string | null
-      workout_date: string
-      workout_index: number
+      workout_id: string
       match_type: string
       match_score: number | null
       strava_activities: {
@@ -301,11 +292,8 @@ export class WorkoutMatchService {
     }>) {
       const activity = match.strava_activities
 
-      if (activity) {
-        // Use workout_id as key if available, otherwise fall back to date:index
-        const key = match.workout_id
-          ? `${match.plan_instance_id}:${match.workout_id}`
-          : `${match.plan_instance_id}:${match.workout_date}:${match.workout_index}`
+      if (activity && match.workout_id) {
+        const key = `${match.plan_instance_id}:${match.workout_id}`
         matchMap.set(key, {
           ...activity,
           match_id: match.id,
@@ -320,44 +308,26 @@ export class WorkoutMatchService {
 
   /**
    * Manually match an activity to a workout
+   * Requires workout_id - this is the primary identifier for matches
    * Note: Uses type assertion because workout_activity_matches table types are not yet generated
-   *
-   * When workout_id is provided, it becomes the primary identifier for the match.
-   * During the migration period, workout_date and workout_index are also saved for backwards compatibility.
    */
   async matchWorkout(input: WorkoutMatchInput): Promise<WorkoutMatch> {
-    // Build the match data
-    const matchData: Record<string, unknown> = {
+    const matchData = {
       user_id: this.userId,
       plan_instance_id: input.plan_instance_id,
+      workout_id: input.workout_id,
+      workout_date: input.workout_date,
+      workout_index: input.workout_index,
       strava_activity_id: input.strava_activity_id,
       match_type: input.match_type,
       match_score: input.match_score ?? null,
-    }
-
-    // Add workout_id if provided (preferred identifier)
-    if (input.workout_id) {
-      matchData.workout_id = input.workout_id
-    }
-
-    // Add workout_date and workout_index for backwards compatibility
-    if (input.workout_date !== undefined) {
-      matchData.workout_date = input.workout_date
-    }
-    if (input.workout_index !== undefined) {
-      matchData.workout_index = input.workout_index
-    } else {
-      matchData.workout_index = 0 // Default value
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (this.supabase as any)
       .from('workout_activity_matches')
       .upsert(matchData, {
-        // Use workout_id for conflict resolution if available, otherwise fall back to date+index
-        onConflict: input.workout_id
-          ? 'plan_instance_id,workout_id'
-          : 'plan_instance_id,workout_date,workout_index',
+        onConflict: 'plan_instance_id,workout_id',
       })
       .select()
       .single()
@@ -370,48 +340,10 @@ export class WorkoutMatchService {
   }
 
   /**
-   * Remove a workout match by workout_id (preferred) or date+index (legacy)
+   * Remove a workout match by workout_id
    * Note: Uses type assertion because workout_activity_matches table types are not yet generated
    */
-  async unmatchWorkout(
-    planInstanceId: string,
-    workoutDateOrId: string,
-    workoutIndex?: number
-  ): Promise<void> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let query = (this.supabase as any)
-      .from('workout_activity_matches')
-      .delete()
-      .eq('plan_instance_id', planInstanceId)
-      .eq('user_id', this.userId)
-
-    // If workoutIndex is provided, use date+index (legacy method)
-    // Otherwise, treat workoutDateOrId as workout_id
-    if (workoutIndex !== undefined) {
-      query = query.eq('workout_date', workoutDateOrId).eq('workout_index', workoutIndex)
-    } else {
-      // Check if this looks like a UUID (workout_id) or a date
-      const isUUID = workoutDateOrId.includes('-') && workoutDateOrId.length === 36
-      if (isUUID) {
-        query = query.eq('workout_id', workoutDateOrId)
-      } else {
-        // Fallback: treat as date with index 0
-        query = query.eq('workout_date', workoutDateOrId).eq('workout_index', 0)
-      }
-    }
-
-    const { error } = await query
-
-    if (error) {
-      throw new Error(`Failed to unmatch workout: ${error.message}`)
-    }
-  }
-
-  /**
-   * Remove a workout match by workout_id
-   * This is the preferred method when workout_id is available
-   */
-  async unmatchWorkoutById(planInstanceId: string, workoutId: string): Promise<void> {
+  async unmatchWorkout(planInstanceId: string, workoutId: string): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (this.supabase as any)
       .from('workout_activity_matches')
@@ -539,50 +471,55 @@ export class WorkoutMatchService {
   /**
    * Auto-match activities to workouts for a plan instance
    * Returns suggested matches without saving them
+   * Requires workouts with id field - will skip workouts without id
    * Note: Uses type assertion because workout_activity_matches table types are not yet generated
    */
   async suggestAutoMatches(
     planInstanceId: string,
-    workoutDates: Array<{ date: string; index: number; tss?: number; type?: string }>
+    workouts: Array<{
+      id: string
+      scheduled_date: string
+      tss?: number
+      type?: string
+    }>
   ): Promise<AutoMatchResult[]> {
-    if (workoutDates.length === 0) {
+    if (workouts.length === 0) {
       return []
     }
 
     // Get date range from workouts
-    const dates = workoutDates.map((w) => w.date).sort()
+    const dates = workouts.map((w) => w.scheduled_date).sort()
     const startDate = dates[0]!
     const endDate = dates[dates.length - 1]!
 
     // Get unmatched activities in date range
     const activities = await this.getUnmatchedActivities(startDate, endDate)
 
-    // Get already matched workout slots for this instance
+    // Get already matched workout IDs for this instance
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: existingMatches } = await (this.supabase as any)
       .from('workout_activity_matches')
-      .select('workout_date, workout_index')
+      .select('workout_id')
       .eq('plan_instance_id', planInstanceId)
       .eq('user_id', this.userId)
+      .not('workout_id', 'is', null)
 
-    const matchedSlots = new Set(
-      ((existingMatches || []) as Array<{ workout_date: string; workout_index: number }>).map(
-        (m) => `${m.workout_date}:${m.workout_index}`
-      )
+    const matchedWorkoutIds = new Set(
+      ((existingMatches || []) as Array<{ workout_id: string }>).map((m) => m.workout_id)
     )
 
     const suggestions: AutoMatchResult[] = []
 
     // For each workout, find the best matching activity
-    for (const workout of workoutDates) {
-      const slotKey = `${workout.date}:${workout.index}`
-      if (matchedSlots.has(slotKey)) {
-        continue // Already matched
+    for (const workout of workouts) {
+      // Skip if already matched
+      if (matchedWorkoutIds.has(workout.id)) {
+        continue
       }
 
       // Find activities on the same date (comparing local dates)
       const sameDay = activities.filter(
-        (a) => getLocalDateFromTimestamp(a.start_date) === workout.date
+        (a) => getLocalDateFromTimestamp(a.start_date) === workout.scheduled_date
       )
 
       if (sameDay.length === 0) {
@@ -605,8 +542,9 @@ export class WorkoutMatchService {
 
       if (best && best.score >= 50) {
         suggestions.push({
-          workout_date: workout.date,
-          workout_index: workout.index,
+          workout_id: workout.id,
+          workout_date: workout.scheduled_date,
+          workout_index: 0,
           activity: {
             id: best.activity.id,
             name: best.activity.name,
@@ -638,6 +576,7 @@ export class WorkoutMatchService {
       try {
         await this.matchWorkout({
           plan_instance_id: planInstanceId,
+          workout_id: suggestion.workout_id,
           workout_date: suggestion.workout_date,
           workout_index: suggestion.workout_index,
           strava_activity_id: suggestion.activity.id,
