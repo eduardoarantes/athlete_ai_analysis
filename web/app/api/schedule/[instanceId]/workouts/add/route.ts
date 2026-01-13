@@ -146,10 +146,11 @@ export async function POST(request: NextRequest, { params }: RouteParams): Promi
     // Get the week (either existing or newly created)
     const week = planData.weekly_plan.find((w) => w.week_number === weekNumber)!
 
-    // Create the workout object
+    // Create the workout object with direct scheduled_date
     const newWorkout: Workout = {
       id: crypto.randomUUID(),
       weekday,
+      scheduled_date: target_date, // Direct date reference - no more calculations!
       name: libraryWorkout.name,
       type: libraryWorkout.type,
       tss: libraryWorkout.base_tss,
