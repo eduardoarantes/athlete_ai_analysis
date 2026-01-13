@@ -349,13 +349,17 @@ Using Supabase client (parameterized queries)
   - After verification that all data is migrated
   - Estimated time: 30 minutes
 
-- [ ] **Replace legacy date calculation** with migration to backfill `scheduled_date`
-  - Ensure backward compatibility removed safely
-  - Estimated time: 1 hour
+- [x] **Replace legacy date calculation** with migration to backfill `scheduled_date`
+  - ✅ Removed legacy fallback code entirely (not in production yet)
+  - ✅ Updated getWorkoutsByDate to require scheduled_date field
+  - ✅ Removed unused imports and startDate parameter
+  - ✅ Updated all callers to not pass startDate
+  - Completed: 2026-01-13
 
-- [ ] **Add unit tests** for new `workout-helpers.ts` functions
-  - Test `getWorkoutByDate`, `getWorkoutByDateAndIndex`, `downsamplePowerStream`
-  - Estimated time: 1 hour
+- [x] **Add unit tests** for new `workout-helpers.ts` functions
+  - ✅ Created comprehensive unit tests (19 tests, all passing)
+  - ✅ Tests cover all helper functions
+  - Completed: 2026-01-13
 
 ### Low Priority 💡
 
