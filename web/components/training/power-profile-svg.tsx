@@ -35,16 +35,22 @@ export interface WorkoutSegmentInput {
   power_high_pct?: number | undefined
   description?: string | undefined
   sets?: number | null | undefined
-  work?: {
-    duration_min: number
-    power_low_pct: number
-    power_high_pct: number
-  } | null | undefined
-  recovery?: {
-    duration_min: number
-    power_low_pct: number
-    power_high_pct: number
-  } | null | undefined
+  work?:
+    | {
+        duration_min: number
+        power_low_pct: number
+        power_high_pct: number
+      }
+    | null
+    | undefined
+  recovery?:
+    | {
+        duration_min: number
+        power_low_pct: number
+        power_high_pct: number
+      }
+    | null
+    | undefined
 }
 
 /**
@@ -156,10 +162,7 @@ interface PowerProfileSVGProps {
  * Supports both legacy segments and new WorkoutStructure format
  */
 export function PowerProfileSVG({ segments, structure, ftp, mini = false }: PowerProfileSVGProps) {
-  const expanded = useMemo(
-    () => expandSegments(segments, structure),
-    [segments, structure]
-  )
+  const expanded = useMemo(() => expandSegments(segments, structure), [segments, structure])
 
   if (expanded.length === 0) return null
 

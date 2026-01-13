@@ -7,10 +7,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { formatDateString, getLocalDateFromTimestamp, parseLocalDate } from '@/lib/utils/date-utils'
-import {
-  CYCLING_ACTIVITY_TYPES,
-  isCyclingWorkout,
-} from '@/lib/services/workout-match-service'
+import { CYCLING_ACTIVITY_TYPES, isCyclingWorkout } from '@/lib/services/workout-match-service'
 
 // Mock the calculateMatchScore function logic for testing
 // Uses the exported constants from workout-match-service.ts
@@ -271,7 +268,6 @@ describe('Date handling for activity matching', () => {
       expect(lteValue).toContain('T')
       expect(lteValue).toContain('Z')
     })
-
   })
 })
 

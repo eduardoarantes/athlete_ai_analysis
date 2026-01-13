@@ -187,8 +187,7 @@ async function migratePlanInstances(): Promise<Map<string, Map<string, string>>>
         const mapKey = `${dateKey}:${workoutIndex}`
 
         // Use existing ID or generate deterministic one
-        const workoutId =
-          workout.id || generateDeterministicId(instance.id, dateKey, workoutIndex)
+        const workoutId = workout.id || generateDeterministicId(instance.id, dateKey, workoutIndex)
 
         if (!workout.id) {
           needsUpdate = true
@@ -270,12 +269,16 @@ async function migratePlanInstances(): Promise<Map<string, Map<string, string>>>
   return workoutIdMaps
 }
 
-async function migrateWorkoutMatches(workoutIdMaps: Map<string, Map<string, string>>): Promise<void> {
+async function migrateWorkoutMatches(
+  workoutIdMaps: Map<string, Map<string, string>>
+): Promise<void> {
   console.log('🔗 Fetching workout matches...\n')
 
   const { data: matches, error } = await supabase
     .from('workout_activity_matches')
-    .select('id, user_id, plan_instance_id, workout_id, workout_date, workout_index, strava_activity_id')
+    .select(
+      'id, user_id, plan_instance_id, workout_id, workout_date, workout_index, strava_activity_id'
+    )
     .order('created_at', { ascending: true })
 
   if (error) {
@@ -327,23 +330,25 @@ async function migrateWorkoutMatches(workoutIdMaps: Map<string, Map<string, stri
     updatedCount++
   }
 
-  console.log(`\n📊 Workout matches: ${updatedCount} updated, ${skippedCount} skipped, ${notFoundCount} not found\n`)
+  console.log(
+    `\n📊 Workout matches: ${updatedCount} updated, ${skippedCount} skipped, ${notFoundCount} not found\n`
+  )
 }
 
 async function main() {
   console.log('🚀 Starting workout ID migration...\n')
-  console.log('=' .repeat(60) + '\n')
+  console.log('='.repeat(60) + '\n')
 
   try {
     // Step 1: Add IDs to all workouts in plan instances
     const workoutIdMaps = await migratePlanInstances()
 
-    console.log('=' .repeat(60) + '\n')
+    console.log('='.repeat(60) + '\n')
 
     // Step 2: Update workout matches with workout_ids
     await migrateWorkoutMatches(workoutIdMaps)
 
-    console.log('=' .repeat(60) + '\n')
+    console.log('='.repeat(60) + '\n')
     console.log('✅ Migration completed successfully!\n')
   } catch (error) {
     console.error('\n❌ Migration failed:', error)

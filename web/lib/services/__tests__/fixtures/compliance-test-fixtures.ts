@@ -1387,10 +1387,7 @@ export function getMultiStepTestFixtures(): WorkoutActivityPair[] {
       athleteFtp: FTP,
       segments: [], // No legacy segments
       structure: MULTI_STEP_ABOVE_BELOW_THRESHOLD,
-      powerStream: generateSimulatedPowerStreamFromStructure(
-        MULTI_STEP_ABOVE_BELOW_THRESHOLD,
-        FTP
-      ),
+      powerStream: generateSimulatedPowerStreamFromStructure(MULTI_STEP_ABOVE_BELOW_THRESHOLD, FTP),
       description: '3-step intervals: 3min Z5 / 3min Z4 / 2min recovery x5 (~60 min)',
     },
     {
@@ -1402,7 +1399,8 @@ export function getMultiStepTestFixtures(): WorkoutActivityPair[] {
       segments: [], // No legacy segments
       structure: MULTI_STEP_BILLAT_30_30_30,
       powerStream: generateSimulatedPowerStreamFromStructure(MULTI_STEP_BILLAT_30_30_30, FTP),
-      description: '3-step VO2max intervals: 30s sprint / 30s threshold / 30s recovery x10 x2 (~50 min)',
+      description:
+        '3-step VO2max intervals: 30s sprint / 30s threshold / 30s recovery x10 x2 (~50 min)',
     },
     {
       id: 'multi-step-3',
