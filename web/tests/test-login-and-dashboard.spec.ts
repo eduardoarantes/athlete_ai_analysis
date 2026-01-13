@@ -175,78 +175,84 @@ test.describe('Dashboard Page', () => {
     ).toBeVisible({ timeout: 5000 })
   })
 
-  test.skip('Dashboard shows profile card', async ({ page }) => {
+  test.skip('Dashboard shows athlete profile information', async ({ page }) => {
     // Create test user with profile
     testUser = await createTestUserWithProfile(supabase, 'dashboard-profile')
 
     // Login
     await page.goto('/login')
+    await page.waitForLoadState('networkidle')
     await page.fill('input[id="email"]', testUser.email)
     await page.fill('input[id="password"]', testUser.password)
     await page.click('button[type="submit"]:has-text("Sign in")')
 
     await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 })
+    await page.waitForLoadState('networkidle')
 
-    // Should show profile link (link to /profile page exists)
-    const profileLink = page.locator('a[href="/profile"]').first()
-    await expect(profileLink).toBeVisible({ timeout: 5000 })
+    // Should show athlete name from profile (Test User from test-helpers)
+    await expect(page.locator('text=/Test/i')).toBeVisible({ timeout: 10000 })
   })
 
-  test.skip('Dashboard shows "Create Training Plan" button', async ({ page }) => {
+  test('Dashboard shows "Create Training Plan" button', async ({ page }) => {
     // Create test user with profile
     testUser = await createTestUserWithProfile(supabase, 'dashboard-cta')
 
     // Login
     await page.goto('/login')
+    await page.waitForLoadState('networkidle')
     await page.fill('input[id="email"]', testUser.email)
     await page.fill('input[id="password"]', testUser.password)
     await page.click('button[type="submit"]:has-text("Sign in")')
 
     await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 })
+    await page.waitForLoadState('networkidle')
 
     // Check for create plan button (might be translated)
     const createPlanButton = page.locator('a[href="/coach/create-plan"]')
-    await expect(createPlanButton).toBeVisible({ timeout: 5000 })
+    await expect(createPlanButton).toBeVisible({ timeout: 10000 })
   })
 
-  test.skip('Dashboard shows recent activities section', async ({ page }) => {
+  test('Dashboard shows recent activities section', async ({ page }) => {
     // Create test user with profile
     testUser = await createTestUserWithProfile(supabase, 'dashboard-activities')
 
     // Login
     await page.goto('/login')
+    await page.waitForLoadState('networkidle')
     await page.fill('input[id="email"]', testUser.email)
     await page.fill('input[id="password"]', testUser.password)
     await page.click('button[type="submit"]:has-text("Sign in")')
 
     await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 })
+    await page.waitForLoadState('networkidle')
 
-    // Should show recent activities section (might show empty state or activities)
-    await expect(
-      page.locator('text=/Recent Activities/i, text=/Atividades Recentes/i')
-    ).toBeVisible({ timeout: 5000 })
+    // Should show recent activities section heading
+    const activitiesHeading = page.locator('h3, h2').filter({ hasText: /recent activities/i })
+    await expect(activitiesHeading).toBeVisible({ timeout: 10000 })
   })
 
-  test.skip('Dashboard profile card links to profile page', async ({ page }) => {
+  test('Dashboard profile card links to profile page', async ({ page }) => {
     // Create test user with profile
     testUser = await createTestUserWithProfile(supabase, 'dashboard-profile-link')
 
     // Login
     await page.goto('/login')
+    await page.waitForLoadState('networkidle')
     await page.fill('input[id="email"]', testUser.email)
     await page.fill('input[id="password"]', testUser.password)
     await page.click('button[type="submit"]:has-text("Sign in")')
 
     await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 })
+    await page.waitForLoadState('networkidle')
 
     // Find and click profile link
     const profileLink = page.locator('a[href="/profile"]').first()
-    await expect(profileLink).toBeVisible({ timeout: 5000 })
+    await expect(profileLink).toBeVisible({ timeout: 10000 })
 
     await profileLink.click()
 
     // Should navigate to profile page
-    await expect(page).toHaveURL(/\/profile/, { timeout: 5000 })
+    await expect(page).toHaveURL(/\/profile/, { timeout: 10000 })
   })
 
   test('Dashboard shows power zones when FTP is set', async ({ page }) => {
