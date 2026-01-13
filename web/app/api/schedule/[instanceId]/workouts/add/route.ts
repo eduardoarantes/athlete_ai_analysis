@@ -3,55 +3,47 @@
  *
  * POST /api/schedule/[instanceId]/workouts/add
  *
- * Adds a workout from the library to the schedule.
- * Library workouts are stored as copies with source_date="library"
- * and source_index containing the library workout ID (stored as string in JSON).
- *
- * Part of Issue #72: Workout Library Sidebar
+ * Adds a workout from the library directly to the plan's weekly_plan structure.
+ * This replaces the old override-based approach with direct plan_data modification.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { errorLogger } from '@/lib/monitoring/error-logger'
-import { scheduleEditService } from '@/lib/services/schedule-edit-service'
+import { invokePythonApi } from '@/lib/services/lambda-client'
 import { z } from 'zod'
-import { startOfDay, parseISO } from 'date-fns'
-
-const intervalPartSchema = z.object({
-  duration_min: z.number(),
-  power_low_pct: z.number(),
-  power_high_pct: z.number(),
-  description: z.string().optional(),
-})
-
-const workoutSegmentSchema = z.object({
-  type: z.string(),
-  duration_min: z.number(),
-  power_low_pct: z.number().nullish(),
-  power_high_pct: z.number().nullish(),
-  description: z.string().nullish(),
-  sets: z.number().nullish(),
-  work: intervalPartSchema.nullish(),
-  recovery: intervalPartSchema.nullish(),
-})
-
-const workoutDataSchema = z.object({
-  name: z.string(),
-  type: z.string(),
-  tss: z.number(),
-  duration_min: z.number().nullish(),
-  description: z.string().nullish(),
-  segments: z.array(workoutSegmentSchema).nullish(),
-})
+import { differenceInDays } from 'date-fns'
+import { parseLocalDate } from '@/lib/utils/date-utils'
+import type { WorkoutLibraryItem } from '@/lib/types/workout-library'
+import type { TrainingPlanData, Workout } from '@/lib/types/training-plan'
 
 const addLibraryWorkoutSchema = z.object({
   workout_id: z.string().min(1, 'Workout ID is required'),
   target_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD format'),
-  workout_data: workoutDataSchema.optional(),
 })
 
 interface RouteParams {
   params: Promise<{ instanceId: string }>
+}
+
+const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
+/**
+ * Calculate week number from plan start date and target date
+ */
+function calculateWeekNumber(startDate: string, targetDate: string): number {
+  const start = parseLocalDate(startDate)
+  const target = parseLocalDate(targetDate)
+  const days = differenceInDays(target, start)
+  return Math.floor(days / 7) + 1
+}
+
+/**
+ * Get weekday name from date
+ */
+function getWeekdayName(dateString: string): string {
+  const date = parseLocalDate(dateString)
+  return WEEKDAY_NAMES[date.getDay()]!
 }
 
 export async function POST(request: NextRequest, { params }: RouteParams): Promise<NextResponse> {
@@ -80,65 +72,136 @@ export async function POST(request: NextRequest, { params }: RouteParams): Promi
       )
     }
 
-    const { workout_id, target_date, workout_data } = validation.data
+    const { workout_id, target_date } = validation.data
 
     // Validate date is not in the past
-    const targetDateObj = parseISO(target_date)
-    const today = startOfDay(new Date())
+    const targetDateObj = parseLocalDate(target_date)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
     if (targetDateObj < today) {
       return NextResponse.json({ error: 'Cannot add workout to past date' }, { status: 409 })
     }
 
-    // Transform workout_data to convert nulls to undefined (Zod nullish produces null | undefined)
-    const normalizedWorkoutData = workout_data
-      ? {
-          name: workout_data.name,
-          type: workout_data.type,
-          tss: workout_data.tss,
-          duration_min: workout_data.duration_min ?? undefined,
-          description: workout_data.description ?? undefined,
-          segments: workout_data.segments?.map((seg) => ({
-            type: seg.type as 'warmup' | 'interval' | 'recovery' | 'cooldown' | 'steady' | 'work' | 'tempo',
-            duration_min: seg.duration_min,
-            power_low_pct: seg.power_low_pct ?? undefined,
-            power_high_pct: seg.power_high_pct ?? undefined,
-            description: seg.description ?? undefined,
-            sets: seg.sets ?? undefined,
-            work: seg.work ?? undefined,
-            recovery: seg.recovery ?? undefined,
-          })),
-        }
-      : undefined
+    // Fetch plan instance
+    const { data: instance, error: instanceError } = await supabase
+      .from('plan_instances')
+      .select('*')
+      .eq('id', instanceId)
+      .eq('user_id', user.id)
+      .single()
 
-    // Add library workout to schedule with workout data for persistence
-    const result = await scheduleEditService.addLibraryWorkout(
-      instanceId,
-      user.id,
-      workout_id,
-      target_date,
-      normalizedWorkoutData
-    )
+    if (instanceError || !instance) {
+      return NextResponse.json({ error: 'Plan instance not found' }, { status: 404 })
+    }
 
-    if (!result.success) {
-      errorLogger.logWarning('Add library workout failed', {
+    // Fetch workout from Python API
+    errorLogger.logInfo('Fetching workout from Python API', {
+      userId: user.id,
+      path: `/api/schedule/${instanceId}/workouts/add`,
+      metadata: { workout_id },
+    })
+
+    const workoutResponse = await invokePythonApi<WorkoutLibraryItem>({
+      method: 'GET',
+      path: `/api/v1/workouts/${workout_id}`,
+    })
+
+    if (workoutResponse.statusCode !== 200) {
+      errorLogger.logWarning('Failed to fetch workout from Python API', {
         userId: user.id,
         path: `/api/schedule/${instanceId}/workouts/add`,
-        metadata: { error: result.error, workout_id, target_date },
+        metadata: { workout_id, statusCode: workoutResponse.statusCode },
       })
 
-      return NextResponse.json({ error: result.error }, { status: 400 })
+      return NextResponse.json(
+        { error: 'Workout not found', details: workoutResponse.body },
+        { status: workoutResponse.statusCode }
+      )
+    }
+
+    const libraryWorkout = workoutResponse.body
+
+    // Calculate week and weekday for the target date
+    const weekNumber = calculateWeekNumber(instance.start_date, target_date)
+    const weekday = getWeekdayName(target_date)
+
+    // Get current plan_data
+    const planData = instance.plan_data as unknown as TrainingPlanData
+
+    // Find or create the week in weekly_plan
+    const existingWeek = planData.weekly_plan.find((w) => w.week_number === weekNumber)
+
+    if (!existingWeek) {
+      // Create new week
+      const newWeek = {
+        week_number: weekNumber,
+        phase: 'base',
+        week_tss: 0,
+        workouts: [],
+      }
+      planData.weekly_plan.push(newWeek)
+      // Sort weeks by week_number
+      planData.weekly_plan.sort((a, b) => a.week_number - b.week_number)
+    }
+
+    // Get the week (either existing or newly created)
+    const week = planData.weekly_plan.find((w) => w.week_number === weekNumber)!
+
+    // Create the workout object
+    const newWorkout: Workout = {
+      id: crypto.randomUUID(),
+      weekday,
+      name: libraryWorkout.name,
+      type: libraryWorkout.type,
+      tss: libraryWorkout.base_tss,
+      ...(libraryWorkout.detailed_description && {
+        description: libraryWorkout.detailed_description,
+      }),
+      ...(libraryWorkout.structure && { structure: libraryWorkout.structure }),
+      library_workout_id: libraryWorkout.id,
+    }
+
+    // Add workout to the week
+    week.workouts.push(newWorkout)
+
+    // Update week TSS
+    week.week_tss = week.workouts.reduce((sum, w) => sum + (w.tss || 0), 0)
+
+    // Update plan_data in database
+    const { error: updateError } = await supabase
+      .from('plan_instances')
+      .update({
+        plan_data: planData as any,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', instanceId)
+      .eq('user_id', user.id)
+
+    if (updateError) {
+      errorLogger.logError(new Error(`Failed to update plan_data: ${updateError.message}`), {
+        userId: user.id,
+        path: `/api/schedule/${instanceId}/workouts/add`,
+        metadata: { workout_id, target_date },
+      })
+      return NextResponse.json({ error: 'Failed to add workout to plan' }, { status: 500 })
     }
 
     errorLogger.logInfo('Library workout added to schedule', {
       userId: user.id,
       path: `/api/schedule/${instanceId}/workouts/add`,
-      metadata: { workout_id, target_date },
+      metadata: {
+        workout_id,
+        target_date,
+        workout_name: libraryWorkout.name,
+        week_number: weekNumber,
+        weekday,
+      },
     })
 
     return NextResponse.json({
       success: true,
-      updatedOverrides: result.updatedOverrides,
-      assignedIndex: result.assignedIndex,
+      workout: newWorkout,
+      week_number: weekNumber,
     })
   } catch (error) {
     errorLogger.logError(error as Error, {
