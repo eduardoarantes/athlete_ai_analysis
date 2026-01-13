@@ -159,3 +159,50 @@ export async function clickNextAndWait(page: Page): Promise<void> {
   await page.click('button:has-text("Next")')
   await page.waitForTimeout(500)
 }
+
+/**
+ * Creates mock Strava activities for testing
+ */
+export async function createMockActivities(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  count: number = 3
+): Promise<void> {
+  const now = new Date()
+  const activities = []
+
+  for (let i = 0; i < count; i++) {
+    const daysAgo = i * 2 // Activities 0, 2, 4 days ago
+    const activityDate = new Date(now)
+    activityDate.setDate(now.getDate() - daysAgo)
+
+    const activityTypes = [
+      { sport_type: 'Ride', name: 'Morning Ride', distance: 45000, time: 5400 },
+      { sport_type: 'Run', name: 'Evening Run', distance: 10000, time: 3000 },
+      { sport_type: 'VirtualRide', name: 'Zwift Workout', distance: 30000, time: 3600 },
+    ]
+
+    const activity = activityTypes[i % activityTypes.length]
+
+    activities.push({
+      user_id: userId,
+      strava_activity_id: 1000000000 + i,
+      name: `${activity.name} ${i + 1}`,
+      type: activity.sport_type,
+      sport_type: activity.sport_type,
+      start_date: activityDate.toISOString(),
+      distance: activity.distance,
+      moving_time: activity.time,
+      elapsed_time: activity.time + 300, // Add 5 minutes for pauses
+      average_watts: 200,
+      max_watts: 350,
+      average_heartrate: 145,
+      max_heartrate: 175,
+      total_elevation_gain: 450,
+    })
+  }
+
+  const { error } = await supabase.from('strava_activities').insert(activities)
+
+  if (error) throw error
+}
