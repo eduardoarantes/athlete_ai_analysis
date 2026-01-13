@@ -82,23 +82,36 @@ export async function POST(request: NextRequest, { params }: RouteParams): Promi
       return NextResponse.json({ error: 'Cannot add workout to past date' }, { status: 409 })
     }
 
-    // Fetch plan instance
-    const { data: instance, error: instanceError } = await supabase
+    // CRITICAL: Library workouts ALWAYS go to MANUAL_WORKOUTS instance
+    // Find the user's MANUAL_WORKOUTS instance
+    const { data: manualWorkoutsInstance, error: manualWorkoutsError } = await supabase
       .from('plan_instances')
       .select('*')
-      .eq('id', instanceId)
       .eq('user_id', user.id)
+      .eq('instance_type', 'manual_workouts')
       .single()
 
-    if (instanceError || !instance) {
-      return NextResponse.json({ error: 'Plan instance not found' }, { status: 404 })
+    if (manualWorkoutsError || !manualWorkoutsInstance) {
+      errorLogger.logWarning('MANUAL_WORKOUTS instance not found', {
+        userId: user.id,
+        path: `/api/schedule/${instanceId}/workouts/add`,
+        metadata: { requestedInstanceId: instanceId },
+      })
+      return NextResponse.json({ error: 'MANUAL_WORKOUTS instance not found' }, { status: 404 })
     }
+
+    // Use MANUAL_WORKOUTS instance, not the instanceId from the URL
+    const instance = manualWorkoutsInstance
 
     // Fetch workout from Python API
     errorLogger.logInfo('Fetching workout from Python API', {
       userId: user.id,
       path: `/api/schedule/${instanceId}/workouts/add`,
-      metadata: { workout_id },
+      metadata: {
+        workout_id,
+        actualInstanceId: instance.id,
+        instanceType: 'manual_workouts',
+      },
     })
 
     const workoutResponse = await invokePythonApi<WorkoutLibraryItem>({
@@ -168,26 +181,30 @@ export async function POST(request: NextRequest, { params }: RouteParams): Promi
     // Update week TSS
     week.week_tss = week.workouts.reduce((sum, w) => sum + (w.tss || 0), 0)
 
-    // Update plan_data in database
+    // Update plan_data in database (using MANUAL_WORKOUTS instance)
     const { error: updateError } = await supabase
       .from('plan_instances')
       .update({
         plan_data: planData as any,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', instanceId)
+      .eq('id', instance.id)
       .eq('user_id', user.id)
 
     if (updateError) {
       errorLogger.logError(new Error(`Failed to update plan_data: ${updateError.message}`), {
         userId: user.id,
         path: `/api/schedule/${instanceId}/workouts/add`,
-        metadata: { workout_id, target_date },
+        metadata: {
+          workout_id,
+          target_date,
+          actualInstanceId: instance.id,
+        },
       })
       return NextResponse.json({ error: 'Failed to add workout to plan' }, { status: 500 })
     }
 
-    errorLogger.logInfo('Library workout added to schedule', {
+    errorLogger.logInfo('Library workout added to MANUAL_WORKOUTS', {
       userId: user.id,
       path: `/api/schedule/${instanceId}/workouts/add`,
       metadata: {
@@ -196,6 +213,8 @@ export async function POST(request: NextRequest, { params }: RouteParams): Promi
         workout_name: libraryWorkout.name,
         week_number: weekNumber,
         weekday,
+        actualInstanceId: instance.id,
+        requestedInstanceId: instanceId,
       },
     })
 
