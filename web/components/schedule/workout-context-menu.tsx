@@ -23,8 +23,6 @@ import type { Workout } from '@/lib/types/training-plan'
 interface WorkoutContextMenuProps {
   children: ReactNode
   instanceId: string
-  date: string
-  index: number
   workout: Workout
   hasMatch: boolean
   isEditMode: boolean
@@ -35,8 +33,6 @@ interface WorkoutContextMenuProps {
 export function WorkoutContextMenu({
   children,
   instanceId,
-  date,
-  index,
   workout,
   hasMatch,
   isEditMode,
@@ -46,12 +42,12 @@ export function WorkoutContextMenu({
   const { copyWorkout } = useScheduleClipboard()
 
   // Check if workout is in the past
-  const workoutDate = parseISO(date)
+  const workoutDate = parseISO(workout.scheduled_date || '')
   const today = startOfDay(new Date())
   const isPast = workoutDate < today
 
   const handleCopy = () => {
-    copyWorkout(instanceId, date, index, workout)
+    copyWorkout(instanceId, workout)
   }
 
   const handleDelete = () => {
@@ -143,7 +139,6 @@ interface CalendarDayContextMenuProps {
   children: ReactNode
   date: string
   isEditMode: boolean
-  existingWorkoutsCount: number
   onAddNote?: () => void
 }
 
@@ -151,7 +146,6 @@ export function CalendarDayContextMenu({
   children,
   date,
   isEditMode,
-  existingWorkoutsCount,
   onAddNote,
 }: CalendarDayContextMenuProps) {
   const { copiedWorkout, hasClipboard, pasteWorkout } = useScheduleClipboard()
@@ -165,8 +159,7 @@ export function CalendarDayContextMenu({
 
   const handlePaste = () => {
     if (copiedWorkout) {
-      // Paste at the next available index
-      pasteWorkout(date, existingWorkoutsCount)
+      pasteWorkout(date)
     }
   }
 
