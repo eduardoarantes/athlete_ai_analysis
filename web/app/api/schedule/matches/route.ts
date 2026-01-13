@@ -48,7 +48,14 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { plan_instance_id, workout_id, workout_date, workout_index, strava_activity_id, match_type } = body
+    const {
+      plan_instance_id,
+      workout_id,
+      workout_date,
+      workout_index,
+      strava_activity_id,
+      match_type,
+    } = body
 
     // Require plan_instance_id and strava_activity_id
     if (!plan_instance_id || !strava_activity_id) {

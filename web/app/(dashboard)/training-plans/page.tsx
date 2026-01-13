@@ -32,6 +32,7 @@ export default async function TrainingPlansPage() {
     .from('training_plans')
     .select('*')
     .eq('user_id', user.id)
+    .neq('name', 'MANUAL_WORKOUTS') // Hide system-generated manual workouts plan
     .order('created_at', { ascending: false })
 
   // Parse plan_data for each plan

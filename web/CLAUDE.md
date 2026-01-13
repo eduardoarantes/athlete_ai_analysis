@@ -373,6 +373,7 @@ function MyComponent() {
 **Location:** `@/components/workout/workout-structure-display`
 
 **Purpose:** Provides consistent, reusable visualization of `WorkoutStructure` format with proper support for:
+
 - Single steps (warmup, cooldown, steady state)
 - 2-step intervals (work + recovery)
 - Multi-step intervals (3+ steps like Z3→Z5→Z2)
@@ -410,11 +411,13 @@ function MyWorkoutComponent({ workout }: { workout: Workout }) {
 **Never implement custom workout structure rendering.** The component handles all edge cases and provides consistent styling across the application.
 
 **Examples of correct usage:**
+
 - ✅ Admin workouts page
 - ✅ Workout detail modal
 - ✅ Plan builder workout cards
 
 **Examples of incorrect usage:**
+
 - ❌ Custom `map()` loops over structure.structure
 - ❌ Manual power zone color calculations
 - ❌ Custom repetition grouping logic

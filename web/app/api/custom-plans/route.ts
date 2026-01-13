@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { errorLogger } from '@/lib/monitoring/error-logger'
-import type { SavePlanRequest, SavePlanResponse, WorkoutsData, WorkoutPlacement } from '@/lib/types/plan-builder'
+import type {
+  SavePlanRequest,
+  SavePlanResponse,
+  WorkoutsData,
+  WorkoutPlacement,
+} from '@/lib/types/plan-builder'
 import type { TrainingPlanData, WeeklyPlan, Workout } from '@/lib/types/training-plan'
 import type { Json } from '@/lib/types/database'
 import { DAYS_OF_WEEK } from '@/lib/types/plan-builder'
