@@ -49,12 +49,10 @@ interface UnmatchedActivity {
 interface ActivityMatchingSectionProps {
   /** Plan instance ID for the workout */
   planInstanceId: string
-  /** Workout date (YYYY-MM-DD) */
+  /** Workout date (YYYY-MM-DD) - used for finding activities in date range */
   workoutDate: string
-  /** Workout ID (optional, used if available) */
-  workoutId?: string | undefined
-  /** Workout index in day (for multiple workouts on same day) */
-  workoutIndex?: number | undefined
+  /** Workout ID (required) */
+  workoutId: string
   /** Currently matched activity data */
   matchedActivity?: MatchedActivityData | null | undefined
   /** Callback when match state changes */
@@ -65,7 +63,6 @@ export function ActivityMatchingSection({
   planInstanceId,
   workoutDate,
   workoutId,
-  workoutIndex = 0,
   matchedActivity,
   onMatchChange,
 }: ActivityMatchingSectionProps) {
@@ -122,8 +119,6 @@ export function ActivityMatchingSection({
         body: JSON.stringify({
           plan_instance_id: planInstanceId,
           workout_id: workoutId,
-          workout_date: workoutDate,
-          workout_index: workoutIndex,
           strava_activity_id: selectedActivityId,
           match_type: 'manual',
         }),
@@ -144,14 +139,11 @@ export function ActivityMatchingSection({
   const handleUnmatch = async () => {
     setIsUnmatching(true)
     try {
-      // Build query params - prefer workout_id if available
-      const params = new URLSearchParams({ plan_instance_id: planInstanceId })
-      if (workoutId) {
-        params.set('workout_id', workoutId)
-      } else {
-        params.set('workout_date', workoutDate)
-        params.set('workout_index', workoutIndex.toString())
-      }
+      // Build query params with workout_id
+      const params = new URLSearchParams({
+        plan_instance_id: planInstanceId,
+        workout_id: workoutId,
+      })
 
       const response = await fetch(`/api/schedule/matches?${params.toString()}`, {
         method: 'DELETE',
