@@ -15,7 +15,8 @@ import { z } from 'zod'
 import { startOfDay, parseISO, differenceInDays } from 'date-fns'
 import { parseLocalDate } from '@/lib/utils/date-utils'
 import { getWeekdayName } from '@/lib/constants/weekdays'
-import type { TrainingPlanData, Workout } from '@/lib/types/training-plan'
+import type { Workout } from '@/lib/types/training-plan'
+import { assertTrainingPlanData } from '@/lib/types/type-guards'
 
 // Validation schemas
 const workoutLocationSchema = z.object({
@@ -219,7 +220,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams): Prom
       return NextResponse.json({ error: 'Plan instance not found' }, { status: 404 })
     }
 
-    const planData = instance.plan_data as unknown as TrainingPlanData
+    // Validate plan_data structure
+    const planData = assertTrainingPlanData(instance.plan_data, 'schedule/workouts')
 
     // Find the source workout by scheduled_date
     let foundWorkout: Workout | null = null
@@ -401,7 +403,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams): Pro
       return NextResponse.json({ error: 'Plan instance not found' }, { status: 404 })
     }
 
-    const planData = instance.plan_data as unknown as TrainingPlanData
+    // Validate plan_data structure
+    const planData = assertTrainingPlanData(instance.plan_data, 'schedule/workouts')
 
     // Find and remove the workout by scheduled_date
     let removed = false

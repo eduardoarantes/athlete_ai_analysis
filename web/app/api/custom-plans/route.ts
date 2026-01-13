@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { errorLogger } from '@/lib/monitoring/error-logger'
-import type {
-  SavePlanRequest,
-  SavePlanResponse,
-  WorkoutsData,
-  WorkoutPlacement,
-} from '@/lib/types/plan-builder'
+import type { SavePlanRequest, SavePlanResponse, WorkoutsData } from '@/lib/types/plan-builder'
 import type { TrainingPlanData, WeeklyPlan, Workout } from '@/lib/types/training-plan'
 import type { Json } from '@/lib/types/database'
 import { DAYS_OF_WEEK } from '@/lib/types/plan-builder'
+import { isWorkoutPlacementArray } from '@/lib/types/type-guards'
 
 /**
  * Capitalize first letter of a string (monday -> Monday)
@@ -25,7 +21,11 @@ function convertWorkoutsDataToWorkouts(workoutsData: WorkoutsData): Workout[] {
   const workouts: Workout[] = []
 
   for (const day of DAYS_OF_WEEK) {
-    const placements = workoutsData[day] as WorkoutPlacement[]
+    const placements = workoutsData[day]
+    // Validate that placements is an array of WorkoutPlacement
+    if (!isWorkoutPlacementArray(placements)) {
+      throw new Error(`Invalid workout placements for ${day}`)
+    }
     for (const placement of placements) {
       workouts.push({
         id: placement.id,

@@ -5,6 +5,8 @@
  */
 
 import type { PlanInstance, TrainingPlan, TrainingPlanData } from './training-plan'
+import type { WorkoutPlacement } from './plan-builder'
+import type { WorkoutComplianceAnalysis } from '@/lib/services/compliance-analysis-service'
 
 /**
  * Check if a value is a non-null object
@@ -106,6 +108,64 @@ export function assertPlanInstance(value: unknown, context?: string): PlanInstan
 export function assertTrainingPlan(value: unknown, context?: string): TrainingPlan {
   if (!isTrainingPlan(value)) {
     throw new Error(`Invalid TrainingPlan${context ? ` in ${context}` : ''}`)
+  }
+  return value
+}
+
+/**
+ * Assert that a value is TrainingPlanData, throwing if not
+ */
+export function assertTrainingPlanData(value: unknown, context?: string): TrainingPlanData {
+  if (!isTrainingPlanData(value)) {
+    throw new Error(`Invalid TrainingPlanData${context ? ` in ${context}` : ''}`)
+  }
+  return value
+}
+
+/**
+ * Check if value has required properties of WorkoutPlacement
+ */
+export function isWorkoutPlacement(value: unknown): value is WorkoutPlacement {
+  if (!isObject(value)) return false
+
+  return (
+    typeof value.id === 'string' &&
+    typeof value.workoutKey === 'string' &&
+    typeof value.order === 'number'
+  )
+}
+
+/**
+ * Check if value is an array of WorkoutPlacement
+ */
+export function isWorkoutPlacementArray(value: unknown): value is WorkoutPlacement[] {
+  if (!Array.isArray(value)) return false
+  return value.every(isWorkoutPlacement)
+}
+
+/**
+ * Check if value has required properties of WorkoutComplianceAnalysis
+ */
+export function isWorkoutComplianceAnalysis(value: unknown): value is WorkoutComplianceAnalysis {
+  if (!isObject(value)) return false
+
+  return (
+    isObject(value.overall) &&
+    Array.isArray(value.segments) &&
+    isObject(value.metadata) &&
+    typeof value.metadata.algorithm_version === 'string'
+  )
+}
+
+/**
+ * Assert that a value is WorkoutComplianceAnalysis, throwing if not
+ */
+export function assertWorkoutComplianceAnalysis(
+  value: unknown,
+  context?: string
+): WorkoutComplianceAnalysis {
+  if (!isWorkoutComplianceAnalysis(value)) {
+    throw new Error(`Invalid WorkoutComplianceAnalysis${context ? ` in ${context}` : ''}`)
   }
   return value
 }

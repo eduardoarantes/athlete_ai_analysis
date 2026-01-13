@@ -16,7 +16,8 @@ import { differenceInDays } from 'date-fns'
 import { parseLocalDate } from '@/lib/utils/date-utils'
 import { getWeekdayName as getWeekdayNameFromIndex } from '@/lib/constants/weekdays'
 import type { WorkoutLibraryItem } from '@/lib/types/workout-library'
-import type { TrainingPlanData, Workout } from '@/lib/types/training-plan'
+import type { Workout } from '@/lib/types/training-plan'
+import { assertTrainingPlanData } from '@/lib/types/type-guards'
 
 const addLibraryWorkoutSchema = z.object({
   workout_id: z.string().min(1, 'Workout ID is required'),
@@ -124,8 +125,8 @@ export async function POST(request: NextRequest, { params }: RouteParams): Promi
     const weekNumber = calculateWeekNumber(instance.start_date, target_date)
     const weekday = getWeekdayName(target_date)
 
-    // Get current plan_data
-    const planData = instance.plan_data as unknown as TrainingPlanData
+    // Get current plan_data and validate structure
+    const planData = assertTrainingPlanData(instance.plan_data, 'schedule/workouts/add')
 
     // Find or create the week in weekly_plan
     const existingWeek = planData.weekly_plan.find((w) => w.week_number === weekNumber)

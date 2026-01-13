@@ -14,15 +14,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { StravaService } from '@/lib/services/strava-service'
-import {
-  analyzeWorkoutCompliance,
-  type WorkoutComplianceAnalysis,
-} from '@/lib/services/compliance-analysis-service'
+import { analyzeWorkoutCompliance } from '@/lib/services/compliance-analysis-service'
 import { errorLogger } from '@/lib/monitoring/error-logger'
 import { downsamplePowerStream, getWorkoutByDateAndIndex } from '@/lib/utils/workout-helpers'
 import type { TrainingPlanData } from '@/lib/types/training-plan'
 import type { Json } from '@/lib/types/database'
 import { hasValidStructure } from '@/lib/types/training-plan'
+import { assertWorkoutComplianceAnalysis } from '@/lib/types/type-guards'
 
 interface PlanInstanceRow {
   id: string
@@ -190,7 +188,10 @@ export async function GET(
         })
 
         return NextResponse.json({
-          analysis: cachedAnalysis.analysis_data as unknown as WorkoutComplianceAnalysis,
+          analysis: assertWorkoutComplianceAnalysis(
+            cachedAnalysis.analysis_data,
+            'cached analysis'
+          ),
           power_stream: powerStreamForChart,
           context: {
             match_id: matchId,

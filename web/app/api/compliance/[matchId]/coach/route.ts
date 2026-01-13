@@ -18,6 +18,7 @@ import { getWorkoutByDateAndIndex } from '@/lib/utils/workout-helpers'
 import type { WorkoutComplianceAnalysis } from '@/lib/services/compliance-analysis-service'
 import type { TrainingPlanData, Workout } from '@/lib/types/training-plan'
 import type { Json } from '@/lib/types/database'
+import { assertWorkoutComplianceAnalysis } from '@/lib/types/type-guards'
 
 // ============================================================================
 // Types
@@ -247,8 +248,11 @@ export async function POST(
       return NextResponse.json({ error: 'Workout not found in plan' }, { status: 404 })
     }
 
-    // Transform analysis for Python API
-    const analysis = existingAnalysis.analysis_data as unknown as WorkoutComplianceAnalysis
+    // Transform analysis for Python API (validate structure)
+    const analysis = assertWorkoutComplianceAnalysis(
+      existingAnalysis.analysis_data,
+      'compliance/coach'
+    )
     const requestBody = transformAnalysisForPythonApi(
       analysis,
       workout,
