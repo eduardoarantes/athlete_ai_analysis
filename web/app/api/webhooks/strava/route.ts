@@ -100,24 +100,20 @@ async function autoMatchActivity(
         if (!week.workouts) continue
 
         for (const workout of week.workouts) {
-          // Skip workouts without scheduled_date (legacy data)
-          if (!workout.scheduled_date) continue
+          // Skip workouts without scheduled_date or workout_id (legacy data)
+          if (!workout.scheduled_date || !workout.id) continue
 
           // Check if this workout is on the same day as the activity
           if (workout.scheduled_date !== dateOnly) continue
 
-          // Check if workout is already matched (by workout_id if available, otherwise by date+index)
-          let existingMatch
-          if (workout.id) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { data } = await (supabase as any)
-              .from('workout_activity_matches')
-              .select('id')
-              .eq('plan_instance_id', instance.id)
-              .eq('workout_id', workout.id)
-              .single()
-            existingMatch = data
-          }
+          // Check if workout is already matched by workout_id
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data: existingMatch } = await (supabase as any)
+            .from('workout_activity_matches')
+            .select('id')
+            .eq('plan_instance_id', instance.id)
+            .eq('workout_id', workout.id)
+            .single()
 
           if (existingMatch) continue // Already matched
 
@@ -141,30 +137,22 @@ async function autoMatchActivity(
 
           // Only match if score is high enough
           if (score >= 50) {
-            // Build match data with workout_id if available
-            const matchData: Record<string, unknown> = {
+            // Build match data - workout_id is always required now
+            const matchData = {
               user_id: userId,
               plan_instance_id: instance.id,
+              workout_id: workout.id,
               workout_date: dateOnly,
-              workout_index: 0, // Default for backwards compatibility
+              workout_index: 0,
               strava_activity_id: activityId,
-              match_type: 'auto',
+              match_type: 'auto' as const,
               match_score: score,
             }
-
-            if (workout.id) {
-              matchData.workout_id = workout.id
-            }
-
-            // Use appropriate conflict resolution based on whether we have workout_id
-            const conflictColumns = workout.id
-              ? 'plan_instance_id,workout_id'
-              : 'plan_instance_id,workout_date,workout_index'
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             await (supabase as any)
               .from('workout_activity_matches')
-              .upsert(matchData, { onConflict: conflictColumns })
+              .upsert(matchData, { onConflict: 'plan_instance_id,workout_id' })
 
             errorLogger.logInfo('Auto-matched activity to workout', {
               userId,
