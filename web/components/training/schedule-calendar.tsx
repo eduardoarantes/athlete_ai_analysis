@@ -117,18 +117,21 @@ export function ScheduleCalendar({
 
   // Build workouts list for auto-matching
   const buildWorkoutsList = useCallback((instance: PlanInstance) => {
-    const workouts: Array<{ date: string; index: number; tss?: number; type?: string }> = []
+    const workouts: Array<{ id: string; scheduled_date: string; tss?: number; type?: string }> = []
 
     if (!instance.plan_data?.weekly_plan) return workouts
 
     // Get effective workouts by date (reads directly from plan_data)
     const effectiveWorkouts = applyWorkoutOverrides(instance.plan_data)
 
-    effectiveWorkouts.forEach((dateWorkouts, dateKey) => {
+    effectiveWorkouts.forEach((dateWorkouts) => {
       dateWorkouts.forEach((effectiveWorkout) => {
-        const workoutEntry: { date: string; index: number; tss?: number; type?: string } = {
-          date: dateKey,
-          index: effectiveWorkout.originalIndex,
+        // Skip workouts without ID or scheduled_date
+        if (!effectiveWorkout.workout.id || !effectiveWorkout.workout.scheduled_date) return
+
+        const workoutEntry: { id: string; scheduled_date: string; tss?: number; type?: string } = {
+          id: effectiveWorkout.workout.id,
+          scheduled_date: effectiveWorkout.workout.scheduled_date,
         }
         if (effectiveWorkout.workout.tss !== undefined)
           workoutEntry.tss = effectiveWorkout.workout.tss
@@ -381,11 +384,7 @@ export function ScheduleCalendar({
   }, [])
 
   // Schedule editing handlers with loading states
-  const handleMoveWorkout = async (
-    instanceId: string,
-    source: { date: string; index: number },
-    target: { date: string; index: number }
-  ) => {
+  const handleMoveWorkout = async (instanceId: string, workoutId: string, targetDate: string) => {
     // Make API call to move workout
     setIsOperationLoading(true)
     try {
@@ -394,8 +393,8 @@ export function ScheduleCalendar({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'move',
-          source: { date: source.date, index: source.index },
-          target: { date: target.date, index: target.index },
+          source: { workout_id: workoutId },
+          target: { date: targetDate },
         }),
       })
 
@@ -415,11 +414,7 @@ export function ScheduleCalendar({
     }
   }
 
-  const handleCopyWorkout = async (
-    instanceId: string,
-    source: { date: string; index: number },
-    target: { date: string; index: number }
-  ) => {
+  const handleCopyWorkout = async (instanceId: string, workoutId: string, targetDate: string) => {
     // Make API call to copy workout
     setIsOperationLoading(true)
     try {
@@ -428,8 +423,8 @@ export function ScheduleCalendar({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'copy',
-          source: { date: source.date, index: source.index },
-          target: { date: target.date, index: target.index },
+          source: { workout_id: workoutId },
+          target: { date: targetDate },
         }),
       })
 
@@ -449,14 +444,14 @@ export function ScheduleCalendar({
     }
   }
 
-  const handleDeleteWorkout = async (instanceId: string, date: string, index: number) => {
+  const handleDeleteWorkout = async (instanceId: string, workoutId: string) => {
     // Make API call to delete workout
     setIsOperationLoading(true)
     try {
       const response = await fetch(`/api/schedule/${instanceId}/workouts`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date, index }),
+        body: JSON.stringify({ workout_id: workoutId }),
       })
 
       if (!response.ok) {
@@ -475,18 +470,8 @@ export function ScheduleCalendar({
     }
   }
 
-  const handlePasteWorkout = (
-    instanceId: string,
-    sourceDate: string,
-    sourceIndex: number,
-    targetDate: string,
-    targetIndex: number
-  ) => {
-    handleCopyWorkout(
-      instanceId,
-      { date: sourceDate, index: sourceIndex },
-      { date: targetDate, index: targetIndex }
-    )
+  const handlePasteWorkout = (instanceId: string, workoutId: string, targetDate: string) => {
+    handleCopyWorkout(instanceId, workoutId, targetDate)
   }
 
   // Handler for adding library workouts via drag-and-drop
@@ -767,16 +752,17 @@ export function ScheduleCalendar({
                             >
                               <WorkoutContextMenu
                                 instanceId={sw.instance.id}
-                                date={dateKey}
-                                index={workoutIndex}
                                 workout={sw.workout}
                                 hasMatch={hasMatch}
                                 isEditMode={canEdit}
                                 onViewDetails={() =>
                                   handleWorkoutClick({ ...sw, index: workoutIndex })
                                 }
-                                onDelete={() =>
-                                  handleDeleteWorkout(sw.instance.id, dateKey, workoutIndex)
+                                onDelete={
+                                  sw.workout.id
+                                    ? () =>
+                                        handleDeleteWorkout(sw.instance.id, sw.workout.id as string)
+                                    : undefined
                                 }
                               >
                                 {workoutCard}
@@ -799,8 +785,6 @@ export function ScheduleCalendar({
                           )}
                           <WorkoutContextMenu
                             instanceId={sw.instance.id}
-                            date={dateKey}
-                            index={workoutIndex}
                             workout={sw.workout}
                             hasMatch={hasMatch}
                             isEditMode={false}

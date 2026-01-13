@@ -12,24 +12,16 @@ import type { Workout } from '@/lib/types/training-plan'
 
 interface CopiedWorkout {
   instanceId: string
-  date: string
-  index: number
   workout: Workout
   copiedAt: Date
 }
 
-type PasteHandler = (
-  instanceId: string,
-  sourceDate: string,
-  sourceIndex: number,
-  targetDate: string,
-  targetIndex: number
-) => void
+type PasteHandler = (instanceId: string, workoutId: string, targetDate: string) => void
 
 interface ScheduleClipboardContextValue {
   copiedWorkout: CopiedWorkout | null
-  copyWorkout: (instanceId: string, date: string, index: number, workout: Workout) => void
-  pasteWorkout: (targetDate: string, targetIndex: number) => void
+  copyWorkout: (instanceId: string, workout: Workout) => void
+  pasteWorkout: (targetDate: string) => void
   clearClipboard: () => void
   hasClipboard: boolean
 }
@@ -49,24 +41,19 @@ export function ScheduleClipboardProvider({
 }: ScheduleClipboardProviderProps) {
   const [copiedWorkout, setCopiedWorkout] = useState<CopiedWorkout | null>(null)
 
-  const copyWorkout = useCallback(
-    (sourceInstanceId: string, date: string, index: number, workout: Workout) => {
-      setCopiedWorkout({
-        instanceId: sourceInstanceId,
-        date,
-        index,
-        workout,
-        copiedAt: new Date(),
-      })
-    },
-    []
-  )
+  const copyWorkout = useCallback((sourceInstanceId: string, workout: Workout) => {
+    setCopiedWorkout({
+      instanceId: sourceInstanceId,
+      workout,
+      copiedAt: new Date(),
+    })
+  }, [])
 
   const pasteWorkout = useCallback(
-    (targetDate: string, targetIndex: number) => {
-      if (!copiedWorkout) return
+    (targetDate: string) => {
+      if (!copiedWorkout || !copiedWorkout.workout.id) return
 
-      onPaste(instanceId, copiedWorkout.date, copiedWorkout.index, targetDate, targetIndex)
+      onPaste(instanceId, copiedWorkout.workout.id, targetDate)
       // Keep clipboard for multi-paste - user can paste same workout multiple times
     },
     [copiedWorkout, instanceId, onPaste]
