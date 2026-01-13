@@ -409,6 +409,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams): Pro
     // Find and remove the workout by scheduled_date
     let removed = false
     let removedWorkoutName = ''
+    let removedWorkoutId: string | null = null
 
     if (planData.weekly_plan) {
       for (let weekIdx = 0; weekIdx < planData.weekly_plan.length; weekIdx++) {
@@ -421,6 +422,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams): Pro
 
           if (workout.scheduled_date === date) {
             removedWorkoutName = workout.name
+            removedWorkoutId = workout.id || null
             week.workouts.splice(workoutIdx, 1)
             week.week_tss = week.workouts.reduce((sum, w) => sum + (w.tss || 0), 0)
             removed = true
@@ -454,17 +456,30 @@ export async function DELETE(request: NextRequest, { params }: RouteParams): Pro
     }
 
     // Delete any associated match from workout_activity_matches
-    const { error: matchDeleteError } = await supabase
+    // Use workout_id if available (preferred), otherwise fall back to date+index
+    let matchDeleteQuery = supabase
       .from('workout_activity_matches')
       .delete()
       .eq('plan_instance_id', instanceId)
-      .eq('workout_date', date)
-      .eq('workout_index', index)
+
+    if (removedWorkoutId) {
+      matchDeleteQuery = matchDeleteQuery.eq('workout_id', removedWorkoutId)
+    } else {
+      matchDeleteQuery = matchDeleteQuery.eq('workout_date', date).eq('workout_index', index)
+    }
+
+    const { error: matchDeleteError } = await matchDeleteQuery
 
     if (matchDeleteError) {
       // Log but don't fail the delete operation
       errorLogger.logWarning('Failed to delete workout match', {
-        metadata: { instanceId, date, index, error: matchDeleteError.message },
+        metadata: {
+          instanceId,
+          workoutId: removedWorkoutId,
+          date,
+          index,
+          error: matchDeleteError.message,
+        },
       })
     }
 

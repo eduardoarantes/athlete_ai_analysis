@@ -14,7 +14,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { invokePythonApi } from '@/lib/services/lambda-client'
 import { errorLogger } from '@/lib/monitoring/error-logger'
-import { getWorkoutByDateAndIndex } from '@/lib/utils/workout-helpers'
+import { getWorkoutById, getWorkoutByDateAndIndex } from '@/lib/utils/workout-helpers'
 import type { WorkoutComplianceAnalysis } from '@/lib/services/compliance-analysis-service'
 import type { TrainingPlanData, Workout } from '@/lib/types/training-plan'
 import type { Json } from '@/lib/types/database'
@@ -60,6 +60,7 @@ interface StoredAnalysisRow {
 interface MatchRow {
   id: string
   plan_instance_id: string
+  workout_id: string | null
   workout_date: string
   workout_index: number
   strava_activity_id: string
@@ -173,7 +174,9 @@ export async function POST(
     // Fetch match record
     const { data: match, error: matchError } = await supabase
       .from('workout_activity_matches')
-      .select('id, plan_instance_id, workout_date, workout_index, strava_activity_id, user_id')
+      .select(
+        'id, plan_instance_id, workout_id, workout_date, workout_index, strava_activity_id, user_id'
+      )
       .eq('id', matchId)
       .single<MatchRow>()
 
@@ -237,15 +240,19 @@ export async function POST(
       return NextResponse.json({ error: 'Plan instance not found' }, { status: 404 })
     }
 
-    // Get workout from plan_data by scheduled_date
-    const workout = getWorkoutByDateAndIndex(
-      planInstance.plan_data,
-      match.workout_date,
-      match.workout_index
-    )
+    // Get workout from plan_data by workout_id (preferred) or date+index (legacy fallback)
+    const workout = match.workout_id
+      ? getWorkoutById(planInstance.plan_data, match.workout_id)
+      : getWorkoutByDateAndIndex(planInstance.plan_data, match.workout_date, match.workout_index)
 
     if (!workout) {
-      return NextResponse.json({ error: 'Workout not found in plan' }, { status: 404 })
+      const identifier = match.workout_id
+        ? `ID ${match.workout_id}`
+        : `date ${match.workout_date} index ${match.workout_index}`
+      return NextResponse.json(
+        { error: `Workout not found in plan for ${identifier}` },
+        { status: 404 }
+      )
     }
 
     // Transform analysis for Python API (validate structure)

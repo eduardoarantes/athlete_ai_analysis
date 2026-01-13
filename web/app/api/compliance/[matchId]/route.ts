@@ -16,7 +16,11 @@ import { createClient } from '@/lib/supabase/server'
 import { StravaService } from '@/lib/services/strava-service'
 import { analyzeWorkoutCompliance } from '@/lib/services/compliance-analysis-service'
 import { errorLogger } from '@/lib/monitoring/error-logger'
-import { downsamplePowerStream, getWorkoutByDateAndIndex } from '@/lib/utils/workout-helpers'
+import {
+  downsamplePowerStream,
+  getWorkoutById,
+  getWorkoutByDateAndIndex,
+} from '@/lib/utils/workout-helpers'
 import type { TrainingPlanData } from '@/lib/types/training-plan'
 import type { Json } from '@/lib/types/database'
 import { hasValidStructure } from '@/lib/types/training-plan'
@@ -77,7 +81,7 @@ export async function GET(
       .from('workout_activity_matches')
       .select(
         `
-        id, plan_instance_id, workout_date, workout_index, strava_activity_id, user_id,
+        id, plan_instance_id, workout_id, workout_date, workout_index, strava_activity_id, user_id,
         strava_activities (
           strava_activity_id
         )
@@ -139,12 +143,15 @@ export async function GET(
         }
 
         if (planInstance) {
-          // Get workout from plan_data by scheduled_date
-          const workout = getWorkoutByDateAndIndex(
-            planInstance.plan_data,
-            match.workout_date,
-            match.workout_index
-          )
+          // Get workout from plan_data by workout_id (preferred) or date+index (legacy fallback)
+          const workout = match.workout_id
+            ? getWorkoutById(planInstance.plan_data, match.workout_id)
+            : getWorkoutByDateAndIndex(
+                planInstance.plan_data,
+                match.workout_date,
+                match.workout_index
+              )
+
           if (workout) {
             workoutContext = {
               workout_name: workout.name,
@@ -221,18 +228,16 @@ export async function GET(
       return NextResponse.json({ error: 'Plan instance not found' }, { status: 404 })
     }
 
-    // Get workout from plan_data by scheduled_date
-    const workout = getWorkoutByDateAndIndex(
-      planInstance.plan_data,
-      match.workout_date,
-      match.workout_index
-    )
+    // Get workout from plan_data by workout_id (preferred) or date+index (legacy fallback)
+    const workout = match.workout_id
+      ? getWorkoutById(planInstance.plan_data, match.workout_id)
+      : getWorkoutByDateAndIndex(planInstance.plan_data, match.workout_date, match.workout_index)
 
     if (!workout) {
-      return NextResponse.json(
-        { error: `No workout found for date ${match.workout_date} index ${match.workout_index}` },
-        { status: 404 }
-      )
+      const identifier = match.workout_id
+        ? `ID ${match.workout_id}`
+        : `date ${match.workout_date} index ${match.workout_index}`
+      return NextResponse.json({ error: `No workout found for ${identifier}` }, { status: 404 })
     }
 
     // Check if workout has valid structure

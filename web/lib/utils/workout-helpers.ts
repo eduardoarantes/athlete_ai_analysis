@@ -40,6 +40,30 @@ export function downsamplePowerStream(data: number[], targetLength: number): num
 }
 
 /**
+ * Get a workout by its unique ID.
+ *
+ * This is the preferred method for finding workouts when you have the workout ID,
+ * as it's more direct than using date+index lookups.
+ *
+ * @param planData - The training plan data
+ * @param workoutId - Unique workout ID (UUID format)
+ * @returns The workout if found, null otherwise
+ */
+export function getWorkoutById(planData: TrainingPlanData, workoutId: string): Workout | null {
+  if (!planData.weekly_plan) return null
+
+  for (const week of planData.weekly_plan) {
+    for (const workout of week.workouts) {
+      if (workout.id === workoutId) {
+        return workout
+      }
+    }
+  }
+
+  return null
+}
+
+/**
  * Get workout from plan_data by scheduled_date.
  *
  * Finds a workout in the training plan based on its scheduled_date field.
