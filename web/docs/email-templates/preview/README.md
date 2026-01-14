@@ -18,10 +18,10 @@ open web/docs/email-templates/preview/signup-confirmation.html
 
 These preview files replace Supabase variables with example values:
 
-| Supabase Variable | Preview Value |
-|-------------------|---------------|
+| Supabase Variable        | Preview Value                                                   |
+| ------------------------ | --------------------------------------------------------------- |
 | `{{ .ConfirmationURL }}` | `http://localhost:3000/reset-password?token=example-token-here` |
-| Links won't work | They're just for visual preview |
+| Links won't work         | They're just for visual preview                                 |
 
 ## Testing Responsiveness
 
