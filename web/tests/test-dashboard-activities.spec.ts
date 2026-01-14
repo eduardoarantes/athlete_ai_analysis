@@ -44,7 +44,9 @@ test.describe('Dashboard Activities Display', () => {
     await expect(activitiesHeading).toBeVisible({ timeout: 10000 })
 
     // Should show empty state - check for the message or button in the empty activities card
-    const emptyStateText = page.locator('text=/no activities/i, text=/connect/i, text=/sync/i').first()
+    const emptyStateText = page
+      .locator('text=/no activities/i, text=/connect/i, text=/sync/i')
+      .first()
     await expect(emptyStateText).toBeVisible({ timeout: 10000 })
   })
 
@@ -151,7 +153,20 @@ test.describe('Dashboard Activities Display', () => {
 
     // Get today's date formatted
     const today = new Date()
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    const monthNames = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ]
     const expectedMonth = monthNames[today.getMonth()]
 
     // Should show current month in date
@@ -240,7 +255,9 @@ test.describe('Dashboard Activities Display', () => {
     await page.waitForTimeout(2000)
 
     // Should show "View All" button that links to /activities (might be translated)
-    const viewAllLink = page.locator('a[href="/activities"]').filter({ hasText: /view all|ver tudo|ver todo/i })
+    const viewAllLink = page
+      .locator('a[href="/activities"]')
+      .filter({ hasText: /view all|ver tudo|ver todo/i })
     await expect(viewAllLink).toBeVisible({ timeout: 10000 })
   })
 })

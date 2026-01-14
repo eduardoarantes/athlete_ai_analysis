@@ -78,7 +78,7 @@ export function UpcomingWorkouts({ workouts }: UpcomingWorkoutsProps) {
           const date = new Date(workout.date)
 
           return (
-            <Link key={workout.id} href={`/schedule/${workout.instanceId}`} className="block">
+            <Link key={workout.id} href="/schedule" className="block">
               <div className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors">
                 {/* Date Column */}
                 <div className="flex-shrink-0 w-14 text-center">

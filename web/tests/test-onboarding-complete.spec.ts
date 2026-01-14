@@ -138,7 +138,9 @@ test.describe('Complete Onboarding Flow', () => {
     await page.waitForTimeout(500)
 
     // The actual message is "Please select your gender" - look for the error message specifically
-    await expect(page.locator('p.text-destructive:has-text("Please select your gender")')).toBeVisible({ timeout: 5000 })
+    await expect(
+      page.locator('p.text-destructive:has-text("Please select your gender")')
+    ).toBeVisible({ timeout: 5000 })
   })
 
   test('Step 2: Validation - FTP constraints', async ({ page }) => {

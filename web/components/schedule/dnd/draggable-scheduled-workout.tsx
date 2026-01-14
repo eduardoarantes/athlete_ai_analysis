@@ -59,6 +59,11 @@ export function DraggableScheduledWorkout({
     id: createScheduledWorkoutDraggableId(instanceId, date, index),
     data: dragData,
     disabled: isDragDisabled,
+    // Require 5px drag distance before activation
+    // This allows clicks to pass through to the onClick handler
+    activationConstraint: {
+      distance: 5,
+    },
   })
 
   // Note: We don't apply transform here because we use DragOverlay to show the dragged item.

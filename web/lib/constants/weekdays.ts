@@ -7,6 +7,7 @@
 
 /**
  * Weekday names in order starting from Sunday (matches JavaScript Date.getDay())
+ * Use this for date calculations and JavaScript Date compatibility.
  */
 export const WEEKDAY_NAMES = [
   'Sunday',
@@ -17,6 +18,29 @@ export const WEEKDAY_NAMES = [
   'Friday',
   'Saturday',
 ] as const
+
+/**
+ * Calendar display constants - Monday as first day of week
+ * Use these for ALL calendar UI components to ensure consistent week start.
+ */
+
+/**
+ * Full weekday names for calendar headers, starting with Monday
+ */
+export const CALENDAR_DAYS_LONG = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+] as const
+
+/**
+ * Short weekday names for calendar headers, starting with Monday
+ */
+export const CALENDAR_DAYS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const
 
 /**
  * Weekday type derived from the names array

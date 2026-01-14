@@ -9,6 +9,7 @@ import { ChevronLeft, ChevronRight, Zap } from 'lucide-react'
 import { WorkoutCard } from './workout-card'
 import { WorkoutDetailModal } from './workout-detail-modal'
 import type { TrainingPlan, Workout, WeeklyPlan } from '@/lib/types/training-plan'
+import { CALENDAR_DAYS_LONG, CALENDAR_DAYS_SHORT } from '@/lib/constants/weekdays'
 
 interface TrainingPlanCalendarProps {
   plan: TrainingPlan
@@ -18,8 +19,6 @@ interface TrainingPlanCalendarProps {
   isAdmin?: boolean
 }
 
-const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-const DAYS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const WEEKS_PER_PAGE = 4
 
 export function TrainingPlanCalendar({
@@ -71,7 +70,7 @@ export function TrainingPlanCalendar({
     const map = new Map<number, Workout>()
     if (weekData?.workouts) {
       weekData.workouts.forEach((workout) => {
-        const dayIndex = DAYS_OF_WEEK.findIndex(
+        const dayIndex = CALENDAR_DAYS_LONG.findIndex(
           (d) => d.toLowerCase() === workout.weekday.toLowerCase()
         )
         if (dayIndex !== -1) {
@@ -137,7 +136,7 @@ export function TrainingPlanCalendar({
         <div className="grid grid-cols-8 gap-px bg-muted">
           {/* Header Row */}
           <div className="bg-background p-2 text-center text-sm font-medium">Week</div>
-          {DAYS_SHORT.map((day) => (
+          {CALENDAR_DAYS_SHORT.map((day) => (
             <div key={day} className="bg-background p-2 text-center text-sm font-medium">
               {day}
             </div>
@@ -162,7 +161,7 @@ export function TrainingPlanCalendar({
                 </div>
 
                 {/* Day Cells */}
-                {DAYS_OF_WEEK.map((day, dayIndex) => {
+                {CALENDAR_DAYS_LONG.map((day, dayIndex) => {
                   const workout = workoutsByDay.get(dayIndex)
 
                   return (

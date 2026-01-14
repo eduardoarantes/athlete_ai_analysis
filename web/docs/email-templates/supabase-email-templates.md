@@ -29,102 +29,131 @@ This document contains the HTML email templates for Supabase authentication emai
 ```html
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reset Your Password - Cycling AI Analysis</title>
-</head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
-    <tr>
-      <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reset Your Password - Cycling AI Analysis</title>
+  </head>
+  <body
+    style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;"
+  >
+    <table
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      style="background-color: #f5f5f5; padding: 40px 20px;"
+    >
+      <tr>
+        <td align="center">
+          <table
+            width="600"
+            cellpadding="0"
+            cellspacing="0"
+            style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
+          >
+            <!-- Header -->
+            <tr>
+              <td
+                style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 40px 40px 30px; text-align: center; border-radius: 8px 8px 0 0;"
+              >
+                <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">
+                  🚴 Cycling AI Analysis
+                </h1>
+              </td>
+            </tr>
 
-          <!-- Header -->
-          <tr>
-            <td style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 40px 40px 30px; text-align: center; border-radius: 8px 8px 0 0;">
-              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">
-                🚴 Cycling AI Analysis
-              </h1>
-            </td>
-          </tr>
+            <!-- Content -->
+            <tr>
+              <td style="padding: 40px;">
+                <!-- Main Heading -->
+                <h2 style="margin: 0 0 20px; color: #1e293b; font-size: 24px; font-weight: 600;">
+                  Reset Your Password
+                </h2>
 
-          <!-- Content -->
-          <tr>
-            <td style="padding: 40px;">
+                <!-- Body Text -->
+                <p style="margin: 0 0 20px; color: #475569; font-size: 16px; line-height: 1.6;">
+                  Hi there,
+                </p>
 
-              <!-- Main Heading -->
-              <h2 style="margin: 0 0 20px; color: #1e293b; font-size: 24px; font-weight: 600;">
-                Reset Your Password
-              </h2>
+                <p style="margin: 0 0 20px; color: #475569; font-size: 16px; line-height: 1.6;">
+                  We received a request to reset your password. Don't worry—this happens to the best
+                  of us! Click the button below to create a new password and get back to your
+                  training.
+                </p>
 
-              <!-- Body Text -->
-              <p style="margin: 0 0 20px; color: #475569; font-size: 16px; line-height: 1.6;">
-                Hi there,
-              </p>
+                <!-- CTA Button -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
+                  <tr>
+                    <td align="center">
+                      <a
+                        href="{{ .ConfirmationURL }}"
+                        style="display: inline-block; padding: 16px 32px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);"
+                      >
+                        Reset My Password
+                      </a>
+                    </td>
+                  </tr>
+                </table>
 
-              <p style="margin: 0 0 20px; color: #475569; font-size: 16px; line-height: 1.6;">
-                We received a request to reset your password. Don't worry—this happens to the best of us! Click the button below to create a new password and get back to your training.
-              </p>
+                <!-- Encouragement -->
+                <div
+                  style="background-color: #f1f5f9; border-left: 4px solid #3b82f6; padding: 16px; margin: 30px 0; border-radius: 4px;"
+                >
+                  <p style="margin: 0; color: #475569; font-size: 15px; line-height: 1.6;">
+                    <strong style="color: #1e293b;">💪 Keep pushing forward!</strong><br />
+                    We're here to support your cycling journey every step of the way. Your training
+                    progress is waiting for you.
+                  </p>
+                </div>
 
-              <!-- CTA Button -->
-              <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
-                <tr>
-                  <td align="center">
-                    <a href="{{ .ConfirmationURL }}"
-                       style="display: inline-block; padding: 16px 32px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);">
-                      Reset My Password
+                <!-- Security Note -->
+                <p style="margin: 20px 0 0; color: #64748b; font-size: 14px; line-height: 1.6;">
+                  <strong>For your security:</strong> This link expires in 60 minutes. If you didn't
+                  request this password reset, you can safely ignore this email—your account remains
+                  secure.
+                </p>
+
+                <!-- Alternative Link -->
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                  <p style="margin: 0 0 10px; color: #64748b; font-size: 13px;">
+                    Button not working? Copy and paste this URL into your browser:
+                  </p>
+                  <p style="margin: 0; word-break: break-all;">
+                    <a
+                      href="{{ .ConfirmationURL }}"
+                      style="color: #3b82f6; text-decoration: none; font-size: 13px;"
+                    >
+                      {{ .ConfirmationURL }}
                     </a>
-                  </td>
-                </tr>
-              </table>
+                  </p>
+                </div>
+              </td>
+            </tr>
 
-              <!-- Encouragement -->
-              <div style="background-color: #f1f5f9; border-left: 4px solid #3b82f6; padding: 16px; margin: 30px 0; border-radius: 4px;">
-                <p style="margin: 0; color: #475569; font-size: 15px; line-height: 1.6;">
-                  <strong style="color: #1e293b;">💪 Keep pushing forward!</strong><br>
-                  We're here to support your cycling journey every step of the way. Your training progress is waiting for you.
+            <!-- Footer -->
+            <tr>
+              <td
+                style="background-color: #f8fafc; padding: 30px 40px; text-align: center; border-radius: 0 0 8px 8px; border-top: 1px solid #e2e8f0;"
+              >
+                <p style="margin: 0 0 10px; color: #64748b; font-size: 14px;">
+                  <strong>Cycling AI Analysis</strong><br />
+                  Your AI-powered cycling coach
                 </p>
-              </div>
-
-              <!-- Security Note -->
-              <p style="margin: 20px 0 0; color: #64748b; font-size: 14px; line-height: 1.6;">
-                <strong>For your security:</strong> This link expires in 60 minutes. If you didn't request this password reset, you can safely ignore this email—your account remains secure.
-              </p>
-
-              <!-- Alternative Link -->
-              <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-                <p style="margin: 0 0 10px; color: #64748b; font-size: 13px;">
-                  Button not working? Copy and paste this URL into your browser:
+                <p style="margin: 10px 0 0; color: #94a3b8; font-size: 13px;">
+                  Need help? Contact us at
+                  <a
+                    href="mailto:support@cyclingai.example.com"
+                    style="color: #3b82f6; text-decoration: none;"
+                    >support@cyclingai.example.com</a
+                  >
                 </p>
-                <p style="margin: 0; word-break: break-all;">
-                  <a href="{{ .ConfirmationURL }}" style="color: #3b82f6; text-decoration: none; font-size: 13px;">
-                    {{ .ConfirmationURL }}
-                  </a>
-                </p>
-              </div>
-
-            </td>
-          </tr>
-
-          <!-- Footer -->
-          <tr>
-            <td style="background-color: #f8fafc; padding: 30px 40px; text-align: center; border-radius: 0 0 8px 8px; border-top: 1px solid #e2e8f0;">
-              <p style="margin: 0 0 10px; color: #64748b; font-size: 14px;">
-                <strong>Cycling AI Analysis</strong><br>
-                Your AI-powered cycling coach
-              </p>
-              <p style="margin: 10px 0 0; color: #94a3b8; font-size: 13px;">
-                Need help? Contact us at <a href="mailto:support@cyclingai.example.com" style="color: #3b82f6; text-decoration: none;">support@cyclingai.example.com</a>
-              </p>
-            </td>
-          </tr>
-
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
 </html>
 ```
 
@@ -143,130 +172,175 @@ This document contains the HTML email templates for Supabase authentication emai
 ```html
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome to Cycling AI Analysis!</title>
-</head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
-    <tr>
-      <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Welcome to Cycling AI Analysis!</title>
+  </head>
+  <body
+    style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;"
+  >
+    <table
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      style="background-color: #f5f5f5; padding: 40px 20px;"
+    >
+      <tr>
+        <td align="center">
+          <table
+            width="600"
+            cellpadding="0"
+            cellspacing="0"
+            style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
+          >
+            <!-- Header with Celebration -->
+            <tr>
+              <td
+                style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px 40px 30px; text-align: center; border-radius: 8px 8px 0 0;"
+              >
+                <div style="font-size: 48px; margin-bottom: 10px;">🎉</div>
+                <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">
+                  Welcome to Cycling AI Analysis!
+                </h1>
+              </td>
+            </tr>
 
-          <!-- Header with Celebration -->
-          <tr>
-            <td style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px 40px 30px; text-align: center; border-radius: 8px 8px 0 0;">
-              <div style="font-size: 48px; margin-bottom: 10px;">🎉</div>
-              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">
-                Welcome to Cycling AI Analysis!
-              </h1>
-            </td>
-          </tr>
+            <!-- Content -->
+            <tr>
+              <td style="padding: 40px;">
+                <!-- Congratulations Message -->
+                <div
+                  style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-radius: 8px; padding: 24px; margin-bottom: 30px; text-align: center;"
+                >
+                  <h2 style="margin: 0 0 12px; color: #1e40af; font-size: 22px; font-weight: 700;">
+                    🚴 Congratulations on Taking the First Step!
+                  </h2>
+                  <p style="margin: 0; color: #1e40af; font-size: 16px; line-height: 1.5;">
+                    You're about to unlock AI-powered insights that will transform your cycling
+                    performance.
+                  </p>
+                </div>
 
-          <!-- Content -->
-          <tr>
-            <td style="padding: 40px;">
-
-              <!-- Congratulations Message -->
-              <div style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-radius: 8px; padding: 24px; margin-bottom: 30px; text-align: center;">
-                <h2 style="margin: 0 0 12px; color: #1e40af; font-size: 22px; font-weight: 700;">
-                  🚴 Congratulations on Taking the First Step!
-                </h2>
-                <p style="margin: 0; color: #1e40af; font-size: 16px; line-height: 1.5;">
-                  You're about to unlock AI-powered insights that will transform your cycling performance.
+                <!-- Main Message -->
+                <p style="margin: 0 0 20px; color: #475569; font-size: 16px; line-height: 1.6;">
+                  Hi there,
                 </p>
-              </div>
 
-              <!-- Main Message -->
-              <p style="margin: 0 0 20px; color: #475569; font-size: 16px; line-height: 1.6;">
-                Hi there,
-              </p>
+                <p style="margin: 0 0 20px; color: #475569; font-size: 16px; line-height: 1.6;">
+                  We're thrilled to have you join our community of passionate cyclists! You've just
+                  taken an important step toward smarter, more effective training.
+                </p>
 
-              <p style="margin: 0 0 20px; color: #475569; font-size: 16px; line-height: 1.6;">
-                We're thrilled to have you join our community of passionate cyclists! You've just taken an important step toward smarter, more effective training.
-              </p>
+                <p style="margin: 0 0 20px; color: #475569; font-size: 16px; line-height: 1.6;">
+                  To get started, please confirm your email address by clicking the button below:
+                </p>
 
-              <p style="margin: 0 0 20px; color: #475569; font-size: 16px; line-height: 1.6;">
-                To get started, please confirm your email address by clicking the button below:
-              </p>
+                <!-- CTA Button -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
+                  <tr>
+                    <td align="center">
+                      <a
+                        href="{{ .ConfirmationURL }}"
+                        style="display: inline-block; padding: 16px 32px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px rgba(5, 150, 105, 0.3);"
+                      >
+                        Confirm Email & Start Your Journey
+                      </a>
+                    </td>
+                  </tr>
+                </table>
 
-              <!-- CTA Button -->
-              <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
-                <tr>
-                  <td align="center">
-                    <a href="{{ .ConfirmationURL }}"
-                       style="display: inline-block; padding: 16px 32px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px rgba(5, 150, 105, 0.3);">
-                      Confirm Email & Start Your Journey
+                <!-- What's Next Section -->
+                <div
+                  style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px; margin: 30px 0; border-radius: 4px;"
+                >
+                  <h3 style="margin: 0 0 12px; color: #92400e; font-size: 18px; font-weight: 600;">
+                    🎯 What's Waiting for You:
+                  </h3>
+                  <ul
+                    style="margin: 0; padding-left: 20px; color: #78350f; font-size: 15px; line-height: 1.8;"
+                  >
+                    <li>
+                      <strong>Personalized Training Plans</strong> – AI-generated workouts tailored
+                      to your goals
+                    </li>
+                    <li>
+                      <strong>Performance Analytics</strong> – Deep insights into your cycling data
+                    </li>
+                    <li>
+                      <strong>Power Zone Training</strong> – Optimize your training with precision
+                    </li>
+                    <li>
+                      <strong>Progress Tracking</strong> – Watch yourself improve week after week
+                    </li>
+                  </ul>
+                </div>
+
+                <!-- Motivational Message -->
+                <div
+                  style="background-color: #f1f5f9; border-radius: 8px; padding: 20px; margin: 30px 0; text-align: center;"
+                >
+                  <p
+                    style="margin: 0; color: #1e293b; font-size: 17px; line-height: 1.6; font-weight: 500;"
+                  >
+                    💪 "Every champion was once a beginner who refused to give up."
+                  </p>
+                  <p style="margin: 12px 0 0; color: #64748b; font-size: 15px;">
+                    Your journey to becoming a stronger cyclist starts now. We're with you every
+                    pedal stroke of the way!
+                  </p>
+                </div>
+
+                <!-- Security Note -->
+                <p style="margin: 20px 0 0; color: #64748b; font-size: 14px; line-height: 1.6;">
+                  <strong>Note:</strong> This confirmation link expires in 24 hours. If you didn't
+                  create this account, you can safely ignore this email.
+                </p>
+
+                <!-- Alternative Link -->
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                  <p style="margin: 0 0 10px; color: #64748b; font-size: 13px;">
+                    Button not working? Copy and paste this URL into your browser:
+                  </p>
+                  <p style="margin: 0; word-break: break-all;">
+                    <a
+                      href="{{ .ConfirmationURL }}"
+                      style="color: #10b981; text-decoration: none; font-size: 13px;"
+                    >
+                      {{ .ConfirmationURL }}
                     </a>
-                  </td>
-                </tr>
-              </table>
+                  </p>
+                </div>
+              </td>
+            </tr>
 
-              <!-- What's Next Section -->
-              <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px; margin: 30px 0; border-radius: 4px;">
-                <h3 style="margin: 0 0 12px; color: #92400e; font-size: 18px; font-weight: 600;">
-                  🎯 What's Waiting for You:
-                </h3>
-                <ul style="margin: 0; padding-left: 20px; color: #78350f; font-size: 15px; line-height: 1.8;">
-                  <li><strong>Personalized Training Plans</strong> – AI-generated workouts tailored to your goals</li>
-                  <li><strong>Performance Analytics</strong> – Deep insights into your cycling data</li>
-                  <li><strong>Power Zone Training</strong> – Optimize your training with precision</li>
-                  <li><strong>Progress Tracking</strong> – Watch yourself improve week after week</li>
-                </ul>
-              </div>
-
-              <!-- Motivational Message -->
-              <div style="background-color: #f1f5f9; border-radius: 8px; padding: 20px; margin: 30px 0; text-align: center;">
-                <p style="margin: 0; color: #1e293b; font-size: 17px; line-height: 1.6; font-weight: 500;">
-                  💪 "Every champion was once a beginner who refused to give up."
+            <!-- Footer -->
+            <tr>
+              <td
+                style="background-color: #f8fafc; padding: 30px 40px; text-align: center; border-radius: 0 0 8px 8px; border-top: 1px solid #e2e8f0;"
+              >
+                <p style="margin: 0 0 10px; color: #64748b; font-size: 14px;">
+                  <strong>🚴 Cycling AI Analysis</strong><br />
+                  Your AI-powered cycling coach
                 </p>
-                <p style="margin: 12px 0 0; color: #64748b; font-size: 15px;">
-                  Your journey to becoming a stronger cyclist starts now. We're with you every pedal stroke of the way!
+                <p style="margin: 10px 0 0; color: #94a3b8; font-size: 13px;">
+                  Questions? We're here to help! Reach out at
+                  <a
+                    href="mailto:support@cyclingai.example.com"
+                    style="color: #10b981; text-decoration: none;"
+                    >support@cyclingai.example.com</a
+                  >
                 </p>
-              </div>
-
-              <!-- Security Note -->
-              <p style="margin: 20px 0 0; color: #64748b; font-size: 14px; line-height: 1.6;">
-                <strong>Note:</strong> This confirmation link expires in 24 hours. If you didn't create this account, you can safely ignore this email.
-              </p>
-
-              <!-- Alternative Link -->
-              <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-                <p style="margin: 0 0 10px; color: #64748b; font-size: 13px;">
-                  Button not working? Copy and paste this URL into your browser:
+                <p style="margin: 15px 0 0; color: #94a3b8; font-size: 13px;">
+                  Follow your passion. Track your progress. Achieve your goals.
                 </p>
-                <p style="margin: 0; word-break: break-all;">
-                  <a href="{{ .ConfirmationURL }}" style="color: #10b981; text-decoration: none; font-size: 13px;">
-                    {{ .ConfirmationURL }}
-                  </a>
-                </p>
-              </div>
-
-            </td>
-          </tr>
-
-          <!-- Footer -->
-          <tr>
-            <td style="background-color: #f8fafc; padding: 30px 40px; text-align: center; border-radius: 0 0 8px 8px; border-top: 1px solid #e2e8f0;">
-              <p style="margin: 0 0 10px; color: #64748b; font-size: 14px;">
-                <strong>🚴 Cycling AI Analysis</strong><br>
-                Your AI-powered cycling coach
-              </p>
-              <p style="margin: 10px 0 0; color: #94a3b8; font-size: 13px;">
-                Questions? We're here to help! Reach out at <a href="mailto:support@cyclingai.example.com" style="color: #10b981; text-decoration: none;">support@cyclingai.example.com</a>
-              </p>
-              <p style="margin: 15px 0 0; color: #94a3b8; font-size: 13px;">
-                Follow your passion. Track your progress. Achieve your goals.
-              </p>
-            </td>
-          </tr>
-
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
 </html>
 ```
 
@@ -355,23 +429,25 @@ Both templates reference `support@cyclingai.example.com`. Update this to your ac
 
 These variables are automatically populated by Supabase:
 
-| Variable | Description | Used In |
-|----------|-------------|---------|
-| `{{ .ConfirmationURL }}` | Confirmation/reset link with token | Both templates |
-| `{{ .Email }}` | User's email address | Optional (not used in these templates) |
-| `{{ .Token }}` | Raw confirmation token | Optional (URL construction) |
-| `{{ .TokenHash }}` | Hashed token | Optional (URL construction) |
-| `{{ .SiteURL }}` | Your site URL from Supabase settings | Optional (URL construction) |
+| Variable                 | Description                          | Used In                                |
+| ------------------------ | ------------------------------------ | -------------------------------------- |
+| `{{ .ConfirmationURL }}` | Confirmation/reset link with token   | Both templates                         |
+| `{{ .Email }}`           | User's email address                 | Optional (not used in these templates) |
+| `{{ .Token }}`           | Raw confirmation token               | Optional (URL construction)            |
+| `{{ .TokenHash }}`       | Hashed token                         | Optional (URL construction)            |
+| `{{ .SiteURL }}`         | Your site URL from Supabase settings | Optional (URL construction)            |
 
 ---
 
 ## Design Principles
 
 ### 1. **Tone & Voice**
+
 - **Password Reset:** Supportive, helpful, professional with gentle encouragement
 - **Signup:** Enthusiastic, welcoming, motivational with genuine excitement
 
 ### 2. **Marketing Copy Guidelines**
+
 - **Congratulate and encourage** – Make users feel welcomed and supported
 - **Highlight value** – Show what they gain from the platform
 - **Build excitement** – Create anticipation for their journey
@@ -379,12 +455,14 @@ These variables are automatically populated by Supabase:
 - **Stay focused** – Don't overshadow the primary action (confirm email, reset password)
 
 ### 3. **Visual Design**
+
 - **Color coding:** Blue for password reset (calm, trustworthy), Green for signup (growth, success)
 - **Clear CTAs:** Large, prominent buttons with action-oriented text
 - **Hierarchy:** Important information stands out
 - **White space:** Generous padding prevents overwhelming users
 
 ### 4. **Email Compatibility**
+
 - **Table-based layout:** Maximum compatibility with older email clients
 - **Inline CSS:** Styles are preserved across all clients
 - **Gradient fallbacks:** Gradients degrade gracefully in unsupported clients
@@ -405,13 +483,14 @@ These variables are automatically populated by Supabase:
 
 ## Changelog
 
-| Date | Author | Changes |
-|------|--------|---------|
+| Date       | Author  | Changes                                              |
+| ---------- | ------- | ---------------------------------------------------- |
 | 2026-01-13 | Initial | Created templates with marketing copy for Issue #120 |
 
 ---
 
 **Next Steps:**
+
 1. Review templates with stakeholders
 2. Update support email addresses
 3. Implement in Supabase Dashboard

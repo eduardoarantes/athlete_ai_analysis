@@ -278,7 +278,23 @@ export function WorkoutDetailPopup({
 
   return (
     <Dialog {...dialogProps}>
-      <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto"
+        onInteractOutside={(e) => {
+          // Allow the dialog to close, but prevent the click from reaching elements below
+          // This stops the modal from reopening when clicking on workout cards underneath
+          if (e.target instanceof Element) {
+            e.target.addEventListener(
+              'click',
+              (clickEvent) => {
+                clickEvent.stopPropagation()
+                clickEvent.preventDefault()
+              },
+              { once: true, capture: true }
+            )
+          }
+        }}
+      >
         <DialogHeader className="pb-2 text-center">
           <div className="flex items-center justify-center gap-2 flex-wrap">
             <DialogTitle className="text-lg">{workout.name}</DialogTitle>

@@ -3,14 +3,15 @@
 /**
  * Workout Library Card Component
  *
- * Displays a workout from the library with full details.
- * Used in the workout browser sidebar.
+ * Displays a workout from the library.
+ * Click the card to view details in a modal.
+ * Click the + button or drag to schedule the workout.
  *
  * Part of Issue #22: Plan Builder Phase 2 - Core UI
  */
 
-import { Clock, Zap, GripVertical, Plus, ChevronDown, ChevronUp } from 'lucide-react'
-import { useState } from 'react'
+import { Clock, Zap, GripVertical, Plus } from 'lucide-react'
+import { useState, useRef } from 'react'
 import type { WorkoutLibraryItem } from '@/lib/types/workout-library'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -53,7 +54,7 @@ function formatIntensity(intensity: string): string {
 interface WorkoutLibraryCardProps {
   /** The workout data */
   workout: WorkoutLibraryItem
-  /** Callback when clicked (to add to calendar) */
+  /** Callback when + button is clicked (to schedule/add workout) */
   onClick?: (() => void) | undefined
   /** Whether draggable */
   isDraggable?: boolean | undefined
@@ -73,13 +74,26 @@ export function WorkoutLibraryCard({
   compact = false,
   className,
 }: WorkoutLibraryCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [showModal, setShowModal] = useState(false)
+  const lastCloseTime = useRef(0)
 
   const borderColor = getWorkoutBorderColor(workout.type)
   const intensityColor = getIntensityBadgeColors(workout.intensity)
 
-  const hasStructure = workout.structure?.structure && workout.structure.structure.length > 0
-  const hasDescription = workout.detailed_description && workout.detailed_description.trim() !== ''
+  const handleCardClick = () => {
+    // Prevent reopening immediately after closing (debounce)
+    const now = Date.now()
+    if (now - lastCloseTime.current > 100) {
+      setShowModal(true)
+    }
+  }
+
+  const handleModalChange = (open: boolean) => {
+    if (!open) {
+      lastCloseTime.current = Date.now()
+    }
+    setShowModal(open)
+  }
 
   return (
     <div
@@ -87,11 +101,11 @@ export function WorkoutLibraryCard({
         'group relative flex flex-col rounded-lg border border-l-4 bg-card',
         compact ? 'p-2' : 'p-3',
         borderColor,
-        onClick && 'hover:bg-accent/50 transition-colors',
-        isDraggable ? 'cursor-grab active:cursor-grabbing' : onClick && 'cursor-pointer',
+        'hover:bg-accent/50 transition-colors',
+        isDraggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer',
         className
       )}
-      onClick={onClick}
+      onClick={handleCardClick}
       data-workout-id={workout.id}
       data-draggable={isDraggable}
     >
@@ -165,50 +179,21 @@ export function WorkoutLibraryCard({
         )}
       </div>
 
-      {/* Expandable details - hidden in compact mode */}
-      {!compact && (hasDescription || hasStructure) && (
-        <>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mt-2 h-6 px-2 self-start text-xs text-muted-foreground hover:text-foreground"
-            onClick={(e) => {
-              e.stopPropagation()
-              setIsExpanded(!isExpanded)
-            }}
-          >
-            {isExpanded ? (
-              <>
-                <ChevronUp className="h-3 w-3 mr-1" />
-                Hide details
-              </>
-            ) : (
-              <>
-                <ChevronDown className="h-3 w-3 mr-1" />
-                Show details
-              </>
-            )}
-          </Button>
-
-          {isExpanded && (
-            <div className="mt-2 pt-2 border-t border-border/50">
-              <WorkoutDetailPopup
-                workout={workout}
-                asInline
-                sections={{
-                  showBadges: false,
-                  showStats: false,
-                  showDescription: true,
-                  showPowerProfile: false,
-                  showStructure: true,
-                  showWeekInfo: false,
-                  showSuitablePhases: false,
-                }}
-              />
-            </div>
-          )}
-        </>
-      )}
+      {/* Workout Detail Modal */}
+      <WorkoutDetailPopup
+        workout={workout}
+        open={showModal}
+        onOpenChange={handleModalChange}
+        sections={{
+          showBadges: true,
+          showStats: true,
+          showDescription: true,
+          showPowerProfile: true,
+          showStructure: true,
+          showWeekInfo: false,
+          showSuitablePhases: true,
+        }}
+      />
     </div>
   )
 }
