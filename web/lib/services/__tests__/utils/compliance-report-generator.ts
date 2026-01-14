@@ -324,12 +324,6 @@ function formatSegmentDuration(durationMin: number): string {
   return `${durationMin} min`
 }
 
-function formatTimeMMSS(totalSeconds: number): string {
-  const minutes = Math.floor(totalSeconds / 60)
-  const seconds = Math.floor(totalSeconds % 60)
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`
-}
-
 function buildPowerProfileSVG(
   plannedSegments: Array<{
     duration_sec: number
@@ -687,7 +681,7 @@ function buildPowerProfile(entry: ComplianceReportEntry): string {
       start_time: seg.actual_start_sec!,
       end_time: seg.actual_end_sec!,
       quality: seg.match_quality,
-      compliance_percentage: seg.scores.overall,
+      compliance_percentage: seg.scores.overall_segment_score,
       segment_index: seg.segment_index,
     }))
 
