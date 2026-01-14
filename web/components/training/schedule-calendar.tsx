@@ -14,7 +14,13 @@ import { NoteDialog } from './note-dialog'
 import { WorkoutDetailModal, type MatchedActivityData } from './workout-detail-modal'
 import { NoteContextMenu } from '@/components/schedule/note-context-menu'
 import { toast } from 'sonner'
-import type { PlanInstance, Workout, PlanInstanceNote } from '@/lib/types/training-plan'
+import type {
+  PlanInstance,
+  Workout,
+  PlanInstanceNote,
+  TrainingPlanData,
+  WeeklyPlan,
+} from '@/lib/types/training-plan'
 import type { WorkoutLibraryItem } from '@/lib/types/workout-library'
 import { parseLocalDate, formatDateString } from '@/lib/utils/date-utils'
 import { applyWorkoutOverrides } from '@/lib/utils/apply-workout-overrides'
@@ -43,6 +49,49 @@ const DAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 // Removed: convertLibrarySegmentsToSchedule - segments are no longer used
 // Library workouts now use the structure field directly
+
+// Helper to get weekday name from day number (0 = Sunday)
+const getWeekdayName = (dayNum: number): string => {
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+  return days[dayNum] || 'Sunday' // Default to Sunday if out of bounds
+}
+
+// Helper to deep clone plan_data
+const clonePlanData = (data: TrainingPlanData): TrainingPlanData => {
+  return JSON.parse(JSON.stringify(data))
+}
+
+// Helper to find or create a week for a target date
+const findOrCreateWeek = (planData: TrainingPlanData, targetDate: string): WeeklyPlan => {
+  // Parse target date
+  const date = parseLocalDate(targetDate)
+
+  // Find which week this date belongs to based on plan start
+  // Use the first workout's date as the plan start reference
+  const firstWorkout = planData.weekly_plan[0]?.workouts[0]
+  const startDate = firstWorkout?.scheduled_date
+    ? parseLocalDate(firstWorkout.scheduled_date)
+    : date
+
+  // Calculate week number (1-based)
+  const daysDiff = Math.floor((date.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+  const weekNumber = Math.floor(daysDiff / 7) + 1
+
+  // Find or create the week
+  let week = planData.weekly_plan.find((w) => w.week_number === weekNumber)
+  if (!week) {
+    week = {
+      week_number: weekNumber,
+      phase: 'Base', // Default phase
+      week_tss: 0,
+      workouts: [],
+    }
+    planData.weekly_plan.push(week)
+    planData.weekly_plan.sort((a, b) => a.week_number - b.week_number)
+  }
+
+  return week
+}
 
 interface ScheduledWorkout {
   workout: Workout
@@ -90,8 +139,6 @@ export function ScheduleCalendar({
   // Edit state
   // Error message for user feedback
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  // Loading state for workout operations
-  const [isOperationLoading, setIsOperationLoading] = useState(false)
 
   // Find MANUAL_WORKOUTS instance (always exists for each user)
   const manualWorkoutsInstance = instances.find((i) => i.instance_type === 'manual_workouts')
@@ -106,6 +153,16 @@ export function ScheduleCalendar({
     realInstances.length === 1 ? realInstances[0]?.id : manualWorkoutsInstance?.id || null
 
   const canEdit = allowEditing && !!primaryInstanceId
+
+  // Local state for optimistic UI updates
+  const [localInstances, setLocalInstances] = useState<PlanInstance[]>(instances)
+  const localInstancesRef = useRef<PlanInstance[]>(instances)
+
+  // Sync local instances when prop changes (server data takes precedence)
+  useEffect(() => {
+    setLocalInstances(instances)
+    localInstancesRef.current = instances
+  }, [instances])
 
   // Matches state: Map of "instanceId:workoutId" (or legacy "instanceId:date:index") -> MatchedActivityData
   const [matchesMap, setMatchesMap] = useState<Map<string, MatchedActivityData>>(new Map())
@@ -384,9 +441,58 @@ export function ScheduleCalendar({
   }, [])
 
   // Schedule editing handlers with loading states
+  // Optimistic update for moving workouts
+  const handleOptimisticMove = useCallback(
+    (instanceId: string, workoutId: string, targetDate: string): (() => void) => {
+      // Capture original state for rollback
+      const originalInstances = [...localInstancesRef.current]
+
+      // Update local state optimistically
+      setLocalInstances((prev) => {
+        return prev.map((instance) => {
+          if (instance.id !== instanceId) return instance
+
+          const planData = clonePlanData(instance.plan_data)
+
+          // Find and modify the workout
+          let movedWorkout: Workout | null = null
+          planData.weekly_plan.forEach((week) => {
+            const workoutIndex = week.workouts.findIndex((w) => w.id === workoutId)
+            if (workoutIndex >= 0) {
+              const workout = week.workouts[workoutIndex]
+              if (workout) {
+                movedWorkout = {
+                  ...workout,
+                  scheduled_date: targetDate,
+                  weekday: getWeekdayName(parseLocalDate(targetDate).getDay()),
+                }
+                week.workouts.splice(workoutIndex, 1)
+                week.week_tss = week.workouts.reduce((sum, w) => sum + (w.tss || 0), 0)
+              }
+            }
+          })
+
+          // Add to target week
+          if (movedWorkout) {
+            const targetWeek = findOrCreateWeek(planData, targetDate)
+            targetWeek.workouts.push(movedWorkout)
+            targetWeek.week_tss = targetWeek.workouts.reduce((sum, w) => sum + (w.tss || 0), 0)
+          }
+
+          return { ...instance, plan_data: planData }
+        })
+      })
+
+      // Return rollback function
+      return () => setLocalInstances(originalInstances)
+    },
+    []
+  )
+
   const handleMoveWorkout = async (instanceId: string, workoutId: string, targetDate: string) => {
-    // Make API call to move workout
-    setIsOperationLoading(true)
+    // Apply optimistic update
+    const rollback = handleOptimisticMove(instanceId, workoutId, targetDate)
+
     try {
       const response = await fetch(`/api/schedule/${instanceId}/workouts`, {
         method: 'PATCH',
@@ -399,24 +505,72 @@ export function ScheduleCalendar({
       })
 
       if (!response.ok) {
+        rollback() // Rollback on error
         const error = await response.json()
-        setErrorMessage(error.error || 'Failed to move workout. Please try again.')
+        toast.error(error.error || 'Failed to move workout')
         return
       }
 
-      // Refetch plan data to get updated workouts with new scheduled_date
+      // Success - sync with server to get canonical state
       router.refresh()
     } catch (error) {
-      console.error('Error moving workout:', error)
-      setErrorMessage('Failed to move workout. Please try again.')
-    } finally {
-      setIsOperationLoading(false)
+      rollback() // Rollback on error
+      errorLogger.logError(error as Error, {
+        path: 'schedule-calendar/handleMoveWorkout',
+        metadata: { instanceId, workoutId, targetDate },
+      })
+      toast.error('Failed to move workout. Please try again.')
     }
   }
 
+  // Optimistic update for copying workouts
+  const handleOptimisticCopy = useCallback(
+    (instanceId: string, workoutId: string, targetDate: string): (() => void) => {
+      const originalInstances = [...localInstancesRef.current]
+      const tempId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+
+      setLocalInstances((prev) => {
+        return prev.map((instance) => {
+          if (instance.id !== instanceId) return instance
+
+          const planData = clonePlanData(instance.plan_data)
+
+          // Find workout to copy
+          let workoutToCopy: Workout | null = null
+          for (const week of planData.weekly_plan) {
+            const workout = week.workouts.find((w) => w.id === workoutId)
+            if (workout) {
+              workoutToCopy = workout
+              break
+            }
+          }
+
+          if (workoutToCopy) {
+            const copiedWorkout: Workout = {
+              ...workoutToCopy,
+              id: tempId, // Temporary ID until server confirms
+              scheduled_date: targetDate,
+              weekday: getWeekdayName(parseLocalDate(targetDate).getDay()),
+            }
+
+            const targetWeek = findOrCreateWeek(planData, targetDate)
+            targetWeek.workouts.push(copiedWorkout)
+            targetWeek.week_tss = targetWeek.workouts.reduce((sum, w) => sum + (w.tss || 0), 0)
+          }
+
+          return { ...instance, plan_data: planData }
+        })
+      })
+
+      return () => setLocalInstances(originalInstances)
+    },
+    []
+  )
+
   const handleCopyWorkout = async (instanceId: string, workoutId: string, targetDate: string) => {
-    // Make API call to copy workout
-    setIsOperationLoading(true)
+    // Apply optimistic update
+    const rollback = handleOptimisticCopy(instanceId, workoutId, targetDate)
+
     try {
       const response = await fetch(`/api/schedule/${instanceId}/workouts`, {
         method: 'PATCH',
@@ -429,24 +583,55 @@ export function ScheduleCalendar({
       })
 
       if (!response.ok) {
+        rollback()
         const error = await response.json()
-        setErrorMessage(error.error || 'Failed to copy workout. Please try again.')
+        toast.error(error.error || 'Failed to copy workout')
         return
       }
 
-      // Refetch plan data to get updated workouts
       router.refresh()
     } catch (error) {
-      console.error('Error copying workout:', error)
-      setErrorMessage('Failed to copy workout. Please try again.')
-    } finally {
-      setIsOperationLoading(false)
+      rollback()
+      errorLogger.logError(error as Error, {
+        path: 'schedule-calendar/handleCopyWorkout',
+        metadata: { instanceId, workoutId, targetDate },
+      })
+      toast.error('Failed to copy workout. Please try again.')
     }
   }
 
+  // Optimistic update for deleting workouts
+  const handleOptimisticDelete = useCallback(
+    (instanceId: string, workoutId: string): (() => void) => {
+      const originalInstances = [...localInstancesRef.current]
+
+      setLocalInstances((prev) => {
+        return prev.map((instance) => {
+          if (instance.id !== instanceId) return instance
+
+          const planData = clonePlanData(instance.plan_data)
+
+          // Find and remove workout
+          planData.weekly_plan.forEach((week) => {
+            const workoutIndex = week.workouts.findIndex((w) => w.id === workoutId)
+            if (workoutIndex >= 0) {
+              week.workouts.splice(workoutIndex, 1)
+              week.week_tss = week.workouts.reduce((sum, w) => sum + (w.tss || 0), 0)
+            }
+          })
+
+          return { ...instance, plan_data: planData }
+        })
+      })
+
+      return () => setLocalInstances(originalInstances)
+    },
+    []
+  )
+
   const handleDeleteWorkout = async (instanceId: string, workoutId: string) => {
-    // Make API call to delete workout
-    setIsOperationLoading(true)
+    const rollback = handleOptimisticDelete(instanceId, workoutId)
+
     try {
       const response = await fetch(`/api/schedule/${instanceId}/workouts`, {
         method: 'DELETE',
@@ -455,24 +640,65 @@ export function ScheduleCalendar({
       })
 
       if (!response.ok) {
+        rollback()
         const error = await response.json()
-        setErrorMessage(error.error || 'Failed to delete workout. Please try again.')
+        toast.error(error.error || 'Failed to delete workout')
         return
       }
 
-      // Refetch plan data to get updated workouts
       router.refresh()
     } catch (error) {
-      console.error('Error deleting workout:', error)
-      setErrorMessage('Failed to delete workout. Please try again.')
-    } finally {
-      setIsOperationLoading(false)
+      rollback()
+      errorLogger.logError(error as Error, {
+        path: 'schedule-calendar/handleDeleteWorkout',
+        metadata: { instanceId, workoutId },
+      })
+      toast.error('Failed to delete workout. Please try again.')
     }
   }
 
   const handlePasteWorkout = (instanceId: string, workoutId: string, targetDate: string) => {
     handleCopyWorkout(instanceId, workoutId, targetDate)
   }
+
+  // Optimistic update for adding library workouts
+  const handleOptimisticAddLibrary = useCallback(
+    (workout: WorkoutLibraryItem, targetDate: string, instanceId: string): (() => void) => {
+      const originalInstances = [...localInstancesRef.current]
+      const tempId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+
+      setLocalInstances((prev) => {
+        return prev.map((instance) => {
+          if (instance.id !== instanceId) return instance
+
+          const planData = clonePlanData(instance.plan_data)
+
+          // Create new workout from library item
+          const newWorkout: Workout = {
+            id: tempId,
+            scheduled_date: targetDate,
+            weekday: getWeekdayName(parseLocalDate(targetDate).getDay()),
+            name: workout.name,
+            type: workout.type,
+            tss: workout.base_tss,
+            structure: workout.structure,
+            ...(workout.detailed_description && { description: workout.detailed_description }),
+            source: 'library',
+            library_workout_id: workout.id,
+          }
+
+          const targetWeek = findOrCreateWeek(planData, targetDate)
+          targetWeek.workouts.push(newWorkout)
+          targetWeek.week_tss = targetWeek.workouts.reduce((sum, w) => sum + (w.tss || 0), 0)
+
+          return { ...instance, plan_data: planData }
+        })
+      })
+
+      return () => setLocalInstances(originalInstances)
+    },
+    []
+  )
 
   // Handler for adding library workouts via drag-and-drop
   const handleAddLibraryWorkout = async (workout: WorkoutLibraryItem, targetDate: string) => {
@@ -499,8 +725,9 @@ export function ScheduleCalendar({
     }
     libraryDropInProgressRef.current.add(dropKey)
 
-    // API call - workout is added directly to plan_data.weekly_plan
-    setIsOperationLoading(true)
+    // Apply optimistic update
+    const rollback = handleOptimisticAddLibrary(workout, targetDate, primaryInstanceId)
+
     try {
       const response = await fetch(`/api/schedule/${primaryInstanceId}/workouts/add`, {
         method: 'POST',
@@ -512,14 +739,15 @@ export function ScheduleCalendar({
       })
 
       if (!response.ok) {
+        rollback()
         const error = await response.json()
         toast.error(error.error || 'Failed to add workout')
       } else {
         toast.success('Workout added successfully!')
-        // Refresh to show the new workout
         router.refresh()
       }
     } catch (error) {
+      rollback()
       errorLogger.logError(error as Error, {
         path: 'schedule-calendar/handleAddLibraryWorkout',
         metadata: { workoutId: workout.id, targetDate },
@@ -528,7 +756,6 @@ export function ScheduleCalendar({
     } finally {
       // Clear the drop-in-progress flag
       libraryDropInProgressRef.current.delete(dropKey)
-      setIsOperationLoading(false)
     }
   }
 
@@ -539,7 +766,7 @@ export function ScheduleCalendar({
   const workoutsByDate = useMemo(() => {
     const map = new Map<string, ScheduledWorkout[]>()
 
-    instances.forEach((instance) => {
+    localInstances.forEach((instance) => {
       const startDate = parseLocalDate(instance.start_date)
 
       // Get effective workouts by date (reads directly from plan_data)
@@ -575,7 +802,7 @@ export function ScheduleCalendar({
     })
 
     return map
-  }, [instances])
+  }, [localInstances])
 
   // Get calendar grid for current month
   const calendarDays = useMemo(() => {
@@ -658,16 +885,6 @@ export function ScheduleCalendar({
           </Button>
         </div>
       </div>
-
-      {/* Loading State */}
-      {isOperationLoading && (
-        <Alert className="mb-4 border-blue-200 bg-blue-50 text-blue-900">
-          <div className="flex items-center gap-2">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
-            <AlertDescription>Processing workout operation...</AlertDescription>
-          </div>
-        </Alert>
-      )}
 
       {/* Error Message */}
       {errorMessage && (
