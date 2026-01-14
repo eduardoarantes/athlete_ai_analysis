@@ -1238,29 +1238,24 @@ export function analyzeWorkoutCompliance(
       ? detectEffortBlocksWithSegmentGuidance(smoothedPower, zones, flattenedSegments)
       : detectEffortBlocks(smoothedPower, zones, adaptiveParams)
 
-  // Step 9: Map detected blocks back to original timeline
-  // Convert pause-free indices to original indices
-  const detectedBlocks = pauseFreeBlocks.map((block) => ({
-    ...block,
-    start_sec: indexMapping[block.start_sec] ?? block.start_sec,
-    end_sec: indexMapping[Math.min(block.end_sec, indexMapping.length - 1)] ?? block.end_sec,
-  }))
+  // Step 9: Match segments to blocks ON PAUSE-FREE TIMELINE
+  // This is critical: both planned segments and detected blocks are on the pause-free
+  // timeline, so they're aligned and matching works correctly
+  const matches = matchSegments(flattenedSegments, pauseFreeBlocks)
 
-  // Step 10: Match segments to blocks
-  const matches = matchSegments(flattenedSegments, detectedBlocks)
-
-  // Step 10.5: Truncate detected blocks to respect planned segment boundaries
+  // Step 10: Truncate detected blocks to respect planned segment boundaries
   // This prevents segments with overlapping power targets (e.g., rest + cooldown)
   // from stealing time from each other
+  // NOTE: Working on PAUSE-FREE timeline here
   let cumulativeTime = 0
-  const adjustedDetectedBlocks = detectedBlocks.map((block) => ({ ...block }))
+  const adjustedPauseFreeBlocks = pauseFreeBlocks.map((block) => ({ ...block }))
 
   for (let i = 0; i < flattenedSegments.length; i++) {
     const planned = flattenedSegments[i]!
     const match = matches[i]
 
     if (match && !match.skipped && match.detected_index !== null) {
-      const detectedBlock = adjustedDetectedBlocks[match.detected_index]!
+      const detectedBlock = adjustedPauseFreeBlocks[match.detected_index]!
       const expectedStart = cumulativeTime
       const expectedEnd = cumulativeTime + planned.duration_sec
 
@@ -1271,7 +1266,8 @@ export function analyzeWorkoutCompliance(
         const truncatedDuration = newEnd - detectedBlock.start_sec
 
         // Recalculate block statistics for truncated portion
-        const blockPowerData = powerStream.slice(detectedBlock.start_sec, newEnd)
+        // Use pause-free power stream for statistics
+        const blockPowerData = pauseFreeStream.slice(detectedBlock.start_sec, newEnd)
         const avgPower =
           blockPowerData.length > 0 ? blockPowerData.reduce((a, b) => a + b, 0) / blockPowerData.length : 0
         const maxPower = blockPowerData.length > 0 ? Math.max(...blockPowerData) : 0
@@ -1302,7 +1298,7 @@ export function analyzeWorkoutCompliance(
           }
         }
 
-        adjustedDetectedBlocks[match.detected_index] = {
+        adjustedPauseFreeBlocks[match.detected_index] = {
           ...detectedBlock,
           end_sec: newEnd,
           duration_sec: truncatedDuration,
@@ -1330,7 +1326,7 @@ export function analyzeWorkoutCompliance(
     let shouldUseSynthetic = !match || match.skipped || match.detected_index === null
 
     if (!shouldUseSynthetic && match && match.detected_index !== null) {
-      const matchedBlock = adjustedDetectedBlocks[match.detected_index]
+      const matchedBlock = adjustedPauseFreeBlocks[match.detected_index]
       if (matchedBlock) {
         const durationRatio = matchedBlock.duration_sec / p.duration_sec
         if (durationRatio < 0.5) {
@@ -1345,6 +1341,7 @@ export function analyzeWorkoutCompliance(
 
   // Second pass: Calculate expected time windows for synthetic block creation
   // Use actual detected end times for GOOD matches, planned times for synthetic blocks
+  // NOTE: Still on PAUSE-FREE timeline
   let cumulativeExpectedTime = 0
   const expectedTimeWindows: Array<{ start: number; end: number }> = []
   for (let i = 0; i < flattenedSegments.length; i++) {
@@ -1356,7 +1353,7 @@ export function analyzeWorkoutCompliance(
 
     // Only use detected block end time if it's a GOOD match (not being replaced by synthetic)
     if (!useSynthetic && match && !match.skipped && match.detected_index !== null) {
-      const adjustedBlock = adjustedDetectedBlocks[match.detected_index]
+      const adjustedBlock = adjustedPauseFreeBlocks[match.detected_index]
       if (adjustedBlock) {
         // Use the actual end time from the (possibly truncated) detected block
         actualEnd = adjustedBlock.end_sec
@@ -1366,7 +1363,7 @@ export function analyzeWorkoutCompliance(
 
     expectedTimeWindows.push({
       start: cumulativeExpectedTime,
-      end: Math.min(actualEnd, powerStream.length), // Cap at end of power stream
+      end: Math.min(actualEnd, pauseFreeStream.length), // Cap at end of pause-free stream
     })
     cumulativeExpectedTime = actualEnd
   }
@@ -1376,11 +1373,12 @@ export function analyzeWorkoutCompliance(
     const shouldUseSyntheticBlock = willUseSyntheticBlock[index]!
 
     if (shouldUseSyntheticBlock) {
-      // No detected block match - create synthetic block from raw power data in expected window
+      // No detected block match - create synthetic block from pause-free power data in expected window
+      // NOTE: Still on PAUSE-FREE timeline
       const expectedWindow = expectedTimeWindows[index]!
       const syntheticStart = expectedWindow.start
-      const syntheticEnd = Math.min(expectedWindow.end, powerStream.length)
-      const syntheticPower = powerStream.slice(syntheticStart, syntheticEnd)
+      const syntheticEnd = Math.min(expectedWindow.end, pauseFreeStream.length)
+      const syntheticPower = pauseFreeStream.slice(syntheticStart, syntheticEnd)
 
       if (syntheticPower.length === 0) {
         // Truly skipped - no data available
@@ -1451,10 +1449,11 @@ export function analyzeWorkoutCompliance(
       }
 
       // Use synthetic block for compliance analysis
+      // NOTE: Still on PAUSE-FREE timeline
       var detected: DetectedBlock = syntheticDetected
       // Fall through to compliance calculation below
     } else {
-      var detected = adjustedDetectedBlocks[match.detected_index]!
+      var detected = adjustedPauseFreeBlocks[match.detected_index]!
     }
 
     // Calculate compliance scores
@@ -1524,8 +1523,28 @@ export function analyzeWorkoutCompliance(
     }
   })
 
-  // Step 8: Calculate overall compliance
-  const overall = calculateOverallCompliance(segmentAnalyses)
+  // Step 12: Map segment times from pause-free timeline to original timeline for display
+  // This is the final step - all analysis is done, now we just translate times for the user
+  const segmentAnalysesWithOriginalTimes = segmentAnalyses.map((segment) => {
+    if (segment.actual_start_sec === null || segment.actual_end_sec === null) {
+      // Skipped segment - no mapping needed
+      return segment
+    }
+
+    // Map pause-free times to original times
+    const originalStartSec = indexMapping[segment.actual_start_sec] ?? segment.actual_start_sec
+    const originalEndSec = indexMapping[Math.min(segment.actual_end_sec, indexMapping.length - 1)] ?? segment.actual_end_sec
+
+    return {
+      ...segment,
+      actual_start_sec: originalStartSec,
+      actual_end_sec: originalEndSec,
+      // Duration remains the same (pause-free duration = actual work duration)
+    }
+  })
+
+  // Step 13: Calculate overall compliance
+  const overall = calculateOverallCompliance(segmentAnalysesWithOriginalTimes)
 
   // Determine power data quality
   let powerDataQuality: 'good' | 'partial' | 'missing'
@@ -1539,7 +1558,7 @@ export function analyzeWorkoutCompliance(
 
   return {
     overall,
-    segments: segmentAnalyses,
+    segments: segmentAnalysesWithOriginalTimes,
     metadata: {
       algorithm_version: '1.2.0',
       power_data_quality: powerDataQuality,
