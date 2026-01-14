@@ -73,6 +73,8 @@ export interface PlannedSegment {
   power_low: number // Absolute watts
   power_high: number // Absolute watts
   target_zone: number // 1-5
+  power_low_pct?: number // Optional: % of FTP (for multi-zone detection)
+  power_high_pct?: number // Optional: % of FTP (for multi-zone detection)
 }
 
 /**
@@ -87,6 +89,15 @@ export interface DetectedBlock {
   max_power: number
   min_power: number
   zone_distribution: ZoneDistribution
+}
+
+/**
+ * Detected pause in power stream
+ */
+export interface DetectedPause {
+  start_sec: number
+  end_sec: number
+  duration_sec: number
 }
 
 /**
@@ -164,6 +175,7 @@ export interface WorkoutComplianceAnalysis {
     power_data_quality: 'good' | 'partial' | 'missing'
     adaptive_parameters: AdaptiveParameters
     detection_strategy?: 'global' | 'per-segment'
+    detected_pauses?: DetectedPause[]
   }
 }
 
@@ -251,12 +263,20 @@ export function getSegmentAdaptiveParameters(segment: PlannedSegment): AdaptiveP
       minSegmentDurationSec: 20,
       boundaryStabilitySec: 15,
     }
-  } else {
-    // Short segments (<1 min): sensitive detection
+  } else if (duration >= 15) {
+    // Short segments (15s-1min): sensitive detection
     return {
       smoothingWindowSec: 5,
       minSegmentDurationSec: 10,
       boundaryStabilitySec: 5,
+    }
+  } else {
+    // Ultra-short segments (<15s): sprint detection
+    // Minimal smoothing to preserve peak power spikes
+    return {
+      smoothingWindowSec: 1,
+      minSegmentDurationSec: 3,
+      boundaryStabilitySec: 2,
     }
   }
 }
@@ -280,10 +300,11 @@ export function calculateAdaptiveParameters(plannedSegments: PlannedSegment[]): 
   // Adaptive rules based on shortest segment
   if (shortestSegmentSec <= 15) {
     // Sprint/Neuromuscular workouts (≤15 sec efforts)
+    // Minimal smoothing to preserve peak power spikes
     return {
-      smoothingWindowSec: 3,
-      minSegmentDurationSec: 5,
-      boundaryStabilitySec: 3,
+      smoothingWindowSec: 1,
+      minSegmentDurationSec: 3,
+      boundaryStabilitySec: 2,
     }
   } else if (shortestSegmentSec <= 30) {
     // Short intervals (15-30 sec)
@@ -369,6 +390,8 @@ function flattenWorkoutStructure(structure: WorkoutStructure, ftp: number): Plan
           power_low: Math.round((powerTarget.minValue / 100) * ftp),
           power_high: Math.round((powerTarget.maxValue / 100) * ftp),
           target_zone: getTargetZone(powerTarget.minValue, powerTarget.maxValue),
+          power_low_pct: powerTarget.minValue,
+          power_high_pct: powerTarget.maxValue,
         })
       }
     }
@@ -416,6 +439,8 @@ export function flattenWorkoutSegments(
           power_low: Math.round((segment.work.power_low_pct / 100) * ftp),
           power_high: Math.round((segment.work.power_high_pct / 100) * ftp),
           target_zone: getTargetZone(segment.work.power_low_pct, segment.work.power_high_pct),
+          power_low_pct: segment.work.power_low_pct,
+          power_high_pct: segment.work.power_high_pct,
         })
 
         // Recovery segment (except after last set if there's no duration_min on parent)
@@ -431,6 +456,8 @@ export function flattenWorkoutSegments(
               segment.recovery.power_low_pct,
               segment.recovery.power_high_pct
             ),
+            power_low_pct: segment.recovery.power_low_pct,
+            power_high_pct: segment.recovery.power_high_pct,
           })
         }
       }
@@ -447,6 +474,8 @@ export function flattenWorkoutSegments(
         power_low: Math.round((powerLowPct / 100) * ftp),
         power_high: Math.round((powerHighPct / 100) * ftp),
         target_zone: getTargetZone(powerLowPct, powerHighPct),
+        power_low_pct: powerLowPct,
+        power_high_pct: powerHighPct,
       })
     }
   }
@@ -511,6 +540,98 @@ export function classifyPowerToZone(power: number, zones: PowerZones): number {
  */
 export function createZoneTimeline(powerStream: number[], zones: PowerZones): number[] {
   return powerStream.map((power) => classifyPowerToZone(power, zones))
+}
+
+/**
+ * Detect pauses in power stream
+ * A pause is defined as sustained very low power (< threshold) for a minimum duration
+ * Common scenarios: bathroom breaks, equipment adjustments, traffic stops
+ *
+ * @param powerStream - Raw power data (1 Hz)
+ * @param powerThreshold - Power below this is considered a pause (default: 20W)
+ * @param minDurationSec - Minimum pause duration to detect (default: 30s)
+ * @returns Array of detected pauses
+ */
+export function detectPauses(
+  powerStream: number[],
+  powerThreshold: number = 20,
+  minDurationSec: number = 30
+): DetectedPause[] {
+  const pauses: DetectedPause[] = []
+  let pauseStart = -1
+
+  for (let i = 0; i < powerStream.length; i++) {
+    const power = powerStream[i] ?? 0
+
+    if (power < powerThreshold) {
+      // Start of potential pause
+      if (pauseStart === -1) {
+        pauseStart = i
+      }
+    } else {
+      // End of pause
+      if (pauseStart !== -1) {
+        const duration = i - pauseStart
+        if (duration >= minDurationSec) {
+          pauses.push({
+            start_sec: pauseStart,
+            end_sec: i,
+            duration_sec: duration,
+          })
+        }
+        pauseStart = -1
+      }
+    }
+  }
+
+  // Handle pause at end of stream
+  if (pauseStart !== -1 && powerStream.length - pauseStart >= minDurationSec) {
+    pauses.push({
+      start_sec: pauseStart,
+      end_sec: powerStream.length,
+      duration_sec: powerStream.length - pauseStart,
+    })
+  }
+
+  return pauses
+}
+
+/**
+ * Create pause-removed power stream for segment matching
+ * Returns a new power stream with pauses removed and a mapping from new indices to original indices
+ *
+ * @param powerStream - Original power data
+ * @param pauses - Detected pauses
+ * @returns Object with pause-free stream and index mapping
+ */
+export function removePausesFromStream(
+  powerStream: number[],
+  pauses: DetectedPause[]
+): {
+  pauseFreeStream: number[]
+  indexMapping: number[] // pauseFreeIndex -> originalIndex
+} {
+  if (pauses.length === 0) {
+    return {
+      pauseFreeStream: [...powerStream],
+      indexMapping: Array.from({ length: powerStream.length }, (_, i) => i),
+    }
+  }
+
+  const pauseFreeStream: number[] = []
+  const indexMapping: number[] = []
+
+  for (let i = 0; i < powerStream.length; i++) {
+    // Check if this index is within any pause
+    const isInPause = pauses.some((pause) => i >= pause.start_sec && i < pause.end_sec)
+
+    if (!isInPause) {
+      pauseFreeStream.push(powerStream[i] ?? 0)
+      indexMapping.push(i)
+    }
+  }
+
+  return { pauseFreeStream, indexMapping }
 }
 
 // ============================================================================
@@ -623,6 +744,51 @@ function createBlock(
   }
 }
 
+/**
+ * Detect effort blocks using segment-specific guidance
+ * Processes each planned segment independently with its own adaptive parameters
+ * This prevents cross-contamination between long and short segments (Issue #98)
+ */
+export function detectEffortBlocksWithSegmentGuidance(
+  powerStream: number[],
+  zones: PowerZones,
+  plannedSegments: PlannedSegment[]
+): DetectedBlock[] {
+  const allBlocks: DetectedBlock[] = []
+  let currentTime = 0
+
+  for (const segment of plannedSegments) {
+    // Get segment-specific adaptive parameters
+    const segmentParams = getSegmentAdaptiveParameters(segment)
+
+    // Extract power data for this segment's time window
+    const startSec = currentTime
+    const endSec = Math.min(currentTime + segment.duration_sec, powerStream.length)
+    const segmentPower = powerStream.slice(startSec, endSec)
+
+    if (segmentPower.length === 0) {
+      currentTime = endSec
+      continue
+    }
+
+    // Detect blocks within this segment using segment-specific params
+    const segmentBlocks = detectEffortBlocks(segmentPower, zones, segmentParams)
+
+    // Offset block times to absolute positions and add to results
+    for (const block of segmentBlocks) {
+      allBlocks.push({
+        ...block,
+        start_sec: block.start_sec + startSec,
+        end_sec: block.end_sec + startSec,
+      })
+    }
+
+    currentTime = endSec
+  }
+
+  return allBlocks
+}
+
 // ============================================================================
 // Segment Matching
 // ============================================================================
@@ -668,7 +834,12 @@ export function calculateMatchSimilarity(planned: PlannedSegment, detected: Dete
 }
 
 /**
- * Match planned segments to detected blocks using sliding window
+ * Match planned segments to detected blocks using time-window constraints
+ *
+ * Key improvement: Each planned segment has an expected time window based on cumulative
+ * planned duration. Only detected blocks that overlap with this window are considered.
+ * This prevents segments with overlapping power targets (e.g., rest and cooldown) from
+ * being confused when power alone can't distinguish them.
  */
 export function matchSegments(
   planned: PlannedSegment[],
@@ -677,19 +848,50 @@ export function matchSegments(
 ): SegmentMatch[] {
   const matches: SegmentMatch[] = []
   const usedDetected = new Set<number>()
-  let searchStart = 0
 
+  // Calculate expected time windows for each planned segment
+  let cumulativeTime = 0
+  const timeWindows: Array<{ start: number; end: number }> = []
   for (const p of planned) {
+    timeWindows.push({
+      start: cumulativeTime,
+      end: cumulativeTime + p.duration_sec,
+    })
+    cumulativeTime += p.duration_sec
+  }
+
+  // Track the minimum start time for the next segment
+  // This enforces sequential ordering
+  let minNextStartTime = 0
+
+  for (let i = 0; i < planned.length; i++) {
+    const p = planned[i]!
+    const expectedWindow = timeWindows[i]!
     let bestMatch: number | null = null
     let bestScore = 0
 
-    // Search window: next 3 detected blocks
-    const windowEnd = Math.min(searchStart + 3, detected.length)
+    // Only consider detected blocks that overlap with the expected time window
+    // Allow small flexibility for late starts (max 60s), but be strict about end time
+    // This prevents segments with overlapping power targets from stealing each other's time
+    const lateStartTolerance = Math.min(60, p.duration_sec * 0.2)
+    const lateEndTolerance = Math.min(30, p.duration_sec * 0.1)
 
-    for (let d = searchStart; d < windowEnd; d++) {
+    const searchStart = Math.max(expectedWindow.start - 30, minNextStartTime) // Allow 30s early start but enforce sequential ordering
+    const searchEnd = expectedWindow.end + lateEndTolerance
+
+    for (let d = 0; d < detected.length; d++) {
       if (usedDetected.has(d)) continue
 
-      const score = calculateMatchSimilarity(p, detected[d]!)
+      const block = detected[d]!
+
+      // Check if block overlaps with expected time window
+      // Block must START before the search window ends AND END after it starts
+      const blockOverlapsWindow =
+        block.start_sec < searchEnd && block.end_sec > searchStart
+
+      if (!blockOverlapsWindow) continue
+
+      const score = calculateMatchSimilarity(p, block)
 
       if (score > bestScore && score >= minMatchThreshold) {
         bestMatch = d
@@ -698,6 +900,7 @@ export function matchSegments(
     }
 
     if (bestMatch !== null) {
+      const matchedBlock = detected[bestMatch]!
       matches.push({
         planned_index: p.index,
         detected_index: bestMatch,
@@ -705,7 +908,10 @@ export function matchSegments(
         skipped: false,
       })
       usedDetected.add(bestMatch)
-      searchStart = bestMatch + 1
+
+      // Update minimum start time for next segment
+      // Next segment must start at or after the end of this matched block
+      minNextStartTime = matchedBlock.end_sec
     } else {
       // No match found - segment was skipped
       matches.push({
@@ -714,6 +920,8 @@ export function matchSegments(
         similarity_score: 0,
         skipped: true,
       })
+      // Even if skipped, advance the minimum start time
+      minNextStartTime = expectedWindow.end
     }
   }
 
@@ -767,11 +975,52 @@ export function calculatePowerCompliance(
 
 /**
  * Calculate zone compliance score (0-100)
+ * Now supports multi-zone targets for power ranges that span multiple zones
  */
 export function calculateZoneCompliance(
   timeInZone: ZoneDistribution,
-  targetZone: number
+  targetZone: number,
+  powerLowPct?: number,
+  powerHighPct?: number
 ): { score: number; assessment: string } {
+  // Determine which zones the target power range spans
+  const spansMultipleZones =
+    powerLowPct !== undefined &&
+    powerHighPct !== undefined &&
+    getTargetZone(powerLowPct, powerLowPct) !== getTargetZone(powerHighPct, powerHighPct)
+
+  if (spansMultipleZones && powerLowPct !== undefined && powerHighPct !== undefined) {
+    // For ranges that span multiple zones (e.g., 50-60% = Z1+Z2), accept any spanned zone
+    const lowZone = getTargetZone(powerLowPct, powerLowPct)
+    const highZone = getTargetZone(powerHighPct, powerHighPct)
+
+    // Calculate combined time in all spanned zones
+    let combinedPercent = 0
+    const zones = []
+    for (let z = lowZone; z <= highZone; z++) {
+      const zoneKey = `z${z}` as keyof ZoneDistribution
+      combinedPercent += timeInZone[zoneKey] * 100
+      zones.push(z)
+    }
+
+    const score = Math.round(combinedPercent)
+    const zoneRange = zones.length > 1 ? `Z${zones.join('/Z')}` : `Z${zones[0]}`
+
+    let assessment: string
+    if (score >= 90) {
+      assessment = `Excellent zone discipline (${score}% in ${zoneRange})`
+    } else if (score >= 75) {
+      assessment = `Good zone discipline (${score}% in ${zoneRange})`
+    } else if (score >= 50) {
+      assessment = `Inconsistent zone discipline (${score}% in ${zoneRange})`
+    } else {
+      assessment = `Poor zone discipline (only ${score}% in ${zoneRange})`
+    }
+
+    return { score, assessment }
+  }
+
+  // Single zone target - original strict behavior
   const zoneKey = `z${targetZone}` as keyof ZoneDistribution
   const percentInZone = timeInZone[zoneKey] * 100
 
@@ -952,7 +1201,14 @@ export function analyzeWorkoutCompliance(
   // Step 2: Flatten planned segments (structure takes precedence)
   const flattenedSegments = flattenWorkoutSegments(plannedSegments, ftp, structure)
 
-  // Step 3: Determine detection strategy based on segment duration variance (Issue #98)
+  // Step 3: Detect pauses in power stream
+  // Pauses (bathroom breaks, equipment adjustments) should not affect matching
+  const detectedPauses = detectPauses(powerStream)
+
+  // Step 4: Create pause-removed stream for accurate segment matching
+  const { pauseFreeStream, indexMapping } = removePausesFromStream(powerStream, detectedPauses)
+
+  // Step 5: Determine detection strategy based on segment duration variance (Issue #98)
   let detectionStrategy: 'global' | 'per-segment' = 'global'
   if (flattenedSegments.length > 0) {
     const durations = flattenedSegments.map((s) => s.duration_sec)
@@ -966,54 +1222,240 @@ export function analyzeWorkoutCompliance(
     }
   }
 
-  // Step 4: Calculate adaptive parameters
+  // Step 6: Calculate adaptive parameters
   // For global strategy, use existing logic based on shortest segment
   // For per-segment strategy, we'll use segment-specific params during matching
   const adaptiveParams = calculateAdaptiveParameters(flattenedSegments)
 
-  // Step 5: Smooth power stream
-  const smoothedPower = smoothPowerStream(powerStream, adaptiveParams.smoothingWindowSec)
+  // Step 7: Smooth pause-removed power stream
+  const smoothedPower = smoothPowerStream(pauseFreeStream, adaptiveParams.smoothingWindowSec)
 
-  // Step 6: Detect effort blocks
-  const detectedBlocks = detectEffortBlocks(smoothedPower, zones, adaptiveParams)
+  // Step 8: Detect effort blocks on pause-removed stream
+  // For per-segment strategy, use segment-specific parameters during detection
+  // For global strategy, use the existing logic based on shortest segment
+  const pauseFreeBlocks =
+    detectionStrategy === 'per-segment'
+      ? detectEffortBlocksWithSegmentGuidance(smoothedPower, zones, flattenedSegments)
+      : detectEffortBlocks(smoothedPower, zones, adaptiveParams)
 
-  // Step 7: Match segments to blocks
+  // Step 9: Map detected blocks back to original timeline
+  // Convert pause-free indices to original indices
+  const detectedBlocks = pauseFreeBlocks.map((block) => ({
+    ...block,
+    start_sec: indexMapping[block.start_sec] ?? block.start_sec,
+    end_sec: indexMapping[Math.min(block.end_sec, indexMapping.length - 1)] ?? block.end_sec,
+  }))
+
+  // Step 10: Match segments to blocks
   const matches = matchSegments(flattenedSegments, detectedBlocks)
 
-  // Step 7: Analyze each segment
-  const segmentAnalyses: SegmentAnalysis[] = flattenedSegments.map((planned) => {
-    const match = matches.find((m) => m.planned_index === planned.index)
+  // Step 10.5: Truncate detected blocks to respect planned segment boundaries
+  // This prevents segments with overlapping power targets (e.g., rest + cooldown)
+  // from stealing time from each other
+  let cumulativeTime = 0
+  const adjustedDetectedBlocks = detectedBlocks.map((block) => ({ ...block }))
 
-    if (!match || match.skipped || match.detected_index === null) {
-      // Skipped segment
-      return {
-        segment_index: planned.index,
-        segment_name: planned.name,
-        segment_type: planned.type,
-        match_quality: 'skipped' as const,
-        planned_duration_sec: planned.duration_sec,
-        planned_power_low: planned.power_low,
-        planned_power_high: planned.power_high,
-        planned_zone: planned.target_zone,
-        actual_start_sec: null,
-        actual_end_sec: null,
-        actual_duration_sec: null,
-        actual_avg_power: null,
-        actual_max_power: null,
-        actual_min_power: null,
-        actual_dominant_zone: null,
-        time_in_zone: null,
-        scores: {
-          power_compliance: 0,
-          zone_compliance: 0,
-          duration_compliance: 0,
-          overall_segment_score: 0,
-        },
-        assessment: 'Segment was skipped or not detected',
+  for (let i = 0; i < flattenedSegments.length; i++) {
+    const planned = flattenedSegments[i]!
+    const match = matches[i]
+
+    if (match && !match.skipped && match.detected_index !== null) {
+      const detectedBlock = adjustedDetectedBlocks[match.detected_index]!
+      const expectedStart = cumulativeTime
+      const expectedEnd = cumulativeTime + planned.duration_sec
+
+      // If the detected block extends significantly beyond the expected end, truncate it
+      if (detectedBlock.end_sec > expectedEnd + 30) {
+        // Allow 30s tolerance
+        const newEnd = expectedEnd + 30
+        const truncatedDuration = newEnd - detectedBlock.start_sec
+
+        // Recalculate block statistics for truncated portion
+        const blockPowerData = powerStream.slice(detectedBlock.start_sec, newEnd)
+        const avgPower =
+          blockPowerData.length > 0 ? blockPowerData.reduce((a, b) => a + b, 0) / blockPowerData.length : 0
+        const maxPower = blockPowerData.length > 0 ? Math.max(...blockPowerData) : 0
+        const minPower = blockPowerData.length > 0 ? Math.min(...blockPowerData) : 0
+
+        // Recalculate zone distribution for truncated portion
+        const truncatedZoneTimeline = createZoneTimeline(blockPowerData, zones)
+        const zoneCounts: Record<number, number> = {}
+        for (const zone of truncatedZoneTimeline) {
+          zoneCounts[zone] = (zoneCounts[zone] || 0) + 1
+        }
+        const totalCounts = Object.values(zoneCounts).reduce((a, b) => a + b, 0)
+        const zoneDistribution = {
+          z1: totalCounts > 0 ? (zoneCounts[1] || 0) / totalCounts : 0,
+          z2: totalCounts > 0 ? (zoneCounts[2] || 0) / totalCounts : 0,
+          z3: totalCounts > 0 ? (zoneCounts[3] || 0) / totalCounts : 0,
+          z4: totalCounts > 0 ? (zoneCounts[4] || 0) / totalCounts : 0,
+          z5: totalCounts > 0 ? (zoneCounts[5] || 0) / totalCounts : 0,
+        }
+
+        // Find dominant zone
+        let dominantZone = 1
+        let maxCount = 0
+        for (const [zone, count] of Object.entries(zoneCounts)) {
+          if (count > maxCount) {
+            maxCount = count
+            dominantZone = Number(zone)
+          }
+        }
+
+        adjustedDetectedBlocks[match.detected_index] = {
+          ...detectedBlock,
+          end_sec: newEnd,
+          duration_sec: truncatedDuration,
+          avg_power: Math.round(avgPower),
+          max_power: maxPower,
+          min_power: minPower,
+          zone_distribution: zoneDistribution,
+          dominant_zone: dominantZone,
+        }
       }
     }
 
-    const detected = detectedBlocks[match.detected_index]!
+    cumulativeTime += planned.duration_sec
+  }
+
+  // Step 11: Analyze each segment
+  // First pass: Determine which segments will use synthetic blocks
+  // This prevents circular dependency where we use matched block end times
+  // to calculate synthetic block windows
+  const willUseSyntheticBlock: boolean[] = []
+  for (let i = 0; i < flattenedSegments.length; i++) {
+    const p = flattenedSegments[i]!
+    const match = matches[i]
+
+    let shouldUseSynthetic = !match || match.skipped || match.detected_index === null
+
+    if (!shouldUseSynthetic && match && match.detected_index !== null) {
+      const matchedBlock = adjustedDetectedBlocks[match.detected_index]
+      if (matchedBlock) {
+        const durationRatio = matchedBlock.duration_sec / p.duration_sec
+        if (durationRatio < 0.5) {
+          // Matched block is less than 50% of planned duration - use synthetic instead
+          shouldUseSynthetic = true
+        }
+      }
+    }
+
+    willUseSyntheticBlock.push(shouldUseSynthetic)
+  }
+
+  // Second pass: Calculate expected time windows for synthetic block creation
+  // Use actual detected end times for GOOD matches, planned times for synthetic blocks
+  let cumulativeExpectedTime = 0
+  const expectedTimeWindows: Array<{ start: number; end: number }> = []
+  for (let i = 0; i < flattenedSegments.length; i++) {
+    const p = flattenedSegments[i]!
+    const match = matches[i]
+    const useSynthetic = willUseSyntheticBlock[i]!
+
+    let actualEnd = cumulativeExpectedTime + p.duration_sec
+
+    // Only use detected block end time if it's a GOOD match (not being replaced by synthetic)
+    if (!useSynthetic && match && !match.skipped && match.detected_index !== null) {
+      const adjustedBlock = adjustedDetectedBlocks[match.detected_index]
+      if (adjustedBlock) {
+        // Use the actual end time from the (possibly truncated) detected block
+        actualEnd = adjustedBlock.end_sec
+      }
+    }
+    // For synthetic blocks, use planned duration to calculate end time
+
+    expectedTimeWindows.push({
+      start: cumulativeExpectedTime,
+      end: Math.min(actualEnd, powerStream.length), // Cap at end of power stream
+    })
+    cumulativeExpectedTime = actualEnd
+  }
+
+  const segmentAnalyses: SegmentAnalysis[] = flattenedSegments.map((planned, index) => {
+    const match = matches.find((m) => m.planned_index === planned.index)
+    const shouldUseSyntheticBlock = willUseSyntheticBlock[index]!
+
+    if (shouldUseSyntheticBlock) {
+      // No detected block match - create synthetic block from raw power data in expected window
+      const expectedWindow = expectedTimeWindows[index]!
+      const syntheticStart = expectedWindow.start
+      const syntheticEnd = Math.min(expectedWindow.end, powerStream.length)
+      const syntheticPower = powerStream.slice(syntheticStart, syntheticEnd)
+
+      if (syntheticPower.length === 0) {
+        // Truly skipped - no data available
+        return {
+          segment_index: planned.index,
+          segment_name: planned.name,
+          segment_type: planned.type,
+          match_quality: 'skipped' as const,
+          planned_duration_sec: planned.duration_sec,
+          planned_power_low: planned.power_low,
+          planned_power_high: planned.power_high,
+          planned_zone: planned.target_zone,
+          actual_start_sec: null,
+          actual_end_sec: null,
+          actual_duration_sec: null,
+          actual_avg_power: null,
+          actual_max_power: null,
+          actual_min_power: null,
+          actual_dominant_zone: null,
+          time_in_zone: null,
+          scores: {
+            power_compliance: 0,
+            zone_compliance: 0,
+            duration_compliance: 0,
+            overall_segment_score: 0,
+          },
+          assessment: 'Segment was skipped or not detected',
+        }
+      }
+
+      // Create synthetic detected block from the expected time window
+      const avgPower = syntheticPower.reduce((a, b) => a + b, 0) / syntheticPower.length
+      const maxPower = Math.max(...syntheticPower)
+      const minPower = Math.min(...syntheticPower)
+
+      const syntheticZoneTimeline = createZoneTimeline(syntheticPower, zones)
+      const zoneCounts: Record<number, number> = {}
+      for (const zone of syntheticZoneTimeline) {
+        zoneCounts[zone] = (zoneCounts[zone] || 0) + 1
+      }
+      const totalCounts = Object.values(zoneCounts).reduce((a, b) => a + b, 0)
+      const zoneDistribution = {
+        z1: totalCounts > 0 ? (zoneCounts[1] || 0) / totalCounts : 0,
+        z2: totalCounts > 0 ? (zoneCounts[2] || 0) / totalCounts : 0,
+        z3: totalCounts > 0 ? (zoneCounts[3] || 0) / totalCounts : 0,
+        z4: totalCounts > 0 ? (zoneCounts[4] || 0) / totalCounts : 0,
+        z5: totalCounts > 0 ? (zoneCounts[5] || 0) / totalCounts : 0,
+      }
+
+      let dominantZone = 1
+      let maxCount = 0
+      for (const [zone, count] of Object.entries(zoneCounts)) {
+        if (count > maxCount) {
+          maxCount = count
+          dominantZone = Number(zone)
+        }
+      }
+
+      const syntheticDetected: DetectedBlock = {
+        start_sec: syntheticStart,
+        end_sec: syntheticEnd,
+        duration_sec: syntheticEnd - syntheticStart,
+        dominant_zone: dominantZone,
+        avg_power: Math.round(avgPower),
+        max_power: maxPower,
+        min_power: minPower,
+        zone_distribution: zoneDistribution,
+      }
+
+      // Use synthetic block for compliance analysis
+      var detected: DetectedBlock = syntheticDetected
+      // Fall through to compliance calculation below
+    } else {
+      var detected = adjustedDetectedBlocks[match.detected_index]!
+    }
 
     // Calculate compliance scores
     const powerCompliance = calculatePowerCompliance(
@@ -1022,7 +1464,12 @@ export function analyzeWorkoutCompliance(
       planned.power_high
     )
 
-    const zoneCompliance = calculateZoneCompliance(detected.zone_distribution, planned.target_zone)
+    const zoneCompliance = calculateZoneCompliance(
+      detected.zone_distribution,
+      planned.target_zone,
+      planned.power_low_pct,
+      planned.power_high_pct
+    )
 
     const durationCompliance = calculateDurationCompliance(
       detected.duration_sec,
@@ -1094,10 +1541,11 @@ export function analyzeWorkoutCompliance(
     overall,
     segments: segmentAnalyses,
     metadata: {
-      algorithm_version: '1.1.0',
+      algorithm_version: '1.2.0',
       power_data_quality: powerDataQuality,
       adaptive_parameters: adaptiveParams,
       detection_strategy: detectionStrategy,
+      detected_pauses: detectedPauses.length > 0 ? detectedPauses : undefined,
     },
   }
 }
