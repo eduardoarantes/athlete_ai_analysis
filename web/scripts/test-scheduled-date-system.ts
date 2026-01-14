@@ -137,20 +137,17 @@ async function testWorkflow() {
 
   // Add workout to 2026-01-13 (Monday)
   console.log('   Adding workout to 2026-01-13 (Monday)...')
-  const addWorkout1Response = await fetch(
-    `http://localhost:3000/api/schedule/${instanceId}/workouts/add`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Cookie: `sb-access-token=${accessToken}; sb-refresh-token=${signInData.session.refresh_token}`,
-      },
-      body: JSON.stringify({
-        workout_id: 'gwqknjoUfr', // Replace with actual library workout ID
-        target_date: '2026-01-13',
-      }),
-    }
-  )
+  const addWorkout1Response = await fetch('http://localhost:3000/api/schedule/workouts/add', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Cookie: `sb-access-token=${accessToken}; sb-refresh-token=${signInData.session.refresh_token}`,
+    },
+    body: JSON.stringify({
+      workout_id: 'gwqknjoUfr', // Replace with actual library workout ID
+      target_date: '2026-01-13',
+    }),
+  })
 
   if (!addWorkout1Response.ok) {
     const error = await addWorkout1Response.text()
@@ -165,20 +162,17 @@ async function testWorkflow() {
 
   // Add workout to 2026-01-15 (Wednesday)
   console.log('   Adding workout to 2026-01-15 (Wednesday)...')
-  const addWorkout2Response = await fetch(
-    `http://localhost:3000/api/schedule/${instanceId}/workouts/add`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Cookie: `sb-access-token=${accessToken}; sb-refresh-token=${signInData.session.refresh_token}`,
-      },
-      body: JSON.stringify({
-        workout_id: 'gwqknjoUfr',
-        target_date: '2026-01-15',
-      }),
-    }
-  )
+  const addWorkout2Response = await fetch('http://localhost:3000/api/schedule/workouts/add', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Cookie: `sb-access-token=${accessToken}; sb-refresh-token=${signInData.session.refresh_token}`,
+    },
+    body: JSON.stringify({
+      workout_id: 'gwqknjoUfr',
+      target_date: '2026-01-15',
+    }),
+  })
 
   if (!addWorkout2Response.ok) {
     const error = await addWorkout2Response.text()
@@ -192,20 +186,17 @@ async function testWorkflow() {
 
   // Add workout to 2026-01-20 (Monday, week 2)
   console.log('   Adding workout to 2026-01-20 (Monday, Week 2)...')
-  const addWorkout3Response = await fetch(
-    `http://localhost:3000/api/schedule/${instanceId}/workouts/add`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Cookie: `sb-access-token=${accessToken}; sb-refresh-token=${signInData.session.refresh_token}`,
-      },
-      body: JSON.stringify({
-        workout_id: 'gwqknjoUfr',
-        target_date: '2026-01-20',
-      }),
-    }
-  )
+  const addWorkout3Response = await fetch('http://localhost:3000/api/schedule/workouts/add', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Cookie: `sb-access-token=${accessToken}; sb-refresh-token=${signInData.session.refresh_token}`,
+    },
+    body: JSON.stringify({
+      workout_id: 'gwqknjoUfr',
+      target_date: '2026-01-20',
+    }),
+  })
 
   if (!addWorkout3Response.ok) {
     const error = await addWorkout3Response.text()

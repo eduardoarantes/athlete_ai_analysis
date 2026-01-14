@@ -1,9 +1,9 @@
 /**
  * Add Library Workout API
  *
- * POST /api/schedule/[instanceId]/workouts/add
+ * POST /api/schedule/workouts/add
  *
- * Adds a workout from the library directly to the plan's weekly_plan structure.
+ * Adds a workout from the library to the user's MANUAL_WORKOUTS instance.
  * This replaces the old override-based approach with direct plan_data modification.
  */
 
@@ -24,10 +24,6 @@ const addLibraryWorkoutSchema = z.object({
   target_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD format'),
 })
 
-interface RouteParams {
-  params: Promise<{ instanceId: string }>
-}
-
 /**
  * Calculate week number from plan start date and target date
  */
@@ -46,10 +42,8 @@ function getWeekdayName(dateString: string): string {
   return getWeekdayNameFromIndex(date.getDay())
 }
 
-export async function POST(request: NextRequest, { params }: RouteParams): Promise<NextResponse> {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    const { instanceId } = await params
-
     // Get authenticated user
     const supabase = await createClient()
     const {
@@ -82,7 +76,7 @@ export async function POST(request: NextRequest, { params }: RouteParams): Promi
       return NextResponse.json({ error: 'Cannot add workout to past date' }, { status: 409 })
     }
 
-    // CRITICAL: Library workouts ALWAYS go to MANUAL_WORKOUTS instance
+    // Library workouts always go to MANUAL_WORKOUTS instance
     // Find the user's MANUAL_WORKOUTS instance
     const { data: manualWorkoutsInstance, error: manualWorkoutsError } = await supabase
       .from('plan_instances')
@@ -94,22 +88,20 @@ export async function POST(request: NextRequest, { params }: RouteParams): Promi
     if (manualWorkoutsError || !manualWorkoutsInstance) {
       errorLogger.logWarning('MANUAL_WORKOUTS instance not found', {
         userId: user.id,
-        path: `/api/schedule/${instanceId}/workouts/add`,
-        metadata: { requestedInstanceId: instanceId },
+        path: '/api/schedule/workouts/add',
       })
       return NextResponse.json({ error: 'MANUAL_WORKOUTS instance not found' }, { status: 404 })
     }
 
-    // Use MANUAL_WORKOUTS instance, not the instanceId from the URL
     const instance = manualWorkoutsInstance
 
     // Fetch workout from Python API
     errorLogger.logInfo('Fetching workout from Python API', {
       userId: user.id,
-      path: `/api/schedule/${instanceId}/workouts/add`,
+      path: '/api/schedule/workouts/add',
       metadata: {
         workout_id,
-        actualInstanceId: instance.id,
+        instanceId: instance.id,
         instanceType: 'manual_workouts',
       },
     })
@@ -122,7 +114,7 @@ export async function POST(request: NextRequest, { params }: RouteParams): Promi
     if (workoutResponse.statusCode !== 200) {
       errorLogger.logWarning('Failed to fetch workout from Python API', {
         userId: user.id,
-        path: `/api/schedule/${instanceId}/workouts/add`,
+        path: '/api/schedule/workouts/add',
         metadata: { workout_id, statusCode: workoutResponse.statusCode },
       })
 
@@ -164,7 +156,7 @@ export async function POST(request: NextRequest, { params }: RouteParams): Promi
     const newWorkout: Workout = {
       id: crypto.randomUUID(),
       weekday,
-      scheduled_date: target_date, // Direct date reference - no more calculations!
+      scheduled_date: target_date,
       name: libraryWorkout.name,
       type: libraryWorkout.type,
       tss: libraryWorkout.base_tss,
@@ -194,11 +186,11 @@ export async function POST(request: NextRequest, { params }: RouteParams): Promi
     if (updateError) {
       errorLogger.logError(new Error(`Failed to update plan_data: ${updateError.message}`), {
         userId: user.id,
-        path: `/api/schedule/${instanceId}/workouts/add`,
+        path: '/api/schedule/workouts/add',
         metadata: {
           workout_id,
           target_date,
-          actualInstanceId: instance.id,
+          instanceId: instance.id,
         },
       })
       return NextResponse.json({ error: 'Failed to add workout to plan' }, { status: 500 })
@@ -206,15 +198,14 @@ export async function POST(request: NextRequest, { params }: RouteParams): Promi
 
     errorLogger.logInfo('Library workout added to MANUAL_WORKOUTS', {
       userId: user.id,
-      path: `/api/schedule/${instanceId}/workouts/add`,
+      path: '/api/schedule/workouts/add',
       metadata: {
         workout_id,
         target_date,
         workout_name: libraryWorkout.name,
         week_number: weekNumber,
         weekday,
-        actualInstanceId: instance.id,
-        requestedInstanceId: instanceId,
+        instanceId: instance.id,
       },
     })
 
@@ -225,7 +216,7 @@ export async function POST(request: NextRequest, { params }: RouteParams): Promi
     })
   } catch (error) {
     errorLogger.logError(error as Error, {
-      path: '/api/schedule/[instanceId]/workouts/add',
+      path: '/api/schedule/workouts/add',
       method: 'POST',
     })
 

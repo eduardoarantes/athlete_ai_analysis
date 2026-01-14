@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { ChevronLeft, ChevronRight, Loader2, ExternalLink } from 'lucide-react'
 import { getActivityIcon, getActivityColors } from '@/lib/constants/activity-styles'
+import { CALENDAR_DAYS_SHORT } from '@/lib/constants/weekdays'
 
 interface Activity {
   id: string
@@ -215,7 +216,7 @@ export function ActivitiesCalendar({ sportTypeFilter }: ActivitiesCalendarProps)
       <Card className="overflow-hidden">
         <div className="grid grid-cols-7 gap-px bg-muted">
           {/* Day Headers */}
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+          {CALENDAR_DAYS_SHORT.map((day) => (
             <div key={day} className="bg-background p-2 text-center text-sm font-medium">
               {day}
             </div>

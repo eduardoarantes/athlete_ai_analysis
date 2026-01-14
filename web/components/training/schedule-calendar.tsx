@@ -36,6 +36,7 @@ import {
   CalendarDayContextMenu,
 } from '@/components/schedule'
 import { errorLogger } from '@/lib/monitoring/error-logger'
+import { CALENDAR_DAYS_SHORT } from '@/lib/constants/weekdays'
 
 interface ScheduleCalendarProps {
   instances: PlanInstance[]
@@ -44,8 +45,6 @@ interface ScheduleCalendarProps {
   /** Sidebar content to render inside the DnD context (for library workout drag) */
   sidebarContent?: React.ReactNode
 }
-
-const DAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 // Removed: convertLibrarySegmentsToSchedule - segments are no longer used
 // Library workouts now use the structure field directly
@@ -729,7 +728,7 @@ export function ScheduleCalendar({
     const rollback = handleOptimisticAddLibrary(workout, targetDate, primaryInstanceId)
 
     try {
-      const response = await fetch(`/api/schedule/${primaryInstanceId}/workouts/add`, {
+      const response = await fetch('/api/schedule/workouts/add', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -898,7 +897,7 @@ export function ScheduleCalendar({
       <Card className="overflow-hidden">
         <div className="grid grid-cols-7 gap-px bg-muted">
           {/* Header Row */}
-          {DAYS_SHORT.map((day) => (
+          {CALENDAR_DAYS_SHORT.map((day) => (
             <div key={day} className="bg-background p-2 text-center text-sm font-medium">
               {day}
             </div>

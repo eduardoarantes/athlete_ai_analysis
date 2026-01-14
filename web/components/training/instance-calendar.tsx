@@ -9,6 +9,7 @@ import { ChevronLeft, ChevronRight, Calendar, Zap } from 'lucide-react'
 import { WorkoutCard } from './workout-card'
 import { WorkoutDetailModal } from './workout-detail-modal'
 import type { PlanInstance, TrainingPlanData, Workout, WeeklyPlan } from '@/lib/types/training-plan'
+import { CALENDAR_DAYS_LONG, CALENDAR_DAYS_SHORT } from '@/lib/constants/weekdays'
 
 interface InstanceCalendarProps {
   instance: PlanInstance
@@ -16,8 +17,6 @@ interface InstanceCalendarProps {
   isAdmin?: boolean
 }
 
-const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-const DAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const WEEKS_PER_PAGE = 4
 
 export function InstanceCalendar({ instance, planData, isAdmin = false }: InstanceCalendarProps) {
@@ -80,7 +79,7 @@ export function InstanceCalendar({ instance, planData, isAdmin = false }: Instan
     const dayOfWeek = weekStartDate.getDay()
     weekStartDate.setDate(weekStartDate.getDate() - dayOfWeek)
 
-    return DAYS_OF_WEEK.map((_, index) => {
+    return CALENDAR_DAYS_LONG.map((_, index) => {
       const date = new Date(weekStartDate)
       date.setDate(date.getDate() + index)
       return date
@@ -92,7 +91,7 @@ export function InstanceCalendar({ instance, planData, isAdmin = false }: Instan
     const map = new Map<number, Workout>()
     if (weekData?.workouts) {
       weekData.workouts.forEach((workout) => {
-        const dayIndex = DAYS_OF_WEEK.findIndex(
+        const dayIndex = CALENDAR_DAYS_LONG.findIndex(
           (d) => d.toLowerCase() === workout.weekday.toLowerCase()
         )
         if (dayIndex !== -1) {
@@ -168,7 +167,7 @@ export function InstanceCalendar({ instance, planData, isAdmin = false }: Instan
         <div className="grid grid-cols-8 gap-px bg-muted">
           {/* Header Row */}
           <div className="bg-background p-2 text-center text-sm font-medium">Week</div>
-          {DAYS_SHORT.map((day) => (
+          {CALENDAR_DAYS_SHORT.map((day) => (
             <div key={day} className="bg-background p-2 text-center text-sm font-medium">
               {day}
             </div>
@@ -194,7 +193,7 @@ export function InstanceCalendar({ instance, planData, isAdmin = false }: Instan
                 </div>
 
                 {/* Day Cells */}
-                {DAYS_OF_WEEK.map((day, dayIndex) => {
+                {CALENDAR_DAYS_LONG.map((day, dayIndex) => {
                   const workout = workoutsByDay.get(dayIndex)
                   const date = weekDates[dayIndex]
                   if (!date) return null

@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { POST } from '../[instanceId]/workouts/add/route'
+import { POST } from '../workouts/add/route'
 import { NextRequest } from 'next/server'
 
 // Mock modules
@@ -141,21 +141,16 @@ describe('Library Workout Addition', () => {
         invokePythonApi: vi.fn().mockResolvedValue(mockPythonApiResponse),
       }))
 
-      // Create request to add library workout to Build Phase (but backend will redirect to MANUAL_WORKOUTS)
-      const request = new NextRequest(
-        'http://localhost:3000/api/schedule/build-phase-instance-id/workouts/add',
-        {
-          method: 'POST',
-          body: JSON.stringify({
-            workout_id: 'lib-workout-123',
-            target_date: '2026-01-20',
-          }),
-        }
-      )
-
-      const response = await POST(request, {
-        params: Promise.resolve({ instanceId: buildPhaseInstanceId }),
+      // Create request to add library workout (always goes to MANUAL_WORKOUTS)
+      const request = new NextRequest('http://localhost:3000/api/schedule/workouts/add', {
+        method: 'POST',
+        body: JSON.stringify({
+          workout_id: 'lib-workout-123',
+          target_date: '2026-01-20',
+        }),
       })
+
+      const response = await POST(request)
 
       // EXPECT THIS TO FAIL: Current code adds to Build Phase instead of MANUAL_WORKOUTS
       // This test documents the current WRONG behavior
@@ -208,30 +203,25 @@ describe('Library Workout Addition', () => {
         return {}
       })
 
-      const request = new NextRequest(
-        `http://localhost:3000/api/schedule/${manualWorkoutsInstanceId}/workouts/add`,
-        {
-          method: 'POST',
-          body: JSON.stringify({
-            workout: {
-              id: 'lib-workout-123',
-              name: '3x12 Tempo',
-              tss: 63.5,
-              type: 'tempo',
-              structure: {
-                primaryIntensityMetric: 'percentOfFtp',
-                primaryLengthMetric: 'duration',
-                structure: [],
-              },
+      const request = new NextRequest('http://localhost:3000/api/schedule/workouts/add', {
+        method: 'POST',
+        body: JSON.stringify({
+          workout: {
+            id: 'lib-workout-123',
+            name: '3x12 Tempo',
+            tss: 63.5,
+            type: 'tempo',
+            structure: {
+              primaryIntensityMetric: 'percentOfFtp',
+              primaryLengthMetric: 'duration',
+              structure: [],
             },
-            targetDate: '2026-01-20',
-          }),
-        }
-      )
-
-      const response = await POST(request, {
-        params: Promise.resolve({ instanceId: manualWorkoutsInstanceId }),
+          },
+          targetDate: '2026-01-20',
+        }),
       })
+
+      const response = await POST(request)
 
       expect(response.status).toBe(200)
 
