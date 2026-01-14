@@ -8,6 +8,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import type { WorkoutComplianceAnalysis } from '../../compliance-analysis-service'
+import { flattenWorkoutSegments } from '../../compliance-analysis-service'
 import type { WorkoutActivityPair } from '../fixtures/compliance-test-fixtures'
 
 export interface ComplianceReportEntry {
@@ -324,70 +325,52 @@ function formatSegmentDuration(durationMin: number): string {
 }
 
 function buildPowerProfileSVG(
-  segments: ComplianceReportEntry['fixture']['segments'],
+  plannedSegments: Array<{
+    duration_sec: number
+    power_low: number
+    power_high: number
+    type: string
+    name?: string
+  }>,
   ftp: number,
   powerStream?: number[]
 ): string {
-  const width = 600
-  const chartHeight = 170
+  const baseWidth = 600
+  const chartHeight = 200
   const graphHeight = 140
   const topMargin = 20
 
-  // Expand interval sets
-  interface ExpandedSegment {
-    type: string
-    duration_min: number
-    power_low_pct: number
-    power_high_pct: number
-    description?: string | undefined
-  }
+  if (plannedSegments.length === 0) return ''
 
-  const expanded: ExpandedSegment[] = []
-  segments.forEach((seg) => {
-    if (seg.sets != null && seg.work && seg.recovery) {
-      for (let i = 0; i < seg.sets; i++) {
-        expanded.push({
-          type: 'work',
-          duration_min: seg.work.duration_min,
-          power_low_pct: seg.work.power_low_pct,
-          power_high_pct: seg.work.power_high_pct,
-          description: seg.description,
-        })
-        expanded.push({
-          type: 'recovery',
-          duration_min: seg.recovery.duration_min,
-          power_low_pct: seg.recovery.power_low_pct,
-          power_high_pct: seg.recovery.power_high_pct,
-        })
-      }
-    } else {
-      expanded.push({
-        type: seg.type,
-        duration_min: seg.duration_min || 0,
-        power_low_pct: seg.power_low_pct || 50,
-        power_high_pct: seg.power_high_pct || 60,
-        description: seg.description,
-      })
-    }
-  })
+  // Calculate planned duration
+  const totalPlannedSec = plannedSegments.reduce((sum, seg) => sum + seg.duration_sec, 0)
+  const actualDurationSec = powerStream ? powerStream.length : totalPlannedSec
 
-  const totalDurationMin = expanded.reduce((sum, seg) => sum + seg.duration_min, 0)
-  if (totalDurationMin === 0 || expanded.length === 0) return ''
+  // Use actual duration for chart width if activity ran longer
+  const totalDurationSec = Math.max(totalPlannedSec, actualDurationSec)
+  const width = baseWidth
 
-  const getBarHeight = (powerLowPct: number, powerHighPct: number) => {
-    const avgPercent = (powerLowPct + powerHighPct) / 2
-    const heightPercent = Math.min(200, Math.max(20, avgPercent))
+  const getBarHeight = (powerLow: number, powerHigh: number) => {
+    const avgPower = (powerLow + powerHigh) / 2
+    const powerPct = (avgPower / ftp) * 100
+    const heightPercent = Math.min(200, Math.max(20, powerPct))
     return (heightPercent / 200) * graphHeight
   }
 
+  const getZoneFromPower = (powerLow: number, powerHigh: number): number => {
+    const avgPower = (powerLow + powerHigh) / 2
+    const powerPct = (avgPower / ftp) * 100
+    return getZoneFromPowerPct(powerPct)
+  }
+
+  // Build planned workout bars
   let xOffset = 0
-  const bars = expanded
+  const bars = plannedSegments
     .map((seg) => {
-      const segWidth = (seg.duration_min / totalDurationMin) * width
-      const barHeight = getBarHeight(seg.power_low_pct, seg.power_high_pct)
+      const segWidth = (seg.duration_sec / totalDurationSec) * width
+      const barHeight = getBarHeight(seg.power_low, seg.power_high)
       const y = topMargin + graphHeight - barHeight
-      const avgPct = (seg.power_low_pct + seg.power_high_pct) / 2
-      const zone = getZoneFromPowerPct(avgPct)
+      const zone = getZoneFromPower(seg.power_low, seg.power_high)
       const color = getZoneColor(zone)
 
       const bar = `
@@ -402,7 +385,6 @@ function buildPowerProfileSVG(
   // Build actual power overlay line
   let powerOverlay = ''
   if (powerStream && powerStream.length > 0) {
-    const totalDurationSec = totalDurationMin * 60
     // Downsample power stream to ~300 points for smooth rendering
     const sampleRate = Math.max(1, Math.floor(powerStream.length / 300))
     const sampledPower: number[] = []
@@ -416,14 +398,10 @@ function buildPowerProfileSVG(
       sampledPower.push(sum / windowSize)
     }
 
-    // Calculate the time scale factor (actual duration vs planned duration)
-    const actualDurationSec = powerStream.length
-    const timeScale = Math.min(1, totalDurationSec / actualDurationSec)
-
-    // Generate SVG path points
+    // Generate SVG path points (no time scaling - show actual duration)
     const points = sampledPower.map((power, i) => {
       const timeSec = i * sampleRate
-      const x = (timeSec / actualDurationSec) * timeScale * width
+      const x = (timeSec / totalDurationSec) * width
       // Convert power to % of FTP and map to y coordinate
       const powerPct = (power / ftp) * 100
       const clampedPct = Math.min(200, Math.max(0, powerPct))
@@ -451,8 +429,18 @@ function buildPowerProfileSVG(
   const gridY2 = topMargin + graphHeight * 0.5
   const gridY3 = topMargin + graphHeight * 0.75
 
+  // Store power stream data as data attribute for hover functionality
+  const powerStreamData = powerStream ? JSON.stringify(powerStream) : '[]'
+
   return `
-    <svg viewBox="0 0 ${width} ${chartHeight}" class="power-profile-svg">
+    <svg viewBox="0 0 ${width} ${chartHeight}" class="power-profile-svg"
+         data-width="${width}"
+         data-height="${chartHeight}"
+         data-graph-height="${graphHeight}"
+         data-top-margin="${topMargin}"
+         data-ftp="${ftp}"
+         data-duration-sec="${totalDurationSec}"
+         data-power-stream='${powerStreamData}'>
       <line x1="0" y1="${gridY1}" x2="${width}" y2="${gridY1}" stroke="#e4e6e8" stroke-width="1" stroke-dasharray="4 4"/>
       <line x1="0" y1="${gridY2}" x2="${width}" y2="${gridY2}" stroke="#e4e6e8" stroke-width="1" stroke-dasharray="4 4"/>
       <line x1="0" y1="${gridY3}" x2="${width}" y2="${gridY3}" stroke="#e4e6e8" stroke-width="1" stroke-dasharray="4 4"/>
@@ -460,6 +448,18 @@ function buildPowerProfileSVG(
       <text x="5" y="${ftpY - 5}" font-size="12" font-weight="bold" fill="#3b82f6">FTP (${ftp}W)</text>
       ${bars}
       ${powerOverlay}
+
+      <!-- Hover tracking elements -->
+      <g class="hover-group" style="display: none;">
+        <line class="hover-line" x1="0" y1="${topMargin}" x2="0" y2="${topMargin + graphHeight}" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3 3"/>
+        <circle class="hover-dot" cx="0" cy="0" r="3" fill="#ef4444" stroke="#fff" stroke-width="1.5"/>
+        <rect class="hover-tooltip-bg" x="0" y="0" width="70" height="24" rx="2" fill="#1e293b" opacity="0.95"/>
+        <text class="hover-tooltip-time" x="0" y="0" font-size="9" font-weight="600" fill="#fff" text-anchor="start"></text>
+        <text class="hover-tooltip-power" x="0" y="0" font-size="9" fill="#e2e8f0" text-anchor="start"></text>
+      </g>
+
+      <!-- Transparent overlay for mouse events -->
+      <rect class="hover-overlay" x="0" y="0" width="${width}" height="${chartHeight}" fill="transparent" style="cursor: crosshair;"/>
     </svg>
   `
 }
@@ -575,20 +575,31 @@ function buildPowerProfile(entry: ComplianceReportEntry): string {
   const ftp = fixture.athleteFtp
   const powerStream = fixture.powerStream
 
+  // Flatten workout using structure if available (for accurate chart rendering)
+  const plannedSegments = flattenWorkoutSegments(
+    fixture.segments,
+    ftp,
+    fixture.structure
+  )
+
   // Build workout JSON for display
   const workoutJson = {
     name: fixture.workoutName,
     athlete_ftp: fixture.athleteFtp,
-    segments: segments.map((seg) => ({
-      type: seg.type,
-      duration_min: seg.duration_min,
-      power_low_pct: seg.power_low_pct,
-      power_high_pct: seg.power_high_pct,
-      description: seg.description,
-      ...(seg.sets != null && { sets: seg.sets }),
-      ...(seg.work && { work: seg.work }),
-      ...(seg.recovery && { recovery: seg.recovery }),
-    })),
+    ...(fixture.structure
+      ? { structure: fixture.structure }
+      : {
+          segments: segments.map((seg) => ({
+            type: seg.type,
+            duration_min: seg.duration_min,
+            power_low_pct: seg.power_low_pct,
+            power_high_pct: seg.power_high_pct,
+            description: seg.description,
+            ...(seg.sets != null && { sets: seg.sets }),
+            ...(seg.work && { work: seg.work }),
+            ...(seg.recovery && { recovery: seg.recovery }),
+          })),
+        }),
   }
 
   return `
@@ -602,7 +613,7 @@ function buildPowerProfile(entry: ComplianceReportEntry): string {
         <button class="json-toggle-btn" data-target="json-${fixture.activityId}">View JSON</button>
       </div>
       <div class="profile-chart">
-        ${buildPowerProfileSVG(segments, ftp, powerStream)}
+        ${buildPowerProfileSVG(plannedSegments, ftp, powerStream)}
       </div>
       <div class="workout-structure collapsible collapsed">
         <button class="collapsible-header" type="button">
@@ -1708,6 +1719,90 @@ function getInteractiveScript(): string {
         if (parent) {
           parent.classList.toggle('collapsed');
         }
+      });
+    });
+
+    // Power profile chart hover tracking
+    document.querySelectorAll('.power-profile-svg').forEach(svg => {
+      const overlay = svg.querySelector('.hover-overlay');
+      const hoverGroup = svg.querySelector('.hover-group');
+      const hoverLine = svg.querySelector('.hover-line');
+      const hoverDot = svg.querySelector('.hover-dot');
+      const tooltipBg = svg.querySelector('.hover-tooltip-bg');
+      const tooltipTime = svg.querySelector('.hover-tooltip-time');
+      const tooltipPower = svg.querySelector('.hover-tooltip-power');
+
+      if (!overlay || !hoverGroup) return;
+
+      // Parse data attributes
+      const width = parseFloat(svg.dataset.width);
+      const graphHeight = parseFloat(svg.dataset.graphHeight);
+      const topMargin = parseFloat(svg.dataset.topMargin);
+      const ftp = parseFloat(svg.dataset.ftp);
+      const durationSec = parseFloat(svg.dataset.durationSec);
+      const powerStream = JSON.parse(svg.dataset.powerStream || '[]');
+
+      if (powerStream.length === 0) return; // No power data
+
+      overlay.addEventListener('mouseenter', () => {
+        hoverGroup.style.display = 'block';
+      });
+
+      overlay.addEventListener('mouseleave', () => {
+        hoverGroup.style.display = 'none';
+      });
+
+      overlay.addEventListener('mousemove', (e) => {
+        // Get mouse position relative to SVG
+        const rect = svg.getBoundingClientRect();
+        const svgX = e.clientX - rect.left;
+        const svgY = e.clientY - rect.top;
+
+        // Convert screen coordinates to SVG viewBox coordinates
+        const viewBoxWidth = width;
+        const viewBoxHeight = parseFloat(svg.getAttribute('viewBox').split(' ')[3]);
+        const x = (svgX / rect.width) * viewBoxWidth;
+        const y = (svgY / rect.height) * viewBoxHeight;
+
+        // Calculate time and power at this position (no time scaling)
+        const actualDurationSec = powerStream.length;
+        const timeSec = Math.max(0, Math.min(actualDurationSec - 1, (x / width) * durationSec));
+        const timeIndex = Math.floor(timeSec);
+        const power = powerStream[timeIndex] || 0;
+
+        // Format time as MM:SS
+        const minutes = Math.floor(timeSec / 60);
+        const seconds = Math.floor(timeSec % 60);
+        const timeStr = minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+
+        // Calculate y position of power line at this time
+        const powerPct = (power / ftp) * 100;
+        const clampedPct = Math.min(200, Math.max(0, powerPct));
+        const powerY = topMargin + graphHeight - (clampedPct / 200) * graphHeight;
+
+        // Update hover line position
+        hoverLine.setAttribute('x1', x);
+        hoverLine.setAttribute('x2', x);
+
+        // Update hover dot position
+        hoverDot.setAttribute('cx', x);
+        hoverDot.setAttribute('cy', powerY);
+
+        // Position tooltip below chart, centered on vertical line
+        const tooltipWidth = 70;
+        const tooltipX = Math.max(0, Math.min(width - tooltipWidth, x - tooltipWidth / 2));
+        const tooltipY = topMargin + graphHeight + 8;
+
+        tooltipBg.setAttribute('x', tooltipX);
+        tooltipBg.setAttribute('y', tooltipY);
+
+        tooltipTime.setAttribute('x', tooltipX + 4);
+        tooltipTime.setAttribute('y', tooltipY + 10);
+        tooltipTime.textContent = timeStr;
+
+        tooltipPower.setAttribute('x', tooltipX + 4);
+        tooltipPower.setAttribute('y', tooltipY + 20);
+        tooltipPower.textContent = Math.round(power) + 'W';
       });
     });
   `
