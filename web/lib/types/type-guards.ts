@@ -173,17 +173,31 @@ export function assertWorkoutComplianceAnalysis(
 
 /**
  * Check if value has required properties of a Workout
+ * Validates all 11 Workout properties (2 required + 9 optional)
  */
 export function isWorkout(value: unknown): value is Workout {
   if (!isObject(value)) return false
 
-  return (
-    typeof value.weekday === 'string' &&
-    typeof value.name === 'string' &&
-    // Optional fields don't need to be present
-    (value.type === undefined || typeof value.type === 'string') &&
-    (value.tss === undefined || typeof value.tss === 'number')
-  )
+  // Required fields - must be strings
+  if (typeof value.weekday !== 'string' || typeof value.name !== 'string') {
+    return false
+  }
+
+  // Optional fields - must be correct type if present
+  if (value.id !== undefined && typeof value.id !== 'string') return false
+  if (value.scheduled_date !== undefined && typeof value.scheduled_date !== 'string') return false
+  if (value.description !== undefined && typeof value.description !== 'string') return false
+  if (value.detailed_description !== undefined && typeof value.detailed_description !== 'string')
+    return false
+  if (value.type !== undefined && typeof value.type !== 'string') return false
+  if (value.tss !== undefined && typeof value.tss !== 'number') return false
+  if (value.structure !== undefined && !isObject(value.structure)) return false
+  if (value.source !== undefined && !['library', 'llm'].includes(value.source as string))
+    return false
+  if (value.library_workout_id !== undefined && typeof value.library_workout_id !== 'string')
+    return false
+
+  return true
 }
 
 /**
