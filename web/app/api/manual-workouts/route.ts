@@ -17,6 +17,7 @@ import {
   createManualWorkout,
   addLibraryWorkout,
 } from '@/lib/services/manual-workout-service'
+import { isPastDate } from '@/lib/utils/date-utils'
 
 // Validation schemas
 const dateRangeSchema = z.object({
@@ -162,6 +163,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         )
       }
 
+      // Validate date is not in the past
+      if (isPastDate(validation.data.scheduled_date)) {
+        return NextResponse.json({ error: 'Cannot add workout to past date' }, { status: 409 })
+      }
+
       // Build input - use type assertion to satisfy exactOptionalPropertyTypes
       const input = {
         library_workout_id: validation.data.library_workout_id,
@@ -194,6 +200,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           { error: 'Invalid request body', details: validation.error.flatten() },
           { status: 400 }
         )
+      }
+
+      // Validate date is not in the past
+      if (isPastDate(validation.data.scheduled_date)) {
+        return NextResponse.json({ error: 'Cannot add workout to past date' }, { status: 409 })
       }
 
       // Build input - use type assertion to satisfy exactOptionalPropertyTypes

@@ -16,6 +16,7 @@ import {
   updateManualWorkout,
   deleteManualWorkout,
 } from '@/lib/services/manual-workout-service'
+import { isPastDate } from '@/lib/utils/date-utils'
 
 // Validation schema for PATCH request
 const updateManualWorkoutSchema = z.object({
@@ -132,6 +133,13 @@ export async function PATCH(request: NextRequest, { params }: RouteParams): Prom
         { error: 'Invalid request body', details: validation.error.flatten() },
         { status: 400 }
       )
+    }
+
+    // Validate date is not in the past (only if scheduled_date is being updated)
+    if (validation.data.scheduled_date !== undefined) {
+      if (isPastDate(validation.data.scheduled_date)) {
+        return NextResponse.json({ error: 'Cannot update workout to past date' }, { status: 409 })
+      }
     }
 
     // Check if workout exists and user owns it
