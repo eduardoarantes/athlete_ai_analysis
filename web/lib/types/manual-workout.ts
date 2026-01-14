@@ -15,7 +15,10 @@ import type { Workout } from './training-plan'
  * Manual workout row from the database
  * Maps directly to the manual_workouts table structure
  */
-export type ManualWorkout = Database['public']['Tables']['manual_workouts']['Row'] & {
+export type ManualWorkout = Omit<
+  Database['public']['Tables']['manual_workouts']['Row'],
+  'workout_data'
+> & {
   /** Full workout object including structure, intervals, TSS, etc. */
   workout_data: Workout
 }
@@ -26,7 +29,7 @@ export type ManualWorkout = Database['public']['Tables']['manual_workouts']['Row
  */
 export type CreateManualWorkoutInput = Omit<
   Database['public']['Tables']['manual_workouts']['Insert'],
-  'id' | 'user_id' | 'created_at' | 'updated_at'
+  'id' | 'user_id' | 'created_at' | 'updated_at' | 'workout_data'
 > & {
   /** Full workout object to store */
   workout_data: Workout
@@ -38,10 +41,10 @@ export type CreateManualWorkoutInput = Omit<
  */
 export type UpdateManualWorkoutInput = Omit<
   Database['public']['Tables']['manual_workouts']['Update'],
-  'id' | 'user_id' | 'created_at' | 'updated_at'
+  'id' | 'user_id' | 'created_at' | 'updated_at' | 'workout_data'
 > & {
   /** Partial workout object for updates */
-  workout_data?: Partial<Workout>
+  workout_data?: Workout
 }
 
 // =========================================================================
