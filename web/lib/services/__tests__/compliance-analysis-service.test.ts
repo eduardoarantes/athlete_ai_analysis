@@ -1921,6 +1921,121 @@ describe('Real Strava Data Integration Tests', () => {
     expect(result.segments.length).toBeGreaterThan(0)
   })
 
+  it('processes real activity 11241924282 (Tempo Repeats 3x15min)', () => {
+    const fixture = realFixtures.find((f) => f.activityId === '11241924282')!
+    expect(fixture).toBeDefined()
+    expect(fixture.powerStream.length).toBe(5102) // ~85 minutes
+    expect(fixture.structure).toBeDefined()
+
+    const result = analyzeWorkoutCompliance(
+      undefined,
+      fixture.powerStream,
+      fixture.athleteFtp,
+      fixture.structure
+    )
+
+    // Collect for report
+    reportEntries.push({ fixture, result, timestamp: new Date() })
+
+    expect(result.overall.score).toBeGreaterThanOrEqual(0)
+    expect(result.overall.score).toBeLessThanOrEqual(100)
+    expect(['A', 'B', 'C', 'D', 'F']).toContain(result.overall.grade)
+    expect(result.metadata.algorithm_version).toBe('1.2.0')
+    expect(result.segments.length).toBeGreaterThan(0)
+  })
+
+  it('processes real activity 11249429377 (Base Fitness Training 1.8hr)', () => {
+    const fixture = realFixtures.find((f) => f.activityId === '11249429377')!
+    expect(fixture).toBeDefined()
+    expect(fixture.powerStream.length).toBe(5868) // ~98 minutes
+    expect(fixture.structure).toBeDefined()
+
+    const result = analyzeWorkoutCompliance(
+      undefined,
+      fixture.powerStream,
+      fixture.athleteFtp,
+      fixture.structure
+    )
+
+    // Collect for report
+    reportEntries.push({ fixture, result, timestamp: new Date() })
+
+    expect(result.overall.score).toBeGreaterThanOrEqual(0)
+    expect(result.overall.score).toBeLessThanOrEqual(100)
+    expect(['A', 'B', 'C', 'D', 'F']).toContain(result.overall.grade)
+    expect(result.metadata.algorithm_version).toBe('1.2.0')
+    expect(result.segments.length).toBeGreaterThan(0)
+  })
+
+  it('processes real activity 10953881435 (FTP Over Unders 3 sets 8x1)', () => {
+    const fixture = realFixtures.find((f) => f.activityId === '10953881435')!
+    expect(fixture).toBeDefined()
+    expect(fixture.powerStream.length).toBe(2869) // ~48 minutes
+    expect(fixture.structure).toBeDefined()
+
+    const result = analyzeWorkoutCompliance(
+      undefined,
+      fixture.powerStream,
+      fixture.athleteFtp,
+      fixture.structure
+    )
+
+    // Collect for report
+    reportEntries.push({ fixture, result, timestamp: new Date() })
+
+    expect(result.overall.score).toBeGreaterThanOrEqual(0)
+    expect(result.overall.score).toBeLessThanOrEqual(100)
+    expect(['A', 'B', 'C', 'D', 'F']).toContain(result.overall.grade)
+    expect(result.metadata.algorithm_version).toBe('1.2.0')
+    expect(result.segments.length).toBeGreaterThan(0)
+  })
+
+  it('processes real activity 10906026493 (FTP Progression 2 5x7)', () => {
+    const fixture = realFixtures.find((f) => f.activityId === '10906026493')!
+    expect(fixture).toBeDefined()
+    expect(fixture.powerStream.length).toBe(5317) // ~89 minutes
+    expect(fixture.structure).toBeDefined()
+
+    const result = analyzeWorkoutCompliance(
+      undefined,
+      fixture.powerStream,
+      fixture.athleteFtp,
+      fixture.structure
+    )
+
+    // Collect for report
+    reportEntries.push({ fixture, result, timestamp: new Date() })
+
+    expect(result.overall.score).toBeGreaterThanOrEqual(0)
+    expect(result.overall.score).toBeLessThanOrEqual(100)
+    expect(['A', 'B', 'C', 'D', 'F']).toContain(result.overall.grade)
+    expect(result.metadata.algorithm_version).toBe('1.2.0')
+    expect(result.segments.length).toBeGreaterThan(0)
+  })
+
+  it('processes real activity 11739391851 (40/20s intervals)', () => {
+    const fixture = realFixtures.find((f) => f.activityId === '11739391851')!
+    expect(fixture).toBeDefined()
+    expect(fixture.powerStream.length).toBe(3544) // ~59 minutes
+    expect(fixture.structure).toBeDefined()
+
+    const result = analyzeWorkoutCompliance(
+      undefined,
+      fixture.powerStream,
+      fixture.athleteFtp,
+      fixture.structure
+    )
+
+    // Collect for report
+    reportEntries.push({ fixture, result, timestamp: new Date() })
+
+    expect(result.overall.score).toBeGreaterThanOrEqual(0)
+    expect(result.overall.score).toBeLessThanOrEqual(100)
+    expect(['A', 'B', 'C', 'D', 'F']).toContain(result.overall.grade)
+    expect(result.metadata.algorithm_version).toBe('1.2.0')
+    expect(result.segments.length).toBeGreaterThan(0)
+  })
+
   it('detects power dropouts in real data', () => {
     const fixture = realFixtures[0]!
 

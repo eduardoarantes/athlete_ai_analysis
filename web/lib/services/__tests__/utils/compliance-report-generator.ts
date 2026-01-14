@@ -324,6 +324,12 @@ function formatSegmentDuration(durationMin: number): string {
   return `${durationMin} min`
 }
 
+function formatTimeMMSS(totalSeconds: number): string {
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = Math.floor(totalSeconds % 60)
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`
+}
+
 function buildPowerProfileSVG(
   plannedSegments: Array<{
     duration_sec: number
@@ -333,7 +339,15 @@ function buildPowerProfileSVG(
     name?: string
   }>,
   ftp: number,
-  powerStream?: number[]
+  powerStream?: number[],
+  detectedPauses?: Array<{ start_sec: number; end_sec: number; duration_sec: number }>,
+  detectedSegments?: Array<{
+    start_time: number
+    end_time: number
+    quality: string
+    compliance_percentage: number
+    segment_index: number
+  }>
 ): string {
   const baseWidth = 600
   const chartHeight = 200
@@ -429,8 +443,88 @@ function buildPowerProfileSVG(
   const gridY2 = topMargin + graphHeight * 0.5
   const gridY3 = topMargin + graphHeight * 0.75
 
+  // Build pause indicators (visual boxes)
+  let pauseIndicators = ''
+  let pauseAnnotations = ''
+
+  if (detectedPauses && detectedPauses.length > 0) {
+    pauseIndicators = detectedPauses
+      .map((pause) => {
+        const x = (pause.start_sec / totalDurationSec) * width
+        const pauseWidth = (pause.duration_sec / totalDurationSec) * width
+        return `
+        <!-- Pause indicator box -->
+        <rect x="${x}" y="${topMargin}" width="${pauseWidth}" height="${graphHeight}"
+              fill="#fbbf24" opacity="0.2" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="3 2"/>
+      `
+      })
+      .join('')
+
+    // Build pause time annotations (below chart, angled text)
+    pauseAnnotations = detectedPauses
+      .map((pause) => {
+        const x = (pause.start_sec / totalDurationSec) * width
+        const pauseWidth = (pause.duration_sec / totalDurationSec) * width
+        const centerX = x + pauseWidth / 2
+        const durationMin = (pause.duration_sec / 60).toFixed(1)
+
+        return `
+        <!-- Pause time annotation -->
+        <line x1="${centerX}" y1="${topMargin + graphHeight}" x2="${centerX}" y2="${topMargin + graphHeight + 5}"
+              stroke="#f59e0b" stroke-width="1"/>
+        <text x="${centerX}" y="${topMargin + graphHeight + 18}"
+              font-size="8" font-weight="500" fill="#f59e0b" text-anchor="start"
+              transform="rotate(-45, ${centerX}, ${topMargin + graphHeight + 18})">
+          ${durationMin}m
+        </text>
+      `
+      })
+      .join('')
+  }
+
+  // Build detected segment overlays
+  let segmentOverlays = ''
+  if (detectedSegments && detectedSegments.length > 0) {
+    const getQualityColor = (quality: string) => {
+      switch (quality) {
+        case 'excellent':
+          return { fill: '#22c55e', stroke: '#16a34a' } // green
+        case 'good':
+          return { fill: '#84cc16', stroke: '#65a30d' } // lime
+        case 'fair':
+          return { fill: '#eab308', stroke: '#ca8a04' } // yellow
+        case 'poor':
+          return { fill: '#f97316', stroke: '#ea580c' } // orange
+        default:
+          return { fill: '#94a3b8', stroke: '#64748b' } // gray
+      }
+    }
+
+    segmentOverlays = detectedSegments
+      .map((seg) => {
+        const x = (seg.start_time / totalDurationSec) * width
+        const segWidth = ((seg.end_time - seg.start_time) / totalDurationSec) * width
+        const colors = getQualityColor(seg.quality)
+
+        return `
+        <!-- Detected segment overlay -->
+        <rect x="${x}" y="${topMargin}" width="${segWidth}" height="${graphHeight}"
+              fill="${colors.fill}" opacity="0.15" stroke="${colors.stroke}" stroke-width="2"/>
+      `
+      })
+      .join('')
+  }
+
   // Store power stream data as data attribute for hover functionality
   const powerStreamData = powerStream ? JSON.stringify(powerStream) : '[]'
+
+  // Store planned segments for hover tooltip segment identification
+  const segmentsData = JSON.stringify(
+    plannedSegments.map((seg) => ({
+      name: seg.name || seg.type,
+      duration_sec: seg.duration_sec,
+    }))
+  )
 
   return `
     <svg viewBox="0 0 ${width} ${chartHeight}" class="power-profile-svg"
@@ -440,7 +534,8 @@ function buildPowerProfileSVG(
          data-top-margin="${topMargin}"
          data-ftp="${ftp}"
          data-duration-sec="${totalDurationSec}"
-         data-power-stream='${powerStreamData}'>
+         data-power-stream='${powerStreamData}'
+         data-segments='${segmentsData}'>
       <line x1="0" y1="${gridY1}" x2="${width}" y2="${gridY1}" stroke="#e4e6e8" stroke-width="1" stroke-dasharray="4 4"/>
       <line x1="0" y1="${gridY2}" x2="${width}" y2="${gridY2}" stroke="#e4e6e8" stroke-width="1" stroke-dasharray="4 4"/>
       <line x1="0" y1="${gridY3}" x2="${width}" y2="${gridY3}" stroke="#e4e6e8" stroke-width="1" stroke-dasharray="4 4"/>
@@ -448,12 +543,20 @@ function buildPowerProfileSVG(
       <text x="5" y="${ftpY - 5}" font-size="12" font-weight="bold" fill="#3b82f6">FTP (${ftp}W)</text>
       ${bars}
       ${powerOverlay}
+      ${pauseIndicators}
+      ${pauseAnnotations}
+
+      <!-- Detected segments overlay (toggleable) -->
+      <g class="detected-segments-overlay">
+        ${segmentOverlays}
+      </g>
 
       <!-- Hover tracking elements -->
       <g class="hover-group" style="display: none;">
         <line class="hover-line" x1="0" y1="${topMargin}" x2="0" y2="${topMargin + graphHeight}" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3 3"/>
         <circle class="hover-dot" cx="0" cy="0" r="3" fill="#ef4444" stroke="#fff" stroke-width="1.5"/>
-        <rect class="hover-tooltip-bg" x="0" y="0" width="70" height="24" rx="2" fill="#1e293b" opacity="0.95"/>
+        <rect class="hover-tooltip-bg" x="0" y="0" width="90" height="36" rx="2" fill="#1e293b" opacity="0.95"/>
+        <text class="hover-tooltip-segment" x="0" y="0" font-size="8" font-weight="600" fill="#fbbf24" text-anchor="start"></text>
         <text class="hover-tooltip-time" x="0" y="0" font-size="9" font-weight="600" fill="#fff" text-anchor="start"></text>
         <text class="hover-tooltip-power" x="0" y="0" font-size="9" fill="#e2e8f0" text-anchor="start"></text>
       </g>
@@ -570,17 +673,26 @@ function buildWorkoutStructure(
 }
 
 function buildPowerProfile(entry: ComplianceReportEntry): string {
-  const { fixture } = entry
+  const { fixture, result } = entry
   const segments = fixture.segments
   const ftp = fixture.athleteFtp
   const powerStream = fixture.powerStream
+  const detectedPauses = result.metadata.detected_pauses
+
+  // Extract detected segments with timing information
+  // Filter out skipped segments (actual_start_sec/actual_end_sec will be null)
+  const detectedSegments = result.segments
+    .filter((seg) => seg.actual_start_sec !== null && seg.actual_end_sec !== null)
+    .map((seg) => ({
+      start_time: seg.actual_start_sec!,
+      end_time: seg.actual_end_sec!,
+      quality: seg.match_quality,
+      compliance_percentage: seg.scores.overall,
+      segment_index: seg.segment_index,
+    }))
 
   // Flatten workout using structure if available (for accurate chart rendering)
-  const plannedSegments = flattenWorkoutSegments(
-    fixture.segments,
-    ftp,
-    fixture.structure
-  )
+  const plannedSegments = flattenWorkoutSegments(fixture.segments, ftp, fixture.structure)
 
   // Build workout JSON for display
   const workoutJson = {
@@ -609,11 +721,13 @@ function buildPowerProfile(entry: ComplianceReportEntry): string {
         <div class="profile-legend">
           <span class="legend-planned">■ Planned</span>
           <span class="legend-actual">— Actual</span>
+          ${detectedPauses && detectedPauses.length > 0 ? '<span class="legend-pause">⚠ Pause</span>' : ''}
+          ${detectedSegments.length > 0 ? `<button class="segments-toggle-btn" data-activity="${fixture.activityId}">Show Detected Segments</button>` : ''}
         </div>
         <button class="json-toggle-btn" data-target="json-${fixture.activityId}">View JSON</button>
       </div>
       <div class="profile-chart">
-        ${buildPowerProfileSVG(plannedSegments, ftp, powerStream)}
+        ${buildPowerProfileSVG(plannedSegments, ftp, powerStream, detectedPauses, detectedSegments)}
       </div>
       <div class="workout-structure collapsible collapsed">
         <button class="collapsible-header" type="button">
@@ -1197,7 +1311,12 @@ function getStyles(): string {
       font-weight: 600;
     }
 
-    .json-toggle-btn {
+    .legend-pause {
+      color: #f59e0b;
+      font-weight: 600;
+    }
+
+    .json-toggle-btn, .segments-toggle-btn {
       background: #e2e8f0;
       border: none;
       padding: 0.25rem 0.5rem;
@@ -1208,8 +1327,22 @@ function getStyles(): string {
       transition: background 0.2s;
     }
 
-    .json-toggle-btn:hover {
+    .json-toggle-btn:hover, .segments-toggle-btn:hover {
       background: #cbd5e1;
+    }
+
+    .segments-toggle-btn {
+      background: #3b82f6;
+      color: white;
+      font-weight: 500;
+    }
+
+    .segments-toggle-btn:hover {
+      background: #2563eb;
+    }
+
+    .segments-toggle-btn.active {
+      background: #16a34a;
     }
 
     .profile-chart {
@@ -1221,6 +1354,15 @@ function getStyles(): string {
       height: auto;
       border-radius: 6px;
       background: white;
+    }
+
+    /* Hide detected segments by default */
+    .detected-segments-overlay {
+      display: none;
+    }
+
+    .detected-segments-overlay.visible {
+      display: block;
     }
 
     /* Workout Structure */
@@ -1677,6 +1819,8 @@ function getStyles(): string {
 
 function getInteractiveScript(): string {
   return `
+    // Initialize interactive features
+    function initInteractiveFeatures() {
     // Smooth scroll to activity when clicking overview table row
     document.querySelectorAll('.overview-table tr.clickable').forEach(row => {
       row.addEventListener('click', () => {
@@ -1712,6 +1856,23 @@ function getInteractiveScript(): string {
       });
     });
 
+    // Toggle detected segments overlay
+    document.querySelectorAll('.segments-toggle-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const activityId = btn.dataset.activity;
+        const powerProfile = btn.closest('.power-profile');
+        const segmentsOverlay = powerProfile.querySelector('.detected-segments-overlay');
+
+        if (segmentsOverlay) {
+          segmentsOverlay.classList.toggle('visible');
+          btn.classList.toggle('active');
+          btn.textContent = segmentsOverlay.classList.contains('visible')
+            ? 'Hide Detected Segments'
+            : 'Show Detected Segments';
+        }
+      });
+    });
+
     // Toggle collapsible sections
     document.querySelectorAll('.collapsible-header').forEach(header => {
       header.addEventListener('click', () => {
@@ -1729,6 +1890,7 @@ function getInteractiveScript(): string {
       const hoverLine = svg.querySelector('.hover-line');
       const hoverDot = svg.querySelector('.hover-dot');
       const tooltipBg = svg.querySelector('.hover-tooltip-bg');
+      const tooltipSegment = svg.querySelector('.hover-tooltip-segment');
       const tooltipTime = svg.querySelector('.hover-tooltip-time');
       const tooltipPower = svg.querySelector('.hover-tooltip-power');
 
@@ -1741,8 +1903,22 @@ function getInteractiveScript(): string {
       const ftp = parseFloat(svg.dataset.ftp);
       const durationSec = parseFloat(svg.dataset.durationSec);
       const powerStream = JSON.parse(svg.dataset.powerStream || '[]');
+      const segments = JSON.parse(svg.dataset.segments || '[]');
 
       if (powerStream.length === 0) return; // No power data
+
+      // Helper function to find which segment the current time is in
+      const findSegmentAtTime = (timeSec) => {
+        let cumulativeTime = 0;
+        for (let i = 0; i < segments.length; i++) {
+          const seg = segments[i];
+          if (timeSec < cumulativeTime + seg.duration_sec) {
+            return seg.name;
+          }
+          cumulativeTime += seg.duration_sec;
+        }
+        return segments[segments.length - 1]?.name || '';
+      };
 
       overlay.addEventListener('mouseenter', () => {
         hoverGroup.style.display = 'block';
@@ -1788,22 +1964,33 @@ function getInteractiveScript(): string {
         hoverDot.setAttribute('cx', x);
         hoverDot.setAttribute('cy', powerY);
 
+        // Find which segment we're in
+        const segmentName = findSegmentAtTime(timeSec);
+
         // Position tooltip below chart, centered on vertical line
-        const tooltipWidth = 70;
+        const tooltipWidth = 90;
         const tooltipX = Math.max(0, Math.min(width - tooltipWidth, x - tooltipWidth / 2));
         const tooltipY = topMargin + graphHeight + 8;
 
         tooltipBg.setAttribute('x', tooltipX);
         tooltipBg.setAttribute('y', tooltipY);
 
+        tooltipSegment.setAttribute('x', tooltipX + 4);
+        tooltipSegment.setAttribute('y', tooltipY + 10);
+        tooltipSegment.textContent = segmentName;
+
         tooltipTime.setAttribute('x', tooltipX + 4);
-        tooltipTime.setAttribute('y', tooltipY + 10);
+        tooltipTime.setAttribute('y', tooltipY + 21);
         tooltipTime.textContent = timeStr;
 
         tooltipPower.setAttribute('x', tooltipX + 4);
-        tooltipPower.setAttribute('y', tooltipY + 20);
+        tooltipPower.setAttribute('y', tooltipY + 32);
         tooltipPower.textContent = Math.round(power) + 'W';
       });
     });
+    } // End initInteractiveFeatures
+
+    // Call initialization immediately (script is at end of body, DOM is ready)
+    initInteractiveFeatures();
   `
 }
