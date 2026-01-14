@@ -873,7 +873,6 @@ export function matchSegments(
     // Only consider detected blocks that overlap with the expected time window
     // Allow small flexibility for late starts (max 60s), but be strict about end time
     // This prevents segments with overlapping power targets from stealing each other's time
-    const lateStartTolerance = Math.min(60, p.duration_sec * 0.2)
     const lateEndTolerance = Math.min(30, p.duration_sec * 0.1)
 
     const searchStart = Math.max(expectedWindow.start - 30, minNextStartTime) // Allow 30s early start but enforce sequential ordering
@@ -886,8 +885,7 @@ export function matchSegments(
 
       // Check if block overlaps with expected time window
       // Block must START before the search window ends AND END after it starts
-      const blockOverlapsWindow =
-        block.start_sec < searchEnd && block.end_sec > searchStart
+      const blockOverlapsWindow = block.start_sec < searchEnd && block.end_sec > searchStart
 
       if (!blockOverlapsWindow) continue
 
@@ -1256,7 +1254,6 @@ export function analyzeWorkoutCompliance(
 
     if (match && !match.skipped && match.detected_index !== null) {
       const detectedBlock = adjustedPauseFreeBlocks[match.detected_index]!
-      const expectedStart = cumulativeTime
       const expectedEnd = cumulativeTime + planned.duration_sec
 
       // If the detected block extends significantly beyond the expected end, truncate it
@@ -1269,7 +1266,9 @@ export function analyzeWorkoutCompliance(
         // Use pause-free power stream for statistics
         const blockPowerData = pauseFreeStream.slice(detectedBlock.start_sec, newEnd)
         const avgPower =
-          blockPowerData.length > 0 ? blockPowerData.reduce((a, b) => a + b, 0) / blockPowerData.length : 0
+          blockPowerData.length > 0
+            ? blockPowerData.reduce((a, b) => a + b, 0) / blockPowerData.length
+            : 0
         const maxPower = blockPowerData.length > 0 ? Math.max(...blockPowerData) : 0
         const minPower = blockPowerData.length > 0 ? Math.min(...blockPowerData) : 0
 
@@ -1453,6 +1452,12 @@ export function analyzeWorkoutCompliance(
       var detected: DetectedBlock = syntheticDetected
       // Fall through to compliance calculation below
     } else {
+      // Should have a valid match with detected_index
+      if (!match || match.detected_index === null) {
+        throw new Error(
+          `Expected valid match for segment ${planned.index} but got: ${JSON.stringify(match)}`
+        )
+      }
       var detected = adjustedPauseFreeBlocks[match.detected_index]!
     }
 
@@ -1533,7 +1538,9 @@ export function analyzeWorkoutCompliance(
 
     // Map pause-free times to original times
     const originalStartSec = indexMapping[segment.actual_start_sec] ?? segment.actual_start_sec
-    const originalEndSec = indexMapping[Math.min(segment.actual_end_sec, indexMapping.length - 1)] ?? segment.actual_end_sec
+    const originalEndSec =
+      indexMapping[Math.min(segment.actual_end_sec, indexMapping.length - 1)] ??
+      segment.actual_end_sec
 
     return {
       ...segment,
@@ -1564,7 +1571,7 @@ export function analyzeWorkoutCompliance(
       power_data_quality: powerDataQuality,
       adaptive_parameters: adaptiveParams,
       detection_strategy: detectionStrategy,
-      detected_pauses: detectedPauses.length > 0 ? detectedPauses : undefined,
+      ...(detectedPauses.length > 0 && { detected_pauses: detectedPauses }),
     },
   }
 }

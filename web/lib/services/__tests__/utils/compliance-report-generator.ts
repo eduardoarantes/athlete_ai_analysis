@@ -675,11 +675,18 @@ function buildPowerProfile(entry: ComplianceReportEntry): string {
 
   // Extract detected segments with timing information
   // Filter out skipped segments (actual_start_sec/actual_end_sec will be null)
+  type DetectedSegmentWithTiming = typeof result.segments[number] & {
+    actual_start_sec: number
+    actual_end_sec: number
+  }
+
   const detectedSegments = result.segments
-    .filter((seg) => seg.actual_start_sec !== null && seg.actual_end_sec !== null)
+    .filter((seg): seg is DetectedSegmentWithTiming =>
+      seg.actual_start_sec !== null && seg.actual_end_sec !== null
+    )
     .map((seg) => ({
-      start_time: seg.actual_start_sec!,
-      end_time: seg.actual_end_sec!,
+      start_time: seg.actual_start_sec,
+      end_time: seg.actual_end_sec,
       quality: seg.match_quality,
       compliance_percentage: seg.scores.overall_segment_score,
       segment_index: seg.segment_index,
@@ -1855,6 +1862,12 @@ function getInteractiveScript(): string {
       btn.addEventListener('click', () => {
         const activityId = btn.dataset.activity;
         const powerProfile = btn.closest('.power-profile');
+
+        if (!powerProfile) {
+          console.error('[Segments Toggle] Could not find parent .power-profile element for activity:', activityId);
+          return;
+        }
+
         const segmentsOverlay = powerProfile.querySelector('.detected-segments-overlay');
 
         if (segmentsOverlay) {
@@ -1863,6 +1876,8 @@ function getInteractiveScript(): string {
           btn.textContent = segmentsOverlay.classList.contains('visible')
             ? 'Hide Detected Segments'
             : 'Show Detected Segments';
+        } else {
+          console.error('[Segments Toggle] Detected segments overlay not found for activity:', activityId);
         }
       });
     });
