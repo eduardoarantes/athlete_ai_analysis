@@ -1,6 +1,11 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: '13.0.5'
+  }
   public: {
     Tables: {
       athlete_profiles: {
@@ -314,7 +319,6 @@ export type Database = {
           created_at: string | null
           end_date: string
           id: string
-          instance_type: string | null
           name: string
           plan_data: Json
           start_date: string
@@ -328,7 +332,6 @@ export type Database = {
           created_at?: string | null
           end_date: string
           id?: string
-          instance_type?: string | null
           name: string
           plan_data: Json
           start_date: string
@@ -342,7 +345,6 @@ export type Database = {
           created_at?: string | null
           end_date?: string
           id?: string
-          instance_type?: string | null
           name?: string
           plan_data?: Json
           start_date?: string
