@@ -430,8 +430,6 @@ export interface PlanInstance {
   workout_overrides: WorkoutOverrides | null
   /** Instance status */
   status: 'scheduled' | 'active' | 'completed' | 'cancelled'
-  /** Instance type: standard or manual_workouts */
-  instance_type?: string | null
   created_at: string
   updated_at: string
 }
