@@ -284,12 +284,21 @@ export async function PATCH(request: NextRequest, { params }: RouteParams): Prom
         .eq('id', instanceId)
 
       if (updateError) {
+        // ROLLBACK: Delete the manual workout we just created
+        await supabase.from('manual_workouts').delete().eq('id', manualWorkout.id)
+
         errorLogger.logError(new Error(`Failed to extract workout: ${updateError.message}`), {
           userId: user.id,
           path: `/api/schedule/${instanceId}/workouts`,
-          metadata: { instanceId, workoutId: source.workout_id, targetDate: target.date },
+          method: 'PATCH',
+          metadata: {
+            instanceId,
+            workoutId: source.workout_id,
+            targetDate: target.date,
+            rollbackPerformed: true,
+          },
         })
-        return NextResponse.json({ error: 'Failed to extract workout' }, { status: 500 })
+        return NextResponse.json({ error: 'Failed to extract workout from plan' }, { status: 500 })
       }
 
       // Update workout_activity_matches if exists (move from plan to manual)
