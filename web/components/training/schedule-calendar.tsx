@@ -22,6 +22,7 @@ import type {
   WeeklyPlan,
 } from '@/lib/types/training-plan'
 import type { WorkoutLibraryItem } from '@/lib/types/workout-library'
+import type { ManualWorkout } from '@/lib/types/manual-workout'
 import { parseLocalDate, formatDateString } from '@/lib/utils/date-utils'
 import { applyWorkoutOverrides } from '@/lib/utils/apply-workout-overrides'
 import { formatWithGoalLabels } from '@/lib/utils/format-utils'
@@ -98,6 +99,9 @@ interface ScheduledWorkout {
   weekNumber: number
   date: Date
   index?: number
+  // Manual workout fields (null if from plan)
+  manualWorkoutId?: string | null
+  sourcePlanInstanceId?: string | null
 }
 
 export function ScheduleCalendar({
@@ -134,6 +138,9 @@ export function ScheduleCalendar({
   const [noteDialogMode, setNoteDialogMode] = useState<'create' | 'edit' | 'view'>('create')
   const [selectedNoteDate, setSelectedNoteDate] = useState<string>('')
   const [selectedNote, setSelectedNote] = useState<PlanInstanceNote | undefined>(undefined)
+
+  // Manual workouts state
+  const [manualWorkouts, setManualWorkouts] = useState<ManualWorkout[]>([])
 
   // Edit state
   // Error message for user feedback
@@ -305,6 +312,39 @@ export function ScheduleCalendar({
 
     fetchNotes()
   }, [primaryInstanceId])
+
+  // Fetch manual workouts for the current month
+  useEffect(() => {
+    const fetchManualWorkouts = async () => {
+      try {
+        // Calculate date range for current month view
+        const year = currentDate.getFullYear()
+        const month = currentDate.getMonth()
+        const startDate = formatDateString(new Date(year, month, 1))
+        const endDate = formatDateString(new Date(year, month + 1, 0))
+
+        const response = await fetch(
+          `/api/manual-workouts?start_date=${startDate}&end_date=${endDate}`
+        )
+
+        if (response.ok) {
+          const data = await response.json()
+          setManualWorkouts(data.data || [])
+        } else {
+          errorLogger.logWarning('Failed to fetch manual workouts', {
+            path: 'schedule-calendar/fetchManualWorkouts',
+            metadata: { status: response.status },
+          })
+        }
+      } catch (error) {
+        errorLogger.logError(error as Error, {
+          path: 'schedule-calendar/fetchManualWorkouts',
+        })
+      }
+    }
+
+    fetchManualWorkouts()
+  }, [currentDate])
 
   // Note handlers
   const handleAddNote = useCallback((date: string) => {
@@ -510,6 +550,15 @@ export function ScheduleCalendar({
         return
       }
 
+      const result = await response.json()
+
+      // Check if workout was extracted to manual workouts
+      if (result.extracted && result.manual_workout) {
+        // Add to manual workouts state
+        setManualWorkouts((prev) => [...prev, result.manual_workout])
+        toast.success('Workout moved outside plan range (now a manual workout)')
+      }
+
       // Success - sync with server to get canonical state
       router.refresh()
     } catch (error) {
@@ -517,6 +566,39 @@ export function ScheduleCalendar({
       errorLogger.logError(error as Error, {
         path: 'schedule-calendar/handleMoveWorkout',
         metadata: { instanceId, workoutId, targetDate },
+      })
+      toast.error('Failed to move workout. Please try again.')
+    }
+  }
+
+  // Handler for moving manual workouts
+  const handleMoveManualWorkout = async (manualWorkoutId: string, targetDate: string) => {
+    try {
+      const response = await fetch(`/api/manual-workouts/${manualWorkoutId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          scheduled_date: targetDate,
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        toast.error(error.error || 'Failed to move workout')
+        return
+      }
+
+      const result = await response.json()
+      const updatedWorkout = result.data
+
+      // Optimistically update manual workouts state
+      setManualWorkouts((prev) => prev.map((w) => (w.id === manualWorkoutId ? updatedWorkout : w)))
+
+      toast.success('Workout moved successfully!')
+    } catch (error) {
+      errorLogger.logError(error as Error, {
+        path: 'schedule-calendar/handleMoveManualWorkout',
+        metadata: { manualWorkoutId, targetDate },
       })
       toast.error('Failed to move workout. Please try again.')
     }
@@ -656,48 +738,35 @@ export function ScheduleCalendar({
     }
   }
 
+  // Handler for deleting manual workouts
+  const handleDeleteManualWorkout = async (manualWorkoutId: string) => {
+    try {
+      const response = await fetch(`/api/manual-workouts/${manualWorkoutId}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        toast.error(error.error || 'Failed to delete workout')
+        return
+      }
+
+      // Optimistically remove from manual workouts state
+      setManualWorkouts((prev) => prev.filter((w) => w.id !== manualWorkoutId))
+
+      toast.success('Workout deleted successfully!')
+    } catch (error) {
+      errorLogger.logError(error as Error, {
+        path: 'schedule-calendar/handleDeleteManualWorkout',
+        metadata: { manualWorkoutId },
+      })
+      toast.error('Failed to delete workout. Please try again.')
+    }
+  }
+
   const handlePasteWorkout = (instanceId: string, workoutId: string, targetDate: string) => {
     handleCopyWorkout(instanceId, workoutId, targetDate)
   }
-
-  // Optimistic update for adding library workouts
-  const handleOptimisticAddLibrary = useCallback(
-    (workout: WorkoutLibraryItem, targetDate: string, instanceId: string): (() => void) => {
-      const originalInstances = [...localInstancesRef.current]
-      const tempId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-
-      setLocalInstances((prev) => {
-        return prev.map((instance) => {
-          if (instance.id !== instanceId) return instance
-
-          const planData = clonePlanData(instance.plan_data)
-
-          // Create new workout from library item
-          const newWorkout: Workout = {
-            id: tempId,
-            scheduled_date: targetDate,
-            weekday: getWeekdayName(parseLocalDate(targetDate).getDay()),
-            name: workout.name,
-            type: workout.type,
-            tss: workout.base_tss,
-            structure: workout.structure,
-            ...(workout.detailed_description && { description: workout.detailed_description }),
-            source: 'library',
-            library_workout_id: workout.id,
-          }
-
-          const targetWeek = findOrCreateWeek(planData, targetDate)
-          targetWeek.workouts.push(newWorkout)
-          targetWeek.week_tss = targetWeek.workouts.reduce((sum, w) => sum + (w.tss || 0), 0)
-
-          return { ...instance, plan_data: planData }
-        })
-      })
-
-      return () => setLocalInstances(originalInstances)
-    },
-    []
-  )
 
   // Handler for adding library workouts via drag-and-drop
   const handleAddLibraryWorkout = async (workout: WorkoutLibraryItem, targetDate: string) => {
@@ -711,12 +780,6 @@ export function ScheduleCalendar({
       return
     }
 
-    // Ensure we have a primary instance (should always have MANUAL_WORKOUTS)
-    if (!primaryInstanceId) {
-      toast.error('No plan available. Please refresh the page.')
-      return
-    }
-
     // Prevent duplicate drops (race condition protection)
     const dropKey = `${workout.id}:${targetDate}`
     if (libraryDropInProgressRef.current.has(dropKey)) {
@@ -724,29 +787,30 @@ export function ScheduleCalendar({
     }
     libraryDropInProgressRef.current.add(dropKey)
 
-    // Apply optimistic update
-    const rollback = handleOptimisticAddLibrary(workout, targetDate, primaryInstanceId)
-
     try {
-      const response = await fetch('/api/schedule/workouts/add', {
+      // Use new manual workouts API
+      const response = await fetch('/api/manual-workouts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          workout_id: workout.id,
-          target_date: targetDate,
+          library_workout_id: workout.id,
+          scheduled_date: targetDate,
         }),
       })
 
       if (!response.ok) {
-        rollback()
         const error = await response.json()
         toast.error(error.error || 'Failed to add workout')
       } else {
+        const result = await response.json()
+        const newManualWorkout = result.data
+
+        // Optimistically add to manual workouts state
+        setManualWorkouts((prev) => [...prev, newManualWorkout])
+
         toast.success('Workout added successfully!')
-        router.refresh()
       }
     } catch (error) {
-      rollback()
       errorLogger.logError(error as Error, {
         path: 'schedule-calendar/handleAddLibraryWorkout',
         metadata: { workoutId: workout.id, targetDate },
@@ -761,10 +825,11 @@ export function ScheduleCalendar({
   // Get FTP from first instance's athlete profile
   const ftp = instances[0]?.plan_data?.athlete_profile?.ftp || 200
 
-  // Build a map of date -> workouts from all instances
+  // Build a map of date -> workouts from all instances (plan + manual)
   const workoutsByDate = useMemo(() => {
     const map = new Map<string, ScheduledWorkout[]>()
 
+    // Add plan workouts
     localInstances.forEach((instance) => {
       const startDate = parseLocalDate(instance.start_date)
 
@@ -800,8 +865,46 @@ export function ScheduleCalendar({
       })
     })
 
+    // Add manual workouts
+    manualWorkouts.forEach((manualWorkout) => {
+      const dateKey = manualWorkout.scheduled_date
+      const workoutDate = parseLocalDate(dateKey)
+      const existing = map.get(dateKey) || []
+
+      // Create a pseudo-instance for manual workouts (needed for consistency)
+      // Use the manualWorkoutsInstance if available, or create a minimal one
+      const pseudoInstance: PlanInstance =
+        manualWorkoutsInstance ||
+        ({
+          id: 'manual-workouts',
+          user_id: '',
+          name: 'Manual Workouts',
+          status: 'active',
+          start_date: dateKey,
+          end_date: dateKey,
+          plan_data: { weekly_plan: [] },
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          instance_type: 'manual_workouts',
+          template_id: null,
+          weeks_total: 0,
+          workout_overrides: null,
+        } as unknown as PlanInstance)
+
+      existing.push({
+        workout: manualWorkout.workout_data,
+        instance: pseudoInstance,
+        weekNumber: 0, // Manual workouts don't have week numbers
+        date: workoutDate,
+        manualWorkoutId: manualWorkout.id,
+        sourcePlanInstanceId: manualWorkout.source_plan_instance_id,
+      })
+
+      map.set(dateKey, existing)
+    })
+
     return map
-  }, [localInstances])
+  }, [localInstances, manualWorkouts, manualWorkoutsInstance])
 
   // Get calendar grid for current month
   const calendarDays = useMemo(() => {
@@ -950,6 +1053,7 @@ export function ScheduleCalendar({
                           matchedActivity={matchData}
                           className="text-[9px]"
                           onClick={() => handleWorkoutClick({ ...sw, index: workoutIndex })}
+                          extractedFromPlan={sw.sourcePlanInstanceId}
                         />
                       )
 
@@ -965,6 +1069,7 @@ export function ScheduleCalendar({
                               workout={sw.workout}
                               hasMatch={hasMatch}
                               isEditMode={canEdit}
+                              manualWorkoutId={sw.manualWorkoutId}
                             >
                               <WorkoutContextMenu
                                 instanceId={sw.instance.id}
@@ -974,12 +1079,21 @@ export function ScheduleCalendar({
                                 onViewDetails={() =>
                                   handleWorkoutClick({ ...sw, index: workoutIndex })
                                 }
-                                onDelete={
-                                  sw.workout.id
-                                    ? () =>
-                                        handleDeleteWorkout(sw.instance.id, sw.workout.id as string)
-                                    : undefined
-                                }
+                                {...(sw.workout.id
+                                  ? {
+                                      onDelete: () => {
+                                        // Route to correct delete handler based on source
+                                        if (sw.manualWorkoutId) {
+                                          handleDeleteManualWorkout(sw.manualWorkoutId)
+                                        } else {
+                                          handleDeleteWorkout(
+                                            sw.instance.id,
+                                            sw.workout.id as string
+                                          )
+                                        }
+                                      },
+                                    }
+                                  : {})}
                               >
                                 {workoutCard}
                               </WorkoutContextMenu>
@@ -1182,6 +1296,7 @@ export function ScheduleCalendar({
     const dndContent = (
       <ScheduleDndContext
         onMoveWorkout={handleMoveWorkout}
+        onMoveManualWorkout={handleMoveManualWorkout}
         onAddLibraryWorkout={handleAddLibraryWorkout}
         onError={handleError}
         isEditMode={canEdit}
