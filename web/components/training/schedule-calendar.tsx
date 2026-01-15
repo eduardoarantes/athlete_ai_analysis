@@ -146,17 +146,10 @@ export function ScheduleCalendar({
   // Error message for user feedback
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  // Find MANUAL_WORKOUTS instance (always exists for each user)
-  const manualWorkoutsInstance = instances.find((i) => i.instance_type === 'manual_workouts')
-
-  // Find non-manual instances (real training plans)
-  const realInstances = instances.filter((i) => i.instance_type !== 'manual_workouts')
-
   // Primary instance for editing:
-  // - If only 1 real plan exists, use it
-  // - Otherwise, use MANUAL_WORKOUTS (for adding workouts without a plan)
-  const primaryInstanceId =
-    realInstances.length === 1 ? realInstances[0]?.id : manualWorkoutsInstance?.id || null
+  // - If exactly 1 plan instance exists, use it as primary
+  // - Otherwise, null (no editing allowed when multiple plans or no plans)
+  const primaryInstanceId = instances.length === 1 ? instances[0]?.id : null
 
   const canEdit = allowEditing && !!primaryInstanceId
 
@@ -872,24 +865,20 @@ export function ScheduleCalendar({
       const existing = map.get(dateKey) || []
 
       // Create a pseudo-instance for manual workouts (needed for consistency)
-      // Use the manualWorkoutsInstance if available, or create a minimal one
-      const pseudoInstance: PlanInstance =
-        manualWorkoutsInstance ||
-        ({
-          id: 'manual-workouts',
-          user_id: '',
-          name: 'Manual Workouts',
-          status: 'active',
-          start_date: dateKey,
-          end_date: dateKey,
-          plan_data: { weekly_plan: [] },
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          instance_type: 'manual_workouts',
-          template_id: null,
-          weeks_total: 0,
-          workout_overrides: null,
-        } as unknown as PlanInstance)
+      const pseudoInstance: PlanInstance = {
+        id: 'manual-workouts',
+        user_id: '',
+        name: 'Manual Workouts',
+        status: 'active',
+        start_date: dateKey,
+        end_date: dateKey,
+        plan_data: { weekly_plan: [] },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        template_id: null,
+        weeks_total: 0,
+        workout_overrides: null,
+      } as unknown as PlanInstance
 
       existing.push({
         workout: manualWorkout.workout_data,
@@ -904,7 +893,7 @@ export function ScheduleCalendar({
     })
 
     return map
-  }, [localInstances, manualWorkouts, manualWorkoutsInstance])
+  }, [localInstances, manualWorkouts])
 
   // Get calendar grid for current month
   const calendarDays = useMemo(() => {
