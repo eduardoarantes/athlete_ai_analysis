@@ -146,7 +146,7 @@ def build_plotly_chart_html(
         yaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[0, max_power]),
     )
 
-    html_str: str = pio.to_html(fig, include_plotlyjs="inline", full_html=False)
+    html_str: str = pio.to_html(fig, include_plotlyjs="cdn", full_html=False)
     return html_str
 
 
