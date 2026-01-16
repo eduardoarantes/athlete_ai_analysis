@@ -90,8 +90,9 @@ async function prepareWorkoutsForInstance(
                   type: libraryWorkout.type,
                   tss: libraryWorkout.base_tss,
                   structure: libraryWorkout.structure,
-                  description: libraryWorkout.description || undefined,
-                  detailed_description: libraryWorkout.detailed_description || undefined,
+                  ...(libraryWorkout.detailed_description && {
+                    detailed_description: libraryWorkout.detailed_description,
+                  }),
                   library_workout_id: workout.library_workout_id, // Keep for reference
                 }
               } else {
@@ -332,7 +333,6 @@ export class PlanInstanceService {
 
   /**
    * Check for overlapping instances
-   * MANUAL_WORKOUTS instances are excluded from overlap checks as they can coexist with other plans
    */
   async checkOverlap(
     userId: string,
@@ -343,13 +343,11 @@ export class PlanInstanceService {
     const supabase = await createClient()
 
     // Find any scheduled or active instances that overlap with the given date range
-    // Exclude MANUAL_WORKOUTS - it can overlap with everything
     let query = supabase
       .from('plan_instances')
       .select('*')
       .eq('user_id', userId)
       .in('status', ['scheduled', 'active'])
-      .neq('instance_type', 'manual_workouts')
       // Check for overlap: instance starts before our end AND instance ends after our start
       .lte('start_date', endDate)
       .gte('end_date', startDate)

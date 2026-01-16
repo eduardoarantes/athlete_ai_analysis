@@ -17,6 +17,7 @@ import { parseLocalDate } from '@/lib/utils/date-utils'
 import { getWeekdayName } from '@/lib/constants/weekdays'
 import type { Workout } from '@/lib/types/training-plan'
 import { assertTrainingPlanData } from '@/lib/types/type-guards'
+import { createManualWorkout } from '@/lib/services/manual-workout-service'
 
 // Validation schemas
 const workoutLocationSchema = z.object({
@@ -133,6 +134,10 @@ async function hasMatchedActivity(instanceId: string, workoutId: string): Promis
  * - Move: source must be current or future date
  * - Copy: allowed even if workout has matched activity
  * - Target must be current or future date
+ *
+ * Boundary Detection:
+ * - If target date is outside plan boundaries, workout is extracted to manual_workouts table
+ * - Extracted workouts maintain source_plan_instance_id for provenance tracking
  */
 export async function PATCH(request: NextRequest, { params }: RouteParams): Promise<NextResponse> {
   try {
@@ -188,7 +193,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams): Prom
     // Fetch the plan instance
     const { data: instance, error: instanceError } = await supabase
       .from('plan_instances')
-      .select('plan_data, start_date')
+      .select('plan_data, start_date, end_date')
       .eq('id', instanceId)
       .single()
 
@@ -240,6 +245,138 @@ export async function PATCH(request: NextRequest, { params }: RouteParams): Prom
       }
     }
 
+    // Check if target date is outside plan boundaries
+    const targetDate = parseLocalDate(target.date)
+    const planStart = parseLocalDate(instance.start_date)
+    const planEnd = parseLocalDate(instance.end_date)
+    const isOutsideBoundaries = targetDate < planStart || targetDate > planEnd
+
+    // Handle extraction for moves outside plan boundaries
+    if (action === 'move' && isOutsideBoundaries) {
+      // Update workout with new date
+      const extractedWorkoutData: Workout = {
+        ...foundWorkout,
+        scheduled_date: target.date,
+        weekday: getWeekdayName(targetDate.getDay()),
+      }
+
+      // Create manual workout with source tracking
+      const manualWorkout = await createManualWorkout(supabase, user.id, {
+        scheduled_date: target.date,
+        workout_data: extractedWorkoutData,
+        source_plan_instance_id: instanceId,
+      })
+
+      // Remove from plan_data
+      const sourceWeek = planData.weekly_plan[sourceWeekIndex]
+      if (sourceWeek) {
+        sourceWeek.workouts.splice(sourceWorkoutIndex, 1)
+        sourceWeek.week_tss = sourceWeek.workouts.reduce((sum, w) => sum + (w.tss || 0), 0)
+      }
+
+      // Update plan_data in database
+      const { error: updateError } = await supabase
+        .from('plan_instances')
+        .update({
+          plan_data: planData as any,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', instanceId)
+
+      if (updateError) {
+        // ROLLBACK: Delete the manual workout we just created
+        await supabase.from('manual_workouts').delete().eq('id', manualWorkout.id)
+
+        errorLogger.logError(new Error(`Failed to extract workout: ${updateError.message}`), {
+          userId: user.id,
+          path: `/api/schedule/${instanceId}/workouts`,
+          method: 'PATCH',
+          metadata: {
+            instanceId,
+            workoutId: source.workout_id,
+            targetDate: target.date,
+            rollbackPerformed: true,
+          },
+        })
+        return NextResponse.json({ error: 'Failed to extract workout from plan' }, { status: 500 })
+      }
+
+      // Update workout_activity_matches if exists (move from plan to manual)
+      const { error: matchUpdateError } = await supabase
+        .from('workout_activity_matches')
+        .update({
+          plan_instance_id: null,
+          manual_workout_id: manualWorkout.id,
+        })
+        .eq('plan_instance_id', instanceId)
+        .eq('workout_id', source.workout_id)
+
+      if (matchUpdateError) {
+        // Log warning but don't fail the operation
+        errorLogger.logWarning('Failed to update workout match during extraction', {
+          metadata: {
+            instanceId,
+            workoutId: source.workout_id,
+            manualWorkoutId: manualWorkout.id,
+            error: matchUpdateError.message,
+          },
+        })
+      }
+
+      errorLogger.logInfo('Workout extracted to manual workouts', {
+        userId: user.id,
+        metadata: {
+          planInstanceId: instanceId,
+          workoutId: source.workout_id,
+          workoutName: foundWorkout.name,
+          targetDate: target.date,
+          manualWorkoutId: manualWorkout.id,
+        },
+      })
+
+      return NextResponse.json({
+        success: true,
+        extracted: true,
+        manual_workout: manualWorkout,
+        message: 'Workout moved outside plan range and converted to manual workout',
+      })
+    }
+
+    // Handle copy outside boundaries (always creates manual workout)
+    if (action === 'copy' && isOutsideBoundaries) {
+      const copiedWorkoutData: Workout = {
+        ...foundWorkout,
+        id: crypto.randomUUID(),
+        scheduled_date: target.date,
+        weekday: getWeekdayName(targetDate.getDay()),
+      }
+
+      const manualWorkout = await createManualWorkout(supabase, user.id, {
+        scheduled_date: target.date,
+        workout_data: copiedWorkoutData,
+        source_plan_instance_id: instanceId,
+      })
+
+      errorLogger.logInfo('Workout copied outside plan as manual workout', {
+        userId: user.id,
+        metadata: {
+          planInstanceId: instanceId,
+          sourceWorkoutId: source.workout_id,
+          workoutName: foundWorkout.name,
+          targetDate: target.date,
+          manualWorkoutId: manualWorkout.id,
+        },
+      })
+
+      return NextResponse.json({
+        success: true,
+        extracted: true,
+        manual_workout: manualWorkout,
+        message: 'Workout copied outside plan range as manual workout',
+      })
+    }
+
+    // Normal flow: Move/copy within plan boundaries
     // Calculate target week number
     const targetWeekNumber = calculateWeekNumber(instance.start_date, target.date)
 
@@ -315,7 +452,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams): Prom
       },
     })
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, extracted: false })
   } catch (error) {
     errorLogger.logError(error as Error, {
       path: '/api/schedule/[instanceId]/workouts',

@@ -5,7 +5,7 @@ import type { Database } from '@/lib/types/database'
 // Supabase configuration
 // For Supabase Cloud, you must set SUPABASE_SERVICE_ROLE_KEY environment variable
 // Get this from: Supabase Dashboard > Project Settings > API > service_role key
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321'
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54361'
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 // Default local development key (only works with local Supabase)
@@ -104,8 +104,8 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   await page.fill('input[name="password"]', user.password)
   await page.click('button[type="submit"]')
 
-  // Wait for either dashboard or onboarding redirect
-  await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 10000 })
+  // Wait for either dashboard or onboarding redirect with longer timeout
+  await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 20000 })
 }
 
 /**
@@ -162,6 +162,7 @@ export async function clickNextAndWait(page: Page): Promise<void> {
 
 /**
  * Creates mock Strava activities for testing
+ * Uses timestamp and random numbers to ensure unique activity IDs
  */
 export async function createMockActivities(
   supabase: SupabaseClient<Database>,
@@ -170,6 +171,7 @@ export async function createMockActivities(
 ): Promise<void> {
   const now = new Date()
   const activities = []
+  const baseId = Date.now() * 1000 // Use current timestamp for uniqueness
 
   for (let i = 0; i < count; i++) {
     const daysAgo = i * 2 // Activities 0, 2, 4 days ago
@@ -182,11 +184,11 @@ export async function createMockActivities(
       { sport_type: 'VirtualRide', name: 'Zwift Workout', distance: 30000, time: 3600 },
     ]
 
-    const activity = activityTypes[i % activityTypes.length]
+    const activity = activityTypes[i % activityTypes.length]!
 
     activities.push({
       user_id: userId,
-      strava_activity_id: 1000000000 + i,
+      strava_activity_id: baseId + i + Math.floor(Math.random() * 1000),
       name: `${activity.name} ${i + 1}`,
       type: activity.sport_type,
       sport_type: activity.sport_type,

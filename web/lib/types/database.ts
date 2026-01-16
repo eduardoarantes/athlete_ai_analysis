@@ -155,6 +155,51 @@ export type Database = {
           },
         ]
       }
+      manual_workouts: {
+        Row: {
+          created_at: string | null
+          id: string
+          scheduled_date: string
+          source_plan_instance_id: string | null
+          updated_at: string | null
+          user_id: string
+          workout_data: Json
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          scheduled_date: string
+          source_plan_instance_id?: string | null
+          updated_at?: string | null
+          user_id: string
+          workout_data: Json
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          scheduled_date?: string
+          source_plan_instance_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+          workout_data?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'manual_workouts_source_plan_instance_id_fkey'
+            columns: ['source_plan_instance_id']
+            isOneToOne: false
+            referencedRelation: 'plan_instances'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'manual_workouts_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'admin_user_view'
+            referencedColumns: ['user_id']
+          },
+        ]
+      }
       plan_generation_jobs: {
         Row: {
           created_at: string | null
@@ -274,7 +319,6 @@ export type Database = {
           created_at: string | null
           end_date: string
           id: string
-          instance_type: string | null
           name: string
           plan_data: Json
           start_date: string
@@ -288,7 +332,6 @@ export type Database = {
           created_at?: string | null
           end_date: string
           id?: string
-          instance_type?: string | null
           name: string
           plan_data: Json
           start_date: string
@@ -302,7 +345,6 @@ export type Database = {
           created_at?: string | null
           end_date?: string
           id?: string
-          instance_type?: string | null
           name?: string
           plan_data?: Json
           start_date?: string
@@ -960,9 +1002,10 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          manual_workout_id: string | null
           match_score: number | null
           match_type: string
-          plan_instance_id: string
+          plan_instance_id: string | null
           strava_activity_id: string
           updated_at: string | null
           user_id: string
@@ -971,9 +1014,10 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id?: string
+          manual_workout_id?: string | null
           match_score?: number | null
           match_type: string
-          plan_instance_id: string
+          plan_instance_id?: string | null
           strava_activity_id: string
           updated_at?: string | null
           user_id: string
@@ -982,15 +1026,23 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string
+          manual_workout_id?: string | null
           match_score?: number | null
           match_type?: string
-          plan_instance_id?: string
+          plan_instance_id?: string | null
           strava_activity_id?: string
           updated_at?: string | null
           user_id?: string
           workout_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: 'workout_activity_matches_manual_workout_id_fkey'
+            columns: ['manual_workout_id']
+            isOneToOne: false
+            referencedRelation: 'manual_workouts'
+            referencedColumns: ['id']
+          },
           {
             foreignKeyName: 'workout_activity_matches_plan_instance_id_fkey'
             columns: ['plan_instance_id']

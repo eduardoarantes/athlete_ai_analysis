@@ -5,6 +5,36 @@
 
 ---
 
+## Database Triggers and Functions (IMPORTANT)
+
+**DO NOT USE DATABASE TRIGGERS OR FUNCTIONS FOR BUSINESS LOGIC**
+
+Database triggers and functions are difficult to:
+
+- Test and debug
+- Track changes (not visible in TypeScript code)
+- Migrate safely (can cause 500 errors if schema changes)
+- Maintain consistency across environments
+
+**Instead:**
+
+- Implement all business logic in TypeScript service layers
+- Use database constraints (foreign keys, NOT NULL, UNIQUE) for data integrity
+- Use row-level security (RLS) policies for access control
+
+**Example of what NOT to do:**
+
+- ❌ Trigger functions that check overlaps or validate data
+- ❌ Stored procedures that implement business rules
+
+**Example of what to DO:**
+
+- ✅ Service layer methods that validate and process data
+- ✅ Database constraints that enforce referential integrity
+- ✅ RLS policies that control data access
+
+---
+
 ## Code Quality Checks (REQUIRED)
 
 **Before committing changes, run these checks:**

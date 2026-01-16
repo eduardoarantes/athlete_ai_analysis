@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    let planInstanceId: string
+    let planInstanceId: string | null
     let workoutId: string | null = null
     let stravaActivityId: string
     let matchId: string | null = body.match_id || null
@@ -179,6 +179,14 @@ export async function POST(request: NextRequest) {
         {
           error: 'match_id is required. Direct workout specification is no longer supported.',
         },
+        { status: 400 }
+      )
+    }
+
+    // Check if plan instance ID is provided (manual workouts may not have one)
+    if (!planInstanceId) {
+      return NextResponse.json(
+        { error: 'Cannot analyze compliance for manual workouts without a plan instance' },
         { status: 400 }
       )
     }
