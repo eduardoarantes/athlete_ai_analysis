@@ -101,8 +101,8 @@ def _sanitize_for_prompt(text: str) -> str:
     for pattern in dangerous_patterns:
         if pattern in text_lower:
             logger.warning(
-                f"[PROMPT INJECTION] Detected potential prompt injection: '{pattern}' "
-                f"in text: '{text[:50]}...'"
+                "[PROMPT INJECTION] Detected pattern in user input",
+                extra={"pattern": pattern, "text_length": len(text)}
             )
             # Replace the pattern with [filtered]
             # Use case-insensitive replacement
@@ -121,7 +121,14 @@ def _sanitize_for_prompt(text: str) -> str:
 
     # Log if we made changes
     if text != original_text:
-        logger.info(f"[PROMPT INJECTION] Sanitized input: '{original_text[:50]}...' -> '{text[:50]}...'")
+        logger.info(
+            "[PROMPT INJECTION] Input sanitized",
+            extra={
+                "original_length": len(original_text),
+                "sanitized_length": len(text),
+                "truncated": len(original_text) > MAX_PROMPT_TEXT_LENGTH
+            }
+        )
 
     return text
 

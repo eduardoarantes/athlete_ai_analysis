@@ -90,6 +90,7 @@ async def generate_coach_analysis_endpoint(
     )
 
     try:
+        import time
         from datetime import UTC, datetime
         from pathlib import Path
 
@@ -146,7 +147,8 @@ async def generate_coach_analysis_endpoint(
             f"for {len(power_streams)} samples ({activity_duration_minutes:.1f} min activity)"
         )
 
-        # Generate analysis with timeout
+        # Generate analysis with timeout and performance tracking
+        start_time = time.time()
         try:
             result = await asyncio.wait_for(
                 asyncio.to_thread(
@@ -166,14 +168,30 @@ async def generate_coach_analysis_endpoint(
                 ),
                 timeout=timeout_seconds,
             )
-        except asyncio.TimeoutError:
-            logger.error(
-                f"[COACH ROUTER] Analysis timeout after {timeout_seconds}s "
-                f"for activity with {len(power_streams)} samples"
+
+            # Log successful completion with performance metrics
+            duration = time.time() - start_time
+            logger.info(
+                f"[PERF] Analysis completed in {duration:.2f}s "
+                f"(samples: {len(power_streams)}, timeout: {timeout_seconds}s, "
+                f"utilization: {(duration/timeout_seconds)*100:.1f}%)"
             )
+
+        except asyncio.TimeoutError:
+            duration = time.time() - start_time
+            logger.error(
+                f"[PERF] Analysis TIMEOUT after {duration:.2f}s "
+                f"(samples: {len(power_streams)}, limit: {timeout_seconds}s)"
+            )
+            # Provide actionable guidance based on activity size
+            if activity_duration_minutes > 120:
+                hint = "For activities over 2 hours, try again during off-peak hours or contact support for assistance."
+            else:
+                hint = "Please try again. If the issue persists, contact support."
+
             raise HTTPException(
                 status_code=504,
-                detail=f"Analysis timeout after {timeout_seconds}s. Activity may be too long or complex for analysis.",
+                detail=f"Analysis timeout after {timeout_seconds}s. {hint}",
             ) from None
 
         logger.info(

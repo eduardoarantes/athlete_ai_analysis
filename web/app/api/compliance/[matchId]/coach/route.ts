@@ -18,6 +18,25 @@ import { getWorkoutById } from '@/lib/utils/workout-helpers'
 import { StravaService } from '@/lib/services/strava-service'
 import type { TrainingPlanData } from '@/lib/types/training-plan'
 import type { Json } from '@/lib/types/database'
+import { z } from 'zod'
+
+// ============================================================================
+// Validation Schemas
+// ============================================================================
+
+const SegmentNoteSchema = z.object({
+  segment_index: z.number(),
+  note: z.string(),
+})
+
+const CoachFeedbackSchema = z.object({
+  schema_version: z.string().optional(),
+  summary: z.string(),
+  strengths: z.array(z.string()),
+  improvements: z.array(z.string()),
+  action_items: z.array(z.string()),
+  segment_notes: z.array(SegmentNoteSchema),
+})
 
 // ============================================================================
 // Types
@@ -29,6 +48,7 @@ interface SegmentNote {
 }
 
 interface CoachFeedback {
+  schema_version?: string
   summary: string
   strengths: string[]
   improvements: string[]
@@ -138,22 +158,38 @@ export async function POST(
 
     // Return cached feedback if available and not forcing regeneration
     if (!forceRegenerate && existingAnalysis?.coach_feedback) {
-      errorLogger.logInfo('Returning cached coach feedback', {
-        userId: user.id,
-        metadata: {
-          matchId,
-          analysisId: existingAnalysis.id,
-          generatedAt: existingAnalysis.updated_at,
-        },
-      })
+      // Validate cached feedback structure
+      const validationResult = CoachFeedbackSchema.safeParse(existingAnalysis.coach_feedback)
 
-      return NextResponse.json({
-        feedback: existingAnalysis.coach_feedback,
-        generated_at: existingAnalysis.coach_generated_at || existingAnalysis.updated_at,
-        model: existingAnalysis.coach_model || 'unknown',
-        prompt_version: existingAnalysis.coach_prompt_version,
-        cached: true,
-      })
+      if (!validationResult.success) {
+        errorLogger.logWarning('Cached coach feedback validation failed', {
+          userId: user.id,
+          metadata: {
+            matchId,
+            analysisId: existingAnalysis.id,
+            errors: validationResult.error.errors,
+          },
+        })
+        // Force regeneration if cached data is invalid
+        // Fall through to regeneration logic below
+      } else {
+        errorLogger.logInfo('Returning cached coach feedback', {
+          userId: user.id,
+          metadata: {
+            matchId,
+            analysisId: existingAnalysis.id,
+            generatedAt: existingAnalysis.updated_at,
+          },
+        })
+
+        return NextResponse.json({
+          feedback: validationResult.data,
+          generated_at: existingAnalysis.coach_generated_at || existingAnalysis.updated_at,
+          model: existingAnalysis.coach_model || 'unknown',
+          prompt_version: existingAnalysis.coach_prompt_version,
+          cached: true,
+        })
+      }
     }
 
     // Need athlete FTP to generate feedback
@@ -248,7 +284,8 @@ export async function POST(
       return NextResponse.json(
         {
           error: 'Power data is corrupted',
-          details: `Stream length mismatch: ${wattsLength} power samples vs ${timeLength} time samples`
+          details: `Stream length mismatch: ${wattsLength} power samples vs ${timeLength} time samples`,
+          hint: 'This usually indicates a Strava API sync issue. Try refreshing your Strava connection or re-syncing the activity.'
         },
         { status: 400 }
       )
@@ -267,7 +304,8 @@ export async function POST(
       return NextResponse.json(
         {
           error: 'Insufficient power data',
-          details: `Activity has only ${wattsLength} samples (minimum 60 required for analysis)`
+          details: `Activity has only ${wattsLength} samples (minimum 60 required for analysis)`,
+          hint: 'This activity is too short (less than 1 minute) for meaningful analysis. Please select a longer workout.'
         },
         { status: 400 }
       )
@@ -340,11 +378,35 @@ export async function POST(
 
     const coachResponse = pythonResponse.body
 
-    // Store feedback in database with metadata
+    // Validate coach feedback structure
+    const validationResult = CoachFeedbackSchema.safeParse(coachResponse.response_json)
+
+    if (!validationResult.success) {
+      errorLogger.logError(new Error('Coach feedback validation failed'), {
+        userId: user.id,
+        path: '/api/compliance/[matchId]/coach',
+        metadata: {
+          matchId,
+          errors: validationResult.error.errors,
+          rawResponse: coachResponse.response_json,
+        },
+      })
+
+      return NextResponse.json(
+        {
+          error: 'Invalid coach feedback format',
+          details: 'The AI response did not match the expected schema',
+          validationErrors: validationResult.error.errors,
+        },
+        { status: 500 }
+      )
+    }
+
+    // Store validated feedback in database with metadata
     const { error: updateError } = await supabase
       .from('workout_compliance_analyses')
       .update({
-        coach_feedback: coachResponse.response_json as unknown as Json,
+        coach_feedback: validationResult.data as unknown as Json,
         coach_model: coachResponse.model,
         coach_prompt_version: `${coachResponse.provider}:${coachResponse.model}`,
         coach_generated_at: coachResponse.generated_at,
@@ -374,7 +436,7 @@ export async function POST(
     })
 
     return NextResponse.json({
-      feedback: coachResponse.response_json,
+      feedback: validationResult.data,
       generated_at: coachResponse.generated_at,
       model: coachResponse.model,
       prompt_version: `${coachResponse.provider}:${coachResponse.model}`,
@@ -462,8 +524,30 @@ export async function GET(
       )
     }
 
+    // Validate cached feedback structure
+    const validationResult = CoachFeedbackSchema.safeParse(analysis.coach_feedback)
+
+    if (!validationResult.success) {
+      errorLogger.logWarning('Cached coach feedback validation failed in GET', {
+        userId: user.id,
+        metadata: {
+          matchId,
+          errors: validationResult.error.errors,
+        },
+      })
+
+      return NextResponse.json(
+        {
+          error: 'Invalid coach feedback format',
+          hint: 'The cached feedback is corrupted. POST to this endpoint to regenerate.',
+          validationErrors: validationResult.error.errors,
+        },
+        { status: 500 }
+      )
+    }
+
     return NextResponse.json({
-      feedback: analysis.coach_feedback,
+      feedback: validationResult.data,
       generated_at: analysis.coach_generated_at || analysis.updated_at,
       model: analysis.coach_model || 'unknown',
       prompt_version: analysis.coach_prompt_version,
