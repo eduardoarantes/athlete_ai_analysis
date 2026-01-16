@@ -1,17 +1,37 @@
-import json
-import os
-from typing import Any, Dict, Iterable, List, Optional
+"""
+Coach AI module for generating AI-powered coaching feedback on workout compliance.
 
-import requests
+This module provides functions for analyzing workout compliance and generating
+personalized coaching feedback using LLM providers.
+"""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Any, Callable, Iterable
 
 from .aligners import DTWAligner
 from .analyzer import ComplianceAnalyzer
-from .io import load_workout_library, load_workout_steps_from_library_object
+from .io import load_workout_steps_from_library_object
 from .models import ComplianceResult, StreamPoint
-from .strava_service import StravaClient
 
 
-def _render_template(template_path: str, context: Dict[str, Any]) -> str:
+def _render_template(template_path: str | Path, context: dict[str, Any]) -> str:
+    """
+    Render a Jinja2 template with the given context.
+
+    Args:
+        template_path: Path to the Jinja2 template file
+        context: Dictionary of variables to render in the template
+
+    Returns:
+        Rendered template as string
+
+    Raises:
+        RuntimeError: If jinja2 is not installed
+        FileNotFoundError: If template file not found
+    """
     try:
         from jinja2 import Environment, StrictUndefined
     except ImportError as exc:
@@ -19,9 +39,11 @@ def _render_template(template_path: str, context: Dict[str, Any]) -> str:
             "jinja2 is required to render prompts. Install it with: pip install jinja2"
         ) from exc
 
-    with open(template_path, "r") as f:
-        template_text = f.read()
+    template_path = Path(template_path)
+    if not template_path.exists():
+        raise FileNotFoundError(f"Template file not found: {template_path}")
 
+    template_text = template_path.read_text()
     env = Environment(undefined=StrictUndefined, trim_blocks=True, lstrip_blocks=True)
     return env.from_string(template_text).render(**context)
 
@@ -38,7 +60,9 @@ def _weight_factor(result: ComplianceResult) -> float:
     return 0.5 if _is_warm_cool(result) else 1.0
 
 
-def _weighted_avg(results: Iterable[ComplianceResult], predicate) -> float:
+def _weighted_avg(
+    results: Iterable[ComplianceResult], predicate: Callable[[ComplianceResult], bool]
+) -> float:
     selected = [r for r in results if predicate(r)]
     total = sum(r.planned_duration for r in selected)
     if total == 0:
@@ -58,7 +82,18 @@ def _is_hard(result: ComplianceResult, ftp: float) -> bool:
     return result.target_power >= ftp * 0.85
 
 
-def _summarize_results(results: List[ComplianceResult], ftp: float) -> Dict[str, float]:
+def _summarize_results(results: list[ComplianceResult], ftp: float) -> dict[str, float]:
+    """
+    Summarize compliance results with overall and segment-specific metrics.
+
+    Args:
+        results: List of compliance results for each workout step
+        ftp: Athlete's Functional Threshold Power
+
+    Returns:
+        Dictionary containing summary metrics like overall compliance,
+        work/warmup/cooldown compliance, and average power values
+    """
     planned_total = sum(r.planned_duration for r in results)
     actual_total = sum(r.actual_duration for r in results)
     weighted_total = sum(r.planned_duration * _weight_factor(r) for r in results)
@@ -99,7 +134,16 @@ def _summarize_results(results: List[ComplianceResult], ftp: float) -> Dict[str,
     }
 
 
-def _data_quality(streams: List[StreamPoint]) -> Dict[str, Any]:
+def _data_quality(streams: list[StreamPoint]) -> dict[str, Any]:
+    """
+    Analyze data quality of power stream.
+
+    Args:
+        streams: List of power stream points
+
+    Returns:
+        Dictionary with data quality metrics (missing samples, zero power, gaps)
+    """
     if not streams:
         return {"missing_samples_pct": 0.0, "zero_power_pct": 0.0, "gaps_detected": False}
 
@@ -127,14 +171,31 @@ def _data_quality(streams: List[StreamPoint]) -> Dict[str, Any]:
 def build_prompt_context(
     activity_id: int,
     workout_id: str,
-    workout: Dict[str, Any],
-    results: List[ComplianceResult],
-    streams: List[StreamPoint],
+    workout: dict[str, Any],
+    results: list[ComplianceResult],
+    streams: list[StreamPoint],
     ftp: float,
-    alignment: Dict[str, str],
-    activity_meta: Optional[Dict[str, str]] = None,
-    athlete_meta: Optional[Dict[str, str]] = None,
-) -> Dict[str, Any]:
+    alignment: dict[str, str],
+    activity_meta: dict[str, str] | None = None,
+    athlete_meta: dict[str, str] | None = None,
+) -> dict[str, Any]:
+    """
+    Build context dictionary for coaching prompt templates.
+
+    Args:
+        activity_id: Strava activity ID
+        workout_id: Workout identifier
+        workout: Workout definition dictionary
+        results: Compliance analysis results
+        streams: Power stream data
+        ftp: Athlete's FTP
+        alignment: Alignment algorithm details
+        activity_meta: Optional activity metadata (name, date)
+        athlete_meta: Optional athlete metadata (name)
+
+    Returns:
+        Dictionary containing all context for prompt rendering
+    """
     activity_meta = activity_meta or {}
     athlete_meta = athlete_meta or {}
 
@@ -175,71 +236,149 @@ def build_prompt_context(
 
 
 def render_coach_prompts(
-    system_prompt_path: str,
-    user_prompt_path: str,
-    context: Dict[str, Any],
-) -> Dict[str, str]:
+    system_prompt_path: str | Path,
+    user_prompt_path: str | Path,
+    context: dict[str, Any],
+) -> dict[str, str]:
+    """
+    Render system and user prompts from templates.
+
+    Args:
+        system_prompt_path: Path to system prompt template
+        user_prompt_path: Path to user prompt template
+        context: Context dictionary for template rendering
+
+    Returns:
+        Dictionary with 'system_prompt' and 'user_prompt' keys
+    """
     return {
         "system_prompt": _render_template(system_prompt_path, context),
         "user_prompt": _render_template(user_prompt_path, context),
     }
 
 
-def call_openai_chat(
+def call_llm_provider(
     system_prompt: str,
     user_prompt: str,
-    api_key: Optional[str] = None,
-    model: Optional[str] = None,
-    api_url: Optional[str] = None,
+    provider_name: str = "openai",
+    api_key: str | None = None,
+    model: str | None = None,
     temperature: float = 0.2,
-    timeout_s: int = 60,
+    max_tokens: int = 2048,
 ) -> str:
-    resolved_key = api_key or os.environ.get("OPENAI_API_KEY")
-    if not resolved_key:
-        raise RuntimeError("OPENAI_API_KEY is required to call the AI API.")
-    resolved_model = model or os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
-    resolved_url = api_url or os.environ.get("OPENAI_API_URL", "https://api.openai.com/v1/chat/completions")
+    """
+    Call an LLM provider to generate coaching feedback.
 
-    payload = {
-        "model": resolved_model,
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
-        ],
-        "temperature": temperature,
-    }
-    response = requests.post(
-        resolved_url,
-        headers={"Authorization": f"Bearer {resolved_key}", "Content-Type": "application/json"},
-        json=payload,
-        timeout=timeout_s,
+    This function uses the provider system to support multiple LLM backends
+    (OpenAI, Anthropic, Google Gemini, Ollama).
+
+    Args:
+        system_prompt: System prompt with coaching instructions
+        user_prompt: User prompt with workout analysis context
+        provider_name: Provider to use ('openai', 'anthropic', 'google', 'ollama')
+        api_key: Optional API key (uses environment variable if not provided)
+        model: Optional model name (uses provider default if not provided)
+        temperature: Temperature for response generation
+        max_tokens: Maximum tokens in response
+
+    Returns:
+        Generated coaching feedback text
+
+    Raises:
+        ValueError: If provider configuration is invalid
+        RuntimeError: If API call fails
+    """
+    from cycling_ai.providers.base import ProviderConfig, ProviderMessage
+    from cycling_ai.providers.factory import ProviderFactory
+
+    # Create provider config
+    config = ProviderConfig(
+        provider_name=provider_name,
+        api_key=api_key or "",  # Will be validated by factory
+        model=model or "",  # Will use default if empty
+        temperature=temperature,
+        max_tokens=max_tokens,
     )
-    response.raise_for_status()
-    data = response.json()
-    return data["choices"][0]["message"]["content"]
+
+    # Create provider instance
+    try:
+        provider = ProviderFactory.create_provider(config)
+    except Exception as e:
+        raise ValueError(f"Failed to create provider '{provider_name}': {e}") from e
+
+    # Create messages
+    messages = [
+        ProviderMessage(role="system", content=system_prompt),
+        ProviderMessage(role="user", content=user_prompt),
+    ]
+
+    # Get completion
+    try:
+        response = provider.create_completion(messages=messages)
+        return response.content
+    except Exception as e:
+        raise RuntimeError(f"LLM provider call failed: {e}") from e
 
 
 def generate_coach_analysis(
     activity_id: int,
-    workout_id: str,
-    strava_token: str,
-    workout_library_path: str,
+    workout_structure: dict[str, Any],
+    power_streams: list[StreamPoint],
     ftp: float,
-    system_prompt_path: str,
-    user_prompt_path: str,
-    api_key: Optional[str] = None,
-    model: Optional[str] = None,
-    activity_meta: Optional[Dict[str, str]] = None,
-    athlete_meta: Optional[Dict[str, str]] = None,
-) -> Dict[str, Any]:
-    library = load_workout_library(workout_library_path)
-    workout = library.get(workout_id)
-    if workout is None:
-        raise KeyError(f"Workout id {workout_id} not found in library.")
+    system_prompt_path: str | Path,
+    user_prompt_path: str | Path,
+    provider_name: str = "openai",
+    api_key: str | None = None,
+    model: str | None = None,
+    temperature: float = 0.2,
+    activity_meta: dict[str, str] | None = None,
+    athlete_meta: dict[str, str] | None = None,
+) -> dict[str, Any]:
+    """
+    Generate AI-powered coaching analysis for an activity.
 
-    steps, resolved_ftp = load_workout_steps_from_library_object(workout, ftp=ftp)
-    streams = StravaClient(strava_token).get_power_streams(activity_id)
+    This function:
+    1. Parses workout structure into steps
+    2. Performs DTW alignment between planned and actual power
+    3. Analyzes compliance for each workout step
+    4. Generates coaching feedback using an LLM provider
 
+    Args:
+        activity_id: Activity identifier (e.g., Strava activity ID)
+        workout_structure: Workout structure dictionary containing:
+            - id: Workout identifier
+            - name: Workout name
+            - type: Workout type
+            - description: Workout description/intent
+            - structure: Workout structure definition
+        power_streams: List of power stream points (time_offset, power)
+        ftp: Athlete's Functional Threshold Power
+        system_prompt_path: Path to system prompt template
+        user_prompt_path: Path to user prompt template
+        provider_name: LLM provider name ('openai', 'anthropic', 'google', 'ollama')
+        api_key: Optional API key for LLM provider
+        model: Optional model name
+        temperature: Temperature for LLM response generation
+        activity_meta: Optional activity metadata (name, date)
+        athlete_meta: Optional athlete metadata (name)
+
+    Returns:
+        Dictionary containing:
+        - system_prompt: Rendered system prompt
+        - user_prompt: Rendered user prompt
+        - response_text: Raw LLM response
+        - response_json: Parsed JSON response (if valid)
+        - context: Full analysis context
+
+    Raises:
+        ValueError: If workout structure is invalid or provider configuration is invalid
+        RuntimeError: If LLM provider call fails
+    """
+    # Load workout steps
+    steps, resolved_ftp = load_workout_steps_from_library_object(workout_structure, ftp=ftp)
+    streams = power_streams
+
+    # Perform DTW alignment
     analyzer = ComplianceAnalyzer(ftp=resolved_ftp)
     planned_power = analyzer._expand_steps_to_seconds(steps)
     actual_power = [p.power for p in streams]
@@ -251,6 +390,7 @@ def generate_coach_analysis(
     )
     results = analyzer.analyze_with_aligned_series(steps, aligned_series)
 
+    # Build alignment metadata
     alignment = {
         "model": "DTW Align (Constrained)",
         "params": (
@@ -261,10 +401,12 @@ def generate_coach_analysis(
         "notes": f"planned_anchor={planned_anchor}, actual_anchor={actual_anchor}",
     }
 
+    # Build prompt context
+    workout_id = workout_structure.get("id", "unknown")
     context = build_prompt_context(
         activity_id=activity_id,
         workout_id=workout_id,
-        workout=workout,
+        workout=workout_structure,
         results=results,
         streams=streams,
         ftp=resolved_ftp,
@@ -273,15 +415,26 @@ def generate_coach_analysis(
         athlete_meta=athlete_meta,
     )
 
+    # Render prompts
     prompts = render_coach_prompts(system_prompt_path, user_prompt_path, context)
-    response_text = call_openai_chat(
-        prompts["system_prompt"], prompts["user_prompt"], api_key=api_key, model=model
+
+    # Generate coaching feedback
+    response_text = call_llm_provider(
+        system_prompt=prompts["system_prompt"],
+        user_prompt=prompts["user_prompt"],
+        provider_name=provider_name,
+        api_key=api_key,
+        model=model,
+        temperature=temperature,
     )
 
+    # Try to parse as JSON
+    response_json: dict[str, Any] | None = None
     try:
         response_json = json.loads(response_text)
     except json.JSONDecodeError:
-        response_json = None
+        # Response is not valid JSON, keep as text
+        pass
 
     return {
         "system_prompt": prompts["system_prompt"],

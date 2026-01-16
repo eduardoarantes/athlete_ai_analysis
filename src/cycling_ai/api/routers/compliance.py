@@ -16,7 +16,7 @@ from pydantic import BaseModel, Field
 from cycling_ai.core.compliance import (
     ComplianceAnalyzer,
     ComplianceResult,
-    analyze_activity_from_library,
+    analyze_activity_from_strava,
 )
 from cycling_ai.core.compliance.io import load_workout_steps_from_library_object
 from cycling_ai.core.compliance.models import StreamPoint
@@ -204,14 +204,6 @@ async def analyze_strava_activity(request: AnalyzeStravaActivityRequest) -> Comp
         HTTPException: If Strava fetch or analysis fails
     """
     try:
-        # Validate Strava token is configured
-        if not settings.strava_access_token:
-            logger.error("Strava access token not configured")
-            raise HTTPException(
-                status_code=500,
-                detail="Strava access token not configured. Please set STRAVA_ACCESS_TOKEN environment variable.",
-            )
-
         logger.info(
             f"Analyzing Strava activity {request.activity_id} "
             f"for workout '{request.workout.name or request.workout.id}'"
@@ -224,11 +216,10 @@ async def analyze_strava_activity(request: AnalyzeStravaActivityRequest) -> Comp
             "structure": request.workout.structure.model_dump(),
         }
 
-        # Use the existing analyze_activity_from_library function
-        result = analyze_activity_from_library(
+        # Use the existing analyze_activity_from_strava function
+        result = analyze_activity_from_strava(
             workout=workout_dict,
             activity_id=request.activity_id,
-            strava_token=settings.strava_access_token,
             ftp=request.ftp,
         )
 

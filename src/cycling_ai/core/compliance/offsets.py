@@ -1,19 +1,42 @@
-from typing import List, Optional, Protocol
+"""
+Temporal offset finding algorithms for workout compliance analysis.
+
+This module provides various strategies for finding the best temporal offset
+to align planned and actual power data.
+"""
+
+from __future__ import annotations
+
+from typing import Protocol
 
 import numpy as np
 
 
 class OffsetFinder(Protocol):
-    def find_offset(self, planned: List[float], actual: List[float]) -> int:
+    """Protocol for temporal offset finding algorithms."""
+
+    def find_offset(self, planned: list[float], actual: list[float]) -> int:
+        """
+        Find optimal temporal offset between planned and actual power.
+
+        Args:
+            planned: Planned power profile
+            actual: Actual power data
+
+        Returns:
+            Offset in seconds (planned[offset] aligns with actual[0])
+        """
         ...
 
 
 class WindowedMSEOffsetFinder(OffsetFinder):
-    def __init__(self, max_offset: int = 1500, min_required: int = 1000):
+    """Find offset by minimizing Mean Squared Error in a sliding window."""
+
+    def __init__(self, max_offset: int = 1500, min_required: int = 1000) -> None:
         self.max_offset = max_offset
         self.min_required = min_required
 
-    def find_offset(self, planned: List[float], actual: List[float]) -> int:
+    def find_offset(self, planned: list[float], actual: list[float]) -> int:
         return _find_offset(
             planned,
             actual,
@@ -23,6 +46,8 @@ class WindowedMSEOffsetFinder(OffsetFinder):
 
 
 class WeightedOffsetFinder(OffsetFinder):
+    """Find offset using variance-weighted MSE (emphasizes high-variance sections)."""
+
     def __init__(
         self,
         max_offset: int = 1500,
@@ -30,14 +55,14 @@ class WeightedOffsetFinder(OffsetFinder):
         window: int = 60,
         percentile: int = 60,
         low_weight: float = 0.2,
-    ):
+    ) -> None:
         self.max_offset = max_offset
         self.min_required = min_required
         self.window = window
         self.percentile = percentile
         self.low_weight = low_weight
 
-    def find_offset(self, planned: List[float], actual: List[float]) -> int:
+    def find_offset(self, planned: list[float], actual: list[float]) -> int:
         weights = _variance_weights(
             planned,
             window=self.window,
@@ -54,17 +79,19 @@ class WeightedOffsetFinder(OffsetFinder):
 
 
 class SegmentPeakOffsetFinder(OffsetFinder):
+    """Find offset by aligning high-power peaks between series."""
+
     def __init__(
         self,
         max_offset: int = 1500,
         min_required: int = 600,
         percentile: int = 85,
-    ):
+    ) -> None:
         self.max_offset = max_offset
         self.min_required = min_required
         self.percentile = percentile
 
-    def find_offset(self, planned: List[float], actual: List[float]) -> int:
+    def find_offset(self, planned: list[float], actual: list[float]) -> int:
         if not planned or not actual:
             return 0
         p_thresh = np.percentile(planned, self.percentile)
@@ -80,19 +107,21 @@ class SegmentPeakOffsetFinder(OffsetFinder):
 
 
 class DTWOffsetFinder(OffsetFinder):
+    """Find offset using DTW path median offset."""
+
     def __init__(
         self,
         max_offset: int = 1500,
         min_required: int = 600,
         downsample: int = 5,
         band: int = 80,
-    ):
+    ) -> None:
         self.max_offset = max_offset
         self.min_required = min_required
         self.downsample = downsample
         self.band = band
 
-    def find_offset(self, planned: List[float], actual: List[float]) -> int:
+    def find_offset(self, planned: list[float], actual: list[float]) -> int:
         if not planned or not actual:
             return 0
         p = _downsample(planned, self.downsample)
@@ -110,9 +139,9 @@ class DTWOffsetFinder(OffsetFinder):
 
 
 def _find_offset(
-    planned: List[float],
-    actual: List[float],
-    weights: Optional[List[float]] = None,
+    planned: list[float],
+    actual: list[float],
+    weights: Optional[list[float]] = None,
     max_offset: int = 1500,
     min_required: int = 1000,
 ) -> int:
@@ -143,11 +172,11 @@ def _find_offset(
 
 
 def _variance_weights(
-    planned: List[float],
+    planned: list[float],
     window: int = 60,
     percentile: int = 60,
     low_weight: float = 0.2,
-) -> List[float]:
+) -> list[float]:
     if len(planned) < window:
         return [1.0] * len(planned)
 
@@ -185,13 +214,13 @@ def _find_peak_overlap_offset(
     return best_offset
 
 
-def _downsample(values: List[float], step: int) -> List[float]:
+def _downsample(values: list[float], step: int) -> list[float]:
     if step <= 1:
         return values
     return [float(np.mean(values[i : i + step])) for i in range(0, len(values), step)]
 
 
-def _zscore(values: List[float]) -> List[float]:
+def _zscore(values: list[float]) -> list[float]:
     arr = np.array(values, dtype=float)
     mean = float(np.mean(arr))
     std = float(np.std(arr))
@@ -200,7 +229,7 @@ def _zscore(values: List[float]) -> List[float]:
     return ((arr - mean) / std).tolist()
 
 
-def _dtw_path(a: List[float], b: List[float], band: int) -> List[tuple[int, int]]:
+def _dtw_path(a: list[float], b: list[float], band: int) -> List[tuple[int, int]]:
     n = len(a)
     m = len(b)
     band = max(band, abs(n - m))

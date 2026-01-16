@@ -5,13 +5,14 @@ planned workouts against actual performance data.
 """
 
 from .analyzer import ComplianceAnalyzer
+from .api import analyze_activity_from_strava
+from .coach_ai import generate_coach_analysis
 from .compliance import (
     BoundedComplianceScorer,
     ComplianceScorer,
     LegacyComplianceScorer,
 )
 from .models import ComplianceResult, StreamPoint, WorkoutStep
-from .api import analyze_activity_from_library, analyze_activity_with_coach_ai
 
 __all__ = [
     "ComplianceAnalyzer",
@@ -21,6 +22,6 @@ __all__ = [
     "ComplianceResult",
     "StreamPoint",
     "WorkoutStep",
-    "analyze_activity_from_library",
-    "analyze_activity_with_coach_ai",
+    "analyze_activity_from_strava",
+    "generate_coach_analysis",
 ]
