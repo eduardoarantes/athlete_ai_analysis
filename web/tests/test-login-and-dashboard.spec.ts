@@ -170,9 +170,9 @@ test.describe('Dashboard Page', () => {
     await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 })
 
     // Check for welcome message (might be translated)
-    await expect(
-      page.locator('h1:has-text("Welcome"), h1:has-text("Bem-vindo")')
-    ).toBeVisible({ timeout: 5000 })
+    await expect(page.locator('h1:has-text("Welcome"), h1:has-text("Bem-vindo")')).toBeVisible({
+      timeout: 5000,
+    })
   })
 
   test.skip('Dashboard shows athlete profile information', async ({ page }) => {

@@ -32,6 +32,9 @@ class APISettings(BaseSettings):
     supabase_url: str | None = None
     supabase_service_role_key: str | None = None
 
+    # Strava configuration
+    strava_access_token: str | None = None  # Will be loaded from AWS Parameter Store in production
+
     # API metadata
     title: str = "Cycling AI API"
     description: str = "REST API for AI-powered cycling performance analysis"
