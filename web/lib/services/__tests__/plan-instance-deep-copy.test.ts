@@ -39,7 +39,7 @@ describe('Plan Instance Workout Deep Copy', () => {
           {
             name: 'Warmup',
             intensityClass: 'warmUp',
-            length: { unit: 'time', value: 600 },
+            length: { unit: 'second', value: 600 },
             targets: [{ type: 'power', minValue: 50, maxValue: 60 }],
           },
         ],
@@ -51,13 +51,13 @@ describe('Plan Instance Workout Deep Copy', () => {
           {
             name: 'Work',
             intensityClass: 'active',
-            length: { unit: 'time', value: 720 },
+            length: { unit: 'second', value: 720 },
             targets: [{ type: 'power', minValue: 88, maxValue: 93 }],
           },
           {
             name: 'Recovery',
             intensityClass: 'rest',
-            length: { unit: 'time', value: 180 },
+            length: { unit: 'second', value: 180 },
             targets: [{ type: 'power', minValue: 55, maxValue: 65 }],
           },
         ],
@@ -69,7 +69,7 @@ describe('Plan Instance Workout Deep Copy', () => {
           {
             name: 'Cooldown',
             intensityClass: 'coolDown',
-            length: { unit: 'time', value: 600 },
+            length: { unit: 'second', value: 600 },
             targets: [{ type: 'power', minValue: 50, maxValue: 60 }],
           },
         ],
@@ -333,7 +333,7 @@ describe('Plan Instance Workout Deep Copy', () => {
               {
                 name: 'Original Warmup',
                 intensityClass: 'warmUp',
-                length: { unit: 'time', value: 600 },
+                length: { unit: 'second', value: 600 },
                 targets: [{ type: 'power', minValue: 50, maxValue: 60 }],
               },
             ],
@@ -352,7 +352,7 @@ describe('Plan Instance Workout Deep Copy', () => {
               {
                 name: 'Modified Warmup',
                 intensityClass: 'warmUp',
-                length: { unit: 'time', value: 900 }, // Changed duration
+                length: { unit: 'second', value: 900 }, // Changed duration
                 targets: [{ type: 'power', minValue: 55, maxValue: 65 }], // Changed power
               },
             ],

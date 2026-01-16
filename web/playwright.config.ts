@@ -1,5 +1,12 @@
 import { defineConfig, devices } from '@playwright/test'
 
+// Get port from environment or use default
+// Note: dotenv automatically loads ../.env before this runs
+const WEB_PORT = process.env.WEB_PORT || process.env.PORT || '3000'
+const BASE_URL = `http://localhost:${WEB_PORT}`
+
+console.log(`[Playwright Config] Using BASE_URL: ${BASE_URL}`)
+
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
@@ -8,7 +15,7 @@ export default defineConfig({
   ...(process.env.CI && { workers: 1 }),
   reporter: 'html',
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: BASE_URL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
@@ -19,9 +26,14 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'pnpm dev',
-    url: 'http://localhost:3000',
+    command: `PORT=${WEB_PORT} pnpm dev`,
+    url: BASE_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
+    env: {
+      PORT: WEB_PORT,
+      NODE_ENV: process.env.NODE_ENV || 'test',
+      ...(process.env.TZ && { TZ: process.env.TZ }),
+    },
   },
 })

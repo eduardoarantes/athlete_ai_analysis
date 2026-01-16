@@ -90,8 +90,9 @@ async function prepareWorkoutsForInstance(
                   type: libraryWorkout.type,
                   tss: libraryWorkout.base_tss,
                   structure: libraryWorkout.structure,
-                  description: libraryWorkout.description || undefined,
-                  detailed_description: libraryWorkout.detailed_description || undefined,
+                  ...(libraryWorkout.detailed_description && {
+                    detailed_description: libraryWorkout.detailed_description,
+                  }),
                   library_workout_id: workout.library_workout_id, // Keep for reference
                 }
               } else {

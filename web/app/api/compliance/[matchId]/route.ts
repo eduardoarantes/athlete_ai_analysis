@@ -103,6 +103,14 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
+    // Check if plan instance ID exists (manual workouts may not have one)
+    if (!match.plan_instance_id) {
+      return NextResponse.json(
+        { error: 'Cannot analyze compliance for manual workouts without a plan instance' },
+        { status: 400 }
+      )
+    }
+
     // Check for cached analysis (if not forcing refresh and no FTP override)
     if (!forceRefresh && !ftpOverride) {
       // Run cache and plan instance queries in parallel for faster response
