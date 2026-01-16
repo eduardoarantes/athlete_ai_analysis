@@ -1,11 +1,14 @@
 import html
 import json
-from typing import Iterable, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional
 
-import plotly.graph_objects as go
-import plotly.io as pio
+import plotly.graph_objects as go  # type: ignore[import-not-found]
+import plotly.io as pio  # type: ignore[import-not-found]
 
 from .models import ComplianceResult, StreamPoint, WorkoutStep
+
+if TYPE_CHECKING:
+    from .analyzer import ComplianceAnalyzer
 
 
 def _expand_planned_power(steps: Iterable[WorkoutStep]) -> List[float]:
@@ -21,7 +24,7 @@ def save_workout_chart(
     output_path: str,
     title: str = "Workout Compliance: Target vs Actual Power",
 ) -> None:
-    import matplotlib.pyplot as plt
+    import matplotlib.pyplot as plt  # type: ignore[import-not-found]
 
     planned_power = _expand_planned_power(steps)
     actual_power = [point.power for point in streams]
@@ -41,7 +44,7 @@ def save_workout_chart(
 def build_plotly_chart_html(
     steps: List[WorkoutStep],
     streams: List[StreamPoint],
-    analyzer,
+    analyzer: "ComplianceAnalyzer",
     offset: Optional[int] = None,
     aligned_actual: Optional[List[Optional[float]]] = None,
     title: str = "Workout Compliance: Target vs Actual Power",
@@ -143,7 +146,8 @@ def build_plotly_chart_html(
         yaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[0, max_power]),
     )
 
-    return pio.to_html(fig, include_plotlyjs="inline", full_html=False)
+    html_str: str = pio.to_html(fig, include_plotlyjs="inline", full_html=False)
+    return html_str
 
 
 def _format_duration(seconds: int) -> str:
@@ -188,7 +192,7 @@ def _zone_descriptor(target_power: float, ftp: float) -> str:
     return "Z5"
 
 
-def _describe_step(step: dict, ftp: float) -> str:
+def _describe_step(step: Dict[str, Any], ftp: float) -> str:
     duration = step.get("length", {}).get("value", 0)
     targets = step.get("targets", [])
     if targets:
@@ -204,7 +208,7 @@ def _describe_step(step: dict, ftp: float) -> str:
     return f"{_format_duration(duration)} in {descriptor}"
 
 
-def _block_section(steps: List[dict]) -> str:
+def _block_section(steps: List[Dict[str, Any]]) -> str:
     names = " ".join(step.get("name", "").lower() for step in steps)
     intensity = " ".join(step.get("intensityClass", "").lower() for step in steps)
     if "warm" in names or "warmup" in intensity:
@@ -214,9 +218,9 @@ def _block_section(steps: List[dict]) -> str:
     return "main"
 
 
-def _describe_workout(workout_definition: dict, ftp: float) -> dict:
+def _describe_workout(workout_definition: Dict[str, Any], ftp: float) -> Dict[str, List[str]]:
     structure = workout_definition.get("structure", {}).get("structure", [])
-    sections = {"warmup": [], "main": [], "cooldown": []}
+    sections: Dict[str, List[str]] = {"warmup": [], "main": [], "cooldown": []}
 
     for block in structure:
         reps = block.get("length", {}).get("value", 1)
@@ -321,10 +325,10 @@ def save_workout_report_html(
 
 def save_multi_workout_report_html(
     output_path: str,
-    sections: List[dict],
+    sections: List[Dict[str, Any]],
     title: str = "Workout Compliance Report",
 ) -> None:
-    section_blocks = []
+    section_blocks: List[str] = []
     for section in sections:
         table_html = _results_table_html(section["results"])
         section_blocks.append(
@@ -353,8 +357,8 @@ def save_multi_workout_report_html(
 """
         )
 
-    sections_html = "\n".join(section_blocks)
-    html_doc = f"""<!doctype html>
+    sections_html: str = "\n".join(section_blocks)
+    html_doc: str = f"""<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -420,10 +424,10 @@ def save_multi_workout_report_html(
 
 def save_comparison_report_html(
     output_path: str,
-    sections: List[dict],
+    sections: List[Dict[str, Any]],
     title: str = "Workout Compliance Comparison",
 ) -> None:
-    section_blocks = []
+    section_blocks: List[str] = []
     for section in sections:
         coach_feedback = section.get("coach_feedback")
         coach_feedback_html = ""
@@ -476,12 +480,12 @@ def save_comparison_report_html(
             if section.get("algorithms"):
                 ftp_value = section["algorithms"][0].get("ftp")
             summary_sections = _describe_workout(workout_definition, ftp_value or 0.0)
-            sections_html = []
+            workout_section_parts: List[str] = []
             if summary_sections["warmup"]:
                 warmup_items = "".join(
                     f"<li>{html.escape(line)}</li>" for line in summary_sections["warmup"]
                 )
-                sections_html.append(
+                workout_section_parts.append(
                     "<div class=\"workout-section\">"
                     "<div class=\"workout-label\">Warm Up</div>"
                     f"<ul>{warmup_items}</ul>"
@@ -491,7 +495,7 @@ def save_comparison_report_html(
                 main_items = "".join(
                     f"<li>{html.escape(line)}</li>" for line in summary_sections["main"]
                 )
-                sections_html.append(
+                workout_section_parts.append(
                     "<div class=\"workout-section\">"
                     "<div class=\"workout-label\">Main Set</div>"
                     f"<ul>{main_items}</ul>"
@@ -501,7 +505,7 @@ def save_comparison_report_html(
                 cooldown_items = "".join(
                     f"<li>{html.escape(line)}</li>" for line in summary_sections["cooldown"]
                 )
-                sections_html.append(
+                workout_section_parts.append(
                     "<div class=\"workout-section\">"
                     "<div class=\"workout-label\">Warm Down</div>"
                     f"<ul>{cooldown_items}</ul>"
@@ -512,7 +516,7 @@ def save_comparison_report_html(
                 "<div class=\"panel workout-summary\">"
                 "<h4>Workout overview</h4>"
                 "<div class=\"workout-text\">"
-                + "".join(sections_html)
+                + "".join(workout_section_parts)
                 + "</div></div>"
             )
 
@@ -567,179 +571,255 @@ def save_comparison_report_html(
 """
         )
 
-    sections_html = "\n".join(section_blocks)
-    html_doc = f"""<!doctype html>
+    sections_html: str = "\n".join(section_blocks)
+    html_doc: str = f"""<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <style>
+      * {{
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }}
+
       :root {{
         color-scheme: light;
       }}
+
       body {{
-        margin: 24px;
-        font-family: "Georgia", "Times New Roman", serif;
-        color: #1b1b1b;
-        background: #f7f3ef;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        line-height: 1.6;
+        color: #1a1a2e;
+        background: #f8fafc;
       }}
+
+      .container {{
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+      }}
+
+      header {{
+        text-align: center;
+        margin-bottom: 3rem;
+        padding-bottom: 2rem;
+        border-bottom: 2px solid #e2e8f0;
+      }}
+
       h1 {{
-        margin: 0 0 16px;
-        font-size: 28px;
-        letter-spacing: 0.5px;
+        font-size: 2.5rem;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+        text-align: center;
+        padding-bottom: 2rem;
+        border-bottom: 2px solid #e2e8f0;
       }}
+
       h2 {{
-        margin: 24px 0 12px;
-        font-size: 20px;
+        font-size: 1.5rem;
+        color: #1e293b;
+        margin-bottom: 1rem;
       }}
+
       h3 {{
-        margin: 0 0 8px;
-        font-size: 16px;
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+        color: #475569;
       }}
+
+      h4 {{
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #475569;
+        margin-bottom: 0.75rem;
+      }}
+
       .grid {{
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-        gap: 16px;
+        gap: 1rem;
         align-items: start;
       }}
+
       .chart {{
-        margin: 12px 0 20px;
+        margin: 1rem 0 1.5rem;
       }}
-      .meta {{
-        margin-bottom: 10px;
-        font-size: 13px;
-        color: #5f5750;
-      }}
+
       .panels {{
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 12px;
-        margin-bottom: 12px;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
       }}
+
       .panel {{
-        background: #ffffff;
+        background: white;
         border-radius: 12px;
-        padding: 12px;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
       }}
-      .panel h4 {{
-        margin: 0 0 8px;
-        font-size: 14px;
-        letter-spacing: 0.3px;
-      }}
+
       .workout-text {{
-        font-size: 13px;
-        line-height: 1.5;
-        color: #2f2a27;
+        font-size: 0.875rem;
+        line-height: 1.6;
+        color: #475569;
       }}
+
       .workout-section + .workout-section {{
-        margin-top: 10px;
-        padding-top: 8px;
-        border-top: 1px solid #eee3db;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid #e2e8f0;
       }}
+
       .workout-label {{
         text-transform: uppercase;
-        font-size: 11px;
-        letter-spacing: 0.8px;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
         font-weight: 600;
-        color: #6b5f58;
-        margin-bottom: 6px;
+        color: #64748b;
+        margin-bottom: 0.5rem;
       }}
+
       .workout-section ul {{
         margin: 0;
-        padding-left: 18px;
+        padding-left: 1.25rem;
       }}
+
       .workout-section li {{
-        margin: 4px 0;
+        margin: 0.25rem 0;
       }}
+
       .summary table {{
         width: 100%;
         border-collapse: collapse;
-        background: #ffffff;
-        margin-bottom: 12px;
+        background: white;
+        margin-bottom: 0.75rem;
+        font-size: 0.875rem;
       }}
+
       .summary th,
       .summary td {{
-        padding: 8px 10px;
-        border-bottom: 1px solid #e0d9d3;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #e2e8f0;
         text-align: left;
-        font-size: 13px;
       }}
+
       .summary th {{
-        background: #f3ece6;
+        background: #f1f5f9;
         font-weight: 600;
+        color: #475569;
       }}
+
       table {{
         width: 100%;
         border-collapse: collapse;
-        background: #ffffff;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+        background: white;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        font-size: 0.875rem;
       }}
+
       .coach-table {{
         width: 100%;
         border-collapse: collapse;
-        background: #ffffff;
+        background: white;
         box-shadow: none;
       }}
+
       .coach-table th,
       .coach-table td {{
-        padding: 8px 10px;
-        border-bottom: 1px solid #e0d9d3;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #e2e8f0;
         text-align: left;
-        font-size: 13px;
+        font-size: 0.875rem;
         vertical-align: top;
       }}
+
       .coach-table th {{
         width: 180px;
-        background: #f3ece6;
+        background: #f1f5f9;
         font-weight: 600;
+        color: #475569;
       }}
+
       th,
       td {{
-        padding: 10px 12px;
-        border-bottom: 1px solid #e0d9d3;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #e2e8f0;
         text-align: left;
-        font-size: 14px;
       }}
+
       th {{
-        background: #ede5df;
+        background: #f1f5f9;
         font-weight: 600;
+        color: #475569;
       }}
+
       tr:last-child td {{
         border-bottom: none;
       }}
+
+      tr:hover {{
+        background: #f8fafc;
+      }}
+
       .workout {{
-        margin-bottom: 32px;
-      }}
-      .algo {{
-        background: rgba(255, 255, 255, 0.6);
-        padding: 12px;
+        background: white;
         border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
       }}
+
+      .algo {{
+        background: #f8fafc;
+        padding: 1rem;
+        border-radius: 8px;
+      }}
+
       details {{
-        background: #ffffff;
-        border-radius: 10px;
-        padding: 8px 10px;
-        margin: 10px 0;
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+        background: white;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        margin: 0.75rem 0;
+        border: 1px solid #e2e8f0;
       }}
+
       summary {{
         cursor: pointer;
         font-weight: 600;
-        color: #3c3430;
+        color: #475569;
         list-style: none;
+        padding: 0.5rem 0;
       }}
+
       summary::-webkit-details-marker {{
         display: none;
       }}
+
+      summary:hover {{
+        color: #1e293b;
+      }}
+
+      details[open] summary {{
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #e2e8f0;
+      }}
+
       details pre {{
-        margin: 10px 0 0;
-        background: #f4efea;
-        padding: 10px 12px;
-        border-radius: 8px;
-        font-size: 12px;
+        margin: 0.75rem 0 0;
+        background: #f1f5f9;
+        padding: 0.75rem 1rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
         overflow-x: auto;
+      }}
+
+      .coach-feedback {{
+        border-left: 4px solid #3b82f6;
       }}
     </style>
   </head>

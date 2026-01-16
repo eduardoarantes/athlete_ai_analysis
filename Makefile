@@ -6,7 +6,7 @@
 .PHONY: help status start stop restart logs clean build check \
         api-status api-start api-stop api-restart api-logs \
         web-status web-start web-stop web-restart web-logs \
-        install test
+        install test report
 
 # Ports
 API_PORT ?= 8000
@@ -211,6 +211,40 @@ web-dev: ## Run web server in foreground (interactive)
 
 web-build: ## Build web for production
 	cd $(WEB_DIR) && pnpm build
+
+#==============================================================================
+# COMPLIANCE REPORT GENERATION
+#==============================================================================
+
+# Report generation variables
+REPORT_OUTPUT ?= workout_comparison_report_dtw.html
+MAPPING_CSV ?= data/workout_to_activity_mapping.csv
+WORKOUT_LIBRARY ?= data/workout_library.json
+STREAMS_DIR ?= data
+FTP ?= 250
+FTP_CSV ?= data/ftp.csv
+
+report: ## Generate workout compliance report with DTW alignment
+	@if [ ! -f $(MAPPING_CSV) ]; then \
+		echo "$(RED)Error: Mapping CSV not found: $(MAPPING_CSV)$(NC)"; \
+		exit 1; \
+	fi
+	@if [ ! -f $(WORKOUT_LIBRARY) ]; then \
+		echo "$(RED)Error: Workout library not found: $(WORKOUT_LIBRARY)$(NC)"; \
+		exit 1; \
+	fi
+	@echo "Generating compliance report..."
+	@echo "  Mapping: $(MAPPING_CSV)"
+	@echo "  Library: $(WORKOUT_LIBRARY)"
+	@echo "  Streams: $(STREAMS_DIR)"
+	@echo "  Output: $(REPORT_OUTPUT)"
+	@$(VENV)/bin/python scripts/generate_compliance_report.py \
+		--mapping-csv $(MAPPING_CSV) \
+		--workout-library $(WORKOUT_LIBRARY) \
+		--streams-dir $(STREAMS_DIR) \
+		--report-output $(REPORT_OUTPUT) \
+		--ftp $(FTP) \
+		--ftp-csv $(FTP_CSV)
 
 #==============================================================================
 # CONVENIENCE ALIASES
