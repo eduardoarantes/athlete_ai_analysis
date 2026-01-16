@@ -18,6 +18,12 @@ import {
   ACTIVITY_11145023577_POWER_STREAM,
   ACTIVITY_11123154345_POWER_STREAM,
   ACTIVITY_11010699309_POWER_STREAM,
+  ACTIVITY_16983317605_POWER_STREAM,
+  ACTIVITY_11241924282_POWER_STREAM,
+  ACTIVITY_11249429377_POWER_STREAM,
+  ACTIVITY_10953881435_POWER_STREAM,
+  ACTIVITY_10906026493_POWER_STREAM,
+  ACTIVITY_11739391851_POWER_STREAM,
 } from './real-activity-streams'
 
 // ============================================================================
@@ -422,10 +428,63 @@ export const PAIR_5_WORKOUT_SEGMENTS: WorkoutSegment[] = [
 ]
 
 // ============================================================================
-// Pair 6: C2kCY0ykdB - 11205974269
-// Workout: 5min Strength Efforts (Zone 3)
+// Pair 6: 9iVUOCNy7g - 11205974269
+// Workout: 5min Strength Efforts (Zone 3) 4x5min (57min)
 // ============================================================================
 
+export const PAIR_6_STRUCTURE: WorkoutStructure = {
+  primaryIntensityMetric: 'percentOfFtp',
+  primaryLengthMetric: 'duration',
+  structure: [
+    // Warmup - 15 minutes (900s)
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Warmup',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 900 },
+          targets: [{ type: 'power', minValue: 50, maxValue: 60, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+    // Main set: 4x (5min strength @ 85-95% / 3min rest @ 45-55%)
+    {
+      type: 'repetition',
+      length: { unit: 'repetition', value: 4 },
+      steps: [
+        {
+          name: 'Strength Efforts',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 300 },
+          targets: [{ type: 'power', minValue: 85, maxValue: 95, unit: 'percentOfFtp' }],
+        },
+        {
+          name: 'Rest',
+          intensityClass: 'rest',
+          length: { unit: 'second', value: 180 },
+          targets: [{ type: 'power', minValue: 45, maxValue: 55, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+    // Cooldown - 10 minutes (600s)
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Cool Down',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 600 },
+          targets: [{ type: 'power', minValue: 50, maxValue: 60, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+  ],
+}
+
+// Legacy segments format (for backwards compatibility)
 export const PAIR_6_WORKOUT_SEGMENTS: WorkoutSegment[] = [
   {
     type: 'steady',
@@ -546,6 +605,639 @@ export const PAIR_9_WORKOUT_SEGMENTS: WorkoutSegment[] = [
 ]
 
 // ============================================================================
+// Pair 10: bxZjY8oRPV - 16983317605
+// Workout: Above and Below Threshold (10x1min Z3/Z5)
+// ============================================================================
+
+export const PAIR_10_STRUCTURE: WorkoutStructure = {
+  primaryIntensityMetric: 'percentOfFtp',
+  primaryLengthMetric: 'duration',
+  structure: [
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Warm up',
+          intensityClass: 'warmUp',
+          length: { unit: 'second', value: 900 },
+          targets: [{ type: 'power', minValue: 56, maxValue: 66, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+    {
+      type: 'repetition',
+      length: { unit: 'repetition', value: 5 },
+      steps: [
+        {
+          name: 'Hard',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 10 },
+          targets: [{ type: 'power', minValue: 91, maxValue: 105, unit: 'percentOfFtp' }],
+        },
+        {
+          name: 'Easy',
+          intensityClass: 'rest',
+          length: { unit: 'second', value: 50 },
+          targets: [{ type: 'power', minValue: 56, maxValue: 66, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+    {
+      type: 'repetition',
+      length: { unit: 'repetition', value: 10 },
+      steps: [
+        {
+          name: 'Hard',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 90 },
+          targets: [{ type: 'power', minValue: 84, maxValue: 90, unit: 'percentOfFtp' }],
+        },
+        {
+          name: 'Harder',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 30 },
+          targets: [{ type: 'power', minValue: 105, maxValue: 110, unit: 'percentOfFtp' }],
+        },
+        {
+          name: 'Easy',
+          intensityClass: 'rest',
+          length: { unit: 'second', value: 60 },
+          targets: [{ type: 'power', minValue: 56, maxValue: 65, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Cool Down',
+          intensityClass: 'coolDown',
+          length: { unit: 'second', value: 600 },
+          targets: [{ type: 'power', minValue: 56, maxValue: 66, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+  ],
+}
+
+// Legacy segments format (for backwards compatibility)
+export const PAIR_10_WORKOUT_SEGMENTS: WorkoutSegment[] = [
+  {
+    type: 'warmup',
+    duration_min: 15.0,
+    power_low_pct: 56,
+    power_high_pct: 66,
+    description: 'Warm up',
+  },
+  {
+    type: 'interval',
+    duration_min: 0,
+    sets: 5,
+    work: { duration_min: 10 / 60, power_low_pct: 91, power_high_pct: 105 },
+    recovery: { duration_min: 50 / 60, power_low_pct: 56, power_high_pct: 66 },
+  },
+  {
+    type: 'interval',
+    duration_min: 0,
+    sets: 10,
+    work: { duration_min: 90 / 60, power_low_pct: 84, power_high_pct: 90 },
+    recovery: { duration_min: 90 / 60, power_low_pct: 85, power_high_pct: 110 },
+  },
+  {
+    type: 'cooldown',
+    duration_min: 10.0,
+    power_low_pct: 56,
+    power_high_pct: 66,
+    description: 'Cool Down',
+  },
+]
+
+// ============================================================================
+// PAIR 11 - Tempo Repeats 3x15min (YQGNEgWsTS / 11241924282)
+// ============================================================================
+
+export const PAIR_11_STRUCTURE: WorkoutStructure = {
+  primaryIntensityMetric: 'percentOfFtp',
+  primaryLengthMetric: 'duration',
+  structure: [
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Warm up',
+          intensityClass: 'warmUp',
+          length: { unit: 'second', value: 1200 },
+          targets: [{ type: 'power', minValue: 55, maxValue: 65, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+    {
+      type: 'repetition',
+      length: { unit: 'repetition', value: 3 },
+      steps: [
+        {
+          name: 'Steady State ',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 900 },
+          targets: [
+            { type: 'power', minValue: 85, maxValue: 90, unit: 'percentOfFtp' },
+            { type: 'cadence', minValue: 85, maxValue: 95, unit: 'rpm' },
+          ],
+        },
+        {
+          name: 'Easy',
+          intensityClass: 'rest',
+          length: { unit: 'second', value: 300 },
+          targets: [{ type: 'power', minValue: 50, maxValue: 55, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Cool Down',
+          intensityClass: 'coolDown',
+          length: { unit: 'second', value: 1200 },
+          targets: [{ type: 'power', minValue: 55, maxValue: 65, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+  ],
+}
+
+// ============================================================================
+// PAIR 12 - Base Fitness Training 1.8hr (Ia8x8iaLo2 / 11249429377)
+// ============================================================================
+
+export const PAIR_12_STRUCTURE: WorkoutStructure = {
+  primaryIntensityMetric: 'percentOfFtp',
+  primaryLengthMetric: 'duration',
+  structure: [
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Warm-up',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 300 },
+          targets: [
+            { type: 'power', minValue: 45, maxValue: 55, unit: 'percentOfFtp' },
+            { type: 'cadence', minValue: 90, maxValue: 100, unit: 'rpm' },
+          ],
+        },
+      ],
+    },
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'The Complete Session',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 5400 },
+          targets: [
+            { type: 'power', minValue: 65, maxValue: 70, unit: 'percentOfFtp' },
+            { type: 'cadence', minValue: 85, maxValue: 100, unit: 'rpm' },
+          ],
+        },
+      ],
+    },
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Cooldown',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 600 },
+          targets: [
+            { type: 'power', minValue: 45, maxValue: 55, unit: 'percentOfFtp' },
+            { type: 'cadence', minValue: 90, maxValue: 100, unit: 'rpm' },
+          ],
+        },
+      ],
+    },
+  ],
+}
+
+// ============================================================================
+// PAIR 13 - FTP Over Unders 3 sets 8x1 (BB5epMKMwL / 10953881435)
+// ============================================================================
+
+export const PAIR_13_STRUCTURE: WorkoutStructure = {
+  primaryIntensityMetric: 'percentOfFtp',
+  primaryLengthMetric: 'duration',
+  structure: [
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Warmup',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 300 },
+          targets: [{ type: 'power', minValue: 42.5, maxValue: 56, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+    {
+      type: 'repetition',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Ramp 1',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 30 },
+          targets: [{ type: 'power', minValue: 76, maxValue: 83, unit: 'percentOfFtp' }],
+        },
+        {
+          name: 'Ramp 1 - Rest',
+          intensityClass: 'rest',
+          length: { unit: 'second', value: 30 },
+          targets: [{ type: 'power', minValue: 56, maxValue: 56, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+    {
+      type: 'repetition',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Ramp 2',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 30 },
+          targets: [{ type: 'power', minValue: 91, maxValue: 98, unit: 'percentOfFtp' }],
+        },
+        {
+          name: 'Ramp 2 - Rest',
+          intensityClass: 'rest',
+          length: { unit: 'second', value: 30 },
+          targets: [{ type: 'power', minValue: 56, maxValue: 56, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+    {
+      type: 'repetition',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Ramp 3',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 30 },
+          targets: [{ type: 'power', minValue: 106, maxValue: 113, unit: 'percentOfFtp' }],
+        },
+        {
+          name: 'Ramp 3 - Rest',
+          intensityClass: 'rest',
+          length: { unit: 'second', value: 30 },
+          targets: [{ type: 'power', minValue: 56, maxValue: 56, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Recover',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 180 },
+          targets: [{ type: 'power', minValue: 42.5, maxValue: 56, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+    {
+      type: 'repetition',
+      length: { unit: 'repetition', value: 4 },
+      steps: [
+        {
+          name: 'Over Unders',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 60 },
+          targets: [{ type: 'power', minValue: 102.2, maxValue: 103.6, unit: 'percentOfFtp' }],
+        },
+        {
+          name: 'Over Unders - Rest',
+          intensityClass: 'rest',
+          length: { unit: 'second', value: 60 },
+          targets: [{ type: 'power', minValue: 93.8, maxValue: 93.8, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Recover',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 240 },
+          targets: [{ type: 'power', minValue: 42.5, maxValue: 56, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+    {
+      type: 'repetition',
+      length: { unit: 'repetition', value: 4 },
+      steps: [
+        {
+          name: 'Over Unders',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 60 },
+          targets: [{ type: 'power', minValue: 102.2, maxValue: 103.6, unit: 'percentOfFtp' }],
+        },
+        {
+          name: 'Over Unders - Rest',
+          intensityClass: 'rest',
+          length: { unit: 'second', value: 60 },
+          targets: [{ type: 'power', minValue: 93.8, maxValue: 93.8, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Recover',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 240 },
+          targets: [{ type: 'power', minValue: 42.5, maxValue: 56, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+    {
+      type: 'repetition',
+      length: { unit: 'repetition', value: 4 },
+      steps: [
+        {
+          name: 'Over Unders',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 60 },
+          targets: [{ type: 'power', minValue: 102.2, maxValue: 103.6, unit: 'percentOfFtp' }],
+        },
+        {
+          name: 'Over Unders - Rest',
+          intensityClass: 'rest',
+          length: { unit: 'second', value: 60 },
+          targets: [{ type: 'power', minValue: 93.8, maxValue: 93.8, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Cool Down',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 600 },
+          targets: [{ type: 'power', minValue: 42.5, maxValue: 56, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+  ],
+}
+
+// ============================================================================
+// PAIR 14 - FTP Progression 2 5x7 (74GPWrdaus / 10906026493)
+// ============================================================================
+
+export const PAIR_14_STRUCTURE: WorkoutStructure = {
+  primaryIntensityMetric: 'percentOfFtp',
+  primaryLengthMetric: 'duration',
+  structure: [
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Warmup',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 1200 },
+          targets: [{ type: 'power', minValue: 50, maxValue: 65, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+    {
+      type: 'repetition',
+      length: { unit: 'repetition', value: 2 },
+      steps: [
+        {
+          name: 'Activations',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 60 },
+          targets: [{ type: 'power', minValue: 95, maxValue: 100, unit: 'percentOfFtp' }],
+        },
+        {
+          name: 'Easy',
+          intensityClass: 'rest',
+          length: { unit: 'second', value: 180 },
+          targets: [{ type: 'power', minValue: 45, maxValue: 55, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+    {
+      type: 'repetition',
+      length: { unit: 'repetition', value: 5 },
+      steps: [
+        {
+          name: 'Threshold',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 420 },
+          targets: [{ type: 'power', minValue: 95, maxValue: 100, unit: 'percentOfFtp' }],
+        },
+        {
+          name: 'Rest',
+          intensityClass: 'rest',
+          length: { unit: 'second', value: 180 },
+          targets: [{ type: 'power', minValue: 45, maxValue: 45, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Cool Down',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 600 },
+          targets: [{ type: 'power', minValue: 42.5, maxValue: 56, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+  ],
+}
+
+// ============================================================================
+// PAIR 15 - 40/20s (5min) 2x1min (dQ1OauEjzF / 11739391851)
+// ============================================================================
+
+export const PAIR_15_STRUCTURE: WorkoutStructure = {
+  primaryIntensityMetric: 'percentOfFtp',
+  primaryLengthMetric: 'duration',
+  structure: [
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Warmup',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 1200 },
+          targets: [{ type: 'power', minValue: 50, maxValue: 65, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+    {
+      type: 'repetition',
+      length: { unit: 'repetition', value: 2 },
+      steps: [
+        {
+          name: 'Activations',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 60 },
+          targets: [{ type: 'power', minValue: 105, maxValue: 110, unit: 'percentOfFtp' }],
+        },
+        {
+          name: 'Rest',
+          intensityClass: 'rest',
+          length: { unit: 'second', value: 120 },
+          targets: [{ type: 'power', minValue: 45, maxValue: 55, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+    {
+      type: 'repetition',
+      length: { unit: 'repetition', value: 5 },
+      steps: [
+        {
+          name: '40s hard ',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 40 },
+          targets: [{ type: 'power', minValue: 115, maxValue: 130, unit: 'percentOfFtp' }],
+        },
+        {
+          name: 'Rest',
+          intensityClass: 'rest',
+          length: { unit: 'second', value: 20 },
+          targets: [{ type: 'power', minValue: 42.5, maxValue: 42.5, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Recovery',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 240 },
+          targets: [{ type: 'power', minValue: 45, maxValue: 55, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+    {
+      type: 'repetition',
+      length: { unit: 'repetition', value: 5 },
+      steps: [
+        {
+          name: '40s hard ',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 40 },
+          targets: [{ type: 'power', minValue: 115, maxValue: 130, unit: 'percentOfFtp' }],
+        },
+        {
+          name: 'Rest',
+          intensityClass: 'rest',
+          length: { unit: 'second', value: 20 },
+          targets: [{ type: 'power', minValue: 42.5, maxValue: 42.5, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Recovery',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 240 },
+          targets: [{ type: 'power', minValue: 45, maxValue: 55, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+    {
+      type: 'repetition',
+      length: { unit: 'repetition', value: 5 },
+      steps: [
+        {
+          name: '40s hard ',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 40 },
+          targets: [{ type: 'power', minValue: 115, maxValue: 130, unit: 'percentOfFtp' }],
+        },
+        {
+          name: 'Rest',
+          intensityClass: 'rest',
+          length: { unit: 'second', value: 20 },
+          targets: [{ type: 'power', minValue: 42.5, maxValue: 42.5, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Recovery',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 240 },
+          targets: [{ type: 'power', minValue: 45, maxValue: 55, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+    {
+      type: 'repetition',
+      length: { unit: 'repetition', value: 5 },
+      steps: [
+        {
+          name: '40s hard ',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 40 },
+          targets: [{ type: 'power', minValue: 115, maxValue: 130, unit: 'percentOfFtp' }],
+        },
+        {
+          name: 'Rest',
+          intensityClass: 'rest',
+          length: { unit: 'second', value: 20 },
+          targets: [{ type: 'power', minValue: 42.5, maxValue: 42.5, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+    {
+      type: 'step',
+      length: { unit: 'repetition', value: 1 },
+      steps: [
+        {
+          name: 'Cool Down',
+          intensityClass: 'active',
+          length: { unit: 'second', value: 1200 },
+          targets: [{ type: 'power', minValue: 50, maxValue: 60, unit: 'percentOfFtp' }],
+        },
+      ],
+    },
+  ],
+}
+
+// ============================================================================
 // Activity Power Streams
 // TODO: Replace with real Strava stream data
 // These are placeholder patterns that simulate realistic power data
@@ -615,7 +1307,7 @@ export function getTestFixtures(): WorkoutActivityPair[] {
   return [
     {
       id: 'pair-1',
-      workoutId: 'dwJlJsPTi8',
+      workoutId: 'rvOE6NDHRT',
       activityId: '15664598790',
       workoutName: '30 s x 4m interval repeats',
       athleteFtp: FTP,
@@ -625,7 +1317,7 @@ export function getTestFixtures(): WorkoutActivityPair[] {
     },
     {
       id: 'pair-2',
-      workoutId: '1qNVeYOPMI',
+      workoutId: 'cfasX3Hvdw',
       activityId: '14698802921',
       workoutName: 'M.A.P Efforts',
       athleteFtp: FTP,
@@ -635,7 +1327,7 @@ export function getTestFixtures(): WorkoutActivityPair[] {
     },
     {
       id: 'pair-3',
-      workoutId: 'kC2kEfzvxG',
+      workoutId: 'BAkWkaPHvo',
       activityId: '14677009311',
       workoutName: 'Threshold Efforts',
       athleteFtp: FTP,
@@ -645,7 +1337,7 @@ export function getTestFixtures(): WorkoutActivityPair[] {
     },
     {
       id: 'pair-4',
-      workoutId: 'h6XLqTB7j2',
+      workoutId: 'nO2p5pSQ1c',
       activityId: '14429811505',
       workoutName: 'Sub Threshold Efforts',
       athleteFtp: FTP,
@@ -655,7 +1347,7 @@ export function getTestFixtures(): WorkoutActivityPair[] {
     },
     {
       id: 'pair-5',
-      workoutId: 'rxniUsbsBD',
+      workoutId: 'wvgCzoPv3l',
       activityId: '14256926250',
       workoutName: 'Threshold Efforts',
       athleteFtp: FTP,
@@ -665,17 +1357,18 @@ export function getTestFixtures(): WorkoutActivityPair[] {
     },
     {
       id: 'pair-6',
-      workoutId: 'C2kCY0ykdB',
+      workoutId: '9iVUOCNy7g',
       activityId: '11205974269',
-      workoutName: '5min Strength Efforts (Zone 3)',
+      workoutName: '5min Strength Efforts (Zone 3) 4x5min (57min)',
       athleteFtp: FTP,
       segments: PAIR_6_WORKOUT_SEGMENTS,
+      structure: PAIR_6_STRUCTURE,
       powerStream: generateSimulatedPowerStream(PAIR_6_WORKOUT_SEGMENTS, FTP),
       description: '4x5min strength efforts with 3min recoveries (~57 min)',
     },
     {
       id: 'pair-7',
-      workoutId: 'SLArVTlccR',
+      workoutId: 'jVDtGT0f1h',
       activityId: '11145023577',
       workoutName: 'Base Fitness Training (Zone Two)',
       athleteFtp: FTP,
@@ -685,7 +1378,7 @@ export function getTestFixtures(): WorkoutActivityPair[] {
     },
     {
       id: 'pair-8',
-      workoutId: 'GoneJ-oasb',
+      workoutId: 'kL9eUebxqf',
       activityId: '11123154345',
       workoutName: '4hr Base Fitness',
       athleteFtp: FTP,
@@ -695,7 +1388,7 @@ export function getTestFixtures(): WorkoutActivityPair[] {
     },
     {
       id: 'pair-9',
-      workoutId: '_mGszlLEZM',
+      workoutId: 'f4SvAqNCuL',
       activityId: '11010699309',
       workoutName: '1hr Base Fitness @ 60-65%',
       athleteFtp: FTP,
@@ -717,7 +1410,7 @@ export function getTestFixturesWithRealData(): WorkoutActivityPair[] {
   return [
     {
       id: 'pair-1-real',
-      workoutId: 'dwJlJsPTi8',
+      workoutId: 'rvOE6NDHRT',
       activityId: '15664598790',
       workoutName: '30 s x 4m interval repeats',
       athleteFtp: FTP,
@@ -727,7 +1420,7 @@ export function getTestFixturesWithRealData(): WorkoutActivityPair[] {
     },
     {
       id: 'pair-2-real',
-      workoutId: '1qNVeYOPMI',
+      workoutId: 'cfasX3Hvdw',
       activityId: '14698802921',
       workoutName: 'M.A.P Efforts',
       athleteFtp: FTP,
@@ -737,7 +1430,7 @@ export function getTestFixturesWithRealData(): WorkoutActivityPair[] {
     },
     {
       id: 'pair-3-real',
-      workoutId: 'kC2kEfzvxG',
+      workoutId: 'BAkWkaPHvo',
       activityId: '14677009311',
       workoutName: 'Threshold Efforts',
       athleteFtp: FTP,
@@ -747,7 +1440,7 @@ export function getTestFixturesWithRealData(): WorkoutActivityPair[] {
     },
     {
       id: 'pair-4-real',
-      workoutId: 'h6XLqTB7j2',
+      workoutId: 'nO2p5pSQ1c',
       activityId: '14429811505',
       workoutName: 'Sub Threshold Efforts',
       athleteFtp: FTP,
@@ -757,7 +1450,7 @@ export function getTestFixturesWithRealData(): WorkoutActivityPair[] {
     },
     {
       id: 'pair-5-real',
-      workoutId: 'rxniUsbsBD',
+      workoutId: 'wvgCzoPv3l',
       activityId: '14256926250',
       workoutName: 'Threshold Efforts',
       athleteFtp: FTP,
@@ -767,17 +1460,18 @@ export function getTestFixturesWithRealData(): WorkoutActivityPair[] {
     },
     {
       id: 'pair-6-real',
-      workoutId: 'C2kCY0ykdB',
+      workoutId: '9iVUOCNy7g',
       activityId: '11205974269',
-      workoutName: '5min Strength Efforts (Zone 3)',
+      workoutName: '5min Strength Efforts (Zone 3) 4x5min (57min)',
       athleteFtp: FTP,
       segments: PAIR_6_WORKOUT_SEGMENTS,
+      structure: PAIR_6_STRUCTURE,
       powerStream: ACTIVITY_11205974269_POWER_STREAM,
-      description: 'Real data: 4x5min strength efforts (~57 min)',
+      description: 'Real data: 4x5min strength efforts at 85-95% FTP (~57 min)',
     },
     {
       id: 'pair-7-real',
-      workoutId: 'SLArVTlccR',
+      workoutId: 'jVDtGT0f1h',
       activityId: '11145023577',
       workoutName: 'Base Fitness Training (Zone Two)',
       athleteFtp: FTP,
@@ -787,7 +1481,7 @@ export function getTestFixturesWithRealData(): WorkoutActivityPair[] {
     },
     {
       id: 'pair-8-real',
-      workoutId: 'GoneJ-oasb',
+      workoutId: 'kL9eUebxqf',
       activityId: '11123154345',
       workoutName: '4hr Base Fitness (Zone Two)',
       athleteFtp: FTP,
@@ -797,13 +1491,82 @@ export function getTestFixturesWithRealData(): WorkoutActivityPair[] {
     },
     {
       id: 'pair-9-real',
-      workoutId: '_mGszlLEZM',
+      workoutId: 'f4SvAqNCuL',
       activityId: '11010699309',
       workoutName: '1hr Base Fitness @ 60-65%',
       athleteFtp: FTP,
       segments: PAIR_9_WORKOUT_SEGMENTS,
       powerStream: ACTIVITY_11010699309_POWER_STREAM,
       description: 'Real data: Incomplete base fitness ride (~10 min)',
+    },
+    {
+      id: 'pair-10-real',
+      workoutId: 'bxZjY8oRPV',
+      activityId: '16983317605',
+      workoutName: 'Above and Below Threshold (10x1min Z3/Z5)',
+      athleteFtp: FTP,
+      segments: PAIR_10_WORKOUT_SEGMENTS,
+      structure: PAIR_10_STRUCTURE,
+      powerStream: ACTIVITY_16983317605_POWER_STREAM,
+      description:
+        'Real data: Mixed-duration workout with 10s sprints and long Z3/Z5 intervals (~61 min)',
+    },
+    {
+      id: 'pair-11-real',
+      workoutId: 'YQGNEgWsTS',
+      activityId: '11241924282',
+      workoutName: 'Tempo Repeats 3x15min (1.7hr)',
+      athleteFtp: FTP,
+      segments: [],
+      structure: PAIR_11_STRUCTURE,
+      powerStream: ACTIVITY_11241924282_POWER_STREAM,
+      description: 'Real data: 3x15min tempo intervals at 85-90% FTP with 5min recovery (~85 min)',
+    },
+    {
+      id: 'pair-12-real',
+      workoutId: 'Ia8x8iaLo2',
+      activityId: '11249429377',
+      workoutName: 'Base Fitness Training (Zone Two) 1.8hr',
+      athleteFtp: FTP,
+      segments: [],
+      structure: PAIR_12_STRUCTURE,
+      powerStream: ACTIVITY_11249429377_POWER_STREAM,
+      description: 'Real data: Long Z2 endurance ride at 65-70% FTP (~98 min)',
+    },
+    {
+      id: 'pair-13-real',
+      workoutId: 'BB5epMKMwL',
+      activityId: '10953881435',
+      workoutName: 'Wahoo SYSTM: FTP Over Unders: 3 sets 8x1',
+      athleteFtp: FTP,
+      segments: [],
+      structure: PAIR_13_STRUCTURE,
+      powerStream: ACTIVITY_10953881435_POWER_STREAM,
+      description:
+        'Real data: 3 sets of 4x (1min over/1min under) threshold intervals with progressive ramp warmup (~48 min)',
+    },
+    {
+      id: 'pair-14-real',
+      workoutId: '74GPWrdaus',
+      activityId: '10906026493',
+      workoutName: 'FTP Progression 2 5x7',
+      athleteFtp: FTP,
+      segments: [],
+      structure: PAIR_14_STRUCTURE,
+      powerStream: ACTIVITY_10906026493_POWER_STREAM,
+      description:
+        'Real data: 5x7min threshold intervals at 95-100% FTP with 3min recovery (~89 min)',
+    },
+    {
+      id: 'pair-15-real',
+      workoutId: 'dQ1OauEjzF',
+      activityId: '11739391851',
+      workoutName: '40/20s (5min) 2x1min (1.3hr)',
+      athleteFtp: FTP,
+      segments: [],
+      structure: PAIR_15_STRUCTURE,
+      powerStream: ACTIVITY_11739391851_POWER_STREAM,
+      description: 'Real data: 4 sets of 5x (40s/20s) VO2 max intervals at 115-130% FTP (~59 min)',
     },
   ]
 }

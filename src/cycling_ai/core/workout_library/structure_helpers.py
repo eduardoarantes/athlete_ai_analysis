@@ -35,7 +35,7 @@ class WorkoutStep(BaseModel):
     """A single step within a workout segment."""
 
     name: str
-    intensityClass: Literal["warmUp", "active", "rest", "coolDown"]
+    intensityClass: Literal["warmUp", "active", "rest", "recovery", "coolDown"]
     length: StepLength
     openDuration: bool | None = None
     targets: list[StepTarget]

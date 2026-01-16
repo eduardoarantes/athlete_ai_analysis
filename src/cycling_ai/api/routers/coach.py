@@ -6,108 +6,223 @@ API endpoints for AI coaching feedback on workout compliance.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException
 
+from cycling_ai.api.config import settings
 from cycling_ai.api.middleware.auth import User, get_current_user
 from cycling_ai.api.middleware.rate_limit import RATE_LIMITS, rate_limit
 from cycling_ai.api.models.coach import (
-    ComplianceCoachRequest,
-    ComplianceCoachResponse,
+    CoachAnalysisRequest,
+    CoachAnalysisResponse,
 )
-from cycling_ai.api.services.coach_service import ComplianceCoachService
+from cycling_ai.config.loader import load_config
+from cycling_ai.core.compliance import generate_coach_analysis
+from cycling_ai.core.compliance.models import StreamPoint
+from cycling_ai.orchestration.prompt_loader import PromptLoader
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
 
-@router.post("/compliance", response_model=ComplianceCoachResponse)
-@rate_limit(RATE_LIMITS["plan_generate"])  # Use same rate limit as plan generation
-async def generate_compliance_feedback(
-    request: ComplianceCoachRequest,
+@router.post("/analyze", response_model=CoachAnalysisResponse)
+@rate_limit(RATE_LIMITS["plan_generate"])
+async def generate_coach_analysis_endpoint(
+    request: CoachAnalysisRequest,
     current_user: User = Depends(get_current_user),  # noqa: B008
-) -> ComplianceCoachResponse:
+) -> CoachAnalysisResponse:
     """
-    Generate AI coaching feedback for workout compliance analysis.
+    Generate full coach analysis from workout structure and power streams.
 
-    Takes compliance analysis data (score, segments, etc.) and returns
-    personalized coaching feedback with strengths, improvements, and action items.
+    Takes workout structure and power stream data, performs compliance analysis
+    using DTW alignment, and generates AI coaching feedback.
 
     Requires authentication.
 
     Args:
-        request: Compliance coach request with analysis data
+        request: Coach analysis request with workout and power data
         current_user: Authenticated user from JWT token
 
     Returns:
-        ComplianceCoachResponse with AI-generated feedback
+        CoachAnalysisResponse with prompts, AI feedback, and metadata
 
     Example:
         ```
-        POST /api/v1/coach/compliance
+        POST /api/v1/coach/analyze
         Authorization: Bearer <jwt_token>
         {
-            "workout_name": "Tempo Intervals",
-            "workout_type": "tempo",
-            "workout_date": "2025-01-06",
+            "activity_id": 12345,
+            "activity_name": "Morning Tempo Ride",
+            "activity_date": "2025-01-16",
+            "workout": {
+                "id": "tempo_3x10",
+                "name": "Tempo Intervals",
+                "type": "tempo",
+                "description": "3x10min @ 85-90% FTP",
+                "structure": {...}
+            },
+            "power_streams": [
+                {"time_offset": 0, "power": 150.0},
+                ...
+            ],
             "athlete_ftp": 265,
-            "compliance_analysis": {
-                "overall": {
-                    "score": 85,
-                    "grade": "B",
-                    "summary": "Good execution",
-                    "segments_completed": 5,
-                    "segments_skipped": 0,
-                    "segments_total": 5
-                },
-                "segments": [...],
-                "metadata": {
-                    "algorithm_version": "1.0.0",
-                    "power_data_quality": "excellent"
-                }
-            }
+            "athlete_name": "John Doe"
         }
 
         Response (200):
         {
-            "feedback": {
-                "summary": "Good workout with 85% compliance...",
-                "strengths": ["Maintained steady tempo power..."],
-                "improvements": ["Recovery intervals too intense..."],
-                "action_items": ["Set power cap for recovery..."],
-                "segment_notes": []
-            },
-            "generated_at": "2025-01-06T12:00:00Z",
-            "model": "gemini-2.0-flash",
-            "cached": false
+            "system_prompt": "You are an experienced cycling coach...",
+            "user_prompt": "Analyze the athlete's execution...",
+            "response_text": "{...}",
+            "response_json": {...},
+            "model": "claude-sonnet-4-20250514",
+            "provider": "anthropic",
+            "generated_at": "2025-01-16T12:00:00Z"
         }
         ```
     """
     logger.info(
-        f"[COACH ROUTER] Received compliance feedback request for user {current_user.id}, "
-        f"workout: {request.workout_name}, score: {request.compliance_analysis.overall.score}"
+        f"[COACH ROUTER] Received analysis request for user {current_user.id}, "
+        f"workout: {request.workout.name}, activity: {request.activity_id}"
     )
 
     try:
-        coach_service = ComplianceCoachService()
-        response = await coach_service.generate_feedback(request)
+        import time
+        from datetime import UTC, datetime
+        from pathlib import Path
+
+        # Convert request models to core models
+        workout_structure = {
+            "id": request.workout.id,
+            "name": request.workout.name,
+            "type": request.workout.type,
+            "description": request.workout.description or "",
+            "structure": request.workout.structure,
+        }
+
+        power_streams = [
+            StreamPoint(time_offset=s.time_offset, power=s.power) for s in request.power_streams
+        ]
+
+        # Build metadata
+        activity_meta = {
+            "name": request.activity_name or "Unknown",
+            "date": request.activity_date or datetime.now(UTC).strftime("%Y-%m-%d"),
+        }
+
+        athlete_meta = {
+            "name": request.athlete_name or "Unknown",
+        }
+
+        # Load prompts using PromptLoader with config version
+        config = load_config()
+        prompt_loader = PromptLoader(version=config.version)
+        prompt_dir = prompt_loader.get_prompts_dir()
+
+        system_prompt_path = prompt_dir / "compliance_coach_analysis_system_prompt.j2"
+        user_prompt_path = prompt_dir / "compliance_coach_analysis_user_prompt.j2"
 
         logger.info(
-            f"[COACH ROUTER] Generated feedback for user {current_user.id}, "
-            f"model: {response.model}"
+            f"[COACH ROUTER] Using prompts from: {prompt_dir} "
+            f"(version: {config.version})"
         )
 
-        return response
+        if not system_prompt_path.exists():
+            raise FileNotFoundError(
+                f"System prompt not found: {system_prompt_path}. "
+                f"Ensure prompt templates exist for version {config.version}"
+            )
+
+        # Calculate timeout based on activity duration
+        # Assume 1 sample per second, with DTW + LLM overhead
+        activity_duration_minutes = len(power_streams) / 60
+        # Base: 60s, add 30s per 30min of activity, max 5 minutes
+        timeout_seconds = min(300, max(60, 60 + (activity_duration_minutes // 30) * 30))
+
+        logger.info(
+            f"[COACH ROUTER] Starting analysis with timeout {timeout_seconds}s "
+            f"for {len(power_streams)} samples ({activity_duration_minutes:.1f} min activity)"
+        )
+
+        # Generate analysis with timeout and performance tracking
+        start_time = time.time()
+        try:
+            result = await asyncio.wait_for(
+                asyncio.to_thread(
+                    generate_coach_analysis,
+                    activity_id=request.activity_id,
+                    workout_structure=workout_structure,
+                    power_streams=power_streams,
+                    ftp=float(request.athlete_ftp),
+                    system_prompt_path=system_prompt_path,
+                    user_prompt_path=user_prompt_path,
+                    provider_name=settings.ai_provider,
+                    api_key=settings.get_provider_api_key(),
+                    model=settings.get_default_model(),
+                    temperature=settings.ai_temperature,
+                    activity_meta=activity_meta,
+                    athlete_meta=athlete_meta,
+                ),
+                timeout=timeout_seconds,
+            )
+
+            # Log successful completion with performance metrics
+            duration = time.time() - start_time
+            logger.info(
+                f"[PERF] Analysis completed in {duration:.2f}s "
+                f"(samples: {len(power_streams)}, timeout: {timeout_seconds}s, "
+                f"utilization: {(duration/timeout_seconds)*100:.1f}%)"
+            )
+
+        except asyncio.TimeoutError:
+            duration = time.time() - start_time
+            logger.error(
+                f"[PERF] Analysis TIMEOUT after {duration:.2f}s "
+                f"(samples: {len(power_streams)}, limit: {timeout_seconds}s)"
+            )
+            # Provide actionable guidance based on activity size
+            if activity_duration_minutes > 120:
+                hint = "For activities over 2 hours, try again during off-peak hours or contact support for assistance."
+            else:
+                hint = "Please try again. If the issue persists, contact support."
+
+            raise HTTPException(
+                status_code=504,
+                detail=f"Analysis timeout after {timeout_seconds}s. {hint}",
+            ) from None
+
+        logger.info(
+            f"[COACH ROUTER] Generated analysis for user {current_user.id}, "
+            f"provider: {settings.ai_provider}, model: {settings.get_default_model()}"
+        )
+
+        return CoachAnalysisResponse(
+            system_prompt=result["system_prompt"],
+            user_prompt=result["user_prompt"],
+            response_text=result["response_text"],
+            response_json=result["response_json"],
+            model=settings.get_default_model(),
+            provider=settings.ai_provider,
+            generated_at=datetime.now(UTC).isoformat(),
+        )
 
     except ValueError as e:
         logger.error(f"[COACH ROUTER] Validation error: {e}")
         raise HTTPException(status_code=400, detail=str(e)) from e
 
-    except Exception as e:
-        logger.error(f"[COACH ROUTER] Failed to generate feedback: {e}")
+    except FileNotFoundError as e:
+        logger.error(f"[COACH ROUTER] Prompt template not found: {e}")
         raise HTTPException(
             status_code=500,
-            detail="Failed to generate coaching feedback. Please try again.",
+            detail="Prompt templates not found. Please contact support.",
+        ) from e
+
+    except Exception as e:
+        logger.error(f"[COACH ROUTER] Failed to generate analysis: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to generate coach analysis. Please try again.",
         ) from e

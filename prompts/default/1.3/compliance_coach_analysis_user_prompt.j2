@@ -1,0 +1,73 @@
+Analyze the athlete's execution of the planned workout using the data below.
+
+Your objectives:
+1. Provide a concise summary (2-3 sentences) explaining overall compliance and workout execution.
+2. Identify 2–4 execution strengths that supported the workout intent (with specific data references).
+3. Identify 1–3 areas for improvement that limited training value.
+4. Provide 2–3 practical, actionable recommendations for the next similar workout.
+5. Add specific notes for 0-3 segments that need particular attention.
+6. Focus on work segments (intervals) - only mention warmup/cooldown if significantly under-executed.
+
+Input data:
+
+Activity:
+- activity_id: {{ activity.id }}
+- activity_name: {{ activity.name }}
+- activity_date: {{ activity.date }}
+- athlete_name: {{ athlete.name }}
+- ftp_w: {{ athlete.ftp_w }}
+
+Workout:
+- workout_id: {{ workout.id }}
+- workout_name: {{ workout.name }}
+- workout_type: {{ workout.type }}
+- workout_intent: {{ workout.intent }}
+
+Alignment:
+- alignment_model: {{ alignment.model }}
+- alignment_params: {{ alignment.params }}
+- alignment_notes: {{ alignment.notes }}
+
+Summary:
+- planned_duration_s: {{ summary.planned_duration_s }}
+- actual_duration_s: {{ summary.actual_duration_s }}
+- overall_compliance_pct: {{ summary.overall_compliance_pct }}
+- work_compliance_pct: {{ summary.work_compliance_pct }}
+- warmup_compliance_pct: {{ summary.warmup_compliance_pct }}
+- cooldown_compliance_pct: {{ summary.cooldown_compliance_pct }}
+- hard_segments_avg_compliance_pct: {{ summary.hard_segments_avg_compliance_pct }}
+- recovery_segments_avg_compliance_pct: {{ summary.recovery_segments_avg_compliance_pct }}
+- avg_target_power_w: {{ summary.avg_target_power_w }}
+- avg_actual_power_w: {{ summary.avg_actual_power_w }}
+
+Data quality:
+- missing_samples_pct: {{ data_quality.missing_samples_pct }}
+- zero_power_pct: {{ data_quality.zero_power_pct }}
+- gaps_detected: {{ data_quality.gaps_detected }}
+
+Segment details:
+{% for seg in segments %}
+- name: {{ seg.name }}
+  intensity_class: {{ seg.intensity_class }}
+  planned_duration_s: {{ seg.planned_duration_s }}
+  actual_duration_s: {{ seg.actual_duration_s }}
+  target_power_w: {{ seg.target_power_w }}
+  actual_avg_power_w: {{ seg.actual_avg_power_w }}
+  compliance_pct: {{ seg.compliance_pct }}
+{% endfor %}
+
+Return JSON only in the following format:
+
+{
+  "schema_version": "1.3",
+  "summary": "...",
+  "strengths": ["...", "..."],
+  "improvements": ["...", "..."],
+  "action_items": ["...", "..."],
+  "segment_notes": [
+    {
+      "segment_index": 0,
+      "note": "..."
+    }
+  ]
+}

@@ -19,7 +19,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { StravaService } from '@/lib/services/strava-service'
-import { analyzeWorkoutCompliance } from '@/lib/services/compliance-analysis-service'
+import { getPythonAPIClient } from '@/lib/services/python-api-client'
+import type { ComplianceAnalysisResponse } from '@/lib/services/python-api-client'
 import { errorLogger } from '@/lib/monitoring/error-logger'
 import { getWorkoutById } from '@/lib/utils/workout-helpers'
 import type { TrainingPlanData } from '@/lib/types/training-plan'
@@ -53,6 +54,85 @@ interface ProfileRow {
 interface AnalyzeRequestWithSave extends AnalyzeRequest {
   // Whether to save the analysis to the database (default: true)
   save?: boolean
+}
+
+/**
+ * Convert Python API response to the format expected by the database and frontend
+ */
+function convertPythonResponseToAnalysis(pythonResponse: ComplianceAnalysisResponse) {
+  // Calculate overall grade based on score
+  const score = pythonResponse.overall_compliance
+  const grade: 'A' | 'B' | 'C' | 'D' | 'F' =
+    score >= 90 ? 'A' : score >= 80 ? 'B' : score >= 70 ? 'C' : score >= 60 ? 'D' : 'F'
+
+  // Generate summary based on score
+  let summary: string
+  if (score >= 90) {
+    summary = 'Outstanding execution! You nailed this workout.'
+  } else if (score >= 80) {
+    summary = 'Good job! Minor deviations from the plan.'
+  } else if (score >= 70) {
+    summary = 'Decent effort with some room for improvement.'
+  } else if (score >= 60) {
+    summary = 'Workout completed but with significant deviations.'
+  } else {
+    summary = 'Workout was not completed as prescribed.'
+  }
+
+  // Convert Python API results to segment analyses
+  const segments = pythonResponse.results.map((result, index) => ({
+    segment_index: index,
+    segment_name: result.step_name,
+    segment_type: result.intensity_class || 'work',
+    match_quality:
+      (result.compliance_pct >= 90
+        ? 'excellent'
+        : result.compliance_pct >= 75
+          ? 'good'
+          : result.compliance_pct >= 60
+            ? 'fair'
+            : 'poor') as 'excellent' | 'good' | 'fair' | 'poor' | 'skipped',
+    planned_duration_sec: result.planned_duration,
+    planned_power_low: result.target_power * 0.95, // Approximate
+    planned_power_high: result.target_power * 1.05, // Approximate
+    planned_zone: 3, // Default, Python API doesn't return this
+    actual_start_sec: index * result.planned_duration, // Approximate
+    actual_end_sec: (index + 1) * result.planned_duration, // Approximate
+    actual_duration_sec: result.actual_duration,
+    actual_avg_power: result.actual_power_avg,
+    actual_max_power: result.actual_power_avg * 1.2, // Approximate
+    actual_min_power: result.actual_power_avg * 0.8, // Approximate
+    actual_dominant_zone: 3, // Default, Python API doesn't return this
+    time_in_zone: null,
+    scores: {
+      power_compliance: result.compliance_pct,
+      zone_compliance: result.compliance_pct,
+      duration_compliance: result.compliance_pct,
+      overall_segment_score: result.compliance_pct,
+    },
+    assessment: `Compliance: ${result.compliance_pct.toFixed(1)}%`,
+  }))
+
+  return {
+    overall: {
+      score: Math.round(score),
+      grade,
+      summary,
+      segments_completed: pythonResponse.total_steps,
+      segments_skipped: 0,
+      segments_total: pythonResponse.total_steps,
+    },
+    segments,
+    metadata: {
+      algorithm_version: '2.0.0-python',
+      power_data_quality: 'good' as const,
+      adaptive_parameters: {
+        smoothingWindowSec: 30,
+        minSegmentDurationSec: 30,
+        boundaryStabilitySec: 20,
+      },
+    },
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -170,12 +250,13 @@ export async function POST(request: NextRequest) {
 
     // Fetch power stream from Strava
     const stravaService = await StravaService.create()
-    const streams = await stravaService.getActivityStreamsWithRefresh(user.id, stravaActivityId, [
-      'watts',
-      'time',
-    ])
+    const stravaStreams = await stravaService.getActivityStreamsWithRefresh(
+      user.id,
+      stravaActivityId,
+      ['watts', 'time']
+    )
 
-    const powerStream = streams.watts?.data
+    const powerStream = stravaStreams.watts?.data
 
     if (!powerStream || powerStream.length === 0) {
       return NextResponse.json(
@@ -187,8 +268,28 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Run compliance analysis
-    const analysis = analyzeWorkoutCompliance(undefined, powerStream, ftp, workout.structure)
+    // Run compliance analysis via Python API
+    const pythonClient = getPythonAPIClient()
+
+    // Convert power stream to the format expected by Python API
+    const powerStreamData = powerStream.map((power, index) => ({
+      time_offset: index,
+      power,
+    }))
+
+    const pythonResponse = await pythonClient.analyzeCompliance({
+      workout: {
+        id: workoutId,
+        name: workout.name,
+        structure: workout.structure,
+      },
+      streams: powerStreamData,
+      ftp,
+      activity_id: parseInt(stravaActivityId),
+    })
+
+    // Convert Python API response to the format expected by the database
+    const analysis = convertPythonResponseToAnalysis(pythonResponse)
 
     // Store analysis to database if we have a match_id and save is enabled
     let savedAnalysisId: string | null = null
