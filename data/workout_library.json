@@ -17091,7 +17091,7 @@
     {
       "id": "EyISEJxbgY",
       "name": "30 x 4min Interval Repeats (Custom)",
-      "type": "intervals",
+      "type": "mixed",
       "intensity": "hard",
       "structure": {
         "primaryIntensityMetric": "percentOfFtp",
