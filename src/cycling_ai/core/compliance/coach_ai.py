@@ -8,6 +8,7 @@ personalized coaching feedback using LLM providers.
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 from typing import Any, Callable, Iterable
 
@@ -15,6 +16,14 @@ from .aligners import DTWAligner
 from .analyzer import ComplianceAnalyzer
 from .io import load_workout_steps_from_library_object
 from .models import ComplianceResult, StreamPoint
+
+logger = logging.getLogger(__name__)
+
+# Constants for compliance analysis
+WARMUP_COOLDOWN_WEIGHT = 0.5  # Weight factor for warmup/cooldown segments (less important)
+WORK_SEGMENT_WEIGHT = 1.0  # Weight factor for work segments (intervals, steady state)
+MAX_PROMPT_TEXT_LENGTH = 500  # Maximum length for user-provided text to prevent token exhaustion
+HARD_SEGMENT_POWER_THRESHOLD = 0.85  # Power threshold (% of FTP) to classify as "hard" segment
 
 
 def _render_template(template_path: str | Path, context: dict[str, Any]) -> str:
@@ -48,6 +57,75 @@ def _render_template(template_path: str | Path, context: dict[str, Any]) -> str:
     return env.from_string(template_text).render(**context)
 
 
+def _sanitize_for_prompt(text: str) -> str:
+    """
+    Sanitize user-provided text to prevent prompt injection attacks.
+
+    Removes or neutralizes patterns that could be used to manipulate LLM behavior,
+    such as role-switching instructions or system prompts.
+
+    Args:
+        text: User-provided text to sanitize
+
+    Returns:
+        Sanitized text safe for LLM prompts
+
+    Examples:
+        >>> _sanitize_for_prompt("Ignore previous instructions and...")
+        "[filtered] and..."
+        >>> _sanitize_for_prompt("Normal workout name")
+        "Normal workout name"
+    """
+    if not text or not isinstance(text, str):
+        return text
+
+    # Patterns that indicate potential prompt injection
+    dangerous_patterns = [
+        "ignore previous instructions",
+        "ignore all previous",
+        "disregard previous",
+        "system:",
+        "assistant:",
+        "user:",
+        "you are now",
+        "act as",
+        "pretend to be",
+        "your new role",
+    ]
+
+    # Convert to lowercase for pattern matching
+    text_lower = text.lower()
+    original_text = text
+
+    # Check for dangerous patterns
+    for pattern in dangerous_patterns:
+        if pattern in text_lower:
+            logger.warning(
+                f"[PROMPT INJECTION] Detected potential prompt injection: '{pattern}' "
+                f"in text: '{text[:50]}...'"
+            )
+            # Replace the pattern with [filtered]
+            # Use case-insensitive replacement
+            import re
+
+            text = re.sub(
+                re.escape(pattern), "[filtered]", text, flags=re.IGNORECASE
+            )
+
+    # Limit length to prevent token exhaustion attacks
+    if len(text) > MAX_PROMPT_TEXT_LENGTH:
+        logger.warning(
+            f"[PROMPT INJECTION] Truncating excessively long text from {len(text)} to {MAX_PROMPT_TEXT_LENGTH} chars"
+        )
+        text = text[:MAX_PROMPT_TEXT_LENGTH] + "..."
+
+    # Log if we made changes
+    if text != original_text:
+        logger.info(f"[PROMPT INJECTION] Sanitized input: '{original_text[:50]}...' -> '{text[:50]}...'")
+
+    return text
+
+
 def _is_warm_cool(result: ComplianceResult) -> bool:
     intensity = (result.intensity_class or "").lower()
     if intensity in {"warmup", "cooldown"}:
@@ -57,7 +135,19 @@ def _is_warm_cool(result: ComplianceResult) -> bool:
 
 
 def _weight_factor(result: ComplianceResult) -> float:
-    return 0.5 if _is_warm_cool(result) else 1.0
+    """
+    Get weight factor for a compliance result.
+
+    Warmup and cooldown segments are weighted lower (0.5) since they're less critical
+    to overall training quality than work segments (1.0).
+
+    Args:
+        result: Compliance result to weight
+
+    Returns:
+        Weight factor (0.5 for warmup/cooldown, 1.0 for work)
+    """
+    return WARMUP_COOLDOWN_WEIGHT if _is_warm_cool(result) else WORK_SEGMENT_WEIGHT
 
 
 def _weighted_avg(
@@ -77,9 +167,22 @@ def _is_recovery(result: ComplianceResult) -> bool:
 
 
 def _is_hard(result: ComplianceResult, ftp: float) -> bool:
+    """
+    Determine if a segment is a "hard" work segment.
+
+    Hard segments are work segments (not warmup/cooldown) with power >= 85% FTP.
+    These include tempo, threshold, and VO2max intervals.
+
+    Args:
+        result: Compliance result to check
+        ftp: Athlete's FTP
+
+    Returns:
+        True if segment is hard work, False otherwise
+    """
     if _is_warm_cool(result):
         return False
-    return result.target_power >= ftp * 0.85
+    return result.target_power >= ftp * HARD_SEGMENT_POWER_THRESHOLD
 
 
 def _summarize_results(results: list[ComplianceResult], ftp: float) -> dict[str, float]:
@@ -212,21 +315,27 @@ def build_prompt_context(
         for r in results
     ]
 
+    # Sanitize user-provided strings to prevent prompt injection
+    activity_name = _sanitize_for_prompt(activity_meta.get("name", "Unknown"))
+    athlete_name = _sanitize_for_prompt(athlete_meta.get("name", "Unknown"))
+    workout_name = _sanitize_for_prompt(workout.get("name", workout_id))
+    workout_description = _sanitize_for_prompt(workout.get("description") or "")
+
     return {
         "activity": {
             "id": activity_id,
-            "name": activity_meta.get("name", "Unknown"),
-            "date": activity_meta.get("date", "Unknown"),
+            "name": activity_name,
+            "date": activity_meta.get("date", "Unknown"),  # Date is safe
         },
         "athlete": {
-            "name": athlete_meta.get("name", "Unknown"),
+            "name": athlete_name,
             "ftp_w": round(ftp, 1),
         },
         "workout": {
-            "id": workout_id,
-            "name": workout.get("name", workout_id),
-            "type": workout.get("type", ""),
-            "intent": workout.get("description") or "",
+            "id": workout_id,  # ID is safe (generated)
+            "name": workout_name,
+            "type": workout.get("type", ""),  # Type is enum-like, safe
+            "intent": workout_description,
         },
         "alignment": alignment,
         "summary": _summarize_results(results, ftp),

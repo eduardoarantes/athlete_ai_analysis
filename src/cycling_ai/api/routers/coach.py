@@ -6,6 +6,7 @@ API endpoints for AI coaching feedback on workout compliance.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -17,8 +18,10 @@ from cycling_ai.api.models.coach import (
     CoachAnalysisRequest,
     CoachAnalysisResponse,
 )
+from cycling_ai.config.loader import load_config
 from cycling_ai.core.compliance import generate_coach_analysis
 from cycling_ai.core.compliance.models import StreamPoint
+from cycling_ai.orchestration.prompt_loader import PromptLoader
 
 logger = logging.getLogger(__name__)
 
@@ -113,33 +116,65 @@ async def generate_coach_analysis_endpoint(
             "name": request.athlete_name or "Unknown",
         }
 
-        # Get prompt paths (from project root)
-        # __file__ is in src/cycling_ai/api/routers/coach.py
-        # We need to go up 5 levels to get to project root
-        project_root = Path(__file__).parent.parent.parent.parent.parent
-        prompt_dir = project_root / "prompts" / "default" / "1.3"
+        # Load prompts using PromptLoader with config version
+        config = load_config()
+        prompt_loader = PromptLoader(version=config.version)
+        prompt_dir = prompt_loader.get_prompts_dir()
+
         system_prompt_path = prompt_dir / "compliance_coach_analysis_system_prompt.j2"
         user_prompt_path = prompt_dir / "compliance_coach_analysis_user_prompt.j2"
 
-        logger.info(f"[COACH ROUTER] Using prompts from: {prompt_dir}")
-        if not system_prompt_path.exists():
-            raise FileNotFoundError(f"System prompt not found: {system_prompt_path}")
-
-        # Generate analysis
-        result = generate_coach_analysis(
-            activity_id=request.activity_id,
-            workout_structure=workout_structure,
-            power_streams=power_streams,
-            ftp=float(request.athlete_ftp),
-            system_prompt_path=system_prompt_path,
-            user_prompt_path=user_prompt_path,
-            provider_name=settings.ai_provider,
-            api_key=settings.get_provider_api_key(),
-            model=settings.get_default_model(),
-            temperature=settings.ai_temperature,
-            activity_meta=activity_meta,
-            athlete_meta=athlete_meta,
+        logger.info(
+            f"[COACH ROUTER] Using prompts from: {prompt_dir} "
+            f"(version: {config.version})"
         )
+
+        if not system_prompt_path.exists():
+            raise FileNotFoundError(
+                f"System prompt not found: {system_prompt_path}. "
+                f"Ensure prompt templates exist for version {config.version}"
+            )
+
+        # Calculate timeout based on activity duration
+        # Assume 1 sample per second, with DTW + LLM overhead
+        activity_duration_minutes = len(power_streams) / 60
+        # Base: 60s, add 30s per 30min of activity, max 5 minutes
+        timeout_seconds = min(300, max(60, 60 + (activity_duration_minutes // 30) * 30))
+
+        logger.info(
+            f"[COACH ROUTER] Starting analysis with timeout {timeout_seconds}s "
+            f"for {len(power_streams)} samples ({activity_duration_minutes:.1f} min activity)"
+        )
+
+        # Generate analysis with timeout
+        try:
+            result = await asyncio.wait_for(
+                asyncio.to_thread(
+                    generate_coach_analysis,
+                    activity_id=request.activity_id,
+                    workout_structure=workout_structure,
+                    power_streams=power_streams,
+                    ftp=float(request.athlete_ftp),
+                    system_prompt_path=system_prompt_path,
+                    user_prompt_path=user_prompt_path,
+                    provider_name=settings.ai_provider,
+                    api_key=settings.get_provider_api_key(),
+                    model=settings.get_default_model(),
+                    temperature=settings.ai_temperature,
+                    activity_meta=activity_meta,
+                    athlete_meta=athlete_meta,
+                ),
+                timeout=timeout_seconds,
+            )
+        except asyncio.TimeoutError:
+            logger.error(
+                f"[COACH ROUTER] Analysis timeout after {timeout_seconds}s "
+                f"for activity with {len(power_streams)} samples"
+            )
+            raise HTTPException(
+                status_code=504,
+                detail=f"Analysis timeout after {timeout_seconds}s. Activity may be too long or complex for analysis.",
+            ) from None
 
         logger.info(
             f"[COACH ROUTER] Generated analysis for user {current_user.id}, "

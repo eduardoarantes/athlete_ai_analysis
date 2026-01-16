@@ -23,19 +23,24 @@ import type { Json } from '@/lib/types/database'
 // Types
 // ============================================================================
 
+interface SegmentNote {
+  segment_index: number
+  note: string
+}
+
+interface CoachFeedback {
+  summary: string
+  strengths: string[]
+  improvements: string[]
+  action_items: string[]
+  segment_notes: SegmentNote[]
+}
+
 interface CoachAnalysisResponse {
   system_prompt: string
   user_prompt: string
   response_text: string
-  response_json: {
-    overall_assessment?: string
-    strengths?: string[]
-    opportunities?: string[]
-    segment_insights?: string[]
-    recommendations_next_session?: string[]
-    confidence?: string
-    data_quality_notes?: string
-  } | null
+  response_json: CoachFeedback | null
   model: string
   provider: string
   generated_at: string
@@ -221,6 +226,49 @@ export async function POST(
     if (!streams.watts || !streams.time) {
       return NextResponse.json(
         { error: 'Activity does not have power data' },
+        { status: 400 }
+      )
+    }
+
+    // Validate stream data quality
+    const wattsLength = streams.watts.data.length
+    const timeLength = streams.time.data.length
+
+    if (wattsLength !== timeLength) {
+      errorLogger.logWarning('Stream length mismatch detected', {
+        userId: user.id,
+        metadata: {
+          matchId,
+          activityId: match.strava_activity_id,
+          wattsLength,
+          timeLength,
+          difference: Math.abs(wattsLength - timeLength),
+        },
+      })
+      return NextResponse.json(
+        {
+          error: 'Power data is corrupted',
+          details: `Stream length mismatch: ${wattsLength} power samples vs ${timeLength} time samples`
+        },
+        { status: 400 }
+      )
+    }
+
+    // Validate minimum data points
+    if (wattsLength < 60) {
+      errorLogger.logWarning('Insufficient power data', {
+        userId: user.id,
+        metadata: {
+          matchId,
+          activityId: match.strava_activity_id,
+          samplesCount: wattsLength,
+        },
+      })
+      return NextResponse.json(
+        {
+          error: 'Insufficient power data',
+          details: `Activity has only ${wattsLength} samples (minimum 60 required for analysis)`
+        },
         { status: 400 }
       )
     }
