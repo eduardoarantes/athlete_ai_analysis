@@ -17,6 +17,8 @@
     "test:unit:ui": "vitest --ui",
     "test:unit:run": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "db:types": "supabase gen types typescript --project-id yqaskiwzyhhovthbvmqq --schema public > lib/types/database.ts",
+    "db:types:check": "supabase gen types typescript --project-id yqaskiwzyhhovthbvmqq --schema public | diff - lib/types/database.ts || echo 'Types are out of sync with database schema'",
     "prepare": "cd .. && husky"
   },
   "lint-staged": {

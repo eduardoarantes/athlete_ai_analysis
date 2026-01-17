@@ -69,3 +69,30 @@ DROP FUNCTION IF EXISTS public.get_admin_stats();
 
 COMMENT ON SCHEMA public IS
   'Application logic migrated to TypeScript services (Issue #148). Database now contains only data integrity constraints and RLS policies.';
+
+-- ============================================================================
+-- POST-MIGRATION STEPS (IMPORTANT!)
+-- ============================================================================
+--
+-- After applying this migration, you MUST regenerate TypeScript types to
+-- remove references to deleted functions:
+--
+-- 1. Regenerate types:
+--    cd web && npm run db:types
+--
+-- 2. Verify types are updated:
+--    grep -E "get_admin_users|get_admin_stats|check_plan_instance_overlap" lib/types/database.ts
+--    (should return no results)
+--
+-- 3. Verify is_admin is still present:
+--    grep "is_admin" lib/types/database.ts
+--    (should return results - this function is kept)
+--
+-- 4. Run type check:
+--    npm run type-check
+--
+-- 5. Commit updated types:
+--    git add lib/types/database.ts
+--    git commit -m "chore: Regenerate Supabase types after removing application logic functions"
+--
+-- See: POST_MIGRATION_CHECKLIST.md for complete checklist

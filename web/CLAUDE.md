@@ -541,29 +541,45 @@ pnpm test:headed         # Run E2E tests with browser
 npx supabase migration new <name>  # Create migration
 npx supabase db push              # Apply migrations
 
-# Supabase Types (IMPORTANT)
-npx supabase gen types typescript --project-id yqaskiwzyhhovthbvmqq --schema public > lib/types/database.ts
+# Supabase Type Generation (IMPORTANT)
+npm run db:types                  # Regenerate TypeScript types from database
+npm run db:types:check            # Check if types are in sync with database
 ```
 
 ---
 
 ## Supabase Type Generation (REQUIRED)
 
-**After adding/modifying database columns, you MUST regenerate Supabase types:**
+**After adding/modifying database schema, you MUST regenerate Supabase types:**
 
 ```bash
-npx supabase gen types typescript --project-id yqaskiwzyhhovthbvmqq --schema public > lib/types/database.ts
+npm run db:types
 ```
 
 **When to regenerate:**
 
 - After running `npx supabase db push` with new migrations
-- After adding new columns to existing tables
-- After creating new tables
+- After adding/removing columns from tables
+- After creating/dropping tables
+- After adding/removing PostgreSQL functions
+- After creating/dropping database views
 - When you see `SelectQueryError` TypeScript errors about missing columns
+
+**How to check if types need regeneration:**
+
+```bash
+npm run db:types:check
+```
+
+This compares the current database schema with `lib/types/database.ts` and shows any differences.
+
+**After schema-changing migrations:**
+
+When applying migrations that remove PostgreSQL functions or views (like the database logic migration in Issue #148), follow the post-migration checklist to ensure types are properly updated. See `POST_MIGRATION_CHECKLIST.md` for detailed steps.
 
 **Important:**
 
 - Types file location: `lib/types/database.ts` (NOT `lib/supabase/database.types.ts`)
 - The Supabase client imports types from `@/lib/types/database`
 - Do NOT use type assertions (`as any`) to work around missing column types - regenerate types instead
+- After regenerating, always run `npm run type-check` to catch breaking changes
