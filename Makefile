@@ -8,14 +8,25 @@
         web-status web-start web-stop web-restart web-logs \
         install test report
 
-# Ports
-API_PORT ?= 8000
-WEB_PORT ?= 3000
-
 # Directories
 ROOT_DIR := $(shell pwd)
 WEB_DIR := $(ROOT_DIR)/web
 VENV := $(ROOT_DIR)/.venv
+
+# Load .env file
+ifneq (,$(wildcard .env))
+    include .env
+    export
+endif
+
+# Validate PORT_SHIFT is defined
+ifndef PORT_SHIFT
+    $(error PORT_SHIFT is not defined in .env file. Please set PORT_SHIFT in .env)
+endif
+
+# Calculate ports from PORT_SHIFT
+API_PORT := $(shell echo $$((8000 + $(PORT_SHIFT))))
+WEB_PORT := $(shell echo $$((3000 + $(PORT_SHIFT))))
 
 # Colors for output
 GREEN := \033[0;32m
@@ -38,6 +49,18 @@ help: ## Show this help message
 	@echo ""
 	@echo "Web targets (Next.js on port $(WEB_PORT)):"
 	@grep -E '^web-[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(GREEN)%-15s$(NC) %s\n", $$1, $$2}'
+
+#==============================================================================
+# CONFIGURATION GENERATION
+#==============================================================================
+
+config-generate: ## Generate config files from templates using PORT_SHIFT
+	@echo "Generating config files from templates with PORT_SHIFT=$(PORT_SHIFT)..."
+	@sed 's/{{PORT_SHIFT}}/$(PORT_SHIFT)/g' $(WEB_DIR)/supabase/config.toml.template > $(WEB_DIR)/supabase/config.toml
+	@sed 's/{{PORT_SHIFT}}/$(PORT_SHIFT)/g' $(WEB_DIR)/.env.local.template > $(WEB_DIR)/.env.local
+	@echo "$(GREEN)Config files generated$(NC)"
+	@echo "  - web/supabase/config.toml (ports 543$(PORT_SHIFT)1-543$(PORT_SHIFT)9)"
+	@echo "  - web/.env.local (WEB_PORT=300$(PORT_SHIFT), API_URL=800$(PORT_SHIFT))"
 
 #==============================================================================
 # COMBINED TARGETS
@@ -119,7 +142,7 @@ api-start: ## Start the API server in background
 		echo "$(YELLOW)API server is already running on port $(API_PORT)$(NC)"; \
 	else \
 		echo "Starting API server on port $(API_PORT)..."; \
-		nohup $(VENV)/bin/uvicorn cycling_ai.api.main:app \
+		PORT_SHIFT=$(PORT_SHIFT) nohup $(VENV)/bin/uvicorn cycling_ai.api.main:app \
 			--host 0.0.0.0 \
 			--port $(API_PORT) \
 			--reload \
@@ -156,7 +179,7 @@ api-logs: ## Show API server logs (tail -f)
 	fi
 
 api-dev: ## Run API server in foreground (interactive)
-	$(VENV)/bin/uvicorn cycling_ai.api.main:app --host 0.0.0.0 --port $(API_PORT) --reload
+	PORT_SHIFT=$(PORT_SHIFT) $(VENV)/bin/uvicorn cycling_ai.api.main:app --host 0.0.0.0 --port $(API_PORT) --reload
 
 #==============================================================================
 # WEB TARGETS (Next.js)
@@ -175,7 +198,7 @@ web-start: ## Start the web server in background
 		echo "$(YELLOW)Web server is already running on port $(WEB_PORT)$(NC)"; \
 	else \
 		echo "Starting web server on port $(WEB_PORT)..."; \
-		cd $(WEB_DIR) && nohup pnpm dev > .dev.log 2>&1 & \
+		cd $(WEB_DIR) && PORT=$(WEB_PORT) nohup pnpm dev > .dev.log 2>&1 & \
 		sleep 3; \
 		if lsof -i :$(WEB_PORT) -sTCP:LISTEN > /dev/null 2>&1; then \
 			echo "$(GREEN)Web server started$(NC)"; \
@@ -207,7 +230,7 @@ web-logs: ## Show web server logs (tail -f)
 	fi
 
 web-dev: ## Run web server in foreground (interactive)
-	cd $(WEB_DIR) && pnpm dev
+	cd $(WEB_DIR) && PORT=$(WEB_PORT) pnpm dev
 
 web-build: ## Build web for production
 	cd $(WEB_DIR) && pnpm build

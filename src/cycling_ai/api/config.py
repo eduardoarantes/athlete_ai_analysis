@@ -6,6 +6,8 @@ Manages environment variables and application settings using Pydantic.
 
 from __future__ import annotations
 
+import os
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -17,13 +19,67 @@ class APISettings(BaseSettings):
     Example: FASTAPI_PORT=8080
     """
 
+    # Environment configuration
+    environment: str = "development"  # development, staging, production
+
     # Server configuration
     host: str = "0.0.0.0"
-    port: int = 8000
+    port: int = 8000  # Default, calculated from PORT_SHIFT if available
     reload: bool = False  # Enable auto-reload in development
 
     # CORS configuration
-    allowed_origins: list[str] = ["http://localhost:3000", "http://localhost:3001"]
+    allowed_origins: list[str] = []  # Calculated from PORT_SHIFT or set explicitly
+
+    def _is_lambda(self) -> bool:
+        """Detect if running in AWS Lambda environment."""
+        return "AWS_LAMBDA_FUNCTION_NAME" in os.environ or "AWS_EXECUTION_ENV" in os.environ
+
+    def _is_production(self) -> bool:
+        """Check if running in production environment."""
+        return self.environment.lower() in ("production", "prod") or self._is_lambda()
+
+    def __init__(self, **kwargs):
+        """Initialize settings and calculate port-based configurations from PORT_SHIFT."""
+        super().__init__(**kwargs)
+
+        # Auto-detect Lambda environment
+        if self._is_lambda() and "environment" not in kwargs:
+            self.environment = "production"
+
+        # Get PORT_SHIFT
+        port_shift_str = os.getenv("PORT_SHIFT")
+
+        # Validate PORT_SHIFT requirement based on environment
+        if not self._is_production() and port_shift_str is None:
+            raise ValueError(
+                "PORT_SHIFT environment variable is required in development/staging. "
+                "Please set PORT_SHIFT in .env file"
+            )
+
+        if port_shift_str is not None:
+            # Local development with PORT_SHIFT
+            port_shift = int(port_shift_str)
+
+            # Calculate port from PORT_SHIFT if not explicitly set
+            if "port" not in kwargs:
+                self.port = 8000 + port_shift
+
+            # Calculate CORS origins from PORT_SHIFT for local development
+            if not self.allowed_origins:
+                web_port = 3000 + port_shift
+                self.allowed_origins = [
+                    f"http://localhost:{web_port}",
+                    f"http://127.0.0.1:{web_port}",
+                ]
+        else:
+            # Production/cloud deployment - use explicit configuration
+            # Port is managed by Lambda runtime or explicitly set
+            # CORS origins must be explicitly set via ALLOWED_ORIGINS env var
+            if not self.allowed_origins:
+                # Default fallback (should be overridden in production)
+                self.allowed_origins = [
+                    "http://localhost:3000",
+                ]
 
     # Job storage
     job_storage_path: str = "/tmp/cycling-ai-jobs"
@@ -63,6 +119,7 @@ class APISettings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
+        extra="ignore",  # Ignore extra fields like PORT_SHIFT, NEXT_PUBLIC_* from .env
     )
 
     def get_provider_api_key(self) -> str:
