@@ -12,8 +12,7 @@ import { createClient } from '@/lib/supabase/server'
 import { requireAdmin } from '@/lib/guards/admin-guard'
 import { errorLogger } from '@/lib/monitoring/error-logger'
 import { validateAdminUsersQuery } from '@/lib/validations/admin'
-import { transformAdminUserRows } from '@/lib/types/admin'
-import type { AdminUserRow } from '@/lib/types/admin'
+import { adminUserService } from '@/lib/services/admin'
 import { HTTP_STATUS, MESSAGES } from '@/lib/constants'
 
 /**
@@ -75,28 +74,35 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // 3. Call database function to get users
-    const { data: usersData, error: usersError } = await supabase.rpc(
-      'get_admin_users' as never,
-      {
-        search_query: queryParams.search || null,
-        role_filter: queryParams.role || null,
-        subscription_filter: queryParams.subscription || null,
-        strava_filter: queryParams.strava ?? null,
-        limit_count: queryParams.limit,
-        offset_count: queryParams.offset,
-      } as never
-    )
+    // 3. Query users using TypeScript service
+    let users
+    let totalCount
+    try {
+      // Build query params, only including defined values
+      const queryFilters = {
+        ...(queryParams.search && { search: queryParams.search }),
+        ...(queryParams.role && { role: queryParams.role }),
+        ...(queryParams.subscription && { subscription: queryParams.subscription }),
+        ...(queryParams.strava !== undefined && { strava: queryParams.strava }),
+        limit: queryParams.limit,
+        offset: queryParams.offset,
+      }
 
-    if (usersError) {
-      errorLogger.logError(new Error(`get_admin_users failed: ${usersError.message}`), {
+      const countFilters = {
+        ...(queryParams.search && { search: queryParams.search }),
+        ...(queryParams.role && { role: queryParams.role }),
+        ...(queryParams.subscription && { subscription: queryParams.subscription }),
+        ...(queryParams.strava !== undefined && { strava: queryParams.strava }),
+      }
+
+      users = await adminUserService.queryUsers(queryFilters)
+      totalCount = await adminUserService.countUsers(countFilters)
+    } catch (error) {
+      errorLogger.logError(error as Error, {
         ...(auth.userId && { userId: auth.userId }),
         path: '/api/admin/users',
         method: 'GET',
-        metadata: {
-          dbError: usersError,
-          query: queryParams,
-        },
+        metadata: { query: queryParams },
       })
 
       return NextResponse.json(
@@ -105,34 +111,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // 4. Get total count for pagination
-    const { data: totalCount, error: countError } = await supabase.rpc(
-      'get_admin_users_count' as never,
-      {
-        search_query: queryParams.search || null,
-        role_filter: queryParams.role || null,
-        subscription_filter: queryParams.subscription || null,
-        strava_filter: queryParams.strava ?? null,
-      } as never
-    )
-
-    if (countError) {
-      errorLogger.logError(new Error(`get_admin_users_count failed: ${countError.message}`), {
-        ...(auth.userId && { userId: auth.userId }),
-        path: '/api/admin/users',
-        metadata: { dbError: countError },
-      })
-
-      return NextResponse.json(
-        { error: MESSAGES.ADMIN_USERS_FETCH_FAILED },
-        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
-      )
-    }
-
-    // 5. Transform database rows to AdminUser objects
-    const users = transformAdminUserRows((usersData || []) as AdminUserRow[])
-
-    // 6. Log successful access
+    // 4. Log successful access
     errorLogger.logInfo('Admin users list accessed', {
       ...(auth.userId && { userId: auth.userId }),
       metadata: {
@@ -147,17 +126,17 @@ export async function GET(request: NextRequest) {
           offset: queryParams.offset,
         },
         resultCount: users.length,
-        totalCount: totalCount || 0,
+        totalCount,
       },
     })
 
-    // 7. Return response
+    // 5. Return response
     return NextResponse.json({
       users,
       pagination: {
         limit: queryParams.limit,
         offset: queryParams.offset,
-        total: Number(totalCount) || 0,
+        total: totalCount,
       },
     })
   } catch (error) {

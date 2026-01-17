@@ -13,8 +13,7 @@ import { createClient } from '@/lib/supabase/server'
 import { requireAdmin } from '@/lib/guards/admin-guard'
 import { errorLogger } from '@/lib/monitoring/error-logger'
 import { validateUuid, validateUpdateSubscription } from '@/lib/validations/admin'
-import { transformAdminUserRow } from '@/lib/types/admin'
-import type { AdminUserRow } from '@/lib/types/admin'
+import { adminUserService } from '@/lib/services/admin'
 import { HTTP_STATUS, MESSAGES } from '@/lib/constants'
 
 /**
@@ -69,23 +68,16 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       )
     }
 
-    // 4. Call database function to get user
-    const { data: userData, error: userError } = await supabase.rpc(
-      'get_admin_user_by_id' as never,
-      {
-        target_user_id: userId,
-      } as never
-    )
-
-    if (userError) {
-      errorLogger.logError(new Error(`get_admin_user_by_id failed: ${userError.message}`), {
+    // 4. Query user using TypeScript service
+    let user
+    try {
+      user = await adminUserService.getUserById(userId)
+    } catch (error) {
+      errorLogger.logError(error as Error, {
         ...(auth.userId && { userId: auth.userId }),
         path: '/api/admin/users/[id]',
         method: 'GET',
-        metadata: {
-          targetUserId: userId,
-          dbError: userError,
-        },
+        metadata: { targetUserId: userId },
       })
 
       return NextResponse.json(
@@ -95,8 +87,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     }
 
     // 5. Check if user exists
-    const dataArray = userData as AdminUserRow[] | null
-    if (!dataArray || dataArray.length === 0) {
+    if (!user) {
       errorLogger.logInfo('Admin user detail: user not found', {
         ...(auth.userId && { userId: auth.userId }),
         metadata: { targetUserId: userId },
@@ -108,10 +99,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       )
     }
 
-    // 6. Transform database row to AdminUser object
-    const user = transformAdminUserRow(dataArray[0]!)
-
-    // 7. Log successful access
+    // 6. Log successful access
     errorLogger.logInfo('Admin user detail accessed', {
       ...(auth.userId && { userId: auth.userId }),
       metadata: {
@@ -121,7 +109,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       },
     })
 
-    // 8. Return user data
+    // 7. Return user data
     return NextResponse.json(user)
   } catch (error) {
     // Catch-all error handler
