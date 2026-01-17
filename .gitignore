@@ -82,3 +82,6 @@ supabase_errors.json
 # Server logs
 .api.log
 web/.dev.log
+
+# Temporary files
+.tmp/
