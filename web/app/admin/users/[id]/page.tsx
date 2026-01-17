@@ -1,8 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { transformAdminUserRow } from '@/lib/types/admin'
-import type { AdminUserRow } from '@/lib/types/admin'
+import { adminUserService } from '@/lib/services/admin'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -26,7 +25,6 @@ interface PageProps {
 
 export default async function AdminUserDetailPage({ params }: PageProps) {
   const { id } = await params
-  const supabase = await createClient()
 
   // Validate UUID format
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -34,21 +32,21 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
     notFound()
   }
 
-  // Fetch user details
-  const { data: userData, error } = await supabase.rpc(
-    'get_admin_user_by_id' as never,
-    {
-      target_user_id: id,
-    } as never
-  )
-
-  if (error || !userData || (userData as AdminUserRow[]).length === 0) {
+  // Fetch user details using TypeScript service
+  let user
+  try {
+    user = await adminUserService.getUserById(id)
+  } catch (error) {
+    console.error('Failed to fetch admin user:', error)
     notFound()
   }
 
-  const user = transformAdminUserRow((userData as AdminUserRow[])[0]!)
+  if (!user) {
+    notFound()
+  }
 
   // Fetch subscription plans for the form
+  const supabase = await createClient()
   const { data: plans } = await supabase
     .from('subscription_plans' as never)
     .select('id, name, display_name')

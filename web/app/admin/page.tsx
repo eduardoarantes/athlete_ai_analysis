@@ -1,4 +1,3 @@
-import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -9,21 +8,15 @@ import {
   TrendingUp,
   TrendingDown,
 } from 'lucide-react'
-import { transformAdminStatsRow } from '@/lib/types/admin'
-import type { AdminStatsRow } from '@/lib/types/admin'
+import { adminStatsService } from '@/lib/services/admin'
 
 export default async function AdminDashboardPage() {
-  const supabase = await createClient()
-
-  // Fetch admin statistics
-  const { data: statsData, error } = await supabase.rpc('get_admin_stats' as never)
-
-  const stats =
-    statsData && (statsData as AdminStatsRow[])[0]
-      ? transformAdminStatsRow((statsData as AdminStatsRow[])[0]!)
-      : null
-
-  if (error || !stats) {
+  // Fetch admin statistics using TypeScript service
+  let stats
+  try {
+    stats = await adminStatsService.getStats()
+  } catch (error) {
+    console.error('Failed to load admin stats:', error)
     return (
       <div className="space-y-6">
         <div>
