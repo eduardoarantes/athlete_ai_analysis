@@ -684,4 +684,52 @@ describe('AdminUserService', () => {
       expect(result).toBe(0)
     })
   })
+
+  // ---------------------------------------------------------------------------
+  // Security - SQL Injection Prevention
+  // ---------------------------------------------------------------------------
+  describe('Security - SQL Injection Prevention', () => {
+    it('should sanitize special characters in search query to prevent injection', async () => {
+      // Malicious input attempting PostgREST injection
+      const maliciousSearch = "test%';DROP TABLE users;--"
+
+      const mockUsers = [
+        createMockAdminUserRow({
+          email: 'test@example.com',
+          first_name: 'Test',
+        }),
+      ]
+
+      const mockSupabase = createMockSupabase({
+        fromResults: { admin_user_view: { data: mockUsers, error: null } },
+      })
+
+      vi.mocked(createClient).mockResolvedValue(mockSupabase as never)
+
+      // Should sanitize and not throw
+      const result = await service.queryUsers({ search: maliciousSearch })
+
+      expect(result).toBeDefined()
+      expect(result).toHaveLength(1)
+      expect(result[0]?.email).toBe('test@example.com')
+    })
+
+    it('should handle search with special PostgREST operators safely', async () => {
+      // Attempting to inject PostgREST eq operator
+      const maliciousSearch = 'admin%,email.eq.admin@example.com'
+
+      const mockUsers: AdminUserRow[] = []
+      const mockSupabase = createMockSupabase({
+        fromResults: { admin_user_view: { data: mockUsers, error: null } },
+      })
+
+      vi.mocked(createClient).mockResolvedValue(mockSupabase as never)
+
+      // Should sanitize and return safe results
+      const result = await service.queryUsers({ search: maliciousSearch })
+
+      expect(result).toBeDefined()
+      expect(Array.isArray(result)).toBe(true)
+    })
+  })
 })

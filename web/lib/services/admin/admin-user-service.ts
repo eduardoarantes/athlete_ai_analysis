@@ -52,9 +52,11 @@ export class AdminUserService {
       let query = supabase.from('admin_user_view').select('*')
 
       // Apply search filter (email, first_name, last_name - case-insensitive)
+      // Sanitize input to prevent PostgREST injection
       if (search) {
+        const sanitized = search.replace(/[^a-zA-Z0-9@.\-\s]/g, '')
         query = query.or(
-          `email.ilike.%${search}%,first_name.ilike.%${search}%,last_name.ilike.%${search}%`
+          `email.ilike.%${sanitized}%,first_name.ilike.%${sanitized}%,last_name.ilike.%${sanitized}%`
         )
       }
 
@@ -168,9 +170,11 @@ export class AdminUserService {
       let query = supabase.from('admin_user_view').select('*', { count: 'exact', head: true })
 
       // Apply search filter (email, first_name, last_name - case-insensitive)
+      // Sanitize input to prevent PostgREST injection
       if (search) {
+        const sanitized = search.replace(/[^a-zA-Z0-9@.\-\s]/g, '')
         query = query.or(
-          `email.ilike.%${search}%,first_name.ilike.%${search}%,last_name.ilike.%${search}%`
+          `email.ilike.%${sanitized}%,first_name.ilike.%${sanitized}%,last_name.ilike.%${sanitized}%`
         )
       }
 
