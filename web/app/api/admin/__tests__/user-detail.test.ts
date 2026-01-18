@@ -25,10 +25,18 @@ vi.mock('@/lib/monitoring/error-logger', () => ({
   },
 }))
 
+vi.mock('@/lib/services/admin', () => ({
+  adminUserService: {
+    getUserById: vi.fn(),
+  },
+}))
+
 // Import route after mocks
 import { GET, PATCH } from '../users/[id]/route'
 import { createClient } from '@/lib/supabase/server'
 import { requireAdmin } from '@/lib/guards/admin-guard'
+import { adminUserService } from '@/lib/services/admin'
+import { transformAdminUserRow } from '@/lib/types/admin'
 
 const validUserId = '123e4567-e89b-12d3-a456-426614174000'
 
@@ -62,14 +70,10 @@ describe('GET /api/admin/users/[id]', () => {
   })
 
   it('returns user details for valid request', async () => {
-    const mockSupabase = {
-      rpc: vi.fn().mockResolvedValue({
-        data: [mockAdminUserRow],
-        error: null,
-      }),
-    }
-    vi.mocked(createClient).mockResolvedValue(mockSupabase as never)
+    vi.mocked(createClient).mockResolvedValue({} as never)
     vi.mocked(requireAdmin).mockResolvedValue(createMockAuthResult(true))
+    const mockUser = transformAdminUserRow(mockAdminUserRow)
+    vi.mocked(adminUserService.getUserById).mockResolvedValue(mockUser)
 
     const request = new NextRequest(`http://localhost:3000/api/admin/users/${validUserId}`)
     const response = await GET(request, { params: Promise.resolve({ id: validUserId }) })
@@ -83,14 +87,9 @@ describe('GET /api/admin/users/[id]', () => {
   })
 
   it('returns 404 when user not found', async () => {
-    const mockSupabase = {
-      rpc: vi.fn().mockResolvedValue({
-        data: [],
-        error: null,
-      }),
-    }
-    vi.mocked(createClient).mockResolvedValue(mockSupabase as never)
+    vi.mocked(createClient).mockResolvedValue({} as never)
     vi.mocked(requireAdmin).mockResolvedValue(createMockAuthResult(true))
+    vi.mocked(adminUserService.getUserById).mockResolvedValue(null)
 
     const request = new NextRequest(`http://localhost:3000/api/admin/users/${validUserId}`)
     const response = await GET(request, { params: Promise.resolve({ id: validUserId }) })
@@ -101,14 +100,9 @@ describe('GET /api/admin/users/[id]', () => {
   })
 
   it('returns 500 on database error', async () => {
-    const mockSupabase = {
-      rpc: vi.fn().mockResolvedValue({
-        data: null,
-        error: new Error('Database error'),
-      }),
-    }
-    vi.mocked(createClient).mockResolvedValue(mockSupabase as never)
+    vi.mocked(createClient).mockResolvedValue({} as never)
     vi.mocked(requireAdmin).mockResolvedValue(createMockAuthResult(true))
+    vi.mocked(adminUserService.getUserById).mockRejectedValue(new Error('Database error'))
 
     const request = new NextRequest(`http://localhost:3000/api/admin/users/${validUserId}`)
     const response = await GET(request, { params: Promise.resolve({ id: validUserId }) })

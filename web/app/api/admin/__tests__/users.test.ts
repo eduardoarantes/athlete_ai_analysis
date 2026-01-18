@@ -6,7 +6,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
-import { mockAdminUserRow, createMockAuthResult, createMockSupabaseClient } from './test-utils'
+import { mockAdminUserRow, createMockAuthResult } from './test-utils'
 
 // Mock modules before importing route
 vi.mock('@/lib/supabase/server', () => ({
@@ -25,10 +25,19 @@ vi.mock('@/lib/monitoring/error-logger', () => ({
   },
 }))
 
+vi.mock('@/lib/services/admin', () => ({
+  adminUserService: {
+    queryUsers: vi.fn(),
+    countUsers: vi.fn(),
+  },
+}))
+
 // Import route after mocks
 import { GET } from '../users/route'
 import { createClient } from '@/lib/supabase/server'
 import { requireAdmin } from '@/lib/guards/admin-guard'
+import { adminUserService } from '@/lib/services/admin'
+import { transformAdminUserRow } from '@/lib/types/admin'
 
 describe('GET /api/admin/users', () => {
   beforeEach(() => {
@@ -63,22 +72,11 @@ describe('GET /api/admin/users', () => {
   })
 
   it('returns paginated users for admin', async () => {
-    const mockSupabase = createMockSupabaseClient({
-      rpcResult: [mockAdminUserRow],
-    })
-    // Override rpc to handle different function calls
-    mockSupabase.rpc = vi.fn().mockImplementation((funcName) => {
-      if (funcName === 'get_admin_users') {
-        return Promise.resolve({ data: [mockAdminUserRow], error: null })
-      }
-      if (funcName === 'get_admin_users_count') {
-        return Promise.resolve({ data: 1, error: null })
-      }
-      return Promise.resolve({ data: null, error: null })
-    })
-
-    vi.mocked(createClient).mockResolvedValue(mockSupabase as never)
+    vi.mocked(createClient).mockResolvedValue({} as never)
     vi.mocked(requireAdmin).mockResolvedValue(createMockAuthResult(true))
+    const mockUser = transformAdminUserRow(mockAdminUserRow)
+    vi.mocked(adminUserService.queryUsers).mockResolvedValue([mockUser])
+    vi.mocked(adminUserService.countUsers).mockResolvedValue(1)
 
     const request = new NextRequest('http://localhost:3000/api/admin/users')
     const response = await GET(request)
@@ -92,35 +90,25 @@ describe('GET /api/admin/users', () => {
   })
 
   it('applies filters from query parameters', async () => {
-    const mockRpc = vi.fn().mockImplementation((funcName, _params) => {
-      if (funcName === 'get_admin_users') {
-        return Promise.resolve({ data: [], error: null })
-      }
-      if (funcName === 'get_admin_users_count') {
-        return Promise.resolve({ data: 0, error: null })
-      }
-      return Promise.resolve({ data: null, error: null })
-    })
-
-    const mockSupabase = { rpc: mockRpc }
-    vi.mocked(createClient).mockResolvedValue(mockSupabase as never)
+    vi.mocked(createClient).mockResolvedValue({} as never)
     vi.mocked(requireAdmin).mockResolvedValue(createMockAuthResult(true))
+    vi.mocked(adminUserService.queryUsers).mockResolvedValue([])
+    vi.mocked(adminUserService.countUsers).mockResolvedValue(0)
 
     const request = new NextRequest(
       'http://localhost:3000/api/admin/users?search=test&role=admin&subscription=pro&strava=true&limit=10&offset=5'
     )
     await GET(request)
 
-    // Verify the RPC was called with correct parameters
-    expect(mockRpc).toHaveBeenCalledWith(
-      'get_admin_users',
+    // Verify the service was called with correct parameters
+    expect(adminUserService.queryUsers).toHaveBeenCalledWith(
       expect.objectContaining({
-        search_query: 'test',
-        role_filter: 'admin',
-        subscription_filter: 'pro',
-        strava_filter: true,
-        limit_count: 10,
-        offset_count: 5,
+        search: 'test',
+        role: 'admin',
+        subscription: 'pro',
+        strava: true,
+        limit: 10,
+        offset: 5,
       })
     )
   })
@@ -140,11 +128,9 @@ describe('GET /api/admin/users', () => {
   })
 
   it('returns 500 on database error', async () => {
-    const mockSupabase = createMockSupabaseClient({
-      rpcError: new Error('Database connection failed'),
-    })
-    vi.mocked(createClient).mockResolvedValue(mockSupabase as never)
+    vi.mocked(createClient).mockResolvedValue({} as never)
     vi.mocked(requireAdmin).mockResolvedValue(createMockAuthResult(true))
+    vi.mocked(adminUserService.queryUsers).mockRejectedValue(new Error('Database connection failed'))
 
     const request = new NextRequest('http://localhost:3000/api/admin/users')
     const response = await GET(request)
@@ -153,19 +139,11 @@ describe('GET /api/admin/users', () => {
   })
 
   it('transforms database rows to AdminUser structure', async () => {
-    const mockSupabase = createMockSupabaseClient({})
-    mockSupabase.rpc = vi.fn().mockImplementation((funcName) => {
-      if (funcName === 'get_admin_users') {
-        return Promise.resolve({ data: [mockAdminUserRow], error: null })
-      }
-      if (funcName === 'get_admin_users_count') {
-        return Promise.resolve({ data: 1, error: null })
-      }
-      return Promise.resolve({ data: null, error: null })
-    })
-
-    vi.mocked(createClient).mockResolvedValue(mockSupabase as never)
+    vi.mocked(createClient).mockResolvedValue({} as never)
     vi.mocked(requireAdmin).mockResolvedValue(createMockAuthResult(true))
+    const mockUser = transformAdminUserRow(mockAdminUserRow)
+    vi.mocked(adminUserService.queryUsers).mockResolvedValue([mockUser])
+    vi.mocked(adminUserService.countUsers).mockResolvedValue(1)
 
     const request = new NextRequest('http://localhost:3000/api/admin/users')
     const response = await GET(request)

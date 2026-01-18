@@ -1,7 +1,6 @@
 import { Suspense } from 'react'
-import { createClient } from '@/lib/supabase/server'
-import { transformAdminUserRows } from '@/lib/types/admin'
-import type { AdminUserRow } from '@/lib/types/admin'
+import { adminUserService } from '@/lib/services/admin'
+import type { UserRole } from '@/lib/types/admin'
 import { UsersTable } from '@/components/admin/users-table'
 import { UsersFilters } from '@/components/admin/users-filters'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -20,43 +19,46 @@ export default async function AdminUsersPage({
   searchParams: Promise<SearchParams>
 }) {
   const params = await searchParams
-  const supabase = await createClient()
 
   // Parse query parameters
-  const search = params.search || null
-  const role = params.role || null
-  const subscription = params.subscription || null
-  const strava = params.strava === 'true' ? true : params.strava === 'false' ? false : null
+  const search = params.search || undefined
+  const role = (params.role as UserRole) || undefined
+  const subscription = params.subscription || undefined
+  const strava = params.strava === 'true' ? true : params.strava === 'false' ? false : undefined
   const page = parseInt(params.page || '1', 10)
   const limit = 20
   const offset = (page - 1) * limit
 
-  // Fetch users
-  const { data: usersData, error: usersError } = await supabase.rpc(
-    'get_admin_users' as never,
-    {
-      search_query: search,
-      role_filter: role,
-      subscription_filter: subscription,
-      strava_filter: strava,
-      limit_count: limit,
-      offset_count: offset,
-    } as never
-  )
+  // Fetch users using TypeScript service
+  let users: Awaited<ReturnType<typeof adminUserService.queryUsers>> = []
+  let total = 0
+  let usersError = false
 
-  // Fetch total count
-  const { data: totalCount } = await supabase.rpc(
-    'get_admin_users_count' as never,
-    {
-      search_query: search,
-      role_filter: role,
-      subscription_filter: subscription,
-      strava_filter: strava,
-    } as never
-  )
+  try {
+    const queryFilters = {
+      ...(search && { search }),
+      ...(role && { role }),
+      ...(subscription && { subscription }),
+      ...(strava !== undefined && { strava }),
+      limit,
+      offset,
+    }
 
-  const users = usersData ? transformAdminUserRows(usersData as AdminUserRow[]) : []
-  const total = Number(totalCount) || 0
+    const countFilters = {
+      ...(search && { search }),
+      ...(role && { role }),
+      ...(subscription && { subscription }),
+      ...(strava !== undefined && { strava }),
+    }
+
+    users = await adminUserService.queryUsers(queryFilters)
+    total = await adminUserService.countUsers(countFilters)
+  } catch (error) {
+    console.error('Failed to fetch admin users:', error)
+    usersError = true
+    users = []
+  }
+
   const totalPages = Math.ceil(total / limit)
 
   return (
@@ -80,7 +82,7 @@ export default async function AdminUsersPage({
               currentSearch={search || ''}
               currentRole={role || ''}
               currentSubscription={subscription || ''}
-              currentStrava={strava}
+              currentStrava={strava ?? null}
             />
           </Suspense>
 

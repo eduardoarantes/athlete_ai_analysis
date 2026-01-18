@@ -24,10 +24,18 @@ vi.mock('@/lib/monitoring/error-logger', () => ({
   },
 }))
 
+vi.mock('@/lib/services/admin', () => ({
+  adminStatsService: {
+    getStats: vi.fn(),
+  },
+}))
+
 // Import route after mocks
 import { GET } from '../stats/route'
 import { createClient } from '@/lib/supabase/server'
 import { requireAdmin } from '@/lib/guards/admin-guard'
+import { adminStatsService } from '@/lib/services/admin'
+import { transformAdminStatsRow } from '@/lib/types/admin'
 
 describe('GET /api/admin/stats', () => {
   beforeEach(() => {
@@ -60,14 +68,10 @@ describe('GET /api/admin/stats', () => {
   })
 
   it('returns platform statistics for admin', async () => {
-    const mockSupabase = {
-      rpc: vi.fn().mockResolvedValue({
-        data: [mockAdminStatsRow],
-        error: null,
-      }),
-    }
-    vi.mocked(createClient).mockResolvedValue(mockSupabase as never)
+    vi.mocked(createClient).mockResolvedValue({} as never)
     vi.mocked(requireAdmin).mockResolvedValue(createMockAuthResult(true))
+    const mockStats = transformAdminStatsRow(mockAdminStatsRow)
+    vi.mocked(adminStatsService.getStats).mockResolvedValue(mockStats)
 
     const response = await GET()
     const data = await response.json()
@@ -80,14 +84,9 @@ describe('GET /api/admin/stats', () => {
   })
 
   it('returns 500 on database error', async () => {
-    const mockSupabase = {
-      rpc: vi.fn().mockResolvedValue({
-        data: null,
-        error: new Error('Database connection failed'),
-      }),
-    }
-    vi.mocked(createClient).mockResolvedValue(mockSupabase as never)
+    vi.mocked(createClient).mockResolvedValue({} as never)
     vi.mocked(requireAdmin).mockResolvedValue(createMockAuthResult(true))
+    vi.mocked(adminStatsService.getStats).mockRejectedValue(new Error('Database connection failed'))
 
     const response = await GET()
 
@@ -95,14 +94,9 @@ describe('GET /api/admin/stats', () => {
   })
 
   it('returns 500 when stats data is empty', async () => {
-    const mockSupabase = {
-      rpc: vi.fn().mockResolvedValue({
-        data: [],
-        error: null,
-      }),
-    }
-    vi.mocked(createClient).mockResolvedValue(mockSupabase as never)
+    vi.mocked(createClient).mockResolvedValue({} as never)
     vi.mocked(requireAdmin).mockResolvedValue(createMockAuthResult(true))
+    vi.mocked(adminStatsService.getStats).mockRejectedValue(new Error('No stats data returned from view'))
 
     const response = await GET()
 
@@ -110,14 +104,10 @@ describe('GET /api/admin/stats', () => {
   })
 
   it('transforms database row to nested AdminStats structure', async () => {
-    const mockSupabase = {
-      rpc: vi.fn().mockResolvedValue({
-        data: [mockAdminStatsRow],
-        error: null,
-      }),
-    }
-    vi.mocked(createClient).mockResolvedValue(mockSupabase as never)
+    vi.mocked(createClient).mockResolvedValue({} as never)
     vi.mocked(requireAdmin).mockResolvedValue(createMockAuthResult(true))
+    const mockStats = transformAdminStatsRow(mockAdminStatsRow)
+    vi.mocked(adminStatsService.getStats).mockResolvedValue(mockStats)
 
     const response = await GET()
     const data = await response.json()

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { errorLogger } from '@/lib/monitoring/error-logger'
 import { planInstanceService } from '@/lib/services/plan-instance-service'
+import { planInstanceValidator } from '@/lib/services/validation/plan-instance-validator'
 import type { CreatePlanInstanceInput } from '@/lib/types/training-plan'
 
 /**
@@ -85,36 +86,52 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Fetch template to calculate end date for validation
+    const { data: template, error: templateError } = await supabase
+      .from('training_plans')
+      .select('id, weeks_total, plan_data')
+      .eq('id', body.template_id)
+      .eq('user_id', user.id)
+      .single()
+
+    if (templateError || !template) {
+      return NextResponse.json({ error: 'Training plan template not found' }, { status: 404 })
+    }
+
+    // Calculate end date based on template duration
+    const weeksTotal =
+      template.weeks_total ||
+      (template.plan_data as { plan_metadata?: { total_weeks?: number } })?.plan_metadata
+        ?.total_weeks ||
+      12
+    const endDate = new Date(body.start_date)
+    endDate.setDate(endDate.getDate() + weeksTotal * 7)
+    const endDateStr = endDate.toISOString().split('T')[0]!
+
+    // Validate no overlap with existing plan instances using PlanInstanceValidator
+    const overlapCheck = await planInstanceValidator.checkOverlap({
+      userId: user.id,
+      startDate: body.start_date,
+      endDate: endDateStr,
+    })
+
+    if (overlapCheck.hasOverlap) {
+      return NextResponse.json(
+        {
+          error: 'Plan instance overlaps with existing plan',
+          overlappingInstance: overlapCheck.overlappingInstance,
+        },
+        { status: 409 }
+      )
+    }
+
     try {
       const instance = await planInstanceService.createInstance(user.id, body)
       return NextResponse.json({ instance }, { status: 201 })
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error'
 
-      // Handle overlap error specifically
-      if (message.includes('conflict') || message.includes('overlap')) {
-        // Get the conflicting instances for better error response
-        const weeksTotal = 12 // Default, will be recalculated in service
-        const endDate = new Date(body.start_date)
-        endDate.setDate(endDate.getDate() + weeksTotal * 7)
-
-        const overlapCheck = await planInstanceService.checkOverlap(
-          user.id,
-          body.start_date,
-          endDate.toISOString().split('T')[0]!
-        )
-
-        return NextResponse.json(
-          {
-            error: 'OVERLAP',
-            message,
-            conflicts: overlapCheck.conflicts,
-          },
-          { status: 409 }
-        )
-      }
-
-      // Handle template not found
+      // Handle template not found (shouldn't happen after our check above)
       if (message.includes('not found')) {
         return NextResponse.json({ error: message }, { status: 404 })
       }

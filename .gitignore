@@ -42,6 +42,8 @@ htmlcov/
 .tox/
 .mypy_cache/
 .ruff_cache/
+web/playwright-report/
+web/test-results/
 
 # Project specific
 *.parquet
@@ -82,3 +84,6 @@ supabase_errors.json
 # Server logs
 .api.log
 web/.dev.log
+
+# Temporary files
+.tmp/

@@ -11,8 +11,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requireAdmin } from '@/lib/guards/admin-guard'
 import { errorLogger } from '@/lib/monitoring/error-logger'
-import { transformAdminStatsRow } from '@/lib/types/admin'
-import type { AdminStatsRow } from '@/lib/types/admin'
+import { adminStatsService } from '@/lib/services/admin'
 import { HTTP_STATUS, MESSAGES } from '@/lib/constants'
 
 /**
@@ -48,15 +47,15 @@ export async function GET() {
       )
     }
 
-    // 2. Call database function to get statistics
-    const { data: statsData, error: statsError } = await supabase.rpc('get_admin_stats' as never)
-
-    if (statsError) {
-      errorLogger.logError(new Error(`get_admin_stats failed: ${statsError.message}`), {
+    // 2. Get statistics using TypeScript service
+    let stats
+    try {
+      stats = await adminStatsService.getStats()
+    } catch (error) {
+      errorLogger.logError(error as Error, {
         ...(auth.userId && { userId: auth.userId }),
         path: '/api/admin/stats',
         method: 'GET',
-        metadata: { dbError: statsError },
       })
 
       return NextResponse.json(
@@ -65,24 +64,7 @@ export async function GET() {
       )
     }
 
-    // 3. Check if stats data exists
-    const dataArray = statsData as AdminStatsRow[] | null
-    if (!dataArray || dataArray.length === 0) {
-      errorLogger.logWarning('Admin stats returned empty result', {
-        ...(auth.userId && { userId: auth.userId }),
-        path: '/api/admin/stats',
-      })
-
-      return NextResponse.json(
-        { error: MESSAGES.ADMIN_STATS_FETCH_FAILED },
-        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
-      )
-    }
-
-    // 4. Transform database row to AdminStats object
-    const stats = transformAdminStatsRow(dataArray[0]!)
-
-    // 5. Log successful access
+    // 3. Log successful access
     errorLogger.logInfo('Admin stats accessed', {
       ...(auth.userId && { userId: auth.userId }),
       metadata: {
@@ -92,7 +74,7 @@ export async function GET() {
       },
     })
 
-    // 6. Return statistics
+    // 4. Return statistics
     return NextResponse.json(stats)
   } catch (error) {
     // Catch-all error handler
