@@ -42,6 +42,8 @@ htmlcov/
 .tox/
 .mypy_cache/
 .ruff_cache/
+web/playwright-report/
+web/test-results/
 
 # Project specific
 *.parquet
