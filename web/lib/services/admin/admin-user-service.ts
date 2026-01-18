@@ -11,6 +11,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { errorLogger } from '@/lib/monitoring/error-logger'
+import { trackServiceMetrics } from '@/lib/monitoring/service-metrics'
 import { sanitizeSearchInput } from '@/lib/utils/input-sanitization'
 import type { AdminUser, AdminUserRow, AdminUserFilters } from '@/lib/types/admin'
 
@@ -44,64 +45,62 @@ export class AdminUserService {
    * @throws Error if database query fails
    */
   async queryUsers(params: AdminUserQueryParams): Promise<AdminUser[]> {
-    try {
-      const { search, role, subscription, strava, limit = 50, offset = 0 } = params
+    return trackServiceMetrics(
+      'admin_users_query',
+      async () => {
+        const { search, role, subscription, strava, limit = 50, offset = 0 } = params
 
-      const supabase = await createClient()
+        const supabase = await createClient()
 
-      // Start query
-      let query = supabase.from('admin_user_view').select('*')
+        // Start query
+        let query = supabase.from('admin_user_view').select('*')
 
-      // Apply search filter (email, first_name, last_name - case-insensitive)
-      // Sanitize input to prevent PostgREST injection
-      if (search) {
-        const sanitized = sanitizeSearchInput(search)
-        query = query.or(
-          `email.ilike.%${sanitized}%,first_name.ilike.%${sanitized}%,last_name.ilike.%${sanitized}%`
-        )
-      }
+        // Apply search filter (email, first_name, last_name - case-insensitive)
+        // Sanitize input to prevent PostgREST injection
+        if (search) {
+          const sanitized = sanitizeSearchInput(search)
+          query = query.or(
+            `email.ilike.%${sanitized}%,first_name.ilike.%${sanitized}%,last_name.ilike.%${sanitized}%`
+          )
+        }
 
-      // Apply role filter
-      if (role) {
-        query = query.eq('role', role)
-      }
+        // Apply role filter
+        if (role) {
+          query = query.eq('role', role)
+        }
 
-      // Apply subscription filter
-      if (subscription) {
-        query = query.eq('plan_name', subscription)
-      }
+        // Apply subscription filter
+        if (subscription) {
+          query = query.eq('plan_name', subscription)
+        }
 
-      // Apply Strava filter
-      if (strava !== undefined) {
-        query = query.eq('strava_connected', strava)
-      }
+        // Apply Strava filter
+        if (strava !== undefined) {
+          query = query.eq('strava_connected', strava)
+        }
 
-      // Apply ordering (DESC by account_created_at)
-      query = query.order('account_created_at', { ascending: false })
+        // Apply ordering (DESC by account_created_at)
+        query = query.order('account_created_at', { ascending: false })
 
-      // Apply pagination
-      query = query.range(offset, offset + limit - 1)
+        // Apply pagination
+        query = query.range(offset, offset + limit - 1)
 
-      const { data, error } = await query
+        const { data, error } = await query
 
-      if (error) {
-        errorLogger.logError(error as Error, {
-          path: 'AdminUserService.queryUsers',
-          metadata: { params },
-        })
-        throw new Error('Failed to query admin users')
-      }
+        if (error) {
+          errorLogger.logError(error as Error, {
+            path: 'AdminUserService.queryUsers',
+            metadata: { params },
+          })
+          throw new Error('Failed to query admin users')
+        }
 
-      // Transform flat rows to nested AdminUser structure
-      const { transformAdminUserRows } = await import('@/lib/types/admin')
-      return transformAdminUserRows((data || []) as AdminUserRow[])
-    } catch (error) {
-      errorLogger.logError(error as Error, {
-        path: 'AdminUserService.queryUsers',
-        metadata: { params },
-      })
-      throw error
-    }
+        // Transform flat rows to nested AdminUser structure
+        const { transformAdminUserRows } = await import('@/lib/types/admin')
+        return transformAdminUserRows((data || []) as AdminUserRow[])
+      },
+      { ...params }
+    )
   }
 
   /**
