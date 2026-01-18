@@ -11,6 +11,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { errorLogger } from '@/lib/monitoring/error-logger'
+import { sanitizeSearchInput } from '@/lib/utils/input-sanitization'
 import type { AdminUser, AdminUserRow, AdminUserFilters } from '@/lib/types/admin'
 
 // Re-export the transform function for convenience
@@ -54,7 +55,7 @@ export class AdminUserService {
       // Apply search filter (email, first_name, last_name - case-insensitive)
       // Sanitize input to prevent PostgREST injection
       if (search) {
-        const sanitized = search.replace(/[^a-zA-Z0-9@.\-\s]/g, '')
+        const sanitized = sanitizeSearchInput(search)
         query = query.or(
           `email.ilike.%${sanitized}%,first_name.ilike.%${sanitized}%,last_name.ilike.%${sanitized}%`
         )
@@ -172,7 +173,7 @@ export class AdminUserService {
       // Apply search filter (email, first_name, last_name - case-insensitive)
       // Sanitize input to prevent PostgREST injection
       if (search) {
-        const sanitized = search.replace(/[^a-zA-Z0-9@.\-\s]/g, '')
+        const sanitized = sanitizeSearchInput(search)
         query = query.or(
           `email.ilike.%${sanitized}%,first_name.ilike.%${sanitized}%,last_name.ilike.%${sanitized}%`
         )
