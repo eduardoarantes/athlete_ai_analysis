@@ -40,12 +40,12 @@ class ServiceMetrics {
       duration,
       success: true,
       timestamp: new Date(),
-      metadata,
+      ...(metadata !== undefined && { metadata }),
     })
 
     // Log slow queries (> 1 second)
     if (duration > 1000) {
-      errorLogger.logWarning(new Error(`Slow query detected: ${name}`), {
+      errorLogger.logWarning(`Slow query detected: ${name}`, {
         path: 'ServiceMetrics.recordQueryTime',
         metadata: {
           operation: name,

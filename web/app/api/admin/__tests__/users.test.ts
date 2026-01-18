@@ -6,7 +6,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
-import { mockAdminUserRow, createMockAuthResult, createMockSupabaseClient } from './test-utils'
+import { mockAdminUserRow, createMockAuthResult } from './test-utils'
 
 // Mock modules before importing route
 vi.mock('@/lib/supabase/server', () => ({
